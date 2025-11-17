@@ -1,0 +1,178 @@
+# Encrypted Traffic IDS Configuration
+# Based on paper: "Hybrid Spatial-Temporal Deep Learning for Privacy-Preserving Encrypted Traffic Intrusion Detection"
+
+# Dataset Configuration
+data:
+  # Supported datasets
+  datasets:
+    - CICIDS2017
+    - CICIDS2018
+    - UNSW-NB15
+    - ISCX-VPN-NonVPN-2016
+    - CESNET-TLS-Year22
+    - VisQUIC
+    - CIC-IoT-2023
+    - Edge-IIoTset
+    - BoT-IoT
+    - IIS3D
+
+  # Data split ratios
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+
+  # Feature extraction parameters
+  max_packets_per_flow: 100
+  feature_dim: 64
+  use_encrypted_only: true
+
+  # Class balancing
+  balance_strategy: 'focal_loss'  # Options: 'weighted', 'focal_loss', 'smote'
+
+# Model Architecture Configuration
+model:
+  # Hybrid CNN-LSTM Configuration
+  cnn_lstm:
+    cnn_channels: [64, 128, 256, 512]
+    kernel_sizes: [3, 5, 7, 9]
+    use_depthwise_separable: true
+    lstm_hidden_dim: 256
+    lstm_num_layers: 2
+    bidirectional: true
+    dropout: 0.3
+
+  # Transformer Configuration
+  transformer:
+    d_model: 512
+    nhead: 8
+    num_encoder_layers: 6
+    dim_feedforward: 2048
+    dropout: 0.1
+    max_seq_length: 100
+    use_eca: true  # Efficient Channel Attention
+
+  # Graph Neural Network Configuration
+  gnn:
+    hidden_channels: 128
+    num_layers: 3
+    aggregation: 'mean'  # Options: 'mean', 'max', 'attention'
+    use_graphsage: true
+    dropout: 0.2
+
+  # Ensemble Configuration
+  ensemble:
+    voting_strategy: 'soft'  # Options: 'hard', 'soft', 'weighted', 'stacking'
+    use_stacking: true
+    meta_learner: 'logistic'  # Options: 'logistic', 'mlp'
+
+# Training Configuration
+training:
+  # Optimization parameters
+  optimizer: 'adam'
+  learning_rate: 0.001
+  lr_scheduler: 'exponential'
+  lr_decay_rate: 0.95
+  lr_decay_steps: 10
+
+  # Training parameters
+  batch_size: 128
+  num_epochs: 100
+  early_stopping_patience: 10
+  gradient_clip_value: 1.0
+
+  # Loss function
+  loss_function: 'focal_loss'  # Options: 'cross_entropy', 'focal_loss', 'weighted_cross_entropy'
+  focal_gamma: 2.0
+  focal_alpha: 0.25
+
+  # Regularization
+  weight_decay: 0.0001
+  label_smoothing: 0.1
+
+# Federated Learning Configuration
+federated:
+  num_clients: 10
+  num_rounds: 20
+  local_epochs: 5
+  client_fraction: 1.0  # Fraction of clients per round
+
+  # Aggregation strategy
+  aggregation: 'fedavg'  # Options: 'fedavg', 'fedprox', 'gradient_similarity'
+
+  # Differential Privacy
+  use_differential_privacy: true
+  epsilon: 1.0  # Privacy budget
+  delta: 1e-5
+  max_grad_norm: 1.0  # Gradient clipping bound
+  noise_multiplier: 1.1
+
+  # Homomorphic Encryption
+  use_homomorphic_encryption: false  # Paillier encryption (computationally expensive)
+
+# Few-Shot Learning Configuration
+few_shot:
+  n_way: 5  # Number of classes per task
+  k_shot: 5  # Number of examples per class
+  query_samples: 15  # Number of query samples per class
+  num_episodes: 1000  # Number of training episodes
+  meta_learning_rate: 0.001
+  inner_learning_rate: 0.01
+  inner_steps: 5
+
+  # Meta-learning algorithm
+  algorithm: 'prototypical'  # Options: 'prototypical', 'maml', 'reptile'
+
+# Explainability Configuration
+explainability:
+  use_shap: true
+  shap_background_samples: 100
+  shap_num_features: 20  # Top features to visualize
+  use_lime: false
+  generate_attention_maps: true
+
+# Adversarial Robustness Configuration
+adversarial:
+  train_adversarial: true
+  attack_method: 'pgd'  # Options: 'fgsm', 'pgd', 'carlini_wagner'
+  epsilon: 0.1  # Perturbation magnitude
+  pgd_steps: 10
+  pgd_alpha: 0.01
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - roc_auc
+    - pr_auc
+    - mcc
+    - fpr
+
+  # Per-class evaluation
+  compute_per_class_metrics: true
+
+  # Confusion matrix
+  plot_confusion_matrix: true
+  normalize_confusion_matrix: true
+
+# Hardware Configuration
+hardware:
+  device: 'cuda'  # Options: 'cuda', 'cpu'
+  num_workers: 8
+  pin_memory: true
+  mixed_precision: true  # Use automatic mixed precision (AMP)
+
+# Logging Configuration
+logging:
+  use_tensorboard: true
+  log_interval: 10  # Log every N batches
+  save_checkpoints: true
+  checkpoint_interval: 5  # Save every N epochs
+  log_dir: './logs'
+  checkpoint_dir: './checkpoints'
+
+# Reproducibility
+seed: 42
+deterministic: true

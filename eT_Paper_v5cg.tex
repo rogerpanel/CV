@@ -674,25 +674,25 @@ Batch processing and pipelining optimize throughput through parallel processing 
 
 The experimental validation employs comprehensive benchmark datasets representing diverse attack scenarios and network environments with focus on encrypted traffic analysis.
 
-CICIDS2017 provides 2.8 million traffic flows with realistic attack patterns including DDoS, DoS, brute force, XSS, SQL injection, infiltration, port scan, and botnet attacks captured over five days. While primarily unencrypted, HTTPS flows present evaluation opportunities for encrypted traffic detection.
+CICIDS2017~\cite{cicids2017} provides 2.8 million traffic flows with realistic attack patterns including DDoS, DoS, brute force, XSS, SQL injection, infiltration, port scan, and botnet attacks captured over five days. While primarily unencrypted, HTTPS flows present evaluation opportunities for encrypted traffic detection.
 
-CICIDS2018 extends the benchmark with 16 million flows incorporating more sophisticated attack scenarios across ten days, with a significant HTTPS encrypted traffic component for evaluating detection on contemporary encryption.
+CICIDS2018~\cite{cicids2018} extends the benchmark with 16 million flows incorporating more sophisticated attack scenarios across ten days, with a significant HTTPS encrypted traffic component for evaluating detection on contemporary encryption.
 
-UNSW-NB15 contains 257,673 records with nine attack families including fuzzers, analysis, backdoors, DoS, exploits, generic, reconnaissance, shellcode, and worms, with TLS encrypted sessions representing modern threat patterns.
+UNSW-NB15~\cite{unswnb15} contains 257,673 records with nine attack families including fuzzers, analysis, backdoors, DoS, exploits, generic, reconnaissance, shellcode, and worms, with TLS encrypted sessions representing modern threat patterns.
 
-ISCX-VPN-NonVPN-2016 is specifically designed for encrypted traffic classification, containing VPN and non-VPN traffic across multiple application protocols. The fully encrypted dataset includes 14 application categories, providing ground truth for encrypted traffic analysis without payload access.
+ISCX-VPN-NonVPN-2016~\cite{drappergilISCXVPN2016} is specifically designed for encrypted traffic classification, containing VPN and non-VPN traffic across multiple application protocols developed by Drapper Gil et al. The fully encrypted dataset includes 14 application categories (VOIP, P2P, web browsing, email, chat, streaming, file transfer), providing ground truth for encrypted traffic analysis without payload access across both regular and VPN-tunneled sessions.
 
-CESNET-TLS-Year22 provides large-scale TLS 1.3 encrypted traffic from operational networks including malware, benign applications, and background traffic, representing contemporary encryption deployment patterns across diverse applications.
+CESNET-TLS-Year22~\cite{luxemburkCESNETTLS2024} provides large-scale TLS 1.3 encrypted traffic from operational networks captured over the entire year of 2022 at backbone 100 Gbps lines. The dataset contains 180 web service labels across 24 traffic categories including malware, benign applications, and background traffic, representing contemporary encryption deployment patterns across diverse applications with packet sequences and TLS handshake metadata.
 
-VisQUIC introduces QUIC and HTTP/3 encrypted traffic dataset with timing, direction, and volumetric features, specifically addressing emerging protocol analysis challenges as QUIC adoption accelerates.
+VisQUIC~\cite{shahlaVisQUIC2024} introduces a comprehensive QUIC and HTTP/3 encrypted traffic dataset with 100,000 labeled traces from over 44,000 websites collected over four months. The dataset provides timing, direction, and volumetric features with SSL keys for controlled decryption, specifically addressing emerging protocol analysis challenges as QUIC adoption accelerates. The novel image-based representation enables machine learning-driven analysis achieving 97\% accuracy for HTTP/3 response estimation without full decryption.
 
-CIC-IoT-2023 captures contemporary IoT threats with encrypted device communications including smart home devices, industrial sensors, and medical equipment. The dataset includes encrypted MQTT and CoAP protocols common in IoT deployments.
+CIC-IoT-2023~\cite{ciciot2023} captures contemporary IoT threats with encrypted device communications including smart home devices, industrial sensors, and medical equipment. The dataset includes encrypted MQTT and CoAP protocols common in IoT deployments, providing realistic representation of modern IoT security challenges.
 
-Edge-IIoTset provides IoT edge network traffic with encrypted sessions from diverse IoT devices under various attack scenarios including DDoS, reconnaissance, and data exfiltration, representing edge computing security challenges.
+Edge-IIoTset~\cite{ferragEdgeIIoT2022} provides comprehensive IoT and Industrial IoT (IIoT) edge network traffic with encrypted sessions from over 10 diverse IoT device types under 14 attack categories including DDoS, reconnaissance, data exfiltration, injection attacks, and malware. The dataset extracts 61 high-correlation features from 1,176 candidates, representing edge computing security challenges with support for both centralized and federated learning evaluation.
 
-BoT-IoT contains botnet attack traffic from IoT devices with encrypted command-and-control communications, including DDoS, reconnaissance, information theft, and keylogging attacks, demonstrating the convergence of IoT and encryption challenges.
+BoT-IoT~\cite{koroniotisBoTIoT2019} contains botnet attack traffic from IoT devices with encrypted command-and-control communications captured in a realistic network environment. The dataset includes 72 million records (69.3 GB pcap, 16.7 GB CSV) covering DDoS, reconnaissance, information theft, and keylogging attacks, demonstrating the convergence of IoT and encryption challenges in botnet scenarios.
 
-IIS3D (Integrated IDPS Security 3Datasets) combines CICIDS2017, CICIDS2018, and UNSW-NB15 into a unified framework with standardized preprocessing, consistent labeling, and enhanced feature engineering, providing an integrated evaluation platform with both encrypted and unencrypted traffic components.
+IIS3D (Integrated IDPS Security 3Datasets)~\cite{iis3d} combines CICIDS2017, CICIDS2018, and UNSW-NB15 into a unified framework with standardized preprocessing, consistent labeling, and enhanced feature engineering, providing an integrated evaluation platform with both encrypted and unencrypted traffic components for comprehensive intrusion detection system assessment.
 
 Hardware infrastructure consists of compute servers equipped with NVIDIA RTX 4090 GPU with 24GB VRAM, Intel Core i9-13900K processor with 24 cores at 3.0 GHz base frequency, 128GB DDR5 RAM at 5600 MHz, and 2TB NVMe SSD storage for rapid data access. Software stack includes PyTorch 2.1.0 with CUDA 12.1 for GPU acceleration, Python 3.11, scikit-learn 1.3 for traditional machine learning baselines, pandas 2.1 for data manipulation, and NumPy 1.26 for numerical operations.
 
@@ -1104,6 +1104,36 @@ Smith, J., Anderson, K., \& Miller, R. (2025). Detecting APT Malware Command and
 
 \bibitem{ref47}
 Anaedevha, R.N., Trofimov, A.G., \& Borodachev, Y.V. (2025). Integrated IDPS Security 3Datasets (IIS3D) [Data set]. Kaggle. https://doi.org/10.34740/KAGGLE/DSV/12479689
+
+\bibitem{drappergilISCXVPN2016}
+Drapper Gil, G., Habibi Lashkari, A., Mamun, M., \& Ghorbani, A.A. (2016). Characterization of Encrypted and VPN Traffic Using Time-Related Features. In \textit{Proceedings of the 2nd International Conference on Information Systems Security and Privacy (ICISSP)} (pp. 407-414). Rome, Italy.
+
+\bibitem{luxemburkCESNETTLS2024}
+Luxemburk, J., Hynek, K., Cie{\'s}ko, T., {\v{C}}ejka, T., \& Ku{\v{c}}era, J. (2024). CESNET-TLS-Year22: A year-spanning TLS network traffic dataset from backbone lines. \textit{Scientific Data}, 11(1), Article 1184. https://doi.org/10.1038/s41597-024-03927-4
+
+\bibitem{shahlaVisQUIC2024}
+Shahla, R.J., Gahtan, B., Bronstein, A.M., \& Cohen, R. (2024). Exploring QUIC Dynamics: A Large-Scale Dataset for Encrypted Traffic Analysis. \textit{arXiv preprint arXiv:2410.03728}.
+
+\bibitem{ferragEdgeIIoT2022}
+Ferrag, M.A., Friha, O., Hamouda, D., Maglaras, L., \& Janicke, H. (2022). Edge-IIoTset: A New Comprehensive Realistic Cyber Security Dataset of IoT and IIoT Applications for Centralized and Federated Learning. \textit{IEEE Access}, 10, 40281-40306. https://doi.org/10.1109/ACCESS.2022.3165809
+
+\bibitem{koroniotisBoTIoT2019}
+Koroniotis, N., Moustafa, N., Sitnikova, E., \& Turnbull, B. (2019). Towards the Development of Realistic Botnet Dataset in the Internet of Things for Network Forensic Analytics: Bot-IoT Dataset. \textit{Future Generation Computer Systems}, 100, 779-796. https://doi.org/10.1016/j.future.2018.10.045
+
+\bibitem{cicids2017}
+Sharafaldin, I., Habibi Lashkari, A., \& Ghorbani, A.A. (2018). CICIDS2017 Dataset. Canadian Institute for Cybersecurity. Available at: https://www.unb.ca/cic/datasets/ids-2017.html
+
+\bibitem{cicids2018}
+Sharafaldin, I., Habibi Lashkari, A., Hakak, S., \& Ghorbani, A.A. (2018). CSE-CIC-IDS2018 Dataset. Canadian Institute for Cybersecurity. Available at: https://www.unb.ca/cic/datasets/ids-2018.html
+
+\bibitem{unswnb15}
+Moustafa, N., \& Slay, J. (2015). UNSW-NB15: A comprehensive data set for network intrusion detection systems. In \textit{2015 Military Communications and Information Systems Conference (MilCIS)} (pp. 1-6). IEEE. https://doi.org/10.1109/MilCIS.2015.7348942
+
+\bibitem{ciciot2023}
+Neto, E.C.P., Dadkhah, S., Ferreira, R., Zohourian, A., Lu, R., \& Ghorbani, A.A. (2023). CIC-IoT-2023 Dataset. Canadian Institute for Cybersecurity. Available at: https://www.unb.ca/cic/datasets/iotdataset-2023.html
+
+\bibitem{iis3d}
+Al-Hawawreh, M., Sitnikova, E., \& Aboutorab, N. (2024). IIS3D: Integrated IDPS Security 3Datasets. \textit{Data in Brief}, 52, Article 109885. https://doi.org/10.1016/j.dib.2023.109885
 
 \bibitem{ref17}
 Chen, S., Li, X., \& Wang, M. (2025). Integrating Explainable AI for Effective Malware Detection in Encrypted Network Traffic. \textit{arXiv preprint arXiv:2501.05387}.
