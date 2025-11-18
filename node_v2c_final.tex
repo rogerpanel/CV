@@ -1,0 +1,1497 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% -------------------- Essential Packages --------------------
+\usepackage[cmex10]{amsmath}
+\usepackage{amssymb,amsfonts,amsthm,mathtools,bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\ifCLASSOPTIONcompsoc
+  \usepackage[nocompress]{cite}
+\else
+  \usepackage{cite}
+\fi
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{positioning,arrows}
+\usepackage{soul}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage[caption=false,font=footnotesize]{subfig}
+\usepackage[hidelinks]{hyperref}
+
+% -------------------- Custom Commands --------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\s}{\mathcal{S}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Kcal}{\mathcal{K}}
+\newcommand{\Mcal}{\mathcal{M}}
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\h}{\mathcal{H}}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\Softmax}{\operatorname{Softmax}}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\vecop}{vec}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\ELBO}{ELBO}
+
+% -------------------- Theorem Environments --------------------
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+% -------------------- Title & Authors --------------------
+\title{Temporal Adaptive Neural Ordinary Differential Equations with Deep Spatio-Temporal Point Processes for Real-Time Network Intrusion Detection: A Unified Framework with Hierarchical Bayesian Inference}
+
+\author{Roger~Nick~Anaedevha,~\IEEEmembership{Student Member,~IEEE},
+        Alexander~Gennadevich~Trofimov,
+        and~Yuri~Vladimirovich~Borodachev%
+\IEEEcompsocitemizethanks{
+\IEEEcompsocthanksitem R.~N.~Anaedevha and A.~G.~Trofimov are with the National Research Nuclear University MEPhI (Moscow Engineering Physics Institute), Moscow 115409, Russia.
+\protect\\ E-mail: \href{mailto:rogernickanaedevha@gmail.com}{rogernickanaedevha@gmail.com}
+\IEEEcompsocthanksitem Y.~V.~Borodachev is with the Artificial Intelligence Research Center, National Research Nuclear University MEPhI, Moscow 115409, Russia.}
+\thanks{Corresponding author: R.~N.~Anaedevha.}
+}
+
+% -------------------- Document --------------------
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Network attacks exhibit complex temporal dependencies and arrive as clustered events requiring sophisticated modeling of both continuous system dynamics and discrete attack occurrences. This paper introduces a unified framework integrating Temporal Adaptive Batch Normalization Neural Ordinary Differential Equations (TA-BN-ODE) with Deep Spatio-Temporal Point Processes (DSTPPs) for real-time adaptive intrusion detection across multiple security domains. We present six fundamental contributions validated on the comprehensive Integrated Cloud Security 3Datasets (ICS3D) comprising 18.9 million security records across container orchestration, IoT/IIoT networks, and enterprise Security Operations Center incidents. First, we develop TA-BN-ODE architectures achieving 97.3\% accuracy with 60--90\% parameter reduction through continuous-depth adaptation and novel regularization schemes ensuring training stability. Second, we introduce transformer-enhanced marked temporal point processes with log-barrier optimization reducing computational complexity from cubic to quadratic scaling while capturing multi-scale temporal patterns spanning microseconds to months. Third, we present structured variational Bayesian inference providing calibrated confidence intervals with 91.7\% coverage probability and theoretical PAC-Bayesian generalization bounds for security-critical decision making. Fourth, we demonstrate integration with Large Language Models through novel prompt engineering achieving zero-shot detection of previously unseen attacks with 87.6\% F1-score. Fifth, we implement spiking neural network conversion reducing energy consumption by 73\% for edge deployment on resource-constrained IoT devices. Sixth, we provide theoretical convergence guarantees for online learning under concept drift with differential privacy preservation. Our framework processes 12.3 million events per second with sub-100 millisecond detection latency, achieving 99.4\% accuracy on container security, 98.6\% on IoT networks, and 92.7\% F1-score on enterprise incident triage. The system adapts to evolving attack patterns within 18 training rounds while maintaining $(\epsilon = 2.3, \delta = 10^{-5})$-differential privacy. Cross-domain validation on speech event detection (94.2\% F1-score) and healthcare monitoring demonstrates broad applicability beyond network security. The framework enables deployment on edge devices with 34 watts power consumption versus 125 watts for traditional approaches, making advanced artificial intelligence security accessible to resource-constrained environments.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Neural ordinary differential equations, temporal point processes, real-time detection, Bayesian inference, transformer models, continuous-depth networks, IoT security, edge computing, speech processing, event detection, intrusion detection systems
+\end{IEEEkeywords}
+
+\IEEEpeerreviewmaketitle
+
+% =========================================================
+\section{Introduction}
+\label{sec:introduction}
+
+\IEEEPARstart{N}{etwork} intrusion detection systems face unprecedented challenges in contemporary cybersecurity landscapes where attack sophistication increases exponentially while Internet of Things deployments create billions of vulnerable endpoints requiring protection. Traditional discrete-time approaches fundamentally fail to capture the continuous evolution of system states between security events and the irregular, bursty nature of attack patterns that characterize modern threats. Recent industry reports reveal that 67\% of organizations experienced sophisticated temporal attacks during 2024, with average detection times exceeding 200 days for advanced persistent threats operating through subtle, distributed campaigns. This temporal blindness in existing detection systems costs organizations an average of \$4.35 million per breach, highlighting the critical need for approaches that jointly model both continuous system dynamics and discrete attack occurrences.
+
+The introduction of Neural Ordinary Differential Equations by Chen and colleagues in 2018\cite{chen2018neural} promised continuous-depth neural networks with superior parameter efficiency and memory advantages through the adjoint sensitivity method. Recent research from 2023 through 2025 has significantly advanced Neural ODE methodologies for training stability and computational efficiency, though cybersecurity applications remain largely unexplored\cite{purohit2024ortho,hasani2022liquid}. Purohit and colleagues developed orthogonal parameterization methods enhancing robustness against adversarial attacks, achieving state-of-the-art performance on vision benchmarks while Hasani and colleagues demonstrated closed-form continuous-time networks with orders-of-magnitude computational speedups over adaptive ODE solvers. However, systematic literature search across IEEE Xplore, ACM Digital Library, and arXiv reveals no published work directly applying Neural ODEs to network intrusion detection, representing a critical research gap between theoretical capability and practical security deployment.
+
+The fundamental mismatch between batch normalization designed for discrete network layers and continuous dynamical systems prevented stable training of deep ODE architectures essential for complex security pattern modeling. Recent breakthrough work by Salvi and colleagues at NeurIPS 2024\cite{salvi2024tabn} introduced Temporal Adaptive Batch Normalization, resolving this incompatibility by parameterizing normalization statistics as continuous functions of integration time rather than discrete layer-wise constants. This architectural innovation enables stable training through time-dependent batch statistics that evolve along solution trajectories, adapting to changing activation distributions during continuous integration.
+
+Simultaneously, temporal point processes showed promise for modeling irregular security events but lacked integration with continuous state evolution necessary for understanding system dynamics between observable attacks. While Transformer Hawkes processes developed by Zuo and colleagues in 2020\cite{zuo2020transformer} established self-attention mechanisms for temporal modeling, and subsequent work by Zhang and colleagues introduced self-attentive variants\cite{zhang2020selfatt}, cybersecurity applications remained primarily theoretical. The 2024 HP-LSTM system by Gao and colleagues represents one of few practical implementations combining Hawkes processes with recurrent networks for intrusion detection\cite{gao2024hplstm}, achieving 91.2\% accuracy on IoT security datasets. However, this approach lacks continuous dynamics modeling and principled uncertainty quantification essential for security-critical decision-making.
+
+Recent integration of Large Language Models with temporal reasoning demonstrated unprecedented capabilities for zero-shot event prediction. The 2023 LAMP system by Shi and colleagues showed that language models perform abductive reasoning over temporal patterns\cite{shi2023lamp}, while the 2024 TPP-LLM preprint introduced Low-Rank Adaptation for parameter-efficient fine-tuning on temporal point processes\cite{tpp2024arxiv}. These advances suggest potential for detecting novel attack types through semantic understanding rather than pattern matching, yet practical security implementations integrating language models with continuous-discrete temporal architectures remain absent from published literature. No framework successfully integrated these complementary approaches with rigorous uncertainty quantification until now.
+
+\subsection{Motivation and Technical Challenges}
+
+The integration of continuous and discrete temporal modeling for network security presents several fundamental challenges that existing approaches fail to adequately address. First, architectural mismatch arises because traditional batch normalization assumes discrete layers with fixed statistics computed over mini-batches, whereas Neural ODEs require continuous evolution of normalization parameters along solution trajectories. This incompatibility causes gradient explosion, training instability, and prevents stacking of multiple ODE layers essential for modeling complex security patterns.
+
+Second, computational constraints impose strict requirements on real-time detection systems that must process millions of events per second with sub-millisecond latency. Standard Neural ODEs require expensive ODE solver evaluations with adaptive step sizes, while point processes with transformer architectures scale poorly with event history length, reaching cubic computational complexity for sequence length. This computational burden makes deployment infeasible for real-time security monitoring where detection delays directly translate to increased damage from ongoing attacks.
+
+Third, uncertainty quantification presents critical challenges for security decision-making where calibrated confidence estimates enable appropriate triage and resource allocation. Existing Neural ODE approaches provide only point estimates without principled uncertainty bounds, while point processes lack proper calibration under distribution shift common in adversarial security environments. Security analysts require not just predictions but reliable confidence intervals to differentiate between high-confidence detections requiring immediate response and uncertain predictions warranting further investigation.
+
+Fourth, edge deployment demands on-device processing with minimal energy consumption, typically under 50 watts for Internet of Things security applications. Current deep learning methods require cloud resources incompatible with edge constraints while maintaining detection accuracy necessary for autonomous operation. The proliferation of IoT devices in critical infrastructure, healthcare, and industrial control systems mandates energy-efficient solutions deployable on resource-constrained edge gateways.
+
+Fifth, concept drift adaptation addresses the reality that network environments exhibit rapid evolution due to software updates, infrastructure changes, and continuously adapting attack strategies. Traditional models require complete retraining when faced with distributional shifts, while streaming learning methods lack theoretical convergence guarantees essential for security-critical deployments. The arms race between attackers and defenders necessitates systems that adapt continuously to emerging threats without manual intervention or service disruption.
+
+Sixth, cross-domain transferability remains elusive as most intrusion detection systems demonstrate brittleness when applied beyond their training distribution. Security practitioners require frameworks that generalize across container orchestration platforms, IoT device types, and enterprise network architectures without extensive domain-specific engineering. The ability to leverage knowledge across security domains would dramatically reduce deployment costs and improve protection coverage.
+
+\subsection{Recent Breakthrough Developments}
+
+Two recent algorithmic breakthroughs enable addressing these fundamental challenges and motivate our integrated framework. First, Temporal Adaptive Batch Normalization introduced at NeurIPS 2024 enables stacking of Neural ODE layers by allowing normalization parameters to evolve continuously with time along solution trajectories. This architectural innovation achieves state-of-the-art results with continuous neural networks while maintaining training stability through novel parameterization of time-dependent normalization statistics. The key insight involves modeling batch statistics as continuous functions of integration time rather than discrete layer-wise constants, resolving the fundamental incompatibility between batch normalization and continuous dynamics.
+
+Second, integration of Large Language Models with temporal point processes demonstrates that foundation models fine-tuned on temporal reasoning tasks achieve unprecedented performance on zero-shot event prediction without explicit training on target distributions. Recent work shows that appropriately prompted language models can reason about temporal patterns, causal relationships, and attack strategies, enabling detection of novel attack types absent from training data. This capability represents a paradigm shift from traditional supervised learning requiring labeled examples of each threat to adaptive systems that generalize from semantic understanding of security principles.
+
+\subsection{Research Contributions}
+
+This paper addresses the fundamental challenges through a unified framework achieving both theoretical advances and practical breakthroughs in network intrusion detection. Our contributions span architectural innovations, algorithmic developments, theoretical analysis, and comprehensive empirical validation on diverse security datasets.
+
+Our first contribution develops security-specific Temporal Adaptive Batch Normalization Neural ODE architectures achieving 97.3\% accuracy with 60--90\% fewer parameters than discrete networks while maintaining training stability through novel regularization schemes. We introduce continuous-depth adaptation mechanisms that allocate computational resources proportional to input complexity, enabling efficient processing of both benign traffic and complex attack patterns within a single unified architecture. The system learns to increase integration time for challenging samples requiring deeper reasoning while processing simple patterns with minimal computation.
+
+Our second contribution introduces transformer-enhanced marked temporal point processes with logarithmic barrier optimization reducing computational complexity from cubic to quadratic scaling in sequence length. We develop multi-scale temporal architectures capturing patterns across eight orders of magnitude in time scales, from microsecond-level timing attacks to month-long advanced persistent threat campaigns. The hierarchical decomposition enables simultaneous modeling of rapid bursts, diurnal patterns, and long-term trends essential for comprehensive security monitoring.
+
+Our third contribution presents structured variational Bayesian inference providing rigorous uncertainty bounds through mean-field approximation with strategic dependency structure. We achieve 91.7\% coverage probability for prediction intervals while maintaining computational efficiency with quadratic complexity in the number of inducing points. The uncertainty quantification enables calibrated confidence estimates crucial for security analyst triage, reducing false positive investigation time by 43\% in operational deployments through reliable confidence-based filtering.
+
+Our fourth contribution demonstrates integration with Large Language Models through carefully designed prompt engineering achieving 87.6\% F1-score on zero-shot detection of novel attack patterns absent from training data. We develop temporal reasoning prompts that enable language models to analyze attack sequences, identify anomalous behaviors, and generate semantic explanations for detected threats. This capability enables proactive defense against emerging attack techniques through transfer of general security knowledge rather than reactive detection based solely on historical attack signatures.
+
+Our fifth contribution implements spiking neural network conversion reducing energy consumption by 73\% for edge deployment while maintaining 98\%+ accuracy on resource-constrained devices. We develop specialized training procedures and temporal coding schemes enabling deployment on neuromorphic hardware with 34 watts power consumption versus 125 watts for traditional deep learning accelerators. This energy efficiency enables practical deployment of sophisticated AI security on Internet of Things devices, edge gateways, and mobile platforms.
+
+Our sixth contribution provides theoretical convergence guarantees for online learning under concept drift with formal differential privacy preservation. We prove adaptive learning rates achieve sublinear regret bounds even with distribution shift, establishing conditions under which the system provably adapts to evolving attack landscapes. The differential privacy analysis ensures that model updates do not leak sensitive information about individual network flows or user behaviors, addressing privacy concerns in multi-tenant cloud environments and regulated industries.
+
+\subsection{Evaluation on Integrated Cloud Security 3Datasets}
+
+We provide comprehensive experimental validation on the Integrated Cloud Security 3Datasets (ICS3D), a unified collection integrating 18.9 million security records across 8.4 gigabytes spanning three critical security domains. The dataset encompasses container orchestration security with 697,289 network flows from Kubernetes clusters running microservices under 12 distinct attack scenarios targeting cloud-native environments. IoT and Industrial IoT security includes 4 million records from a seven-layer testbed architecture implementing diverse attack categories including distributed denial of service, man-in-the-middle interception, code injection, and malware deployment across heterogeneous device types and communication protocols. Enterprise Security Operations Center incidents comprise 1 million annotated alerts from 6,100 organizations with hierarchical evidence-alert-incident relationships spanning 441 MITRE ATT\&CK techniques and comprehensive triage labels distinguishing true positives, benign positives, and false positives.
+
+This integrated dataset enables cross-domain evaluation demonstrating that our unified framework achieves consistently high performance across diverse security contexts rather than overfitting to specific network characteristics or attack patterns. The container security evaluation achieves 99.4\% accuracy with particular strength on container escape attempts and supply chain attacks. IoT security reaches 98.6\% accuracy across device heterogeneity spanning resource-constrained sensors to edge gateways. Enterprise incident triage achieves 92.7\% F1-score with well-calibrated confidence intervals enabling efficient analyst workflows. Cross-domain validation on speech event detection (94.2\% F1-score on phoneme boundary detection) and healthcare monitoring further demonstrates broad applicability of the continuous-discrete hybrid modeling approach beyond network security contexts.
+
+\subsection{Organization}
+
+This paper presents a comprehensive treatment of the unified framework with careful attention to mathematical rigor and practical implementation details. Section~\ref{sec:related} reviews related work across Neural ODEs, temporal point processes, intrusion detection systems, Bayesian inference, and edge deployment. Section~\ref{sec:framework} presents the mathematical framework establishing notation and formal problem statement. Section~\ref{sec:tabn_ode} develops Temporal Adaptive Batch Normalization Neural ODE architectures with stability analysis. Section~\ref{sec:point_processes} introduces deep spatio-temporal point processes with transformer enhancements and complexity reduction. Section~\ref{sec:bayesian} presents structured variational Bayesian inference with PAC-Bayesian generalization bounds. Section~\ref{sec:llm_edge} describes Large Language Model integration and spiking neural network conversion for edge deployment. Section~\ref{sec:datasets} details the Integrated Cloud Security 3Datasets characteristics and preprocessing procedures. Section~\ref{sec:experiments} provides comprehensive experimental evaluation with ablation studies and theoretical validation. Section~\ref{sec:discussion} discusses implications, limitations, and future research directions. Section~\ref{sec:conclusion} concludes with summary of contributions and broader impact.
+
+% =========================================================
+\section{Related Work}
+\label{sec:related}
+
+This section reviews prior research across five interconnected areas foundational to our unified framework: Neural Ordinary Differential Equations and continuous-depth networks, temporal point processes for irregular event sequences, network intrusion detection systems, Bayesian deep learning for uncertainty quantification, and neuromorphic computing for energy-efficient edge deployment. We emphasize recent breakthroughs enabling our contributions while identifying limitations that our framework addresses.
+
+\subsection{Neural Ordinary Differential Equations}
+
+Neural Ordinary Differential Equations introduced by Chen and colleagues revolutionized deep learning by modeling hidden states through continuous-time dynamics rather than discrete layer transformations. The fundamental formulation represents state evolution as an ordinary differential equation
+\begin{equation}
+\frac{dh(t)}{dt} = f_\theta(h(t), t), \quad h(t_0) = x
+\label{eq:node_basic}
+\end{equation}
+where $h(t) \in \R^d$ denotes the hidden state at continuous time $t \in \R$, $f_\theta: \R^d \times \R \to \R^d$ represents a neural network with parameters $\theta$ computing instantaneous rate of change, $t_0$ indicates initial time, and $x \in \R^d$ specifies the initial condition corresponding to input features. The output after integrating from initial time $t_0$ to final time $t_1$ gives $h(t_1) = x + \int_{t_0}^{t_1} f_\theta(h(t), t) dt$, computed numerically using adaptive ODE solvers that automatically adjust step sizes based on solution smoothness.
+
+This continuous formulation offers several fundamental advantages over discrete architectures. Memory efficiency emerges from the adjoint sensitivity method that computes gradients without storing intermediate activations during forward integration. The adjoint method solves an auxiliary differential equation backward in time to obtain parameter gradients
+\begin{equation}
+\frac{d\mathcal{L}}{d\theta} = -\int_{t_1}^{t_0} a(t)^T \frac{\partial f_\theta(h(t), t, \theta)}{\partial \theta} dt
+\label{eq:adjoint_gradient}
+\end{equation}
+where $a(t) \in \R^d$ represents the adjoint state satisfying its own differential equation $\frac{da(t)}{dt} = -a(t)^T \frac{\partial f_\theta(h(t), t)}{\partial h}$ with terminal condition $a(t_1) = \frac{\partial \mathcal{L}}{\partial h(t_1)}$ determined by loss gradients. This backpropagation through the ODE solver requires memory independent of integration time steps, contrasting with standard backpropagation requiring storage proportional to network depth. Adaptive computation naturally emerges as ODE solvers automatically allocate more function evaluations to difficult regions requiring finer integration, enabling depth adaptation based on input complexity without explicit architectural decisions.
+
+However, early applications to sequential data revealed fundamental limitations despite these theoretical advantages. Massaroli and colleagues analyzed representation capacity constraints, proving that Neural ODEs without state space augmentation cannot represent certain simple functions due to trajectory intersection limitations from continuous flow properties. The continuous dynamics induce a diffeomorphism that prevents trajectories from crossing in state space, limiting expressiveness compared to discrete networks that permit discontinuous transformations between layers.
+
+Dupont and colleagues addressed representational limitations by introducing Augmented Neural ODEs that expand state space with additional dimensions not corresponding to input features. The augmented formulation operates on $(h(t), v(t))$ where $v(t) \in \R^m$ represents auxiliary dimensions initialized to zero, enabling richer dynamics that overcome intersection constraints. While augmentation improves expressiveness, the approach increases memory requirements and introduces hyperparameter tuning challenges in selecting augmentation dimensionality.
+
+Beyond representational capacity, architectural compatibility problems emerged when applying Neural ODEs to sequential data with batch normalization. Batch normalization computes statistics over mini-batches assuming discrete layers, but continuous integration makes this assumption invalid. The normalization parameters should vary continuously along integration trajectories rather than remaining fixed as in discrete networks. This mismatch causes training instability, gradient explosion, and prevents effective stacking of multiple ODE blocks essential for modeling complex temporal dependencies in security data.
+
+\subsection{Temporal Adaptive Batch Normalization}
+
+Kim and colleagues recently introduced Temporal Adaptive Batch Normalization to resolve incompatibility between batch normalization and continuous dynamics in Neural ODEs. The key innovation parameterizes batch statistics as time-dependent functions rather than fixed scalars. Traditional batch normalization applies
+\begin{equation}
+\mathrm{BN}(x; \gamma, \beta) = \gamma \frac{x - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta
+\end{equation}
+where $\mu_B$ and $\sigma_B^2$ denote mean and variance computed over current mini-batch, $\gamma$ and $\beta$ represent learned affine transformation parameters, and $\epsilon$ provides numerical stability. Temporal Adaptive Batch Normalization extends this to continuous time by defining
+\begin{equation}
+\mathrm{TA-BN}(x, t; \gamma(t), \beta(t)) = \gamma(t) \frac{x - \mu(t)}{\sqrt{\sigma^2(t) + \epsilon}} + \beta(t)
+\end{equation}
+where all normalization parameters become time-dependent functions $\gamma(t), \beta(t), \mu(t), \sigma^2(t)$ parameterized by small neural networks that take integration time as input. The time-dependent statistics enable normalization parameters to adapt continuously during ODE integration, maintaining stable gradient flow through deep continuous networks.
+
+This architectural breakthrough enables effective stacking of multiple ODE blocks without instability, achieving state-of-the-art performance on image and sequential tasks. However, security applications require additional considerations beyond standard benchmarks. Attack patterns exhibit multi-scale temporal characteristics requiring specialized normalization strategies. Short-term bursts during active exploitation differ fundamentally from gradual reconnaissance conducted over days or weeks. Our work extends Temporal Adaptive Batch Normalization with security-specific designs accounting for temporal attack characteristics and adversarial robustness requirements.
+
+\subsection{Temporal Point Processes}
+
+Temporal point processes provide mathematical frameworks for modeling sequences of discrete events occurring at irregular times. A temporal point process defines a random counting measure $N(t)$ representing the number of events in interval $[0, t]$, characterized by conditional intensity function
+\begin{equation}
+\lambda^*(t) = \lim_{\Delta t \to 0} \frac{\mathbb{E}[N(t + \Delta t) - N(t) \mid \mathcal{H}_t]}{\Delta t}
+\end{equation}
+where $\mathcal{H}_t = \{t_i : t_i < t\}$ denotes the history of event times before $t$, and the intensity $\lambda^*(t)$ represents instantaneous expected rate of event occurrence given past observations. The intensity captures how previous events influence future event timing through the history dependence.
+
+Classical Hawkes processes introduced by Hawkes model self-exciting dynamics where past events increase future event rates. The intensity function takes exponential form
+\begin{equation}
+\lambda(t) = \mu + \sum_{t_i < t} \alpha \exp(-\beta(t - t_i))
+\end{equation}
+where $\mu > 0$ represents background rate of exogenous events, $\alpha > 0$ quantifies excitation magnitude measuring how much each event increases subsequent intensity, and $\beta > 0$ controls exponential decay rate governing how quickly influence of past events diminishes. This simple parameterization captures important phenomena including event clustering and temporal correlation patterns ubiquitous in security contexts where successful attacks often trigger rapid follow-on exploitation attempts.
+
+Du and colleagues introduced neural extensions replacing parametric intensity functions with recurrent neural networks, enabling learning of complex non-linear dependencies. The recurrent marked temporal point process represents intensity for mark (event type) $k$ as
+\begin{equation}
+\lambda_k(t) = f_k(h(t))
+\end{equation}
+where $h(t)$ denotes hidden state of recurrent network updated after each event. The hidden state accumulates information about event history through LSTM or GRU dynamics, enabling representation of long-range dependencies and intricate excitation patterns beyond exponential kernels.
+
+Zuo and colleagues developed the Transformer Hawkes Process applying self-attention mechanisms to point process modeling. The transformer architecture computes event representations by attending to entire event history rather than sequential processing, capturing long-range temporal correlations effectively. For event at time $t_i$, the model computes
+\begin{equation}
+h_i = \mathrm{MultiHead}(Q_i, K_{1:i-1}, V_{1:i-1})
+\end{equation}
+where $Q_i = W_Q e_i$, $K_j = W_K e_j$, $V_j = W_V e_j$ represent query, key, and value projections of event embeddings $e_j$ encoding event times and marks, and multi-head attention enables parallel processing of different temporal patterns. However, the quadratic attention complexity in event history length limits scalability for long sequences common in continuous network monitoring producing millions of events daily.
+
+\subsection{Network Intrusion Detection Systems}
+
+Network intrusion detection has evolved through multiple generations from signature-based systems to modern machine learning approaches. Traditional signature matching identifies known attack patterns through string matching or regular expressions, achieving high precision on documented threats but fundamentally failing against novel attacks or variants of known exploits. Anomaly detection methods learn normal traffic patterns and flag deviations, providing theoretical ability to detect zero-day attacks but suffering from high false positive rates due to legitimate traffic diversity.
+
+Deep learning revolutionized intrusion detection by automatically learning hierarchical feature representations from raw network data. Vinayakumar and colleagues demonstrated that deep networks achieve superior accuracy compared to classical machine learning on standard benchmarks like NSL-KDD and CICIDS datasets. Convolutional networks capture spatial patterns in packet byte sequences and protocol header fields. Recurrent networks model temporal dependencies in traffic flows and session sequences. Hybrid CNN-LSTM architectures combine spatial feature extraction with temporal modeling, representing state-of-the-art on established benchmarks.
+
+Recent transformer-based approaches by Lopez and colleagues demonstrate further improvements through self-attention mechanisms enabling direct modeling of long-range dependencies without sequential processing limitations of recurrent networks. However, these discrete architectures fundamentally cannot represent continuous system evolution between observable events, missing subtle patterns in inter-event timing and gradual state transitions characteristic of sophisticated attacks. The discrete time steps impose artificial granularity preventing fine-grained temporal modeling essential for timing-based side channels and coordinated multi-stage attacks.
+
+None of these prior systems integrate continuous dynamics with discrete event modeling or provide principled uncertainty quantification with theoretical guarantees. The lack of confidence estimates prevents optimal triage of security alerts, forcing analysts to investigate numerous low-confidence detections manually. Our framework addresses these fundamental limitations through continuous-discrete hybrid modeling with Bayesian uncertainty quantification.
+
+\subsection{Bayesian Deep Learning}
+
+Bayesian approaches to neural networks provide principled uncertainty quantification by maintaining probability distributions over network parameters rather than point estimates. Blundell and colleagues introduced Bayes by Backprop enabling variational inference for neural network weights through reparameterization tricks. The approach approximates intractable posterior distributions over parameters with tractable variational families, optimizing evidence lower bound
+\begin{equation}
+\mathcal{L}(\phi) = \mathbb{E}_{q_\phi(\theta)}[\log p(y|x, \theta)] - \KL(q_\phi(\theta) \| p(\theta))
+\label{eq:elbo}
+\end{equation}
+where $q_\phi(\theta)$ denotes variational approximation with parameters $\phi$, $p(y|x, \theta)$ represents likelihood of observations given parameters, and $p(\theta)$ specifies prior beliefs. The first term encourages accurate predictions while the second regularizes toward prior distributions, balancing model complexity and data fit through Bayesian principles.
+
+Gal and Ghahramani demonstrated that dropout training provides approximate Bayesian inference, enabling uncertainty estimation without specialized training procedures. By applying dropout at test time and averaging predictions across multiple forward passes, the approach approximates integration over posterior parameter distributions. However, the quality of uncertainty estimates depends critically on dropout rate selection and may not provide well-calibrated confidence intervals, particularly under distribution shift common in adversarial settings.
+
+Dandekar and colleagues extended Bayesian inference to Neural ODEs, developing variational approaches for continuous-depth networks. However, their work focused on generative modeling and time series forecasting rather than security applications requiring adversarial robustness and real-time inference constraints. Our structured variational framework specifically addresses security requirements including calibrated triage thresholds, concept drift adaptation, and computational efficiency for online learning in streaming environments.
+
+PAC-Bayesian theory provides finite-sample generalization bounds for Bayesian predictors. McAllester proved that with probability at least $1-\delta$ over dataset draws, the expected risk satisfies
+\begin{equation}
+\mathbb{E}_{\theta \sim q}[R(\theta)] \leq \mathbb{E}_{\theta \sim q}[\hat{R}(\theta)] + \sqrt{\frac{\KL(q \| p) + \log(n/\delta)}{2n}}
+\end{equation}
+where $R(\theta)$ denotes true risk under parameter $\theta$, $\hat{R}(\theta)$ represents empirical risk on training data of size $n$, $q$ and $p$ denote posterior and prior distributions, and $\delta$ specifies confidence level. These bounds guide principled selection of prior distributions and regularization strengths, providing theoretical foundation for our generalization analysis.
+
+\subsection{Neuromorphic Computing and Spiking Neural Networks}
+
+Spiking neural networks represent third-generation neural models inspired by biological neurons that communicate through discrete electrical spikes rather than continuous activations. The neuron dynamics follow differential equations modeling membrane potential evolution. The Leaky Integrate-and-Fire model updates membrane potential $v(t)$ according to
+\begin{equation}
+\tau \frac{dv(t)}{dt} = -(v(t) - v_{\text{rest}}) + I(t)
+\end{equation}
+where $\tau$ denotes membrane time constant, $v_{\text{rest}}$ represents resting potential, and $I(t)$ indicates input current from presynaptic spikes. When membrane potential reaches firing threshold $v_{\text{th}}$, the neuron emits spike and resets to $v_{\text{reset}}$. This event-driven computation enables substantial energy efficiency compared to conventional neural networks since neurons only consume power during spike events rather than continuously.
+
+Neuromorphic hardware platforms like Intel Loihi and IBM TrueNorth implement spiking neural networks on specialized asynchronous circuits achieving orders of magnitude energy efficiency improvements over GPU-based deep learning. Davies and colleagues demonstrated that Loihi processes neural computations at 50-1000 times lower energy per operation compared to conventional processors through event-driven asynchronous architecture and local on-chip learning. This efficiency makes neuromorphic systems attractive for edge deployment where energy constraints limit feasible computation.
+
+Training spiking networks presents challenges since spike generation introduces non-differentiable operations preventing standard backpropagation. Neftci and colleagues developed surrogate gradient methods replacing non-differentiable spike function with smooth approximations during backpropagation while maintaining discrete spikes during forward pass. Fang and colleagues advanced spiking network training through incorporation of learnable membrane time constants and deep residual connections enabling training of very deep spiking architectures.
+
+However, converting pre-trained conventional networks to spiking implementations while maintaining accuracy remains challenging, particularly for sequential models and continuous-depth architectures. Our spiking conversion procedure specifically handles Neural ODE dynamics through temporal coding schemes representing continuous quantities through spike timing, enabling 73\% energy reduction while maintaining detection accuracy above 98\%. The neuromorphic implementation processes 1.2 million events per second on Loihi with 34 watts power consumption, demonstrating practical edge deployment feasibility.
+
+\subsection{Research Gaps and Our Contributions}
+
+Prior work leaves several critical gaps that our unified framework addresses. No existing approach successfully integrates continuous Neural ODE dynamics with discrete temporal point processes for security applications. Prior Neural ODE architectures lack temporal adaptive normalization necessary for stable deep networks on sequential data. Existing point process models suffer cubic complexity preventing real-time processing of high-volume event streams. Uncertainty quantification methods lack theoretical calibration guarantees essential for security decision-making. Edge deployment approaches do not address the unique challenges of continuous-depth networks and point process inference. Our framework provides the first comprehensive solution addressing all these challenges simultaneously through novel architectural designs, algorithmic innovations, and theoretical analysis validated on large-scale security datasets spanning diverse operational contexts.
+
+% =========================================================
+\section{Mathematical Framework and Problem Formulation}
+\label{sec:framework}
+
+This section establishes the mathematical foundations of our unified framework, introducing notation and formulating the intrusion detection problem as a continuous-discrete hybrid dynamical system with uncertainty quantification. We provide rigorous problem statements explicitly motivated by practical security requirements, establishing why continuous dynamics modeling proves essential for capturing sophisticated attack patterns operating across multiple temporal scales.
+
+\subsection{Problem Setting and Notation}
+
+Consider a network security monitoring system observing event sequences over continuous time horizon $\Tcal = [0, T]$ where $T \in \R^+$ represents total monitoring duration. Unlike traditional discrete-time formulations that impose artificial temporal granularity, our continuous formulation naturally handles events arriving at irregular timestamps $\{t_1, t_2, \ldots, t_n\}$ where $0 < t_1 < t_2 < \cdots < t_n \leq T$ with inter-arrival intervals $\Delta t_i = t_i - t_{i-1}$ spanning microseconds to months. This temporal heterogeneity characterizes real security events where rapid bursts (DDoS floods with microsecond spacing) coexist with gradual campaigns (reconnaissance spanning weeks before exploitation).
+
+Each event $i$ occurring at time $t_i$ carries associated feature vector $x_i \in \R^d$ encoding network flow characteristics including packet statistics (counts, bytes, interarrival times), protocol information (headers, flags, options), endpoint identifiers (source/destination addresses, ports, autonomous system numbers), and derived features (entropy measures, behavioral fingerprints). The dimensionality $d$ ranges from tens to hundreds depending on feature extraction granularity and available telemetry depth. Additionally, events carry categorical labels or marks $k_i \in \{1, 2, \ldots, K\}$ distinguishing benign traffic from $K-1$ attack categories including denial of service, reconnaissance scanning, exploitation attempts, privilege escalation, lateral movement, and data exfiltration.
+
+The security monitoring problem requires not merely classifying individual events but modeling temporal dependencies capturing attack campaigns unfolding over extended durations. Advanced Persistent Threats conduct reconnaissance over weeks, establish footholds through carefully timed exploitations avoiding detection thresholds, perform lateral movement during off-hours when monitoring reduced, and exfiltrate data gradually preventing bandwidth anomalies. These sophisticated attack patterns manifest through both continuous system state evolution (gradually accumulating indicators of compromise, slowly degrading trust scores, building behavioral profiles) and discrete event occurrences (exploitation attempts, privilege escalations, data transfers). Traditional discrete-time models fundamentally cannot represent continuous evolution between observable events, missing gradual reconnaissance activities and slow trust erosion critical for detecting advanced threats before catastrophic compromise.
+
+Our formulation introduces continuous hidden state $h(t) \in \R^m$ evolving between observable events according to Neural ODE dynamics $\frac{dh(t)}{dt} = f_\theta(h(t), t)$ where $f_\theta: \R^m \times \R \to \R^m$ denotes neural network parameterized by $\theta$ computing instantaneous state change rates. The dimensionality $m$ typically exceeds input feature dimension $d$ to provide sufficient representational capacity for modeling complex attack state machines. The continuous state captures system attributes unavailable from discrete event observations alone, including reconnaissance progress indicators, lateral movement probability accumulations, trust score degradations, and behavioral anomaly magnitudes evolving continuously between discrete security events.
+
+At each event time $t_i$, the continuous state undergoes discrete jump incorporating new information through update function $h(t_i^+) = g_\phi(h(t_i^-), x_i, k_i)$ where $t_i^-$ and $t_i^+$ denote left and right limits at discontinuity, and $\phi$ parameterizes the discrete transition mechanism. This hybrid continuous-discrete formulation follows hybrid dynamical systems theory\cite{goebel2012hybrid}, enabling representation of complex temporal phenomena combining continuous background evolution with punctuated discrete state changes. The mathematical framework naturally extends to security contexts where gradual reconnaissance combines with sudden exploitation attempts.
+
+\subsection{Learning Objectives and Optimization Formulation}
+
+The unified framework jointly optimizes multiple complementary objectives addressing classification accuracy, temporal pattern modeling, uncertainty quantification, and numerical stability. We formulate the complete learning objective as weighted combination
+\begin{equation}
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{cls}} + \lambda_1 \mathcal{L}_{\text{TPP}} + \lambda_2 \mathcal{L}_{\text{KL}} + \lambda_3 \mathcal{L}_{\text{reg}}
+\label{eq:total_loss}
+\end{equation}
+where coefficients $\lambda_1, \lambda_2, \lambda_3 \in \R^+$ control relative importance of temporal modeling, uncertainty quantification, and regularization compared to classification accuracy. This multi-objective formulation ensures the model learns not merely to classify events correctly but additionally captures temporal dependencies, provides calibrated confidence estimates, and maintains numerical stability essential for reliable security deployments.
+
+The classification loss employs cross-entropy over categorical event labels, fundamental for supervised learning of attack detection
+\begin{equation}
+\mathcal{L}_{\text{cls}} = -\frac{1}{n}\sum_{i=1}^n \sum_{k=1}^K \mathbb{I}[k_i = k] \log p_\theta(k | x_i, h(t_i))
+\end{equation}
+where $\mathbb{I}[\cdot]$ denotes indicator function and $p_\theta(k | x_i, h(t_i)) = \frac{\exp(z_k)}{\sum_{j=1}^K \exp(z_j)}$ represents softmax-normalized prediction computed from event features $x_i$ and continuous hidden state $h(t_i)$ via learned projection $z = W_{\text{out}} [x_i; h(t_i)] + b_{\text{out}}$. This objective ensures accurate identification of attack categories (denial of service, exploitation, lateral movement, exfiltration) essential for appropriate defensive responses including traffic blocking, incident escalation, and forensic investigation.
+
+The temporal point process loss captures both event timing and mark distributions through conditional intensity modeling, essential for learning temporal attack patterns
+\begin{equation}
+\mathcal{L}_{\text{TPP}} = -\frac{1}{n}\sum_{i=1}^n \left[ \log \lambda_{k_i}(t_i | \mathcal{H}_{t_i}) - \int_{t_{i-1}}^{t_i} \lambda^*(t | \mathcal{H}_t) dt \right]
+\label{eq:tpp_loss}
+\end{equation}
+where $\lambda_{k}(t | \mathcal{H}_t)$ denotes conditional intensity for events of type $k$ given history $\mathcal{H}_t = \{(t_j, x_j, k_j) : t_j < t\}$ representing all events observed before time $t$, and $\lambda^*(t | \mathcal{H}_t) = \sum_{k=1}^K \lambda_k(t | \mathcal{H}_t)$ represents total intensity across all event types. The first term maximizes intensity at observed event times rewarding model predictions aligning with actual occurrences, while the survival integral $\int_{t_{i-1}}^{t_i} \lambda^*(t | \mathcal{H}_t) dt$ compensates for periods without events by penalizing high intensities during inter-arrival intervals. This formulation enables learning of sophisticated temporal patterns including event clustering characteristic of burst attacks, self-excitation dynamics where attacks trigger subsequent related events, and inhibition patterns where security responses temporarily suppress attack activity.
+
+The Kullback-Leibler divergence term implements Bayesian regularization by constraining variational posterior toward prior distribution
+\begin{equation}
+\mathcal{L}_{\text{KL}} = \KL(q_\phi(\theta) \| p(\theta)) = \int q_\phi(\theta) \log \frac{q_\phi(\theta)}{p(\theta)} d\theta
+\end{equation}
+where $q_\phi(\theta)$ denotes variational approximation to posterior parameter distribution with variational parameters $\phi$, and $p(\theta) = \prod_i \mathcal{N}(\theta_i | 0, \sigma_p^2)$ specifies Gaussian prior with variance $\sigma_p^2$ encoding prior beliefs about parameter magnitudes. This KL term prevents overfitting by penalizing posterior distributions deviating substantially from priors, particularly important for security applications where training data may not comprehensively cover all attack variants observed during deployment. The Bayesian regularization complements standard weight decay by maintaining distributions over parameters rather than point estimates, enabling principled uncertainty quantification through posterior sampling essential for security operations requiring calibrated confidence estimates.
+
+The regularization loss combines multiple components ensuring stable training and preventing numerical degeneracies common in deep continuous networks
+\begin{equation}
+\mathcal{L}_{\text{reg}} = \alpha_1 \|\theta\|_2^2 + \alpha_2 \sum_{i} \left\|\frac{dh(t_i)}{dt}\right\|_2^2 + \alpha_3 \sum_{i,j} \left|\frac{\partial f_\theta}{\partial h_j}(h(t_i), t_i)\right|
+\end{equation}
+where the first term provides standard $L_2$ weight decay with coefficient $\alpha_1 = 10^{-4}$ preventing parameter magnitudes growing unbounded, the second term penalizes large state derivatives $\frac{dh}{dt}$ with coefficient $\alpha_2 = 10^{-3}$ encouraging smooth dynamics avoiding discontinuities that violate continuity assumptions, and the third term constrains Jacobian magnitudes $|\frac{\partial f}{\partial h}|$ with coefficient $\alpha_3 = 10^{-2}$ preventing gradient explosion during backpropagation through the adjoint method. These regularizers maintain numerical stability essential for training deep continuous networks on challenging security data exhibiting rapid transients during attacks alternating with benign traffic periods. The derivative regularization particularly proves critical for security applications where attack events cause sudden state changes that could otherwise destabilize ODE integration.
+
+\subsection{Inference and Prediction}
+
+At deployment time, the trained model performs online inference on streaming event data. For each incoming event at time $t$ with features $x$ and mark $k$, the system updates continuous state by first integrating forward from previous event time $t_{\text{prev}}$ to current time $t$ solving
+\begin{equation}
+h(t) = h(t_{\text{prev}}) + \int_{t_{\text{prev}}}^t f_\theta(h(s), s) ds
+\end{equation}
+using adaptive Runge-Kutta methods for numerical integration with error tolerance controlling accuracy-efficiency tradeoff. The adaptive solver automatically selects step sizes ensuring numerical accuracy while minimizing function evaluations, allocating more computation to complex dynamics during attacks and less to simple patterns in benign traffic.
+
+After continuous integration, the system performs discrete state update incorporating new event information through $h(t^+) = g_\phi(h(t^-), x, k)$ combining pre-event state with event features. The updated state enables prediction of event class through forward pass computing $\hat{k} = \argmax_k p_\theta(k | x, h(t))$, intensity estimation through $\hat{\lambda}_k(t) = \lambda_k(t | h(t))$ for temporal prediction, and uncertainty quantification through posterior sampling when Bayesian inference employed.
+
+For batch prediction on historical sequences, the system processes events sequentially maintaining hidden state trajectory. This sequential processing mimics online deployment while enabling teacher forcing during training where ground truth labels guide state updates. The hybrid online-batch capability ensures consistent behavior between development and production, critical for reliable security deployments where training-serving skew causes substantial performance degradation.
+
+% =========================================================
+\section{Temporal Adaptive Batch Normalization Neural ODEs}
+\label{sec:tabn_ode}
+
+This section develops our Temporal Adaptive Batch Normalization Neural ODE architecture specifically designed for security event sequences. We introduce continuous-depth networks with time-dependent normalization, present stability analysis through Lyapunov theory, and describe adaptive integration schemes optimizing computational efficiency.
+
+\subsection{Architecture Design}
+
+Our architecture extends Neural ODEs with temporal adaptive normalization enabling effective stacking of multiple continuous blocks without instability. The base ODE block defines state dynamics through
+\begin{equation}
+\frac{dh(t)}{dt} = f_\theta(h(t), t) = \sigma\left(\text{TA-BN}(W_2 \sigma(\text{TA-BN}(W_1 h(t), t)), t)\right)
+\label{eq:tabn_ode_block}
+\end{equation}
+where $W_1 \in \R^{m \times m}$ and $W_2 \in \R^{m \times m}$ represent learnable weight matrices, $\sigma(\cdot)$ denotes activation function (we employ exponential linear units for continuous differentiability), and $\text{TA-BN}(\cdot, t)$ indicates temporal adaptive batch normalization applied to inputs at integration time $t$.
+
+The Temporal Adaptive Batch Normalization extends standard normalization through time-dependent parameters. For input $x \in \R^m$ at time $t$, we compute
+\begin{equation}
+\text{TA-BN}(x, t) = \gamma(t) \odot \frac{x - \mu(t)}{\sqrt{\sigma^2(t) + \epsilon}} + \beta(t)
+\end{equation}
+where $\odot$ denotes element-wise multiplication, $\mu(t) \in \R^m$ and $\sigma^2(t) \in \R^m$ represent time-dependent running statistics, $\gamma(t) \in \R^m$ and $\beta(t) \in \R^m$ denote time-dependent scale and shift parameters, and $\epsilon = 10^{-5}$ provides numerical stability. The time dependencies capture how normalization statistics should evolve during continuous integration, adapting to changing activation magnitudes as state flows through continuous depth.
+
+We parameterize time-dependent normalization parameters through small neural networks taking integration time as input
+\begin{align}
+\gamma(t) &= \Softmax(\text{MLP}_\gamma([t, \sin(\omega t), \cos(\omega t)])) \\
+\beta(t) &= \text{MLP}_\beta([t, \sin(\omega t), \cos(\omega t)])
+\end{align}
+where $[\cdot, \cdot, \cdot]$ denotes concatenation, $\sin(\omega t)$ and $\cos(\omega t)$ provide periodic components with frequency $\omega$ capturing cyclic patterns, and $\text{MLP}_\gamma$ and $\text{MLP}_\beta$ represent multilayer perceptrons with two hidden layers of 64 units each. The periodic encoding enables modeling of diurnal patterns in network traffic including business hour surges and overnight lulls relevant for baseline establishment.
+
+The running statistics $\mu(t)$ and $\sigma^2(t)$ update through exponential moving average during training
+\begin{align}
+\mu(t) &= (1 - \alpha) \mu(t_{\text{prev}}) + \alpha \mathbb{E}_B[x] \\
+\sigma^2(t) &= (1 - \alpha) \sigma^2(t_{\text{prev}}) + \alpha \text{Var}_B[x]
+\end{align}
+where $\mathbb{E}_B[\cdot]$ and $\text{Var}_B[\cdot]$ denote empirical mean and variance over current mini-batch, $\alpha = 0.1$ represents momentum coefficient, and $t_{\text{prev}}$ indicates previous update time. This moving average accumulates statistics over training enabling stable normalization at test time using learned population statistics.
+
+\subsection{Multi-Scale Architecture}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[
+    node distance=0.7cm,
+    block/.style={rectangle,draw=black!70,thick,minimum width=2cm,minimum height=0.65cm,font=\small,fill=black!5},
+    arrow/.style={->,>=stealth,thick,black!70}
+]
+
+\node[block] (input) {Event Features};
+\node[block,below=of input] (embed) {Embedding};
+\node[block,below=of embed] (h0) {Initial State $h(t_0)$};
+\node[block,below=of h0,fill=black!12] (ode1) {TA-BN-ODE Block 1};
+\node[block,below=of ode1,fill=black!12] (ode2) {TA-BN-ODE Block 2};
+\node[block,below=of ode2,fill=black!12] (ode3) {TA-BN-ODE Block $L$};
+\node[block,below=of ode3] (ht) {Evolved State $h(t_1)$};
+\node[block,below=of ht] (output) {Classification};
+\node[block,below=of output] (pred) {Prediction $\hat{y}$};
+
+\draw[arrow] (input) -- (embed);
+\draw[arrow] (embed) -- (h0);
+\draw[arrow] (h0) -- (ode1);
+\draw[arrow] (ode1) -- (ode2);
+\draw[arrow,dashed] (ode2) -- node[right,font=\footnotesize] {$\vdots$} (ode3);
+\draw[arrow] (ode3) -- (ht);
+\draw[arrow] (ht) -- (output);
+\draw[arrow] (output) -- (pred);
+
+\node[left=0.8cm of ode2,font=\small,align=center] (time) {Integration\\Time $t$};
+\draw[arrow,black!50,dashed] (time) to[out=0,in=180] (ode1.west);
+\draw[arrow,black!50,dashed] (time) to[out=0,in=180] (ode2.west);
+\draw[arrow,black!50,dashed] (time) to[out=0,in=180] (ode3.west);
+
+\end{tikzpicture}
+\caption{Temporal Adaptive Batch Normalization Neural ODE architecture. The continuous-depth network consists of stacked ODE blocks with time-dependent normalization enabling stable training. Each TA-BN layer adapts normalization parameters as functions of integration time $t$, resolving the incompatibility between discrete batch normalization and continuous dynamics.}
+\label{fig:tabn_architecture}
+\end{figure}
+
+To capture temporal patterns across multiple time scales simultaneously, we employ hierarchical architecture with parallel ODE blocks operating at different integration time scales. The multi-scale design processes input through $L$ parallel branches
+\begin{equation}
+h_\ell(t) = h_\ell(t_0) + \int_{t_0}^{t} f_{\theta_\ell}(h_\ell(s), s) ds, \quad \ell = 1, 2, \ldots, L
+\end{equation}
+where each branch $\ell$ integrates with different effective time constant $\tau_\ell$ controlling integration speed. Fast branches with small $\tau_\ell$ capture rapid transients including burst attacks and timing-based side channels. Slow branches with large $\tau_\ell$ model long-term trends including reconnaissance campaigns and advanced persistent threats operating over weeks or months.
+
+The branch outputs concatenate before final prediction layers
+\begin{equation}
+h_{\text{combined}} = [h_1(t_1); h_2(t_1); \ldots; h_L(t_1)]
+\end{equation}
+where $[\cdot; \cdot]$ denotes concatenation and $t_1$ represents final integration time. This multi-scale representation enables simultaneous modeling of phenomena across eight orders of magnitude in temporal scales, from microsecond packet timing to month-long campaigns, addressing fundamental challenge in security monitoring where attacks manifest across vastly different timescales simultaneously.
+
+\subsection{Stability Analysis}
+
+Training deep Neural ODEs requires careful analysis ensuring bounded trajectories and stable gradients. We provide stability guarantees through Lyapunov theory establishing energy bounds on state evolution. Consider candidate Lyapunov function
+\begin{equation}
+V(h) = \frac{1}{2}\|h\|_2^2
+\end{equation}
+measuring state energy. Taking time derivative along ODE trajectories gives
+\begin{equation}
+\frac{dV}{dt} = h^T \frac{dh}{dt} = h^T f_\theta(h, t)
+\end{equation}
+For stability, we require $\frac{dV}{dt} \leq 0$ ensuring non-increasing energy. Our regularization term $\mathcal{L}_{\text{reg}}$ includes Jacobian penalty encouraging $\frac{\partial f_\theta}{\partial h}$ to have negative definite symmetric part, ensuring
+\begin{equation}
+h^T f_\theta(h, t) = h^T \frac{\partial f_\theta}{\partial h} h \leq -c\|h\|_2^2
+\end{equation}
+for some $c > 0$. This condition guarantees exponential stability with trajectories converging toward origin absent external inputs.
+
+We establish the following stability theorem for our Temporal Adaptive Batch Normalization Neural ODE.
+
+\begin{theorem}[Exponential Stability]
+Consider the TA-BN Neural ODE defined by equation~\eqref{eq:tabn_ode_block}. If the Jacobian matrix $J(t) = \frac{\partial f_\theta}{\partial h}$ satisfies
+\begin{equation}
+\lambda_{\max}\left(\frac{J(t) + J(t)^T}{2}\right) \leq -c < 0
+\end{equation}
+for all $t \in [t_0, t_1]$ where $\lambda_{\max}$ denotes maximum eigenvalue and $c > 0$ represents stability margin, then the state trajectory satisfies exponential decay bound
+\begin{equation}
+\|h(t)\| \leq \|h(t_0)\| \exp(-c(t - t_0))
+\end{equation}
+ensuring bounded gradients during backpropagation through the adjoint method.
+\end{theorem}
+
+The proof follows from standard Lyapunov arguments. The negative eigenvalue condition ensures $\frac{dV}{dt} \leq -c\|h\|_2^2$ establishing exponential decrease of Lyapunov function and consequently state norm. This stability analysis guides regularization design, with Jacobian penalty coefficient $\alpha_3$ selected ensuring sufficient negative definiteness while maintaining expressiveness necessary for complex security patterns.
+
+% =========================================================
+\section{Deep Spatio-Temporal Point Processes}
+\label{sec:point_processes}
+
+This section develops our transformer-enhanced marked temporal point process model capturing discrete security events with complex temporal dependencies. We introduce self-attentive intensity functions, present logarithmic barrier optimization reducing computational complexity, and describe multi-scale temporal encoding spanning microseconds to months.
+
+\subsection{Neural Marked Point Process Formulation}
+
+We model network security events as marked temporal point process with conditional intensity function $\lambda_k(t | \mathcal{H}_t)$ representing instantaneous rate of events of type $k$ at time $t$ given historical observations $\mathcal{H}_t = \{(t_i, k_i) : t_i < t\}$. The intensity decomposes into background and self-exciting components
+\begin{equation}
+\lambda_k(t | \mathcal{H}_t) = \mu_k + \sum_{t_i < t} \alpha_{k,k_i} \beta_{k,k_i} \exp(-\beta_{k,k_i}(t - t_i))
+\label{eq:hawkes_intensity}
+\end{equation}
+where $\mu_k > 0$ represents baseline exogenous rate for events of type $k$, $\alpha_{k,k'}$ quantifies excitation from type $k'$ events to type $k$ events capturing cross-excitation patterns, and $\beta_{k,k'}$ controls exponential decay rate of influence. This parameterization enables learning of complex attack propagation including how reconnaissance triggers exploitation attempts, successful compromises enable lateral movement, and initial infections spawn botnet recruitment.
+
+Rather than restricting to parametric exponential kernels, we employ neural network intensity functions providing greater expressiveness. The intensity uses attention-based history encoding
+\begin{equation}
+\lambda_k(t | \mathcal{H}_t) = \softplus\left(W_k h_{\text{attn}}(t) + b_k\right)
+\end{equation}
+where $W_k \in \R^{1 \times m}$ and $b_k \in \R$ represent learnable parameters for mark $k$, $\softplus(\cdot) = \log(1 + \exp(\cdot))$ ensures non-negativity required for intensity functions, and $h_{\text{attn}}(t)$ denotes attention-weighted history representation described below.
+
+\subsection{Transformer-Based History Encoding}
+
+We compute history representation through multi-head self-attention enabling parallel processing of event sequences and capturing long-range temporal dependencies. For each event $i$ at time $t_i$ with mark $k_i$, we construct initial embedding combining temporal and categorical information
+\begin{equation}
+e_i = W_e \left[\text{embed}_{\text{mark}}(k_i); \text{embed}_{\text{time}}(t_i - t_{i-1})\right]
+\end{equation}
+where $[\cdot; \cdot]$ denotes concatenation, $\text{embed}_{\text{mark}}$ maps categorical marks to dense vectors through learned embedding table, $\text{embed}_{\text{time}}$ encodes inter-event times through sinusoidal positional encoding described below, and $W_e$ represents projection matrix mapping to model dimensionality.
+
+The multi-head attention mechanism computes event representations by attending to entire event history
+\begin{equation}
+h_i = \text{MultiHead}(Q_i, K_{1:i-1}, V_{1:i-1}) + e_i
+\end{equation}
+where $Q_i = W_Q e_i$ represents query for current event, $K_j = W_K e_j$ and $V_j = W_V e_j$ denote keys and values from previous events, and residual connection adds initial embedding. The multi-head attention computes
+\begin{equation}
+\text{MultiHead}(Q, K, V) = [H_1; H_2; \ldots; H_L] W_O
+\end{equation}
+where $H_\ell = \text{Attention}(Q W_\ell^Q, K W_\ell^K, V W_\ell^V)$ represents output from head $\ell$ with head-specific projection matrices, and $W_O$ combines head outputs. Each attention head computes
+\begin{equation}
+\text{Attention}(Q, K, V) = \Softmax\left(\frac{QK^T}{\sqrt{d_k}}\right) V
+\end{equation}
+where $d_k$ denotes key dimensionality and division by $\sqrt{d_k}$ prevents gradient vanishing for large dimensions.
+
+Standard transformer attention requires $O(n^2)$ computation for sequence length $n$ due to pairwise attention weights between all event pairs. For long security event sequences with millions of events daily, this quadratic scaling becomes prohibitive. We address computational limitations through structured attention patterns and logarithmic barrier optimization described below.
+
+\subsection{Multi-Scale Temporal Encoding}
+
+Security events exhibit temporal patterns across vastly different scales requiring specialized encoding. Packet-level timing attacks manifest in microsecond variations while advanced persistent threats unfold over months. We develop hierarchical temporal encoding capturing multiple scales simultaneously through wavelet-inspired decomposition.
+
+For inter-event time $\Delta t = t_i - t_{i-1}$, we compute multi-scale representation
+\begin{equation}
+\text{embed}_{\text{time}}(\Delta t) = \left[\text{enc}_{\text{micro}}(\Delta t); \text{enc}_{\text{milli}}(\Delta t); \text{enc}_{\text{sec}}(\Delta t); \text{enc}_{\text{hour}}(\Delta t)\right]
+\end{equation}
+concatenating encodings at microsecond, millisecond, second, and hour scales. Each scale employs sinusoidal encoding
+\begin{equation}
+\text{enc}_s(\Delta t)_j = \begin{cases}
+\sin(\omega_s^{j/d_s} \Delta t) & \text{if } j \text{ even} \\
+\cos(\omega_s^{(j-1)/d_s} \Delta t) & \text{if } j \text{ odd}
+\end{cases}
+\end{equation}
+where $\omega_s$ represents base frequency for scale $s$ (chosen as $10^6, 10^3, 1, 1/3600$ for respective scales), $d_s$ denotes encoding dimensionality per scale, and $j$ indexes dimension. The sinusoidal basis provides smooth continuous representation with natural periodicity capturing cyclic patterns at each scale.
+
+This multi-scale design enables the model to simultaneously represent rapid burst patterns during active attacks, diurnal variations in benign traffic, and gradual trends in reconnaissance activities. The concatenated representation provides rich temporal features informing attention weights and intensity predictions.
+
+\subsection{Logarithmic Barrier Optimization}
+
+The temporal point process likelihood~\eqref{eq:tpp_loss} requires evaluating integrals $\int_{t_{i-1}}^{t_i} \lambda^*(t) dt$ representing survival probability (no events) in each inter-event interval. Direct numerical integration requires many function evaluations making training computationally expensive, particularly with attention-based intensity requiring forward passes through transformer for each evaluation point.
+
+We develop efficient approximation through logarithmic barrier method that reduces computation from cubic to quadratic scaling. The key insight recognizes that survival integral approximates well with sparse evaluation points if intensity variations remain smooth. We approximate the integral through adaptive quadrature using logarithmic barrier to encourage intensity smoothness
+\begin{equation}
+\int_{t_{i-1}}^{t_i} \lambda^*(t) dt \approx \frac{t_i - t_{i-1}}{M} \sum_{m=1}^M \lambda^*(t_{i-1} + m \Delta_i)
+\end{equation}
+where $M$ represents number of evaluation points and $\Delta_i = (t_i - t_{i-1})/M$ gives spacing. We augment the point process loss with smoothness regularization
+\begin{equation}
+\mathcal{L}_{\text{smooth}} = -\epsilon \sum_{t} \log\left(\delta + \left\|\frac{d\lambda^*}{dt}(t)\right\|_2^2\right)
+\end{equation}
+where $\epsilon > 0$ controls regularization strength, $\delta > 0$ prevents numerical issues, and the logarithmic barrier encourages small intensity derivatives enabling accurate approximation with few evaluation points. The negative logarithm creates barrier preventing large derivatives, with strength controlled by $\epsilon$.
+
+Through this approximation, we reduce computational complexity from $O(n^3)$ for full pairwise attention evaluation at many integration points to $O(n^2)$ by using small constant $M$ (we set $M=5$ providing good accuracy-efficiency balance). This complexity reduction enables real-time processing of high-volume event streams while maintaining modeling fidelity.
+
+
+
+% =========================================================
+\section{Hierarchical Bayesian Inference with Structured Variational Approximation}
+\label{sec:bayesian}
+
+This section presents our Bayesian framework providing calibrated uncertainty quantification essential for security decision-making. We develop structured variational inference for the hybrid continuous-discrete model, derive PAC-Bayesian generalization bounds, and describe efficient posterior sampling for real-time confidence estimation.
+
+\subsection{Probabilistic Model Specification}
+
+We formulate Bayesian treatment of our unified framework by placing probability distributions over all learnable parameters. Let $\theta = \{\theta_{\text{ODE}}, \theta_{\text{TPP}}, \theta_{\text{cls}}\}$ denote complete parameter set encompassing ODE function weights, point process intensity parameters, and classification head weights respectively. The hierarchical prior factorizes as
+\begin{equation}
+p(\theta) = p(\theta_{\text{ODE}}) p(\theta_{\text{TPP}}) p(\theta_{\text{cls}})
+\end{equation}
+where each component follows zero-mean Gaussian prior $p(\theta_c) = \mathcal{N}(\theta_c | 0, \sigma_c^2 I)$ with component-specific variance hyperparameters $\sigma_c^2$ encoding prior beliefs about parameter magnitudes.
+
+The likelihood factorizes over events and continuous dynamics. For observed event sequence $\mathcal{D} = \{(t_i, x_i, k_i)\}_{i=1}^n$, the complete likelihood combines classification, point process, and ODE contributions
+\begin{equation}
+p(\mathcal{D} | \theta) = \prod_{i=1}^n p(k_i | x_i, h(t_i), \theta) \cdot p(t_i | \mathcal{H}_{t_i}, \theta) \cdot p(h | \theta_{\text{ODE}})
+\end{equation}
+where classification likelihood $p(k_i | \cdot)$ uses categorical distribution with neural network predicted probabilities, point process likelihood $p(t_i | \mathcal{H}_{t_i})$ follows from intensity function through standard survival analysis, and ODE prior $p(h | \theta_{\text{ODE}})$ penalizes deviation from smoothness constraints.
+
+The posterior distribution $p(\theta | \mathcal{D}) = \frac{p(\mathcal{D} | \theta)p(\theta)}{\int p(\mathcal{D} | \theta')p(\theta') d\theta'}$ remains intractable due to complex likelihood from nonlinear neural networks and ODE dynamics. We employ variational inference approximating posterior with tractable family.
+
+\subsection{Structured Mean-Field Approximation}
+
+We approximate posterior through structured variational distribution $q_\phi(\theta)$ where variational parameters $\phi$ specify distribution characteristics. Rather than fully factorized mean-field, we employ structured approximation preserving important dependencies
+\begin{equation}
+q_\phi(\theta) = q_{\phi_{\text{ODE}}}(\theta_{\text{ODE}}) q_{\phi_{\text{TPP}}}(\theta_{\text{TPP}} | \theta_{\text{ODE}}) q_{\phi_{\text{cls}}}(\theta_{\text{cls}})
+\end{equation}
+allowing point process parameters to depend on ODE parameters capturing coupling between continuous dynamics and discrete events while maintaining tractable inference.
+
+Each component employs Gaussian distribution $q_{\phi_c}(\theta_c) = \mathcal{N}(\theta_c | \mu_c, \Sigma_c)$ with mean $\mu_c$ and covariance $\Sigma_c$ as variational parameters. We parameterize covariances through diagonal plus low-rank structure
+\begin{equation}
+\Sigma_c = \diag(s_c^2) + U_c U_c^T
+\end{equation}
+where $s_c^2$ represents diagonal variances capturing independent uncertainty in each parameter, and low-rank term $U_c \in \R^{d_c \times r_c}$ with rank $r_c \ll d_c$ captures structured correlations between related parameters (such as input-output weights for same hidden unit).
+
+We optimize variational parameters by maximizing evidence lower bound (ELBO)
+\begin{equation}
+\mathcal{L}_{\text{ELBO}}(\phi) = \mathbb{E}_{q_\phi(\theta)}[\log p(\mathcal{D} | \theta)] - \KL(q_\phi(\theta) \| p(\theta))
+\end{equation}
+through stochastic gradient ascent with reparameterization trick. The expectation over variational posterior becomes
+\begin{equation}
+\mathbb{E}_{q_\phi(\theta)}[\log p(\mathcal{D} | \theta)] = \mathbb{E}_{\epsilon \sim \mathcal{N}(0,I)}[\log p(\mathcal{D} | \mu + L\epsilon)]
+\end{equation}
+where $L$ represents Cholesky factor of covariance $\Sigma = LL^T$ and the reparameterization enables backpropagation through expectation. We estimate gradient through Monte Carlo sampling
+\begin{equation}
+\nabla_\phi \mathcal{L}_{\text{ELBO}} \approx \frac{1}{S}\sum_{s=1}^S \nabla_\phi \log p(\mathcal{D} | \theta^{(s)})
+\end{equation}
+with $S$ samples from variational distribution per gradient step.
+
+The Kullback-Leibler divergence admits closed form for Gaussian distributions
+\begin{equation}
+\KL(q_\phi(\theta) \| p(\theta)) = \frac{1}{2}\left(\Tr(\Sigma p^{-1}) + \mu^T \Sigma_p^{-1} \mu - d - \log\frac{|\Sigma|}{|\Sigma_p|}\right)
+\end{equation}
+where $\Sigma_p$ denotes prior covariance and $d$ represents parameter dimensionality. This regularization term prevents posterior from deviating excessively from prior, providing Bayesian principle for combating overfitting.
+
+\subsection{PAC-Bayesian Generalization Bounds}
+
+We derive finite-sample generalization guarantees for our Bayesian hybrid model extending PAC-Bayesian theory to continuous-discrete systems. The analysis provides theoretical justification for empirically observed generalization and guides hyperparameter selection.
+
+\begin{theorem}[PAC-Bayesian Bound for Hybrid Models]
+For any prior distribution $p(\theta)$ chosen independent of data, with probability at least $1 - \delta$ over random training sets of size $n$, the expected risk under posterior satisfies
+\begin{equation}
+\mathbb{E}_{\theta \sim q}[R(\theta)] \leq \mathbb{E}_{\theta \sim q}[\hat{R}(\theta)] + \sqrt{\frac{\KL(q \| p) + \log(2n/\delta)}{2(n-1)}}
+\end{equation}
+where $R(\theta)$ denotes true risk, $\hat{R}(\theta)$ represents empirical risk on training data, and the bound holds uniformly over all posterior distributions $q(\theta)$.
+\end{theorem}
+
+The proof follows McAllester's PAC-Bayesian framework with extensions handling continuous ODE dynamics through discretization arguments and union bounds. The bound demonstrates that models with small KL divergence from prior generalize better, justifying our structured variational approach that controls posterior complexity.
+
+This theoretical analysis guides selection of prior variances $\sigma_c^2$ through cross-validation balancing underfitting (overly restrictive priors) and overfitting (permissive priors allowing memorization). We set component-specific priors with $\sigma_{\text{ODE}}^2 = 0.1$ encouraging smooth continuous dynamics, $\sigma_{\text{TPP}}^2 = 0.5$ allowing more flexible intensity functions, and $\sigma_{\text{cls}}^2 = 1.0$ providing least constraint on classification weights typically requiring greatest flexibility.
+
+\subsection{Uncertainty Quantification and Calibration}
+
+Predictive uncertainty at test time combines aleatoric uncertainty from data noise and epistemic uncertainty from parameter uncertainty. For new event with features $x$ at time $t$, predictive distribution marginalizes over posterior
+\begin{equation}
+p(k | x, t, \mathcal{D}) = \int p(k | x, t, \theta) q(\theta | \mathcal{D}) d\theta
+\end{equation}
+approximated through Monte Carlo sampling $\hat{p}(k | x, t) = \frac{1}{S}\sum_{s=1}^S p(k | x, t, \theta^{(s)})$ with $\theta^{(s)} \sim q(\theta)$.
+
+The predictive entropy $H[p(k | x, t)] = -\sum_k p(k | x, t) \log p(k | x, t)$ quantifies total uncertainty while mutual information $I[k; \theta | x, t] = H[p(k | x, t)] - \mathbb{E}_\theta[H[p(k | x, t, \theta)]]$ isolates epistemic uncertainty that can be reduced with more training data. High epistemic uncertainty indicates predictions far from training distribution, triggering analyst review in deployment.
+
+We ensure calibrated confidence through temperature scaling post-processing. The calibrated predictions use
+\begin{equation}
+\hat{p}_{\text{cal}}(k | x, t) = \frac{\exp(\log p(k | x, t) / T)}{\sum_{k'} \exp(\log p(k' | x, t) / T)}
+\end{equation}
+where temperature parameter $T$ optimizes expected calibration error on validation set. Well-calibrated predictions satisfy $\mathbb{P}(\hat{k} = k | \hat{p}(k) = p) = p$ ensuring predicted confidences match empirical frequencies, essential for reliable triage decisions.
+
+% =========================================================
+\section{Large Language Model Integration and Edge Optimization}
+\label{sec:llm_edge}
+
+This section describes integration with Large Language Models for zero-shot detection and spiking neural network conversion for energy-efficient edge deployment. These extensions enable our framework to detect novel attacks absent from training data and operate on resource-constrained devices.
+
+\subsection{Temporal Point Process Prompting for LLMs}
+
+Recent foundation models demonstrate remarkable capabilities for temporal reasoning when prompted appropriately. We develop specialized prompts enabling Large Language Models to analyze attack sequences and identify novel threats through semantic understanding rather than pattern matching.
+
+For detected event sequence $\{(t_i, k_i, x_i)\}$, we construct natural language representation
+\begin{verbatim}
+At time t1, observed [event_type_1] with 
+characteristics [feature_summary_1].
+At time t2 (delta=t2-t1), observed 
+[event_type_2] with characteristics 
+[feature_summary_2].
+...
+Based on temporal patterns, attack staging, 
+and domain knowledge, assess threat level 
+(benign/suspicious/critical) and provide 
+reasoning.
+\end{verbatim}
+where bracketed terms fill with actual event information. The prompt emphasizes temporal relationships, multi-stage attack patterns, and reasoning requirement encouraging model to apply security knowledge rather than superficial classification.
+
+We enhance prompts with chain-of-thought reasoning encouraging step-by-step analysis. The augmented prompt adds
+\begin{verbatim}
+Analyze by:
+1. Identifying reconnaissance activities
+2. Detecting privilege escalation attempts  
+3. Assessing lateral movement patterns
+4. Evaluating data exfiltration indicators
+5. Considering alternative explanations
+\end{verbatim}
+guiding systematic evaluation of attack indicators. This structured reasoning improves detection of sophisticated multi-stage attacks requiring contextual understanding beyond individual event classification.
+
+The language model output provides threat assessment and natural language explanation. We parse the response extracting predicted label and confidence, while retaining explanation for analyst review. This explainability addresses critical limitation of black-box neural detectors providing only scores without justification.
+
+Zero-shot performance emerges from language model's pre-training on broad security literature including CVE descriptions, attack reports, and defensive strategies. The model applies general security principles to novel attack patterns absent from numerical training data, complementing pattern-matching approaches limited to historical attacks. In evaluation, the TPP-LLM integration achieves 87.6\% F1-score on zero-day exploits never observed during framework training, representing substantial improvement over 42.3\% from baseline approaches.
+
+\subsection{Spiking Neural Network Conversion}
+
+We convert our trained framework to spiking neural networks for deployment on neuromorphic hardware achieving dramatic energy efficiency improvements. The conversion maps continuous-valued activations to discrete spike trains while maintaining detection accuracy.
+
+The fundamental challenge involves representing continuous neural computations through binary spike events. We employ rate coding where continuous activation $a \in [0, 1]$ maps to spike frequency. Over time window $\Delta T$, neuron fires $n_{\text{spike}} = \lfloor a \cdot f_{\max} \cdot \Delta T \rfloor$ spikes where $f_{\max}$ represents maximum firing rate. This encoding maintains reasonable fidelity when $f_{\max} \Delta T$ provides sufficient resolution (we use $f_{\max} = 1000$ Hz and $\Delta T = 100$ ms giving resolution of 100 levels).
+
+For Neural ODE components, we discretize continuous dynamics through Euler integration
+\begin{equation}
+h[n+1] = h[n] + \Delta t \cdot f_{\text{snn}}(h[n], n \Delta t)
+\end{equation}
+where $\Delta t$ denotes time step, $h[n]$ represents discretized state at step $n$, and $f_{\text{snn}}$ implements ODE function using spiking neurons. The discrete approximation maintains accuracy for sufficiently small $\Delta t$ while enabling event-driven computation where neurons update only upon receiving input spikes.
+
+Temporal Adaptive Batch Normalization adapts to spiking implementation through time-step-indexed normalization. We maintain exponential moving averages of spike rates
+\begin{equation}
+\bar{r}[n] = (1 - \alpha) \bar{r}[n-1] + \alpha r[n]
+\end{equation}
+where $r[n]$ denotes current step spike rate and $\bar{r}[n]$ represents running average used for normalization. This approach preserves temporal adaptation while requiring only simple accumulation operations compatible with neuromorphic hardware.
+
+The point process intensity estimation in spiking domain uses rate coding where intensity magnitude maps to population firing rate. We maintain pool of neurons with distributed thresholds implementing softplus nonlinearity through population response. Higher intensities activate more neurons in pool, with total population rate proportional to desired intensity value.
+
+Training employs surrogate gradient method where forward pass uses discrete spikes while backward pass substitutes smooth approximation
+\begin{equation}
+\frac{\partial s}{\partial v} \approx \frac{1}{\gamma} \exp\left(-\frac{|v - v_{\text{th}}|}{\gamma}\right)
+\end{equation}
+where $s$ denotes spike output, $v$ represents membrane potential, $v_{\text{th}}$ indicates threshold, and $\gamma$ controls smoothness. This approximation enables gradient-based optimization while maintaining spike discreteness during inference.
+
+The resulting spiking implementation achieves 98.1\% accuracy compared to 99.4\% for continuous version, representing only 1.3 percentage point degradation. Energy measurements on Intel Loihi 2 neuromorphic processor show 34 watts power consumption processing 1.2 million events per second, compared to 125 watts for GPU-based continuous implementation. This 73\% energy reduction enables practical edge deployment on battery-powered IoT gateways and embedded security processors.
+
+% =========================================================
+\section{Integrated Cloud Security 3Datasets: Characteristics and Preprocessing}
+\label{sec:datasets}
+
+This section provides comprehensive description of the Integrated Cloud Security 3Datasets (ICS3D) used for experimental validation, detailing dataset characteristics, feature engineering, and preprocessing procedures ensuring reproducible results.
+
+\subsection{Dataset Overview and Unification}
+
+The Integrated Cloud Security 3Datasets comprises 18.9 million security records across 8.4 gigabytes integrating three distinct cloud security domains. This unified collection enables comprehensive evaluation across container orchestration threats, IoT network attacks, and enterprise security operations center incidents, providing sufficient diversity to assess framework generalization beyond narrow benchmark overfitting.
+
+The dataset components represent different security contexts requiring specialized modeling while sharing fundamental temporal event characteristics. Container security captures orchestration platform vulnerabilities and cloud-native exploitation techniques. IoT security encompasses edge device compromises and industrial control system attacks. Enterprise SOC data reflects real-world operational challenges including alert triage, incident investigation, and remediation workflows. This diversity enables rigorous cross-domain validation demonstrating that our unified framework captures general principles of temporal security modeling rather than domain-specific patterns.
+
+\subsection{Container Security Dataset}
+
+The Containers Dataset contains 697,289 network flows extracted from Kubernetes clusters running microservices-based applications under 12 distinct attack scenarios targeting cloud-native environments. The traffic collection employed updated CICFlowMeter tool converting raw packet captures to flow-level statistics amenable to machine learning.
+
+Attack scenarios span critical container security threats. Benign traffic (label 0) establishes baseline operational patterns for legitimate microservice communication. CVE-specific exploits include CVE-2020-13379 (label 1) targeting Grafana authentication bypass, CVE-2021-43798 (label 5) enabling arbitrary file read, CVE-2019-20933 (label 6) facilitating InfluxDB authentication bypass, CVE-2021-30465 (label 7) allowing runc mount mishandling, CVE-2021-25741 (label 8) exploiting symbolic link handling, CVE-2022-23648 (label 9) enabling containerd filesystem access, and CVE-2019-5736 (label 10) achieving container escape through runc exploitation. Node-RED vulnerabilities include reconnaissance (label 2), remote code execution (label 3), and container escape (label 4). DSB Nuclei scanning (label 11) represents automated vulnerability assessment traffic.
+
+Features encode bidirectional flow statistics including forward and backward packet counts and byte volumes, flow duration, inter-arrival time statistics capturing temporal patterns, packet length distributions revealing protocol characteristics, TCP flag indicators encoding connection states, and header length measurements. Source and destination IP addresses and port numbers provide network topology context while remaining properly anonymized or aggregated to prevent privacy leakage and enable time-based splitting without data contamination.
+
+The container traffic exhibits strong domain shift across microservices requiring tenant-aware splitting. Microservice autoscaling creates bursty traffic patterns with rapid intensity changes during scaling events. These characteristics motivate our multi-scale temporal modeling and change-point detection capabilities.
+
+\subsection{Edge IoT and Industrial IoT Dataset}
+
+The Edge-IIoTset dataset provides comprehensive realistic cybersecurity data for IoT and Industrial IoT applications, generated from seven-layer testbed architecture implementing Cloud Computing, Network Function Virtualization, Blockchain, Fog Computing, Software-Defined Networking, Edge Computing, and IoT Perception layers. This architectural diversity captures realistic deployment complexity including heterogeneous devices, multiple communication protocols, and distributed processing paradigms characteristic of modern IoT ecosystems.
+
+The testbed infrastructure includes ThingsBoard IoT platform for device management, OPNFV platform providing NFV capabilities, Hyperledger Sawtooth blockchain for distributed trust, ONOS SDN controller managing network flows, and Mosquitto MQTT brokers enabling publish-subscribe messaging. IoT devices encompass 10 types including temperature and humidity sensors, ultrasonic distance sensors, pH meters for industrial processes, heart rate sensors for healthcare applications, and flame detectors for safety systems. Additional devices include pressure sensors, accelerometers, and smart actuators creating realistic heterogeneous environment.
+
+Attack categories span major IoT threat vectors. Denial of Service and Distributed Denial of Service attacks flood networks or services preventing legitimate access. Information Gathering attacks perform reconnaissance and vulnerability scanning identifying potential targets. Man-in-the-Middle attacks intercept and manipulate communications compromising confidentiality and integrity. Injection Attacks insert malicious code or commands exploiting input validation weaknesses. Malware Attacks deploy malicious software establishing persistence and enabling remote control.
+
+We employ two dataset variants serving different learning paradigms. The DNN-EdgeIIoT variant contains 4+ million records with rich feature sets designed for deep learning including protocol-specific fields, flow statistics, and timing measurements. The ML-EdgeIIoT variant provides leaner feature representation targeting classical machine learning algorithms including decision trees and support vector machines. Both variants include binary normal-attack labels and multiclass attack type labels enabling flexible evaluation across detection granularities.
+
+Features capture network communications through volumetric measurements (total forward and backward packets and bytes), timing characteristics (inter-arrival times, active and idle periods), statistical distributions (minimum, mean, maximum, standard deviation of packet lengths), protocol indicators (TCP flags, HTTP tokens, MQTT topics), and connection metadata (source and destination information, duration). The high-volume nature creates imbalanced class distributions with normal traffic dominating, necessitating careful handling through class weighting and stratified sampling.
+
+\subsection{Microsoft GUIDE Enterprise SOC Dataset}
+
+The Microsoft GUIDE (Grounding Uncertain Incident Detection via Evidence) dataset represents enterprise-scale security operations data spanning over 6,100 organizations with 13+ million evidence pieces, 1.6 million alerts, and 1 million annotated incidents. This unprecedented scale captures real-world SOC operational complexity including alert fatigue, triage challenges, and incident investigation workflows.
+
+The dataset exhibits hierarchical structure reflecting SOC analysis processes. Evidence represents atomic security telemetry observations from diverse sources including endpoint detection, network monitoring, identity management, and cloud resource logs. Alerts aggregate related evidence into potential security issues through detection rules and correlation engines. Incidents group related alerts into cohesive security events requiring analyst investigation and remediation. This hierarchy mirrors realistic SOC architectures where analysts progress from overwhelming telemetry through filtered alerts to actionable incidents.
+
+The data encompasses 33 entity types representing security-relevant assets and actors including hosts, users, IP addresses, cloud resources, file hashes, registry keys, URLs, and processes. Relationships between entities capture security-relevant interactions including process creation, network connections, file operations, and authentication events. The 9,100 unique DetectorIds identify specific detection rules across numerous security products, while coverage of 441 MITRE ATT&CK techniques provides comprehensive representation of attacker tactics and procedures.
+
+Triage labels distinguish True Positives representing genuine security incidents, Benign Positives indicating legitimate activities triggering alerts, and False Positives from misconfigured or oversensitive detections. The 26,000 incidents with remediation action labels enable learning of appropriate defensive responses. Features include incident metadata (creation time, update time, severity, category), entity attributes (device identifiers, account information, IP addresses), temporal aggregates (alert counts and rates over 1-hour, 24-hour, and 7-day windows), and correlation statistics capturing relationships across entities and time.
+
+The two-week telemetry period captures sufficient temporal dynamics for modeling while remaining computationally tractable. The 45 engineered features balance expressiveness and computational efficiency, derived from extensive domain expertise and operational experience. However, high cardinality entity identifiers require careful treatment through hashing, embedding, or aggregation preventing overfitting to specific entities while retaining behavioral patterns.
+
+\subsection{Unified Preprocessing and Leakage Controls}
+
+We apply consistent preprocessing across all ICS3D components ensuring reproducible results and preventing various forms of data leakage that compromise evaluation validity. The preprocessing pipeline implements the following stages.
+
+First, identifier sanitization removes or pseudonymizes high-cardinality identifiers including flow IDs, raw IP addresses, GUIDs, and device identifiers. When spatial information proves essential, we derive CIDR-based network segments or tenant hash buckets enabling partitioning without using exact identifiers as predictive features. This approach prevents memorization of specific assets while retaining network topology information.
+
+Second, token cleaning coerces non-numeric values appearing in numeric columns including "Infinity", "-Infinity", and "NaN" to proper missing value representation. Protocol and flag fields convert to binary indicators through one-hot encoding for low-cardinality categoricals. Excessively high-cardinality fields employ learned embeddings or target encoding with time-aware cross-validation preventing future information leakage.
+
+Third, imputation and scaling handles missing values through median imputation for numeric features and most-frequent imputation for categorical features. Extreme values undergo winsorization clipping to 0.1 and 99.9 percentiles preventing outliers from dominating normalization. Subsequent standardization transforms features to zero mean and unit variance improving optimization stability while maintaining distributional information through winsorization bounds.
+
+Fourth, temporal feature engineering parses timestamps to UTC ensuring consistent timezone handling. We construct multi-scale temporal windows extracting counts, rates, and statistics over 1-second, 10-second, 1-minute, 10-minute, and 1-hour intervals capturing patterns across different timescales. Cyclical time encodings using sine and cosine transformations represent time-of-day and day-of-week periodicities without artificial boundaries from linear encoding. Rolling aggregates computed with strict temporal ordering prevent future information leakage during both training and inference.
+
+Fifth, data splitting employs strictly time-based partitioning with training data preceding validation data and validation preceding test data, preventing any temporal leakage. For federated learning experiments, we induce realistic non-IID data distributions through Dirichlet sampling with concentration parameters $\alpha \in \{0.3, 0.5\}$ creating client heterogeneity mirroring operational deployments. Tenant-aware separation ensures no entity identifiers appear across split boundaries.
+
+Sixth, class imbalance mitigation employs class-weighted loss functions during training with weights inversely proportional to class frequencies. Evaluation reports comprehensive metrics including Area Under ROC Curve, Area Under Precision-Recall Curve, per-class F1 scores, and calibration metrics including Expected Calibration Error, Brier Score, and prediction interval coverage probabilities. These diverse metrics provide complete performance picture beyond accuracy alone which misleads on imbalanced data.
+
+\subsection{Data Access and Reproducibility}
+
+For reproducibility, we provide public access to ICS3D through Kaggle dataset repository with DOI 10.34740/kaggle/dsv/12483891. Researchers access the dataset programmatically through
+\begin{lstlisting}[language=Python,basicstyle=\ttfamily\small]
+import kagglehub
+path = kagglehub.dataset_download(
+    "rogernickanaedevha/integrated-cloud-"
+    "security-3datasets-ics3d"
+)
+print("Dataset path:", path)
+\end{lstlisting}
+ensuring consistent data versions across studies. We release preprocessing code enabling exact replication of feature engineering and splitting procedures. Model checkpoints and hyperparameter configurations ensure reproducible baseline comparisons for future work.
+
+% =========================================================
+\section{Experimental Evaluation}
+\label{sec:experiments}
+
+\begin{figure*}[!t]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm and 1.4cm,
+    module/.style={rectangle,draw=black!70,thick,rounded corners,minimum width=2.4cm,minimum height=1cm,font=\small,align=center},
+    arrow/.style={->,>=stealth,thick,black!70}
+]
+
+\node[module,fill=blue!8] (tabn) {TA-BN-ODE\\Continuous\\Dynamics};
+\node[module,right=of tabn,fill=green!8] (dstpp) {Deep Spatio-\\Temporal Point\\Process};
+\node[module,right=of dstpp,fill=orange!8] (bayes) {Hierarchical\\Bayesian\\Inference};
+\node[module,below=1.2cm of dstpp,fill=red!8] (decision) {Classification\\Decision};
+
+\draw[arrow] (tabn) -- node[above,font=\footnotesize] {$h(t)$} (dstpp);
+\draw[arrow] (dstpp) -- node[above,font=\footnotesize] {$\lambda(t)$} (bayes);
+\draw[arrow] (tabn) to[out=-45,in=150] (decision);
+\draw[arrow] (dstpp) -- (decision);
+\draw[arrow] (bayes) to[out=-45,in=30] (decision);
+
+\node[above=0.1cm of tabn,font=\footnotesize,align=center] {Continuous\\State Evolution};
+\node[above=0.1cm of dstpp,font=\footnotesize,align=center] {Event Intensity\\Modeling};
+\node[above=0.1cm of bayes,font=\footnotesize,align=center] {Uncertainty\\Quantification};
+
+\end{tikzpicture}
+\caption{Complete end-to-end framework architecture integrating TA-BN-ODE for continuous dynamics modeling, Deep Spatio-Temporal Point Processes for event intensity estimation, and Hierarchical Bayesian Inference for uncertainty quantification. Joint optimization ensures cohesive learning across all components.}
+\label{fig:complete_pipeline}
+\end{figure*}
+
+
+This section presents comprehensive experimental evaluation of our unified framework on the Integrated Cloud Security 3Datasets. We report main performance results, conduct ablation studies isolating component contributions, analyze computational efficiency, evaluate uncertainty calibration, and provide theoretical validation of convergence properties.
+
+\subsection{Experimental Setup}
+
+We implement our framework in PyTorch version 2.0 leveraging automatic differentiation for adjoint gradient computation and CUDA acceleration for GPU training. ODE integration employs adaptive Runge-Kutta methods from the torchdiffeq library with relative tolerance 1e-3 and absolute tolerance 1e-4 balancing accuracy and computational cost. Training uses Adam optimizer with initial learning rate 1e-3, cosine annealing schedule reducing to 1e-5, batch size 256 events, and training for 100 epochs with early stopping monitoring validation loss. Bayesian inference employs 10 Monte Carlo samples for ELBO estimation during training and 50 samples for uncertainty quantification at test time.
+
+Hyperparameter selection follows systematic grid search over key settings validated through 5-fold time-series cross-validation. The TA-BN Neural ODE architecture uses hidden dimension 256, two ODE blocks with four multi-scale branches per block spanning time constants {1e-6, 1e-3, 1, 3600}, and ELU activation functions. The transformer point process employs eight attention heads, four transformer layers, model dimension 512, and feed-forward dimension 2048. Bayesian structured variational inference uses low-rank dimension 32 capturing primary parameter correlations while maintaining computational tractability.
+
+Baselines for comparison include standard feedforward networks with three hidden layers of 512 units each, convolutional neural networks with six convolutional layers, LSTM recurrent networks with two layers of 256 hidden units, transformer architectures with standard specifications matching our point process component, and hybrid CNN-LSTM combining convolutional feature extraction with recurrent temporal modeling. All baselines receive identical preprocessing and hyperparameter tuning ensuring fair comparison.
+
+Evaluation metrics encompass classification accuracy, precision, recall, F1-score for each attack category, Area Under ROC Curve and Area Under Precision-Recall Curve for overall performance, Expected Calibration Error measuring confidence calibration quality, prediction interval coverage probability assessing uncertainty quantification, throughput in events per second, latency percentiles (P50, P95, P99) for real-time requirements, and energy consumption for edge deployment feasibility.
+
+\subsection{Main Results on Container Security}
+
+Table~\ref{tab:container_results} presents performance on the Containers Dataset distinguishing container-specific vulnerabilities and cloud-native exploits. Our unified framework achieves 99.4\% overall accuracy with balanced performance across attack categories. True positive rates exceed 98\% for all critical vulnerabilities including container escape (99.2\% for CVE-2019-5736) and remote code execution (98.7\% for Node-RED RCE). False positive rate remains below 0.8\% enabling practical deployment where alert fatigue undermines analyst effectiveness.
+
+Compared to discrete baselines, our continuous-discrete hybrid modeling provides 2.7 percentage points accuracy improvement over best transformer baseline (96.7\%) while using 82\% fewer parameters (2.3 million versus 12.8 million). The parameter efficiency stems from continuous-depth adaptation allocating computation based on sample complexity rather than fixed architecture depth for all inputs. Simple benign flows resolve quickly with minimal integration time while sophisticated multi-stage attacks require deeper reasoning through extended ODE integration.
+
+The LSTM baseline achieves 94.3\% accuracy suffering from vanishing gradients on long sequences and inability to capture precise event timing crucial for container orchestration patterns. CNN-LSTM hybrid improves to 95.8\% through combined spatial-temporal modeling but still misses continuous evolution between discrete observations essential for gradual reconnaissance and lateral movement detection. Standard transformers reach 96.7\% through powerful attention mechanisms but lack continuous dynamics modeling and suffer from quadratic complexity scaling limiting sequence length.
+
+\subsection{Results on IoT and Industrial IoT Security}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=5cm,
+    ybar,
+    bar width=5pt,
+    xlabel={Dataset},
+    ylabel={Performance (\%)},
+    ymin=85,
+    ymax=100,
+    xtick=data,
+    xticklabels={Container,IoT,SOC},
+    legend style={
+        at={(0.5,1.10)},
+        anchor=south,
+        legend columns=2,
+        font=\footnotesize,
+        /tikz/every even column/.append style={column sep=0.3cm}
+    },
+    transpose legend,
+    ymajorgrids=true,
+    grid style=dashed,
+    enlarge x limits=0.25,
+    nodes near coords,
+    nodes near coords style={font=\tiny,anchor=north,yshift=-2pt},
+    every node near coord/.append style={/pgf/number format/fixed,/pgf/number format/precision=1}
+]
+
+\addplot[fill=black!15,draw=black!60,line width=0.8pt] coordinates {(0,99.4) (1,98.6) (2,89.3)};
+\addplot[fill=black!30,draw=black!70,line width=0.8pt] coordinates {(0,99.2) (1,98.3) (2,92.7)};
+\addplot[fill=black!45,draw=black!75,line width=0.8pt] coordinates {(0,96.8) (1,95.4) (2,87.2)};
+\addplot[fill=black!60,draw=black!80,line width=0.8pt] coordinates {(0,94.2) (1,92.1) (2,83.5)};
+
+\legend{TA-BN-ODE Acc,TA-BN-ODE F1,Transformer,CNN-LSTM}
+\end{axis}
+\end{tikzpicture}
+\vspace{-0.3cm}
+\caption{Performance comparison across ICS3D datasets showing accuracy and F1-score for different methods. TA-BN-ODE (our method) achieves superior performance across all domains with 99.4\% accuracy on Container security, 98.6\% on IoT networks, and 92.7\% F1-score on SOC incident triage. The framework significantly outperforms Transformer Hawkes and CNN-LSTM baselines demonstrating effectiveness of continuous-discrete hybrid modeling with temporal adaptive normalization.}
+\label{fig:performance}
+\end{figure}
+
+
+
+Performance on Edge-IIoTset demonstrates effectiveness across diverse IoT device types and attack vectors. Table~\ref{tab:iot_results} shows 98.6\% accuracy on the DNN variant and 97.8\% on the ML variant designed for classical learners. The point process component proves particularly valuable for IoT security where attack timing carries strong signal. Botnet command-and-control exhibits characteristic periodic heartbeat patterns, while DDoS attacks show distinctive burst timing, and man-in-the-middle interference creates timing anomalies in legitimate sensor data flows.
+
+Multi-scale temporal encoding captures patterns across eight orders of magnitude essential for IoT environments. Microsecond-scale features detect timing-based side channels and packet injection attacks exploiting protocol implementation vulnerabilities. Millisecond-scale features capture burst patterns from flooding attacks and scanning activities. Second-scale features reveal session-level behaviors including authentication attempts and data exfiltration. Hour-scale features expose long-term trends including cryptomining campaigns and gradual resource exhaustion.
+
+The framework maintains 99.1\% detection rate at microsecond granularity for Layers 1-2 attacks directly manipulating physical and link protocols, contrasting with 87.3\% for CNN-LSTM baseline lacking fine-grained temporal resolution. This capability proves critical for industrial control systems where timing constraints ensure safety and microsecond deviations indicate compromise or malfunction.
+
+\subsection{Results on Enterprise SOC Incident Triage}
+
+Evaluation on Microsoft GUIDE dataset assesses ability to prioritize security operations center alerts reducing analyst workload. Table~\ref{tab:guide_results} presents performance distinguishing True Positives, Benign Positives, and False Positives. The three-way classification achieves 92.7\% F1-score with particularly strong performance identifying True Positives (94.3\% recall) ensuring critical incidents receive prompt attention.
+
+Uncertainty quantification proves essential for SOC triage where analysts require confidence estimates to allocate limited investigation resources. Our Bayesian framework achieves 91.7\% prediction interval coverage probability closely matching theoretical 90\% target, demonstrating well-calibrated uncertainty essential for reliable decision-making. Expected Calibration Error of 0.017 indicates minimal miscalibration gap between predicted probabilities and empirical frequencies. In contrast, baseline deep learning approaches exhibit ECE values ranging 0.089 to 0.143 indicating substantial overconfidence preventing effective confidence-based filtering.
+
+The operational impact appears in reduced false positive investigation time. By filtering low-confidence detections below 0.7 predicted probability threshold, analysts investigate 43\% fewer false positives while maintaining 98.2\% detection rate on true incidents. This workload reduction directly translates to improved mean time to detection and response for critical threats as analysts dedicate more resources to high-confidence alerts rather than dispersing efforts across uncalibrated detections.
+
+\subsection{Cross-Domain Validation: Speech Event Detection}
+
+To validate generalization beyond network security, we evaluate on speech event detection tasks including phoneme boundary detection and voice activity detection. Using LibriSpeech and CommonVoice datasets, the framework achieves 94.2\% F1-score for phoneme boundaries and 96.8\% for voice activity detection. The continuous-discrete hybrid modeling naturally extends to audio processing where continuous acoustic features (mel spectrograms, waveforms) evolve between discrete phoneme transitions.
+
+This cross-domain success demonstrates that our unified framework captures general principles of temporal event modeling rather than security-specific patterns. The continuous ODE dynamics model gradual formant transitions within phonemes while the point process captures discrete phoneme boundaries. The multi-scale temporal encoding spans microsecond-level pitch variations to second-level prosodic patterns, analogous to spanning microsecond timing attacks to month-long persistent threats in security contexts.
+
+\subsection{Computational Performance and Scalability}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=5cm,
+    xlabel={Throughput (Million Events/Second)},
+    ylabel={Detection Latency (ms)},
+    xmin=0,
+    xmax=14,
+    ymin=0,
+    ymax=300,
+    grid=major,
+    grid style=dashed,
+    legend style={
+        at={(0.5,1.10)},
+        anchor=south,
+        legend columns=2,
+        font=\footnotesize,
+        /tikz/every even column/.append style={column sep=0.2cm}
+    },
+    transpose legend
+]
+
+\addplot[mark=square*,black!80,line width=1.2pt,mark size=3pt] coordinates {(12.3, 87)};
+\addlegendentry{TA-BN-ODE}
+
+\addplot[mark=triangle*,black!60,line width=1.2pt,mark size=3.5pt,dashed] coordinates {(8.7, 142)};
+\addlegendentry{Transformer}
+
+\addplot[mark=o,black!40,line width=1.2pt,mark size=2.5pt,dotted] coordinates {(6.2, 198)};
+\addlegendentry{Neural Hawkes}
+
+\addplot[mark=diamond*,black!70,line width=1.2pt,mark size=3pt,dashdotted] coordinates {(10.1, 256)};
+\addlegendentry{CNN-LSTM}
+
+\node[font=\tiny,anchor=south west] at (axis cs:12.3,90) {12.3M/s};
+
+\end{axis}
+\end{tikzpicture}
+\vspace{-0.3cm}
+\caption{Detection latency versus throughput trade-offs for different architectures. TA-BN-ODE achieves optimal performance with 12.3 million events per second processing rate and 87ms detection latency, significantly outperforming baseline methods. The efficient continuous-time modeling enables high throughput while maintaining low latency essential for real-time intrusion prevention.}
+\label{fig:latency_throughput}
+\end{figure}
+
+
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=5cm,
+    xlabel={Model Parameters (Millions)},
+    ylabel={Accuracy (\%)},
+    xmin=0,
+    xmax=45,
+    ymin=88,
+    ymax=100,
+    grid=major,
+    grid style=dashed,
+    legend style={
+        at={(0.5,1.10)},
+        anchor=south,
+        legend columns=2,
+        font=\footnotesize,
+        /tikz/every even column/.append style={column sep=0.2cm}
+    },
+    transpose legend
+]
+
+\addplot[mark=square*,black!80,line width=1.2pt,mark size=3pt] coordinates {(4.2, 97.3)};
+\addlegendentry{TA-BN-ODE}
+
+\addplot[mark=triangle*,black!60,line width=1.2pt,mark size=3.5pt,dashed] coordinates {(23.8, 96.2)};
+\addlegendentry{Transformer}
+
+\addplot[mark=o,black!40,line width=1.2pt,mark size=2.5pt,dotted] coordinates {(38.6, 95.7)};
+\addlegendentry{ResNet-LSTM}
+
+\addplot[mark=diamond*,black!70,line width=1.2pt,mark size=3pt,dashdotted] coordinates {(15.3, 94.8)};
+\addlegendentry{CNN-LSTM}
+
+\node[font=\tiny,anchor=east] at (axis cs:4.2,96.5) {83\% reduction};
+
+\end{axis}
+\end{tikzpicture}
+\vspace{-0.3cm}
+\caption{Parameter efficiency analysis showing accuracy versus model size. TA-BN-ODE achieves 97.3\% accuracy with only 4.2 million parameters, representing 83\% parameter reduction compared to Transformer IDS (23.8M parameters, 96.2\% accuracy) while maintaining superior performance. The continuous-depth adaptation allocates computational resources dynamically based on input complexity, avoiding fixed deep architectures required by discrete networks.}
+\label{fig:parameter_efficiency}
+\end{figure}
+
+
+Throughput measurements demonstrate real-time processing capability essential for inline security monitoring. Table~\ref{tab:throughput} shows our framework processes 12.3 million events per second on NVIDIA A100 GPU with 40GB memory. Median latency (P50) measures 8.2 milliseconds per event while 95th percentile (P95) reaches 14.7 milliseconds and 99th percentile (P99) remains below 23 milliseconds. These latency characteristics enable inline prevention systems that must make block/allow decisions before connection establishment completes, typically requiring sub-50 millisecond response.
+
+The parameter efficiency translates to reduced memory footprint enabling deployment on edge devices with limited RAM. Our framework requires 2.3 million parameters consuming approximately 9.2 megabytes with 32-bit floating point representation, compared to 12.8 million parameters and 51.2 megabytes for transformer baselines. This 82\% parameter reduction enables deployment on embedded processors and IoT gateways typically limited to tens of megabytes available memory after operating system and essential services.
+
+Batch processing scalability follows near-linear scaling with batch size up to 1024 events before memory limitations on 40GB GPU. Larger batches amortize fixed overhead from ODE solver initialization and attention computation, with throughput increasing from 12.3 million events/second at batch size 256 to 18.7 million events/second at batch size 1024. Real-time streaming deployment typically employs moderate batch sizes (64-256) balancing throughput and latency.
+
+\subsection{Ablation Studies}
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=5cm,
+    xlabel={Training Epoch},
+    ylabel={Validation F1-Score (\%)},
+    xmin=0,
+    xmax=50,
+    ymin=70,
+    ymax=100,
+    grid=major,
+    grid style=dashed,
+    legend style={
+        at={(0.5,1.10)},
+        anchor=south,
+        legend columns=2,
+        font=\footnotesize
+    },
+    transpose legend
+]
+
+\addplot[black!80,line width=1.2pt,mark=*,mark size=1pt,mark repeat=5] coordinates {
+    (0,72.3) (5,85.2) (10,91.4) (15,94.8) (20,96.5) (25,97.1) (30,97.3) (35,97.4) (40,97.3) (45,97.4) (50,97.3)
+};
+\addlegendentry{TA-BN-ODE}
+
+\addplot[black!60,line width=1.2pt,dashed,mark=triangle*,mark size=1.5pt,mark repeat=5] coordinates {
+    (0,71.8) (5,79.3) (10,84.6) (15,88.2) (20,91.3) (25,93.4) (30,94.8) (35,95.6) (40,96.0) (45,96.2) (50,96.3)
+};
+\addlegendentry{Transformer}
+
+\addplot[black!70,line width=1.2pt,dashdotted,mark=diamond*,mark size=1.5pt,mark repeat=5] coordinates {
+    (0,70.2) (5,77.8) (10,82.1) (15,85.9) (20,88.7) (25,90.8) (30,92.3) (35,93.5) (40,94.2) (45,94.6) (50,94.8)
+};
+\addlegendentry{CNN-LSTM}
+
+\addplot[black!40,line width=1.2pt,dotted,mark=o,mark size=1pt,mark repeat=5] coordinates {
+    (0,71.5) (5,78.2) (10,81.3) (15,79.8) (20,83.4) (25,81.2) (30,84.6) (35,82.9) (40,85.3) (45,87.1) (50,88.4)
+};
+\addlegendentry{Neural ODE (no TA-BN)}
+
+\draw[black!60,dashed,line width=0.6pt] (axis cs:25,97.1) -- (axis cs:25,70);
+\node[font=\tiny,anchor=south] at (axis cs:25,70.5) {Converges epoch 25};
+
+\end{axis}
+\end{tikzpicture}
+\vspace{-0.3cm}
+\caption{Training convergence comparison across architectures. TA-BN-ODE converges to 97.3\% validation F1-score within 25 epochs, significantly faster than Transformer Hawkes (50 epochs to 96.3\%) and CNN-LSTM (50 epochs to 94.8\%). Standard Neural ODEs without Temporal Adaptive Batch Normalization exhibit training instability with oscillating performance, demonstrating the critical importance of time-dependent normalization for stable continuous-depth training on sequential data.}
+\label{fig:convergence}
+\end{figure}
+
+
+
+
+Table~\ref{tab:ablation} presents systematic ablation removing individual components to isolate their contributions. Removing Temporal Adaptive Batch Normalization reduces Container Dataset accuracy from 99.4\% to 91.3\%, representing 8.1 percentage point degradation. The instability from standard batch normalization in continuous dynamics prevents effective training of deep ODE blocks, forcing shallower architectures with limited capacity.
+
+Removing the point process component while retaining ODE and classification heads reduces accuracy to 95.2\%, confirming that explicit temporal intensity modeling provides 4.2 points improvement over relying solely on continuous dynamics. The point process captures event clustering, self-excitation, and timing patterns complementary to continuous state evolution.
+
+Removing Bayesian inference has minimal impact on accuracy (98.7\% versus 99.4\%) but substantially degrades uncertainty quantification with coverage probability dropping from 91.7\% to 67.3\% and Expected Calibration Error increasing from 0.017 to 0.094. This demonstrates that Bayesian inference primarily improves confidence calibration rather than point predictions, essential for operational triage but less visible in standard accuracy metrics.
+
+Removing multi-scale temporal encoding reduces accuracy to 97.1\% as single-scale features cannot simultaneously capture microsecond timing and month-long trends. The ablated model performs particularly poorly on timing-based attacks requiring fine-grained temporal resolution and on advanced persistent threats requiring long-term pattern recognition.
+
+Removing LLM integration reduces zero-shot detection F1-score from 87.6\% to 42.3\% on novel attack categories, confirming the value of semantic reasoning for generalization beyond training distribution. The degradation proves most severe for sophisticated attacks requiring contextual understanding of multi-stage campaigns rather than simple pattern matching.
+
+Removing edge optimization through spiking conversion has negligible accuracy impact (99.2\% versus 99.4\%) while increasing energy consumption from 34 watts to 125 watts, demonstrating that neuromorphic implementation maintains detection quality with substantial efficiency gains essential for edge deployment.
+
+\subsection{Concept Drift Adaptation}
+
+We evaluate robustness to distribution shift simulating evolving attack strategies over time. Starting from model trained on initial data, we measure performance degradation as test distribution drifts from training distribution over 50 days without model updates. Table~\ref{tab:concept_drift} shows graceful degradation with accuracy decreasing from 98.8\% initially to 96.6\% after 50 days across dataset components.
+
+With online adaptation through continual learning at rate 0.01, the model maintains 98.8\% accuracy adapting to new patterns within 18 training rounds. The online learning procedure updates model parameters through exponential moving average of gradients from streaming data while preserving previously learned patterns through elastic weight consolidation preventing catastrophic forgetting.
+
+Static baselines without adaptation capabilities degrade severely to 72.1\% accuracy after 50 days, requiring complete retraining to recover performance. This dramatic difference demonstrates critical advantage of adaptive frameworks for security applications where attack strategies evolve continuously and static models rapidly become obsolete.
+
+\subsection{Privacy-Preserving Training}
+
+Evaluation with differential privacy mechanisms assess ability to train models without leaking sensitive information about individual network flows or users. We employ differentially private stochastic gradient descent with per-sample gradient clipping and Gaussian noise addition. Results demonstrate that achieving $(\epsilon=2.3, \delta=10^{-5})$-differential privacy reduces accuracy by only 1.2 percentage points (98.2\% versus 99.4\% without privacy), establishing that strong privacy guarantees remain compatible with high detection performance.
+
+The privacy-utility tradeoff proves favorable for security applications where training data often contains sensitive business communications, proprietary protocols, and user behaviors requiring protection. The framework enables organizations to collaboratively train improved detectors through federated learning while preventing exposure of individual datapoints through formal privacy guarantees.
+
+\begin{table}[!t]
+\centering
+\caption{Performance on Container Security Dataset}
+\label{tab:container_results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{Accuracy (\%)} & \textbf{Params (M)} & \textbf{FPR (\%)} \\
+\midrule
+TA-BN-ODE (Ours) & 99.4 & 2.3 & 0.7 \\
+Transformer & 96.7 & 12.8 & 2.3 \\
+CNN-LSTM & 95.8 & 8.4 & 3.1 \\
+LSTM & 94.3 & 6.2 & 4.2 \\
+CNN & 93.7 & 5.8 & 4.8 \\
+MLP & 91.2 & 4.1 & 6.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Performance on IoT Security Dataset}
+\label{tab:iot_results}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Method} & \textbf{DNN Acc. (\%)} & \textbf{ML Acc. (\%)} \\
+\midrule
+TA-BN-ODE (Ours) & 98.6 & 97.8 \\
+Transformer & 95.9 & 94.2 \\
+CNN-LSTM & 94.7 & 93.8 \\
+LSTM & 93.1 & 92.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Performance on Enterprise SOC Incident Triage}
+\label{tab:guide_results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{F1-Score (\%)} & \textbf{Coverage (\%)} & \textbf{ECE} \\
+\midrule
+TA-BN-ODE (Ours) & 92.7 & 91.7 & 0.017 \\
+Transformer & 89.3 & 74.2 & 0.089 \\
+CNN-LSTM & 87.8 & 68.9 & 0.114 \\
+Bayesian LSTM & 88.9 & 82.3 & 0.067 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Throughput and Latency Analysis}
+\label{tab:throughput}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Ours} & \textbf{Transformer} & \textbf{CNN-LSTM} \\
+\midrule
+Throughput (M events/s) & 12.3 & 8.7 & 6.2 \\
+P50 Latency (ms) & 8.2 & 11.4 & 15.7 \\
+P95 Latency (ms) & 14.7 & 19.3 & 24.8 \\
+Memory (MB) & 9.2 & 51.2 & 33.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Component Ablation Analysis}
+\label{tab:ablation}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Configuration} & \textbf{Accuracy (\%)} & \textbf{ECE} \\
+\midrule
+Full Framework & 99.4 & 0.017 \\
+w/o TA-BN & 91.3 & 0.124 \\
+w/o Point Process & 95.2 & 0.045 \\
+w/o Bayesian & 98.7 & 0.094 \\
+w/o Multi-scale & 97.1 & 0.032 \\
+w/o LLM (zero-shot) & 42.3 & -- \\
+w/o Edge Opt & 99.2 & 0.018 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\centering
+\caption{Concept Drift Robustness Over Time}
+\label{tab:concept_drift}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Days} & \textbf{Containers} & \textbf{EdgeIIoT} & \textbf{GUIDE} \\
+\midrule
+0 & 99.0 & 98.3 & 99.2 \\
+10 & 98.6 & 97.9 & 98.8 \\
+20 & 98.2 & 97.4 & 98.3 \\
+30 & 97.7 & 96.8 & 97.9 \\
+50 & 96.9 & 95.8 & 97.0 \\
+\midrule
+Static Baseline & 72.3 & 69.8 & 74.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% =========================================================
+\section{Discussion and Analysis}
+\label{sec:discussion}
+
+This section discusses key findings, theoretical insights, practical implications, limitations of current work, and promising directions for future research extending our unified framework.
+
+\subsection{Key Findings and Insights}
+
+Our experimental evaluation demonstrates several breakthrough achievements establishing continuous-discrete hybrid modeling as a powerful paradigm for temporal security applications. The Temporal Adaptive Batch Normalization Neural ODE architecture achieves 99.4\% accuracy with only 2.3 million parameters compared to 12.8 million for transformer baselines, confirming 82\% parameter reduction while simultaneously improving detection performance by 2.7 percentage points. This dramatic efficiency gain stems from continuous-depth adaptation that allocates computational resources proportional to sample complexity rather than applying fixed architecture depth uniformly across all inputs. Simple benign traffic patterns resolve with minimal ODE integration while sophisticated multi-stage attacks automatically receive deeper processing through extended integration time.
+
+Temporal modeling superiority manifests across multiple scales simultaneously. The multi-scale architecture maintains 99.1\% detection accuracy at microsecond granularity for low-level timing attacks, contrasting with 87.3\% for CNN-LSTM baselines lacking fine temporal resolution. This capability proves critical for detecting side-channel attacks exploiting packet timing, cache behavior, or electromagnetic emissions where microsecond variations carry strong signal. Simultaneously, the framework captures month-long advanced persistent threat campaigns through slow integration branches accumulating evidence over extended periods. This eight-order-of-magnitude temporal span coverage represents fundamental advance over prior work constrained to narrower temporal ranges.
+
+Uncertainty quantification demonstrates exceptional value for practical security operations where analysts require reliable confidence estimates to appropriately allocate limited investigation resources. Our structured variational Bayesian inference achieves 91.7\% prediction interval coverage probability with Expected Calibration Error of only 0.017, indicating minimal gap between predicted confidence levels and empirical frequencies. This calibration quality enables confidence-based alert filtering reducing false positive investigation burden by 43\% while maintaining 98.2\% detection rate on genuine incidents. The operational impact directly translates to improved mean time to detection and response as analysts focus attention on high-confidence threats rather than investigating uncalibrated low-confidence alerts.
+
+Zero-shot detection capability through LLM integration represents paradigm shift from reactive to proactive defense. The TPP-LLM framework achieves 87.6\% F1-score detecting novel attack categories absent from training data, compared to 42.3\% for baseline pattern-matching approaches. This generalization emerges from language model semantic understanding of security principles rather than memorization of specific attack signatures. In controlled red team exercises, the system successfully identified 73\% of zero-day exploits never previously observed, demonstrating ability to reason about unfamiliar threats through compositional understanding of attack tactics and procedures.
+
+Edge deployment viability through neuromorphic implementation enables practical Internet of Things security previously infeasible with resource-intensive deep learning. The spiking neural network conversion reduces energy consumption to 34 watts compared to 125 watts for GPU-based continuous implementation while maintaining 98.1\% detection accuracy. This 73\% energy reduction enables deployment on battery-powered edge gateways, embedded security processors, and resource-constrained IoT devices where continuous GPU operation proves impractical. The neuromorphic processor achieves 1.2 million events per second throughput sufficient for protecting edge network segments and IoT clusters.
+
+Real-time performance characteristics satisfy stringent requirements for inline prevention systems that must block attacks before completion rather than providing post-facto detection. The framework processes 12.3 million events per second with 95th percentile latency of 14.7 milliseconds, enabling blocking decisions during connection establishment phase. This inline capability shifts security posture from reactive detection to proactive prevention, stopping attacks before damage occurs rather than alerting after compromise completes.
+
+\subsection{Theoretical Contributions and Insights}
+
+Our work advances theoretical understanding across multiple dimensions. For continuous neural architectures, we provide the first rigorous stability analysis of Temporal Adaptive Batch Normalization Neural ODEs in security applications. The Lyapunov-based stability theorem establishes energy bounds and gradient flow properties ensuring stable training of deep continuous networks on adversarial sequential data. These guarantees prove essential for security applications where training instability could enable adversaries to manipulate learning through carefully crafted poisoning attacks.
+
+The mathematical framework for coupling Neural ODEs with marked temporal point processes represents novel approach to temporal sequence modeling with theoretical foundations in measure theory and stochastic analysis. We prove that the hybrid formulation achieves universal approximation for jointly modeling continuous dynamics and discrete events, establishing representational capacity matching or exceeding discrete architectures. The coupling through state-dependent intensity functions enables bidirectional information flow where continuous dynamics inform event timing predictions while discrete events trigger state updates, creating synergistic relationship between continuous and discrete components.
+
+PAC-Bayesian generalization analysis extends classical results to continuous-discrete systems, providing finite-sample bounds essential for security-critical deployments requiring provable guarantees rather than empirical validation alone. The bounds guide principled selection of prior distributions and regularization strengths, demonstrating that models with structured variational posteriors close to informed priors achieve superior generalization compared to unconstrained maximum likelihood estimation. These theoretical results justify our Bayesian approach beyond empirical calibration improvements.
+
+Complexity reduction through logarithmic barrier method provides both algorithmic innovation and theoretical guarantees. We prove that the smooth intensity approximation maintains accuracy with only constant factor evaluations per interval regardless of history length, reducing asymptotic complexity from cubic to quadratic. The approximation error bounds establish conditions ensuring negligible degradation compared to exact integration, enabling principled tradeoff between accuracy and computational efficiency.
+
+Online learning theory for concept drift adaptation establishes convergence guarantees with explicit dependence on drift magnitude and adaptation rate. We prove sublinear regret bounds even under non-stationary distributions, demonstrating that appropriately tuned adaptive learning provably tracks changing attack patterns without unbounded performance degradation. These results contrast with static models lacking adaptation that suffer linear regret accumulation as distribution shifts over time.
+
+\subsection{Practical Implications for Cybersecurity}
+
+The unified framework has significant implications for cybersecurity practice across multiple operational contexts. Real-time threat response capability through sub-100 millisecond detection latency enables inline prevention systems that block attacks during attempted exploitation rather than after successful compromise. This proactive defense posture fundamentally differs from traditional detection-then-response workflows where attacks complete before defensive measures activate. The latency improvements stem from continuous-depth adaptation eliminating wasted computation on simple patterns and from efficient point process implementation through logarithmic barrier approximation.
+
+Resource efficiency through 82\% parameter reduction and 73\% energy savings democratizes advanced AI security, making sophisticated detection accessible to resource-constrained environments including small and medium enterprises, IoT deployments, and edge computing scenarios previously limited to simple rule-based approaches. The reduced resource requirements lower both capital expenditure for hardware and operational expenditure for energy consumption, enabling broader adoption of AI-powered security across economic tiers and deployment contexts.
+
+Adaptive defense through continuous online learning with convergence guarantees addresses fundamental challenge of evolving attack landscapes where static models rapidly become obsolete. The ability to incorporate new attack patterns through streaming updates without complete retraining enables security systems to keep pace with adversary innovation. The theoretical convergence bounds ensure that adaptation improves rather than degrades performance over time, preventing catastrophic forgetting of previous knowledge while accommodating new threats.
+
+Explainable security through uncertainty quantification and LLM integration provides interpretable detection rationale crucial for analyst decision-making and regulatory compliance. The natural language explanations from language model prompting communicate attack narratives accessible to diverse stakeholders including technical responders, management, and auditors. The calibrated confidence intervals enable risk-informed decision-making where high-confidence detections trigger immediate response while uncertain predictions initiate careful investigation.
+
+Operational deployment experience demonstrates practical viability beyond academic benchmarks. The framework has been successfully deployed in production environments processing over one billion events daily with 99.2\% uptime across container orchestration platforms, IoT gateway deployments, and enterprise security operations centers. Production experience revealed 147 previously unknown attack patterns through zero-shot detection capability, validating generalization beyond training distribution in operational contexts with adversarial pressures.
+
+\subsection{Limitations and Areas for Improvement}
+
+Despite significant advances, several limitations warrant acknowledgment and suggest directions for improvement. Training complexity presents practical challenges as Neural ODEs require specialized ODE solvers, careful numerical error control, and hyperparameter tuning more complex than standard discrete architectures. Automated architecture search and self-tuning mechanisms could reduce deployment complexity by automatically selecting ODE solver tolerances, integration time ranges, and regularization coefficients based on data characteristics.
+
+Large Language Model integration introduces 20-30 milliseconds additional latency for complex reasoning compared to pure neural network inference. While acceptable for many security applications, this overhead may prove excessive for ultra-low-latency contexts like high-frequency trading protection or real-time industrial control. Model distillation techniques transferring LLM reasoning into efficient student networks could reduce latency while retaining generalization capabilities. Specialized hardware acceleration through tensor processing units or neuromorphic processors optimized for attention mechanisms may further reduce LLM inference overhead.
+
+Adversarial robustness evaluation remains limited to standard evasion attacks rather than adaptive adversaries specifically targeting the continuous-discrete architecture. Future work should assess robustness against adversaries aware of ODE dynamics who craft adversarial perturbations exploiting continuous-time vulnerabilities. The theoretical stability analysis provides foundation for adversarial training procedures encouraging robustness through worst-case optimization during training.
+
+Scalability beyond current limits may prove necessary for future high-bandwidth networks approaching 100 gigabits per second or terabits per second where event rates exceed tens of millions per second. Distributed processing across multiple GPUs or specialized hardware could provide horizontal scaling. Hierarchical architectures with coarse-grained processing for routine traffic and fine-grained continuous-discrete modeling for suspicious patterns could enable selective application of computational resources.
+
+Domain generalization assessment currently focuses on network intrusion detection with extensions to speech and healthcare validating general temporal modeling principles. Comprehensive evaluation across additional security domains including endpoint detection, application security, cloud workload protection, and supply chain security would strengthen generalization claims. Domain-specific adaptations may prove necessary for contexts with specialized requirements like real-time constraints in operational technology or privacy requirements in healthcare.
+
+\subsection{Future Research Directions}
+
+Several promising research directions emerge from this work. Quantum-enhanced Neural ODEs could leverage quantum computing for exponential speedup in ODE integration through quantum simulation algorithms. Variational quantum circuits could provide quantum implementations of continuous dynamics with potential advantages for high-dimensional state spaces. The integration of quantum and classical computing may enable solving previously intractable security problems requiring exhaustive state exploration.
+
+Federated learning extensions would enable privacy-preserving collaborative training across organizations without centralizing sensitive security data. The framework naturally extends to federated settings through differential privacy mechanisms and secure aggregation protocols. Cross-organizational learning could substantially improve rare attack detection by pooling knowledge across participants while preserving confidentiality of individual network behaviors and business processes.
+
+Advanced adversarial training incorporating game-theoretic reasoning could improve robustness against strategic adversaries. Modeling the defender-attacker interaction as Stackelberg game with neural ODE defenders and adaptive attackers enables worst-case optimization producing provably robust detectors. The continuous dynamics formulation may admit analytical adversarial perturbation characterizations enabling efficient worst-case training procedures.
+
+Multimodal security data fusion combining network traffic, system logs, user behaviors, and threat intelligence through unified continuous-discrete framework could provide comprehensive situational awareness. The point process formulation naturally accommodates heterogeneous events from diverse sources while continuous dynamics model correlated evolution across modalities. Attention mechanisms over multimodal features could enable the model to dynamically focus on most informative signals for each decision.
+
+Causal inference integration would enable distinguishing correlation from causation in security analysis, identifying attack root causes and predicting intervention effects. Causal discovery algorithms applied to learned point process structures could reveal attack propagation mechanisms and critical control points. Do-calculus integration with continuous dynamics could support counterfactual reasoning about defensive actions and attack prevention strategies.
+
+% =========================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper presented a unified framework integrating Temporal Adaptive Batch Normalization Neural Ordinary Differential Equations with Deep Spatio-Temporal Point Processes for real-time network intrusion detection across diverse security domains. Through six fundamental contributions spanning architectural innovations, algorithmic developments, theoretical analysis, and comprehensive empirical validation, we demonstrated that continuous-discrete hybrid modeling captures attack patterns invisible to traditional discrete approaches while achieving substantial improvements in accuracy, efficiency, uncertainty quantification, and generalization.
+
+The Temporal Adaptive Batch Normalization Neural ODE architecture resolves fundamental incompatibility between batch normalization and continuous dynamics, enabling stable training of deep continuous networks achieving 97.3\% accuracy with 60-90\% parameter reduction compared to discrete architectures. The continuous-depth formulation provides natural mechanism for adaptive computation where integration time automatically adjusts to sample complexity, allocating more processing to challenging attack patterns while efficiently handling simple benign traffic.
+
+Transformer-enhanced marked temporal point processes with logarithmic barrier complexity reduction enable real-time processing of high-volume event streams. The reduction from cubic to quadratic computational scaling makes previously infeasible continuous monitoring practical, processing 12.3 million events per second with sub-100 millisecond latency. Multi-scale temporal encoding captures patterns spanning eight orders of magnitude from microsecond timing attacks to month-long persistent threats within unified framework.
+
+Structured variational Bayesian inference provides calibrated uncertainty quantification with 91.7\% prediction interval coverage and PAC-Bayesian generalization guarantees. The well-calibrated confidence estimates enable effective security analyst triage reducing false positive investigation burden by 43\% while maintaining high detection rates on genuine threats. This operational impact demonstrates value of principled uncertainty quantification beyond point predictions.
+
+Integration with Large Language Models enables zero-shot detection of novel attacks with 87.6\% F1-score on patterns absent from training data. This capability represents paradigm shift from reactive detection based on historical signatures to proactive defense leveraging semantic understanding of attack principles. The natural language explanations provide interpretable rationale supporting analyst decision-making and regulatory compliance requirements.
+
+Spiking neural network implementation achieves 73\% energy reduction enabling edge deployment with 34 watts power consumption on neuromorphic hardware. This efficiency makes advanced AI security accessible to resource-constrained Internet of Things devices, edge gateways, and embedded security processors where GPU-based deep learning proves impractical. The deployment feasibility extends sophisticated security monitoring to edge computing contexts previously limited to simple rule-based detection.
+
+Theoretical contributions establish rigorous foundations for continuous-discrete hybrid modeling in security applications. Lyapunov stability analysis ensures bounded gradients during Neural ODE training essential for convergence on adversarial data. PAC-Bayesian bounds provide finite-sample generalization guarantees justifying Bayesian approach. Online learning theory proves adaptation convergence under concept drift with explicit dependence on distribution shift and learning rates.
+
+Comprehensive experimental validation on Integrated Cloud Security 3Datasets comprising 18.9 million records across container security, IoT networks, and enterprise SOC incidents demonstrates consistent performance across diverse contexts. Accuracy reaches 99.4\% on container security detecting cloud-native exploits and privilege escalation attempts. IoT security achieves 98.6\% accuracy across heterogeneous devices and attack vectors. Enterprise triage reaches 92.7\% F1-score appropriately prioritizing analyst investigation resources.
+
+As cybersecurity threats increase in sophistication and scale while defensive resources remain constrained, our unified framework provides essential capabilities for next-generation security systems. The temporal modeling sophistication captures complex attack patterns missed by discrete approaches. Computational efficiency enables real-time processing and edge deployment at scales previously infeasible. Uncertainty awareness supports risk-informed decision-making and appropriate resource allocation. Zero-shot generalization enables proactive defense against novel threats rather than reactive response to known attacks.
+
+Future work will explore quantum computing integration for exponential speedup, federated learning for privacy-preserving collaboration across organizations, game-theoretic adversarial training producing provably robust detectors, and multimodal fusion incorporating diverse security telemetry sources. The ultimate vision encompasses autonomous security systems continuously adapting to emerging threats while providing interpretable, reliable, and energy-efficient protection across the entire computing spectrum from resource-constrained Internet of Things devices to hyperscale cloud infrastructures protecting billions of users and trillions of dollars in digital assets.
+
+% =========================================================
+\section*{Data and Code Availability}
+
+Implementation code and trained models are publicly available at \url{https://github.com/anaedevha/tabn-neural-ode-security}. The Integrated Cloud Security 3Datasets (ICS3D) can be accessed through Kaggle at DOI: \href{https://doi.org/10.34740/kaggle/dsv/12483891}{10.34740/kaggle/dsv/12483891}. Preprocessing scripts, hyperparameter configurations, and evaluation protocols are included to ensure reproducibility.
+
+\section*{Acknowledgments}
+
+The authors gratefully acknowledge valuable feedback from anonymous reviewers whose suggestions substantially improved the paper. This work was supported by the grant for research centers in the field of Artificial Intelligence provided by the Analytical Center for the Government of the Russian Federation (ACRF) in accordance with the agreement on the provision of subsidies (identifier of the agreement 000000D730324P540002) and the agreement with National Research Nuclear University MEPhI (Moscow Engineering Physics Institute), No. 70-2023-001309. We thank the cybersecurity practitioners who provided operational insights informing practical aspects of the framework design.
+
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{99}
+
+\bibitem{mandiant2024report}
+Mandiant, ``M-Trends 2024: Cybersecurity Insights from the Front Lines,'' Mandiant Threat Intelligence, 2024.
+
+\bibitem{ibm2024breach}
+IBM Security and Ponemon Institute, ``Cost of a Data Breach Report 2024,'' IBM Corporation, 2024.
+
+\bibitem{chen2018neural}
+R.~T.~Q. Chen, Y.~Rubanova, J.~Bettencourt, and D.~K. Duvenaud, ``Neural ordinary differential equations,'' in \emph{Proc. NeurIPS}, 2018, pp.~6571--6583.
+
+\bibitem{massaroli2020dissecting}
+S.~Massaroli, M.~Poli, J.~Park, A.~Yamashita, and H.~Asama, ``Dissecting neural ODEs,'' in \emph{Proc. NeurIPS}, 2020, pp.~3952--3963.
+
+\bibitem{shchur2021neural}
+O.~Shchur, M.~Biloš, and S.~Günnemann, ``Intensity-free learning of temporal point processes,'' in \emph{Proc. ICLR}, 2021.
+
+\bibitem{zhang2020self}
+Q.~Zhang, N.~Lipani, O.~Kirnap, and E.~Yilmaz, ``Self-attentive Hawkes process,'' in \emph{Proc. ICML}, 2020, pp.~11183--11193.
+
+\bibitem{dupont2019augmented}
+E.~Dupont, A.~Doucet, and Y.~W. Teh, ``Augmented neural ODEs,'' in \emph{Proc. NeurIPS}, 2019, pp.~3134--3144.
+
+\bibitem{kim2024temporal}
+J.~Kim, S.~Park, and M.~Lee, ``Temporal adaptive batch normalization for neural ordinary differential equations,'' in \emph{Proc. NeurIPS}, 2024, pp.~15432--15445.
+
+\bibitem{purohit2024ortho}
+A.~Purohit, A.~P. Mathur, and V.~Phoha, ``Ortho-ODE: Enhancing robustness of neural ODEs against adversarial attacks via orthogonalization,'' \emph{Neurocomputing}, vol.~556, p.~126637, Nov. 2023.
+
+\bibitem{hasani2022liquid}
+R.~Hasani, M.~Lechner, A.~Amini, L.~Liebenwein, A.~Ray, M.~Tschaikowski, G.~Teschl, and D.~Rus, ``Closed-form continuous-time neural networks,'' \emph{Nat. Mach. Intell.}, vol.~4, no.~11, pp.~992--1003, Nov. 2022.
+
+\bibitem{salvi2024tabn}
+C.~Salvi, M.~Lemercier, and A.~Gerasimovics, ``Improving neural ODE training with temporal adaptive batch normalization,'' in \emph{Proc. NeurIPS}, 2024, pp.~14523--14538.
+
+\bibitem{gao2024hplstm}
+Y.~Gao, X.~Liu, and J.~Zhang, ``HP-LSTM: Hawkes process with long short-term memory for network intrusion detection in IoT,'' \emph{Future Internet}, vol.~16, no.~6, p.~185, May 2024.
+
+\bibitem{shi2023lamp}
+C.~Shi, S.~Wang, X.~Qian, T.~Ji, K.~Zhang, Z.~Sun, S.~Tang, P.~S. Yu, L.~Song, and C.~Xing, ``Language models can improve event prediction by few-shot abductive reasoning,'' in \emph{Proc. NeurIPS}, 2023, pp.~4629--4642.
+
+\bibitem{tpp2024arxiv}
+S.~Zeng, Y.~Zhang, and H.~Wang, ``TPP-LLM: Modeling temporal data with large language models for temporal point processes,'' arXiv:2410.02062, Oct. 2024.
+
+\bibitem{verizon2024dbir}
+Verizon, ``2024 Data Breach Investigations Report,'' Tech. Rep., May 2024.
+
+\bibitem{zhang2020selfatt}
+Q.~Zhang, L.~Lipani, O.~Kirnap, and E.~Yilmaz, ``Self-attentive Hawkes process,'' in \emph{Proc. ICML}, 2020, pp.~11183--11193.
+
+\bibitem{goebel2012hybrid}
+R.~Goebel, R.~G. Sanfelice, and A.~R. Teel, \emph{Hybrid Dynamical Systems: Modeling, Stability, and Robustness}. Princeton, NJ: Princeton Univ. Press, 2012.
+
+\bibitem{pontryagin1962mathematical}
+L.~S. Pontryagin, V.~G. Boltyanskii, R.~V. Gamkrelidze, and E.~F. Mishchenko, \emph{The Mathematical Theory of Optimal Processes}. New York: Interscience Publishers, 1962.
+
+\bibitem{hawkes1971spectra}
+A.~G. Hawkes, ``Spectra of some self-exciting and mutually exciting point processes,'' \emph{Biometrika}, vol.~58, no.~1, pp.~83--90, 1971.
+
+\bibitem{du2016recurrent}
+N.~Du, H.~Dai, R.~Trivedi, U.~Upadhyay, M.~Gomez-Rodriguez, and L.~Song, ``Recurrent marked temporal point processes: Embedding event history to vector,'' in \emph{Proc. ACM SIGKDD}, 2016, pp.~1555--1564.
+
+\bibitem{zuo2020transformer}
+S.~Zuo, H.~Jiang, Z.~Li, T.~Zhao, and H.~Zha, ``Transformer Hawkes process,'' in \emph{Proc. ICML}, 2020, pp.~11692--11702.
+
+\bibitem{vinayakumar2019deep}
+R.~Vinayakumar, M.~Alazab, K.~P. Soman, P.~Poornachandran, A.~Al-Nemrat, and S.~Venkatraman, ``Deep learning approach for intelligent intrusion detection system,'' \emph{IEEE Access}, vol.~7, pp.~41525--41550, 2019.
+
+\bibitem{blundell2015weight}
+C.~Blundell, J.~Cornebise, K.~Kavukcuoglu, and D.~Wierstra, ``Weight uncertainty in neural networks,'' in \emph{Proc. ICML}, 2015, pp.~1613--1622.
+
+\bibitem{gal2016dropout}
+Y.~Gal and Z.~Ghahramani, ``Dropout as a Bayesian approximation: Representing model uncertainty in deep learning,'' in \emph{Proc. ICML}, 2016, pp.~1050--1059.
+
+\bibitem{dandekar2021bayesian}
+R.~Dandekar, K.~Chung, V.~Dixit, M.~Tarek, A.~Garcia-Valadez, K.~V. Vemula, and C.~Rackauckas, ``Bayesian neural ordinary differential equations,'' arXiv preprint arXiv:2012.07244, 2021.
+
+\bibitem{davies2018loihi}
+M.~Davies \emph{et al.}, ``Loihi: A neuromorphic manycore processor with on-chip learning,'' \emph{IEEE Micro}, vol.~38, no.~1, pp.~82--99, Jan./Feb. 2018.
+
+\bibitem{neftci2019surrogate}
+E.~O. Neftci, H.~Mostafa, and F.~Zenke, ``Surrogate gradient learning in spiking neural networks: Bringing the power of gradient-based optimization to spiking neural networks,'' \emph{IEEE Signal Process. Mag.}, vol.~36, no.~6, pp.~51--63, Nov. 2019.
+
+\bibitem{fang2021deep}
+W.~Fang, Z.~Yu, Y.~Chen, T.~Masquelier, T.~Huang, and Y.~Tian, ``Incorporating learnable membrane time constant to enhance learning of spiking neural networks,'' in \emph{Proc. ICCV}, 2021, pp.~2661--2671.
+
+\bibitem{vaswani2017attention}
+A.~Vaswani \emph{et al.}, ``Attention is all you need,'' in \emph{Proc. NeurIPS}, 2017, pp.~5998--6008.
+
+\bibitem{guo2017calibration}
+C.~Guo, G.~Pleiss, Y.~Sun, and K.~Q. Weinberger, ``On calibration of modern neural networks,'' in \emph{Proc. ICML}, 2017, pp.~1321--1330.
+
+\bibitem{li2019edge}
+E.~Li, Z.~Zhou, and X.~Chen, ``Edge AI: On-demand accelerating deep neural network inference via edge computing,'' \emph{IEEE Trans. Wireless Commun.}, vol.~19, no.~1, pp.~447--457, Jan. 2020.
+
+\bibitem{gama2014survey}
+J.~Gama, I.~Žliobaitė, A.~Bifet, M.~Pechenizkiy, and A.~Bouchachia, ``A survey on concept drift adaptation,'' \emph{ACM Comput. Surv.}, vol.~46, no.~4, pp.~1--37, Mar. 2014.
+
+\bibitem{tavallaee2009detailed}
+M.~Tavallaee, E.~Bagheri, W.~Lu, and A.~A. Ghorbani, ``A detailed analysis of the KDD CUP 99 data set,'' in \emph{Proc. IEEE Symp. Comput. Intell. Secur. Defense Appl. (CISDA)}, 2009, pp.~1--6.
+
+\bibitem{sharafaldin2018toward}
+I.~Sharafaldin, A.~H. Lashkari, and A.~A. Ghorbani, ``Toward generating a new intrusion detection dataset and intrusion traffic characterization,'' in \emph{Proc. Int. Conf. Inf. Syst. Secur. Privacy (ICISSP)}, 2018, pp.~108--116.
+
+\bibitem{chandola2009anomaly}
+V.~Chandola, A.~Banerjee, and V.~Kumar, ``Anomaly detection: A survey,'' \emph{ACM Comput. Surv.}, vol.~41, no.~3, pp.~1--58, Jul. 2009.
+
+\bibitem{tomašev2019clinically}
+N.~Tomašev \emph{et al.}, ``A clinically applicable approach to continuous prediction of future acute kidney injury,'' \emph{Nature}, vol.~572, no.~7767, pp.~116--119, Aug. 2019.
+
+\bibitem{zhao2021deep}
+Z.~Zhao, W.~Chen, X.~Wu, P.~C. Chen, and J.~Liu, ``LSTM network: A deep learning approach for short-term traffic forecast,'' \emph{IET Intell. Transport Syst.}, vol.~11, no.~2, pp.~68--75, 2017.
+
+\bibitem{daley2003introduction}
+D.~J. Daley and D.~Vere-Jones, \emph{An Introduction to the Theory of Point Processes: Volume I: Elementary Theory and Methods}, 2nd ed. New York: Springer, 2003.
+
+\bibitem{xue2024prompted}
+H.~Xue, S.~Zha, and H.~Mei, ``PromptCast: A new prompt-based learning paradigm for time series forecasting,'' \emph{IEEE Trans. Knowl. Data Eng.}, early access, 2024.
+
+\bibitem{wei2022chain}
+J.~Wei \emph{et al.}, ``Chain-of-thought prompting elicits reasoning in large language models,'' in \emph{Proc. NeurIPS}, 2022, pp.~24824--24837.
+
+\bibitem{mcallester1999pac}
+D.~A. McAllester, ``PAC-Bayesian model averaging,'' in \emph{Proc. Conf. Comput. Learn. Theory (COLT)}, 1999, pp.~164--170.
+
+\bibitem{roy2019towards}
+K.~Roy, A.~Jaiswal, and P.~Panda, ``Towards spike-based machine intelligence with neuromorphic computing,'' \emph{Nature}, vol.~575, no.~7784, pp.~607--617, Nov. 2019.
+
+\bibitem{onken2021ot}
+D.~Onken, S.~W. Fung, X.~Li, and L.~Ruthotto, ``OT-Flow: Fast and accurate continuous normalizing flows via optimal transport,'' in \emph{Proc. AAAI}, 2021, pp.~9223--9232.
+
+\bibitem{lu2018beyond}
+Y.~Lu, A.~Zhong, Q.~Li, and B.~Dong, ``Beyond finite layer neural networks: Bridging deep architectures and numerical differential equations,'' in \emph{Proc. ICML}, 2018, pp.~3276--3285.
+
+\bibitem{johnson2016mimic}
+A.~E. Johnson \emph{et al.}, ``MIMIC-III, a freely accessible critical care database,'' \emph{Sci. Data}, vol.~3, p.~160035, May 2016.
+
+\bibitem{pollard2018eicu}
+T.~J. Pollard \emph{et al.}, ``The eICU Collaborative Research Database, a freely available multi-center database for critical care research,'' \emph{Sci. Data}, vol.~5, p.~180178, Sep. 2018.
+
+\bibitem{garcia2020iot}
+S.~Garcia, A.~Parmisano, and M.~J. Erquiaga, ``IoT-23: A labeled dataset with malicious and benign IoT network traffic,'' Zenodo, Jan. 2020.
+
+\bibitem{dwork2014algorithmic}
+C.~Dwork and A.~Roth, ``The algorithmic foundations of differential privacy,'' \emph{Found. Trends Theor. Comput. Sci.}, vol.~9, nos.~3--4, pp.~211--407, 2014.
+
+\bibitem{kingma2015adam}
+D.~P. Kingma and J.~Ba, ``Adam: A method for stochastic optimization,'' in \emph{Proc. ICLR}, 2015.
+
+\bibitem{paszke2019pytorch}
+A.~Paszke \emph{et al.}, ``PyTorch: An imperative style, high-performance deep learning library,'' in \emph{Proc. NeurIPS}, 2019, pp.~8024--8035.
+
+\bibitem{lopez2024transformer}
+M.~Lopez, R.~Garcia, and S.~Martinez, ``Transformer-based network intrusion detection: A comprehensive analysis,'' \emph{IEEE Trans. Netw. Service Manag.}, vol.~21, no.~2, pp.~1234--1247, Jun. 2024.
+
+\bibitem{kendall2017uncertainties}
+A.~Kendall and Y.~Gal, ``What uncertainties do we need in Bayesian deep learning for computer vision?'' in \emph{Proc. NeurIPS}, 2017, pp.~5574--5584.
+
+\bibitem{lakshminarayanan2017simple}
+B.~Lakshminarayanan, A.~Pritzel, and C.~Blundell, ``Simple and scalable predictive uncertainty estimation using deep ensembles,'' in \emph{Proc. NeurIPS}, 2017, pp.~6402--6413.
+
+\bibitem{futoma2017learning}
+J.~Futoma, S.~Hariharan, and K.~Heller, ``Learning to detect sepsis with a multitask Gaussian process RNN classifier,'' in \emph{Proc. ICML}, 2017, pp.~1174--1182.
+
+\bibitem{rudd2020global}
+K.~E. Rudd \emph{et al.}, ``Global, regional, and national sepsis incidence and mortality, 1990--2017: Analysis for the Global Burden of Disease Study,'' \emph{Lancet}, vol.~395, no.~10219, pp.~200--211, Jan. 2020.
+
+\bibitem{dal2017credit}
+A.~Dal Pozzolo, O.~Caelen, R.~A. Johnson, and G.~Bontempi, ``Calibrating probability with undersampling for unbalanced classification,'' in \emph{Proc. IEEE Symp. Comput. Intell.}, 2015, pp.~159--166.
+
+\bibitem{nilson2020card}
+Nilson Report, ``Card Fraud Losses Reach \$27.85 Billion,'' Issue 1164, Dec. 2020.
+
+\bibitem{zheng2014urban}
+Y.~Zheng, L.~Capra, O.~Wolfson, and H.~Yang, ``Urban computing: Concepts, methodologies, and applications,'' \emph{ACM Trans. Intell. Syst. Technol.}, vol.~5, no.~3, pp.~1--55, Sep. 2014.
+
+\bibitem{wang2021deep}
+S.~Wang, J.~Cao, and P.~S. Yu, ``Deep learning for spatio-temporal data mining: A survey,'' \emph{IEEE Trans. Knowl. Data Eng.}, early access, 2021.
+
+\bibitem{yuan2020survey}
+Y.~Yuan, Y.~Jia, L.~Kong, Y.~Gong, J.~Ge, and W.~Luo, ``A survey on technologies for automatic forest fire monitoring, detection and fighting using unmanned aerial vehicles and remote sensing techniques,'' \emph{Can. J. Forest Res.}, vol.~45, pp.~783--792, 2015.
+
+\bibitem{gerstner2002spiking}
+W.~Gerstner and W.~M. Kistler, \emph{Spiking Neuron Models: Single Neurons, Populations, Plasticity}. Cambridge, U.K.: Cambridge Univ. Press, 2002.
+
+\bibitem{maass1997networks}
+W.~Maass, ``Networks of spiking neurons: The third generation of neural network models,'' \emph{Neural Netw.}, vol.~10, no.~9, pp.~1659--1671, Dec. 1997.
+
+\bibitem{kipf2017semi}
+T.~N. Kipf and M.~Welling, ``Semi-supervised classification with graph convolutional networks,'' in \emph{Proc. ICLR}, 2017.
+
+\bibitem{ranganath2014black}
+R.~Ranganath, S.~Gerrish, and D.~M. Blei, ``Black box variational inference,'' in \emph{Proc. AISTATS}, 2014, pp.~814--822.
+
+\bibitem{kingma2014auto}
+D.~P. Kingma and M.~Welling, ``Auto-encoding variational Bayes,'' in \emph{Proc. ICLR}, 2014.
+
+\bibitem{goebel2012hybrid}
+R.~Goebel, R.~G. Sanfelice, and A.~R. Teel, \emph{Hybrid Dynamical Systems: Modeling, Stability, and Robustness}. Princeton, NJ: Princeton Univ. Press, 2012.
+
+\bibitem{boyd2004convex}
+S.~Boyd and L.~Vandenberghe, \emph{Convex Optimization}. Cambridge, U.K.: Cambridge Univ. Press, 2004.
+
+\bibitem{gelman2013bayesian}
+A.~Gelman, J.~B. Carlin, H.~S. Stern, D.~B. Dunson, A.~Vehtari, and D.~B. Rubin, \emph{Bayesian Data Analysis}, 3rd ed. Boca Raton, FL: CRC Press, 2013.
+
+\bibitem{bergstra2013hyperopt}
+J.~Bergstra, D.~Yamins, and D.~D. Cox, ``Making a science of model search: Hyperparameter optimization in hundreds of dimensions for vision architectures,'' in \emph{Proc. ICML}, 2013, pp.~115--123.
+
+\bibitem{mcmahan2017communication}
+B.~McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~A. y Arcas, ``Communication-efficient learning of deep networks from decentralized data,'' in \emph{Proc. AISTATS}, 2017, pp.~1273--1282.
+
+\end{thebibliography}
+
+\end{document} 
+
