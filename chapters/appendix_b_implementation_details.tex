@@ -1,0 +1,303 @@
+\chapter{Implementation Details and Hyperparameters}
+\label{app:implementation}
+
+This appendix provides comprehensive implementation details, hyperparameter configurations, and computational infrastructure specifications to facilitate reproducibility.
+
+\section{Software Framework and Dependencies}
+
+All implementations utilize Python 3.10 with the following core dependencies:
+
+\textbf{Deep Learning Frameworks:}
+\begin{itemize}
+\item PyTorch 2.0.1 with CUDA 11.8 support
+\item TensorFlow 2.13.0 for specific baseline comparisons
+\item PyTorch Lightning 2.0.5 for training orchestration
+\end{itemize}
+
+\textbf{Scientific Computing:}
+\begin{itemize}
+\item NumPy 1.24.3 for numerical operations
+\item SciPy 1.11.1 for optimization and special functions
+\item Pandas 2.0.3 for data manipulation
+\item Scikit-learn 1.3.0 for preprocessing and metrics
+\end{itemize}
+
+\textbf{ODE Solvers:}
+\begin{itemize}
+\item torchdiffeq 0.2.3 for Neural ODE integration
+\item DifferentialEquations.jl interfaced via PyJulia for specialized solvers
+\end{itemize}
+
+\textbf{Optimal Transport:}
+\begin{itemize}
+\item POT (Python Optimal Transport) 0.9.1
+\item GeomLoss 0.2.6 for Sinkhorn divergences
+\end{itemize}
+
+\textbf{Privacy and Security:}
+\begin{itemize}
+\item Opacus 1.4.0 for differential privacy
+\item PySyft 0.8.2 for federated learning
+\end{itemize}
+
+\section{Hyperparameter Configurations}
+
+\subsection{Temporal Adaptive Neural ODE}
+
+\textbf{Architecture:}
+\begin{itemize}
+\item Input dimension: 64 (after feature extraction)
+\item Hidden dimensions: [128, 256, 256, 128]
+\item ODE function: 3-layer MLP with hidden dim 256
+\item Integration interval: $[0, 1]$
+\item ODE solver: Dopri5 with adaptive step size
+\item Relative tolerance: $10^{-3}$
+\item Absolute tolerance: $10^{-4}$
+\end{itemize}
+
+\textbf{Temporal Adaptive Batch Normalization:}
+\begin{itemize}
+\item Time embedding dimension: 32
+\item Time encoder: 2-layer MLP [32, 64, 32]
+\item Normalization momentum: 0.1
+\item Epsilon for numerical stability: $10^{-5}$
+\end{itemize}
+
+\textbf{Point Process Model:}
+\begin{itemize}
+\item Transformer layers: 4
+\item Attention heads: 8
+\item Hidden dimension: 256
+\item Feed-forward dimension: 1024
+\item Dropout rate: 0.1
+\item Log-barrier coefficient: 0.01
+\end{itemize}
+
+\textbf{Training:}
+\begin{itemize}
+\item Optimizer: AdamW
+\item Learning rate: $3 \times 10^{-4}$ with cosine annealing
+\item Weight decay: $10^{-5}$
+\item Batch size: 128
+\item Maximum epochs: 100
+\item Early stopping patience: 15 epochs
+\item Gradient clipping: max norm 1.0
+\end{itemize}
+
+\subsection{Privacy-Preserving Optimal Transport}
+
+\textbf{Optimal Transport:}
+\begin{itemize}
+\item Sinkhorn regularization $\lambda$: 0.1 (initial), adaptive scheduling
+\item Sinkhorn iterations: maximum 100, convergence threshold $10^{-6}$
+\item Importance sparsification: keep top 20\% of couplings
+\item Ground cost metric: Euclidean distance
+\end{itemize}
+
+\textbf{Differential Privacy:}
+\begin{itemize}
+\item Privacy budget $\epsilon$: 0.85
+\item Failure probability $\delta$: $10^{-5}$
+\item Noise mechanism: Gaussian
+\item Clipping norm: 1.0 for gradients
+\end{itemize}
+
+\textbf{Federated Learning:}
+\begin{itemize}
+\item Number of clients: 10-50 (varies by experiment)
+\item Client sampling fraction: 0.3 per round
+\item Local epochs: 5
+\item Local batch size: 64
+\item Global rounds: 200
+\item Byzantine trimming fraction $\beta$: 0.25
+\end{itemize}
+
+\subsection{Encrypted Traffic Analysis}
+
+\textbf{CNN Architecture:}
+\begin{itemize}
+\item Conv layers: [64, 128, 256] filters
+\item Kernel sizes: [5, 3, 3]
+\item MaxPool: size 2 after each conv layer
+\item Activation: ReLU
+\item Dropout: 0.3
+\end{itemize}
+
+\textbf{LSTM Architecture:}
+\begin{itemize}
+\item Bidirectional: Yes
+\item Hidden size: 128
+\item Layers: 2
+\item Dropout: 0.2
+\end{itemize}
+
+\textbf{Transformer Architecture:}
+\begin{itemize}
+\item Embedding dimension: 256
+\item Encoder layers: 6
+\item Attention heads: 8
+\item Feed-forward dimension: 2048
+\item Positional encoding: sinusoidal
+\item Dropout: 0.1
+\end{itemize}
+
+\subsection{Graph Neural Networks}
+
+\textbf{Heterogeneous Graph Pooling:}
+\begin{itemize}
+\item Message passing layers: 3
+\item Hidden dimension: 256
+\item Relation-specific transformations: Yes
+\item Pooling ratio: 0.2
+\item Attention heads (pooling): 4
+\end{itemize}
+
+\textbf{Temporal Graph Model:}
+\begin{itemize}
+\item GRU hidden size: 256
+\item Temporal snapshots: 10
+\item Snapshot interval: 5 minutes
+\item Temporal attention heads: 4
+\end{itemize}
+
+\section{Data Preprocessing}
+
+\subsection{Feature Engineering}
+
+\textbf{Network Flow Features:}
+\begin{itemize}
+\item Packet count (forward/backward)
+\item Byte count (forward/backward)
+\item Duration
+\item Inter-arrival time statistics (mean, std, min, max)
+\item Packet size statistics
+\item Flags distribution (SYN, ACK, FIN, RST, etc.)
+\item Protocol type (one-hot encoded)
+\item Port numbers (embedded)
+\end{itemize}
+
+\textbf{Normalization:}
+\begin{itemize}
+\item Numerical features: StandardScaler (zero mean, unit variance)
+\item Categorical features: One-hot encoding or learned embeddings
+\item Temporal features: Min-max scaling to [0, 1]
+\item Outlier handling: Winsorization at 1st and 99th percentiles
+\end{itemize}
+
+\subsection{Data Augmentation}
+
+\textbf{Temporal Jittering:}
+\begin{itemize}
+\item Random time shifts: $\pm$ 10\% of event timestamps
+\item Probability: 0.3
+\end{itemize}
+
+\textbf{Feature Noise Injection:}
+\begin{itemize}
+\item Gaussian noise: $\mathcal{N}(0, 0.01 \sigma_{feature})$
+\item Probability: 0.2
+\end{itemize}
+
+\textbf{Sequence Augmentation:}
+\begin{itemize}
+\item Random cropping: 80-100\% of original length
+\item Probability: 0.4
+\end{itemize}
+
+\section{Computational Infrastructure}
+
+\subsection{Training Infrastructure}
+
+\textbf{Hardware Configuration:}
+\begin{itemize}
+\item GPUs: 4× NVIDIA A100 (40GB) for main experiments
+\item CPUs: 2× AMD EPYC 7742 (64 cores each)
+\item RAM: 512 GB DDR4
+\item Storage: 10 TB NVMe SSD for datasets
+\item Network: 10 Gbps Ethernet for distributed training
+\end{itemize}
+
+\textbf{Distributed Training:}
+\begin{itemize}
+\item Strategy: PyTorch Distributed Data Parallel (DDP)
+\item Mixed precision: FP16 with automatic mixed precision (AMP)
+\item Gradient accumulation steps: 4 (effective batch size 512)
+\item Communication backend: NCCL for GPU-GPU communication
+\end{itemize}
+
+\subsection{Inference Optimization}
+
+\textbf{Model Optimization:}
+\begin{itemize}
+\item Quantization: INT8 for deployment models
+\item Pruning: 30\% structured pruning of fully connected layers
+\item Knowledge distillation: 10× compression for edge deployment
+\end{itemize}
+
+\textbf{Deployment Configuration:}
+\begin{itemize}
+\item Inference framework: ONNX Runtime
+\item Batch size: 256 for throughput, 1 for latency-critical
+\item Threading: 8 CPU threads for CPU inference
+\item GPU: NVIDIA T4 (16GB) for production deployment
+\end{itemize}
+
+\section{Evaluation Protocols}
+
+\subsection{Cross-Validation Strategy}
+
+\textbf{Temporal Split:}
+\begin{itemize}
+\item Training: First 70\% of time period
+\item Validation: Next 15\% of time period
+\item Testing: Final 15\% of time period
+\item Rationale: Preserves temporal ordering for realistic evaluation
+\end{itemize}
+
+\textbf{K-Fold Cross-Validation:}
+\begin{itemize}
+\item Folds: 5
+\item Strategy: Stratified by attack type
+\item Used for: Hyperparameter tuning and ablation studies
+\end{itemize}
+
+\subsection{Statistical Significance Testing}
+
+\textbf{Paired t-test:}
+\begin{itemize}
+\item Null hypothesis: No difference between methods
+\item Significance level: $\alpha = 0.05$
+\item Correction: Bonferroni for multiple comparisons
+\item Runs: 5 independent runs with different random seeds
+\end{itemize}
+
+\textbf{Bootstrapping:}
+\begin{itemize}
+\item Samples: 1000 bootstrap samples
+\item Confidence intervals: 95\%
+\item Metrics: Accuracy, F1-score, AUC-ROC
+\end{itemize}
+
+\section{Code and Data Availability}
+
+\textbf{Source Code:}
+\begin{itemize}
+\item Repository: \url{https://github.com/rogerpanel/CV}
+\item Commits: See thesis references for specific versions
+\item License: MIT License for research use
+\item Documentation: README with installation and usage instructions
+\end{itemize}
+
+\textbf{Datasets:}
+\begin{itemize}
+\item ICS3D: Kaggle DOI 10.34740/kaggle/dsv/12483891
+\item Preprocessing scripts: Included in repository
+\item License: CC BY-NC-SA 4.0
+\end{itemize}
+
+\textbf{Trained Models:}
+\begin{itemize}
+\item Available: Checkpoints for main experiments
+\item Format: PyTorch .pth files
+\item Size: Approximately 2-15 GB per model
+\end{itemize}

@@ -1,0 +1,246 @@
+% ============================================================================
+% PhD Dissertation: Advanced Machine Learning Approaches for
+% Network Intrusion Detection Systems
+% ============================================================================
+% Author: Roger Nick Anaedevha
+% Institution: National Research Nuclear University MEPhI
+% Date: November 2025
+% ============================================================================
+
+\documentclass[12pt,a4paper,twoside,openright]{book}
+
+% ============================================================================
+% ESSENTIAL PACKAGES
+% ============================================================================
+\usepackage[utf8]{inputenc}
+\usepackage[english]{british}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Mathematics and Algorithms
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools,bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Graphics and Figures
+\usepackage{graphicx}
+\usepackage[caption=false,font=footnotesize]{subfig}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{positioning,arrows,shapes,calc,patterns,decorations.pathmorphing,arrows.meta,shapes.geometric}
+
+% Tables and Formatting
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+
+% Page Layout and Formatting
+\usepackage[top=2.5cm,bottom=2.5cm,left=3.5cm,right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{fancyhdr}
+\usepackage{emptypage}
+
+% Citations and References
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+\usepackage{url}
+
+% Additional Packages
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{soul}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{microtype}
+
+% ============================================================================
+% CUSTOM COMMANDS AND OPERATORS
+% ============================================================================
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\Ss}{\mathcal{S}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Kcal}{\mathcal{K}}
+\newcommand{\Mcal}{\mathcal{M}}
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\h}{\mathcal{H}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\Softmax}{\operatorname{Softmax}}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\vecop}{vec}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\ELBO}{ELBO}
+\DeclareMathOperator{\OT}{OT}
+\DeclareMathOperator{\supp}{supp}
+
+% ============================================================================
+% THEOREM ENVIRONMENTS
+% ============================================================================
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{assumption}{Assumption}[chapter]
+\newtheorem{remark}{Remark}[chapter]
+\newtheorem{example}{Example}[chapter]
+
+% ============================================================================
+% HEADER AND FOOTER SETTINGS
+% ============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Plain style for chapter pages
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+% ============================================================================
+% COLOR DEFINITIONS
+% ============================================================================
+\definecolor{layer1}{RGB}{41,128,185}
+\definecolor{layer2}{RGB}{142,68,173}
+\definecolor{layer3}{RGB}{39,174,96}
+\definecolor{layer4}{RGB}{230,126,34}
+\definecolor{layer5}{RGB}{231,76,60}
+\definecolor{fedcolor}{RGB}{243,156,18}
+\definecolor{primaryblue}{RGB}{0,82,155}
+\definecolor{secondaryblue}{RGB}{51,153,255}
+\definecolor{accentorange}{RGB}{255,127,0}
+\definecolor{darkgreen}{RGB}{0,128,0}
+
+% ============================================================================
+% HYPERREF SETUP
+% ============================================================================
+\hypersetup{
+    pdfauthor={Roger Nick Anaedevha},
+    pdftitle={Advanced Machine Learning Approaches for Network Intrusion Detection Systems},
+    pdfsubject={PhD Dissertation},
+    pdfkeywords={Intrusion Detection, Deep Learning, Neural ODEs, Optimal Transport, Cybersecurity},
+    colorlinks=false,
+    linkcolor=black,
+    citecolor=black,
+    urlcolor=black
+}
+
+% ============================================================================
+% TITLE PAGE INFORMATION
+% ============================================================================
+\title{Advanced Machine Learning Approaches for Network Intrusion Detection Systems}
+\author{Roger Nick Anaedevha}
+\date{November 2025}
+
+% ============================================================================
+% DOCUMENT BEGIN
+% ============================================================================
+\begin{document}
+
+% ============================================================================
+% FRONT MATTER
+% ============================================================================
+\frontmatter
+
+% Title Page
+\include{chapters/titlepage}
+
+% Abstract
+\include{chapters/abstract}
+
+% Acknowledgements
+\include{chapters/acknowledgements}
+
+% Table of Contents
+\tableofcontents
+\cleardoublepage
+
+% List of Figures
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\cleardoublepage
+
+% List of Tables
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
+\cleardoublepage
+
+% List of Abbreviations
+\include{chapters/abbreviations}
+
+% ============================================================================
+% MAIN MATTER
+% ============================================================================
+\mainmatter
+
+% Chapter 1: Introduction
+\include{chapters/chapter1_introduction}
+
+% Chapter 2: Literature Review and Theoretical Foundations
+\include{chapters/chapter2_literature_review}
+
+% Chapter 3: Temporal Adaptive Neural ODEs for Real-Time Intrusion Detection
+\include{chapters/chapter3_neural_ode}
+
+% Chapter 4: Differentially Private Optimal Transport for Multi-Cloud Security
+\include{chapters/chapter4_optimal_transport}
+
+% Chapter 5: Hybrid Deep Learning for Encrypted Traffic Analysis
+\include{chapters/chapter5_encrypted_traffic}
+
+% Chapter 6: Federated Learning Approaches for Distributed IDS
+\include{chapters/chapter6_federated_learning}
+
+% Chapter 7: Graph-Based Methods for Network Security
+\include{chapters/chapter7_graph_methods}
+
+% Chapter 8: Experimental Evaluation and Comparative Analysis
+\include{chapters/chapter8_experiments}
+
+% Chapter 9: Conclusions and Future Research Directions
+\include{chapters/chapter9_conclusions}
+
+% ============================================================================
+% BACK MATTER
+% ============================================================================
+\backmatter
+
+% Bibliography
+\addcontentsline{toc}{chapter}{Bibliography}
+\input{references.bib}
+
+% Appendices
+\appendix
+\include{chapters/appendix_a_mathematical_proofs}
+\include{chapters/appendix_b_implementation_details}
+\include{chapters/appendix_c_additional_results}
+
+\end{document}
