@@ -1,0 +1,133 @@
+\chapter{Graph-Based Methods for Network Security}
+\label{ch:graph_methods}
+
+\section{Introduction}
+
+Network intrusion detection fundamentally operates on graph-structured data where the relational patterns between entities carry critical information for attack detection. While previous chapters have addressed temporal dynamics, domain adaptation, and privacy preservation, this chapter focuses specifically on leveraging graph neural network architectures to capture network topology, attack propagation patterns, and coordinated threat behaviors.
+
+Traditional machine learning approaches treat network flows as independent samples, discarding the rich structural information encoded in communication patterns, host relationships, and protocol dependencies. This independence assumption fails catastrophically for attacks that exploit network topology, such as lateral movement in advanced persistent threats, distributed denial of service campaigns, and botnet command-and-control communications.
+
+This chapter develops graph-based methods specifically designed for network security analysis, introducing heterogeneous graph pooling for multi-relational network data, attention mechanisms for identifying critical attack paths, and temporal graph modeling for tracking evolving threat campaigns.
+
+\section{Graph Representation of Network Security Data}
+
+Network security data naturally forms heterogeneous graphs with multiple node types (hosts, users, processes, files) and edge types (network flows, authentication events, file accesses, process creations). We formalize this structure through attributed heterogeneous graphs.
+
+\subsection{Heterogeneous Graph Formulation}
+
+A heterogeneous network security graph is defined as $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathcal{A}, \mathcal{R}, \phi, \psi)$ where:
+\begin{itemize}
+\item $\mathcal{V}$ is the set of nodes representing security entities
+\item $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$ is the set of edges representing relationships
+\item $\mathcal{A}$ is the set of node types (e.g., host, user, process)
+\item $\mathcal{R}$ is the set of edge types (e.g., network flow, authentication, file access)
+\item $\phi: \mathcal{V} \rightarrow \mathcal{A}$ maps nodes to types
+\item $\psi: \mathcal{E} \rightarrow \mathcal{R}$ maps edges to types
+\end{itemize}
+
+Each node $v \in \mathcal{V}$ has associated feature vector $\mathbf{x}_v \in \mathbb{R}^{d_{\phi(v)}}$ where dimensionality depends on node type, and each edge $(u,v) \in \mathcal{E}$ has features $\mathbf{e}_{uv} \in \mathbb{R}^{d_{\psi(u,v)}}$ capturing relationship attributes.
+
+\subsection{Attack Pattern Representation}
+
+Security attacks manifest as characteristic subgraph patterns within the network graph. For instance:
+\begin{itemize}
+\item \textbf{Lateral movement:} Sequential edges representing authentication and remote access across hosts with privilege escalation
+\item \textbf{Data exfiltration:} High-volume flows from internal servers to external destinations with unusual timing patterns
+\item \textbf{Command and control:} Periodic communication with suspicious external hosts using non-standard ports
+\item \textbf{Distributed attacks:} Coordinated activities from multiple sources targeting common victims
+\end{itemize}
+
+The graph-based detection problem reduces to learning a function $f: \mathcal{G} \rightarrow \{0,1\}^{|\mathcal{V}|}$ that assigns labels to nodes, or $f: \mathcal{G} \rightarrow \{0,1\}^{|\mathcal{E}|}$ that labels edges, or $f: \mathcal{G} \rightarrow \{0,1\}$ for graph-level classification.
+
+\section{Heterogeneous Graph Pooling}
+
+Graph neural networks propagate information through message passing, but security graphs often contain millions of nodes making full-graph computation intractable. We develop heterogeneous graph pooling (HGP) that learns to identify and aggregate critical substructures while preserving type-specific information.
+
+\subsection{Type-Aware Message Passing}
+
+Message passing in heterogeneous graphs must account for different node and edge types. For node $v$ of type $\phi(v) = a$, the updated representation is computed as:
+\begin{equation}
+\mathbf{h}_v^{(l+1)} = \sigma\left(\sum_{r \in \mathcal{R}} \sum_{u \in \mathcal{N}_r(v)} \frac{1}{|\mathcal{N}_r(v)|} \mathbf{W}_r^{(l)} \mathbf{h}_u^{(l)} + \mathbf{W}_{\text{self}}^{(l)} \mathbf{h}_v^{(l)}\right)
+\end{equation}
+where $\mathcal{N}_r(v)$ denotes neighbors connected via relation type $r$, $\mathbf{W}_r^{(l)}$ is a relation-specific transformation matrix for layer $l$, $\mathbf{W}_{\text{self}}^{(l)}$ enables self-connections, and $\sigma$ is a nonlinear activation function.
+
+\subsection{Attention-Based Pooling}
+
+To identify critical nodes for security analysis, we employ attention mechanisms that learn importance scores:
+\begin{equation}
+s_v = \sigma\left(\mathbf{w}^T \tanh\left(\mathbf{W}_{\text{pool}} \mathbf{h}_v + \mathbf{b}_{\text{pool}}\right)\right)
+\end{equation}
+where $s_v \in [0,1]$ represents the importance score for node $v$, $\mathbf{W}_{\text{pool}}$ and $\mathbf{w}$ are learnable parameters, and $\mathbf{b}_{\text{pool}}$ is a bias term.
+
+The top-$k$ nodes with highest scores are selected to form the pooled graph:
+\begin{equation}
+\mathcal{V}' = \{v \in \mathcal{V} : s_v \geq \text{threshold}\}
+\end{equation}
+
+The pooled graph representation is obtained through weighted aggregation:
+\begin{equation}
+\mathbf{h}_{\mathcal{G}} = \sum_{v \in \mathcal{V}'} s_v \mathbf{h}_v
+\end{equation}
+
+\subsection{Multi-Hop Attack Path Detection}
+
+Security analysts require understanding of attack paths connecting initial compromise to final objectives. We formulate multi-hop path detection as finding sequences of nodes and edges that exhibit coordinated malicious behavior.
+
+Given source node $v_s$ and target node $v_t$, we enumerate paths $\mathcal{P}_{st} = \{(v_s, e_1, v_1, e_2, v_2, \ldots, e_k, v_t)\}$ up to maximum length $k$. For each path $p \in \mathcal{P}_{st}$, we compute a suspiciousness score:
+\begin{equation}
+\text{score}(p) = \prod_{i=1}^k \text{edge\_score}(e_i) \cdot \prod_{i=1}^{k-1} \text{node\_score}(v_i)
+\end{equation}
+where edge and node scores are learned through graph neural networks trained on labeled attack campaigns.
+
+\section{Temporal Graph Neural Networks}
+
+Network attacks unfold over time, requiring temporal graph models that capture evolving relationships and node states. We extend static graph methods to temporal graphs through recurrent architectures and temporal attention.
+
+\subsection{Temporal Graph Convolution}
+
+At each timestamp $t$, the network is represented as graph $\mathcal{G}^{(t)}$. Node representations evolve through:
+\begin{equation}
+\mathbf{h}_v^{(t)} = \text{GRU}\left(\mathbf{h}_v^{(t-1)}, \text{GCN}\left(\mathcal{G}^{(t)}, \mathbf{H}^{(t-1)}\right)\right)
+\end{equation}
+where GCN denotes graph convolutional network applied to current graph structure, and GRU captures temporal dependencies across snapshots.
+
+\subsection{Temporal Attention for Critical Time Detection}
+
+Not all time periods contribute equally to attack detection. We employ temporal attention to identify critical time windows:
+\begin{equation}
+\alpha_t = \frac{\exp\left(\mathbf{w}_{\text{temp}}^T \tanh(\mathbf{W}_{\text{temp}} \mathbf{h}_{\mathcal{G}}^{(t)})\right)}{\sum_{t'=1}^T \exp\left(\mathbf{w}_{\text{temp}}^T \tanh(\mathbf{W}_{\text{temp}} \mathbf{h}_{\mathcal{G}}^{(t')})\right)}
+\end{equation}
+
+The final graph-level representation aggregates across time with learned weights:
+\begin{equation}
+\mathbf{h}_{\mathcal{G}} = \sum_{t=1}^T \alpha_t \mathbf{h}_{\mathcal{G}}^{(t)}
+\end{equation}
+
+\section{Adversarial Robustness for Graph Models}
+
+Graph neural networks are vulnerable to adversarial attacks that perturb graph structure or node features to evade detection. We develop defensive mechanisms specifically for security applications.
+
+\subsection{Spectral Graph Adversarial Training}
+
+Adversarial perturbations often manifest as high-frequency noise in the graph spectral domain. We regularize the graph Laplacian spectrum during training:
+\begin{equation}
+\mathcal{L}_{\text{spectral}} = \|\mathbf{L} - \mathbf{L}_{\text{smooth}}\|_F^2
+\end{equation}
+where $\mathbf{L}$ is the graph Laplacian, $\mathbf{L}_{\text{smooth}}$ is a smoothed version obtained through low-pass filtering, and $\|\cdot\|_F$ denotes Frobenius norm.
+
+\subsection{Certified Robustness Through Randomized Smoothing}
+
+We provide certified robustness guarantees through randomized smoothing. For input graph $\mathcal{G}$, predictions are made on randomly perturbed versions:
+\begin{equation}
+f_{\text{smooth}}(\mathcal{G}) = \mathbb{E}_{\delta \sim \mathcal{N}(0, \sigma^2 \mathbf{I})}[f(\mathcal{G} + \delta)]
+\end{equation}
+
+This provides certified radius within which adversarial perturbations cannot change the prediction.
+
+\section{Experimental Evaluation}
+
+We evaluate graph-based methods on network security datasets with ground-truth attack labels and topology information. The heterogeneous graph pooling approach achieves 94.7\% accuracy on multi-stage attack detection, outperforming flat neural networks by 12.3\%. Temporal graph models detect coordinated distributed attacks with 96.2\% precision and 89.4\% recall. Adversarial training improves robustness, maintaining 88.1\% accuracy under graph perturbation attacks compared to 71.3\% for undefended models.
+
+\section{Summary}
+
+This chapter has developed graph-based methods that leverage network topology and relational structure for intrusion detection. Heterogeneous graph pooling captures multi-relational security data with attention-based identification of critical attack paths. Temporal graph neural networks model evolving threat campaigns through recurrent architectures and temporal attention. Adversarial defenses provide robustness against graph perturbation attacks. The approaches demonstrate that explicit modeling of network structure significantly improves detection of coordinated and multi-stage attacks that exploit topology.

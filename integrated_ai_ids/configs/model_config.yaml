@@ -1,0 +1,252 @@
+# Integrated AI-IDS Model Configuration
+# Configure all dissertation models and parameters
+
+# Global Settings
+global:
+  device: cuda  # cpu, cuda, or tpu
+  precision: fp16  # fp32, fp16, or int8
+  enable_jit: true  # TorchScript compilation
+  enable_profiling: false
+
+# Neural ODE Configuration
+neural_ode:
+  enabled: true
+
+  # Architecture
+  input_dim: 64
+  hidden_dims: [128, 256, 256, 128]
+  num_layers: 4
+  activation: relu
+
+  # ODE Solver
+  ode_solver: dopri5  # dopri5, euler, rk4, adaptive_heun
+  rtol: 1.0e-3
+  atol: 1.0e-4
+  max_num_steps: 1000
+
+  # Temporal Adaptive Batch Normalization
+  enable_tabn: true
+  time_embedding_dim: 32
+  normalization_momentum: 0.1
+
+  # Point Process Integration
+  enable_point_process: true
+  transformer_layers: 4
+  attention_heads: 8
+  log_barrier_coef: 0.01
+
+  # Training
+  learning_rate: 3.0e-4
+  weight_decay: 1.0e-5
+  gradient_clip: 1.0
+
+# Optimal Transport Configuration
+optimal_transport:
+  enabled: true
+
+  # Privacy Settings
+  enable_privacy: true
+  epsilon: 0.85  # Privacy budget
+  delta: 1.0e-5
+  noise_multiplier: 1.1
+
+  # Sinkhorn Algorithm
+  sinkhorn_reg: 0.1
+  sinkhorn_iterations: 100
+  convergence_threshold: 1.0e-6
+
+  # Computational Optimization
+  enable_importance_sparsification: true
+  sparsity_ratio: 0.2
+  enable_adaptive_scheduling: true
+
+  # Byzantine Robustness
+  enable_byzantine_robust: true
+  trimming_fraction: 0.25
+  anomaly_detection_threshold: 0.9
+
+# Encrypted Traffic Analyzer
+encrypted_traffic:
+  enabled: true
+
+  # CNN Configuration
+  cnn_filters: [64, 128, 256]
+  cnn_kernel_sizes: [5, 3, 3]
+  cnn_stride: 1
+  cnn_padding: same
+  pool_size: 2
+
+  # LSTM Configuration
+  lstm_hidden: 128
+  lstm_layers: 2
+  bidirectional: true
+  lstm_dropout: 0.2
+
+  # Transformer Configuration
+  transformer_layers: 6
+  attention_heads: 8
+  feedforward_dim: 2048
+  transformer_dropout: 0.1
+  positional_encoding: sinusoidal
+
+  # Feature Extraction
+  max_sequence_length: 1000
+  packet_embedding_dim: 64
+
+# Federated Learning Configuration
+federated:
+  enabled: true
+
+  # Federation Settings
+  num_clients: 10
+  client_fraction: 0.3  # Fraction selected per round
+  local_epochs: 5
+  local_batch_size: 64
+
+  # Graph Temporal Dynamics
+  node_dim: 64
+  hidden_dim: 256
+  num_gnn_layers: 3
+  aggregation: mean  # mean, sum, or attention
+
+  # Knowledge Distillation
+  enable_distillation: true
+  teacher_student_ratio: 10  # Compression ratio
+  distillation_temperature: 3.0
+  distillation_alpha: 0.7
+
+  # Communication
+  compression: quantize  # quantize, sparsify, or none
+  quantization_bits: 8
+
+# Graph Model Configuration
+graph:
+  enabled: true
+
+  # Heterogeneous Graph
+  num_node_types: 5
+  num_edge_types: 10
+  node_embedding_dim: 64
+  edge_embedding_dim: 32
+
+  # Message Passing
+  num_message_passing_layers: 3
+  hidden_channels: 256
+
+  # Pooling
+  enable_pooling: true
+  pooling_ratio: 0.2
+  pooling_type: topk  # topk, sag, or attention
+
+  # Attention
+  attention_heads: 4
+  attention_dropout: 0.1
+
+# LLM Integration
+llm:
+  enabled: false  # Enable only if API key available
+
+  # Model Selection
+  model_name: gpt-4  # gpt-4, gpt-3.5-turbo, or local model
+  api_key_env: OPENAI_API_KEY
+
+  # Prompting
+  enable_chain_of_thought: true
+  enable_few_shot: true
+  num_few_shot_examples: 3
+  temperature: 0.7
+  max_tokens: 500
+
+  # Caching
+  enable_cache: true
+  cache_ttl: 3600  # seconds
+
+# Bayesian Uncertainty Quantification
+uncertainty:
+  enabled: true
+
+  # Method
+  method: structured_variational  # dropout, ensemble, or structured_variational
+
+  # Variational Inference
+  num_mc_samples: 10
+  kl_weight: 0.01
+
+  # Calibration
+  enable_temperature_scaling: true
+  enable_isotonic_regression: false
+
+  # PAC-Bayesian
+  prior_scale: 1.0
+  pac_delta: 0.05
+
+# Decision Fusion
+fusion:
+  # Fusion Strategy
+  strategy: learned  # weighted, learned, or voting
+
+  # Learned Fusion
+  fusion_hidden_dim: 256
+  fusion_layers: 2
+  fusion_dropout: 0.2
+
+  # Confidence Calibration
+  confidence_threshold: 0.85
+  uncertainty_weight: 0.3
+
+# Attack Classification
+attack_classifier:
+  num_classes: 13
+  classifier_hidden: [128, 64]
+  classifier_dropout: 0.3
+
+  # Class Labels
+  classes:
+    - Benign
+    - DoS/DDoS
+    - Brute Force
+    - Web Attack
+    - Botnet
+    - Infiltration
+    - Port Scan
+    - SQL Injection
+    - XSS
+    - Malware
+    - Ransomware
+    - APT
+    - Zero-Day
+
+# Explainability
+explainability:
+  enabled: true
+
+  # Methods
+  enable_shap: true
+  enable_lime: false
+  enable_grad_cam: false
+
+  # SHAP Configuration
+  shap_num_samples: 100
+  shap_batch_size: 32
+
+# Performance Optimization
+performance:
+  # Batching
+  batch_size: 128
+  max_batch_delay_ms: 50
+  dynamic_batching: true
+
+  # Multi-processing
+  num_workers: 8
+  prefetch_factor: 2
+  pin_memory: true
+
+  # Caching
+  enable_feature_cache: true
+  cache_size_mb: 1024
+
+  # Model Optimization
+  enable_quantization: false
+  quantization_type: int8
+  enable_pruning: false
+  pruning_ratio: 0.3

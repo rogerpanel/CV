@@ -1,0 +1,189 @@
+\chapter{Mathematical Proofs and Derivations}
+\label{app:proofs}
+
+This appendix provides detailed mathematical proofs for the key theorems presented in the main text.
+
+\section{Proof of Theorem 3.1: Adjoint Gradient Stability}
+
+\begin{theorem*}[Adjoint Gradient Stability for TA-BN-ODE]
+Under Lipschitz continuity assumptions on the ODE function and time-dependent normalization statistics, the adjoint method for TA-BN-ODE produces bounded gradients.
+\end{theorem*}
+
+\begin{proof}
+Let $f_\theta(h, t)$ denote the ODE function with parameters $\theta$ and $\gamma(t), \beta(t), \mu(t), \sigma(t)$ represent time-dependent normalization parameters. The forward dynamics satisfy:
+\begin{equation*}
+\frac{dh(t)}{dt} = f_\theta(h(t), t; \gamma(t), \beta(t), \mu(t), \sigma(t))
+\end{equation*}
+
+The adjoint state $a(t) = \partial \mathcal{L}/\partial h(t)$ evolves according to:
+\begin{equation*}
+\frac{da(t)}{dt} = -a(t)^T \frac{\partial f_\theta}{\partial h}(h(t), t)
+\end{equation*}
+
+Assuming $f_\theta$ is $L_f$-Lipschitz in $h$, we have:
+\begin{equation*}
+\left\|\frac{\partial f_\theta}{\partial h}\right\| \leq L_f
+\end{equation*}
+
+Therefore:
+\begin{align*}
+\frac{d\|a(t)\|}{dt} &= \frac{a(t)^T}{\|a(t)\|} \frac{da(t)}{dt}\\
+&= -\frac{a(t)^T}{\|a(t)\|} a(t)^T \frac{\partial f_\theta}{\partial h}\\
+&\leq \|a(t)\| \left\|\frac{\partial f_\theta}{\partial h}\right\|\\
+&\leq L_f \|a(t)\|
+\end{align*}
+
+By Gronwall's inequality:
+\begin{equation*}
+\|a(t_0)\| \leq \|a(t_1)\| \exp(L_f (t_1 - t_0))
+\end{equation*}
+
+For time-dependent normalization with bounded derivatives $\|\partial \gamma(t)/\partial t\| \leq C_\gamma$, $\|\partial \beta(t)/\partial t\| \leq C_\beta$, the augmented Lipschitz constant becomes $\tilde{L}_f = L_f + C_\gamma + C_\beta$, maintaining bounded adjoint evolution.
+
+The parameter gradients:
+\begin{equation*}
+\frac{\partial \mathcal{L}}{\partial \theta} = -\int_{t_1}^{t_0} a(t)^T \frac{\partial f_\theta}{\partial \theta} dt
+\end{equation*}
+remain bounded since $\|a(t)\|$ is bounded and $\partial f_\theta/\partial \theta$ is bounded by network weight constraints.
+\end{proof}
+
+\section{Proof of Theorem 3.2: PAC-Bayesian Risk Bound}
+
+\begin{theorem*}[PAC-Bayesian Risk Bound]
+For structured variational posterior $q(\theta)$, with probability at least $1 - \delta$ over training data $\mathcal{D}$:
+\begin{equation*}
+\mathbb{E}_{\theta \sim q}[\mathcal{R}(\theta)] \leq \mathbb{E}_{\theta \sim q}[\hat{\mathcal{R}}(\theta)] + \sqrt{\frac{\mathrm{KL}(q \| p) + \log(2n/\delta)}{2n}}
+\end{equation*}
+where $\mathcal{R}$ is true risk, $\hat{\mathcal{R}}$ is empirical risk, $p$ is prior, and $n$ is sample size.
+\end{theorem*}
+
+\begin{proof}
+By McAllester's PAC-Bayesian theorem, for any distribution $q$ over hypotheses:
+\begin{equation*}
+\Pr_{\mathcal{D}}\left[\mathbb{E}_{\theta \sim q}[\mathcal{R}(\theta)] > \mathbb{E}_{\theta \sim q}[\hat{\mathcal{R}}(\theta)] + \sqrt{\frac{\mathrm{KL}(q \| p) + \log(2n/\delta)}{2n}}\right] \leq \delta
+\end{equation*}
+
+For structured mean-field variational posterior:
+\begin{equation*}
+q(\theta) = \prod_{i=1}^m q_i(\theta_i | \phi_i)
+\end{equation*}
+
+The KL divergence decomposes as:
+\begin{equation*}
+\mathrm{KL}(q \| p) = \sum_{i=1}^m \mathrm{KL}(q_i \| p_i)
+\end{equation*}
+
+Each factor $q_i(\theta_i | \phi_i) = \mathcal{N}(\mu_i, \sigma_i^2)$ with prior $p_i = \mathcal{N}(0, \tau^2)$ yields:
+\begin{equation*}
+\mathrm{KL}(q_i \| p_i) = \frac{1}{2}\left(\frac{\mu_i^2 + \sigma_i^2}{\tau^2} - 1 - \log\frac{\sigma_i^2}{\tau^2}\right)
+\end{equation*}
+
+Summing over all parameters and substituting into the PAC-Bayesian bound completes the proof.
+\end{proof}
+
+\section{Proof of Theorem 4.1: Privacy-Preserving Optimal Transport}
+
+\begin{theorem*}[Differential Privacy for Noisy Sinkhorn]
+Adding Gaussian noise $\mathcal{N}(0, \sigma^2 I)$ to empirical marginals with $\sigma^2 = 2\Delta^2\log(1.25/\delta)/\epsilon^2$ and $\Delta = 2/n$ achieves $(\epsilon, \delta)$-differential privacy for Sinkhorn-based optimal transport.
+\end{theorem*}
+
+\begin{proof}
+The empirical marginal $\hat{\mu} = \frac{1}{n}\sum_{i=1}^n \delta_{x_i}$ has global sensitivity:
+\begin{equation*}
+\Delta = \max_{D, D'} \|\hat{\mu}_D - \hat{\mu}_{D'}\|_1 = \frac{2}{n}
+\end{equation*}
+for adjacent datasets $D, D'$ differing in one record.
+
+The Gaussian mechanism adds noise $\xi \sim \mathcal{N}(0, \sigma^2 I)$ to produce noisy marginal $\tilde{\mu} = \hat{\mu} + \xi$.
+
+By the Gaussian mechanism theorem (Dwork et al.), this achieves $(\epsilon, \delta)$-differential privacy when:
+\begin{equation*}
+\sigma \geq \frac{\Delta}{\epsilon}\sqrt{2\log(1.25/\delta)}
+\end{equation*}
+
+Sinkhorn iterations operate on noisy marginals $\tilde{\mu}, \tilde{\nu}$ through:
+\begin{align*}
+u^{(k+1)} &= \tilde{\mu} \oslash (K v^{(k)})\\
+v^{(k+1)} &= \tilde{\nu} \oslash (K^T u^{(k+1)})
+\end{align*}
+where $K_{ij} = \exp(-C_{ij}/\lambda)$ and $\oslash$ denotes element-wise division.
+
+The transport plan $\gamma^* = \text{diag}(u^*) K \text{diag}(v^*)$ inherits privacy from noisy marginals through post-processing property: any function of private data remains private with the same parameters.
+\end{proof}
+
+\section{Proof of Theorem 4.2: Byzantine-Robust Convergence}
+
+\begin{theorem*}[Convergence Under Byzantine Attacks]
+Trimmed mean aggregation with trimming fraction $\beta > q$ converges as:
+\begin{equation*}
+\mathbb{E}[\mathcal{L}(\theta^{(R)})] - \mathcal{L}(\theta^*) \leq O\left(\frac{1}{R} + \frac{q}{\sqrt{K}}\right)
+\end{equation*}
+where $q < 0.5$ is Byzantine fraction, $R$ is rounds, $K$ is clients.
+\end{theorem*}
+
+\begin{proof}
+Let $\theta_1^{(r)}, \ldots, \theta_K^{(r)}$ denote client updates at round $r$, with $qK$ Byzantine clients.
+
+Define the trimmed mean for each dimension $j$:
+\begin{equation*}
+\bar{\theta}^{(r)}[j] = \frac{1}{K - 2\beta K} \sum_{k \in \mathcal{K}_{\text{trim}}(j)} \theta_k^{(r)}[j]
+\end{equation*}
+
+Under $L$-smoothness and $\mu$-strong convexity:
+\begin{equation*}
+\mathbb{E}[\mathcal{L}(\bar{\theta}^{(r)})] \leq \mathcal{L}(\theta^*) + \frac{L}{2}\mathbb{E}[\|\bar{\theta}^{(r)} - \theta^*\|^2]
+\end{equation*}
+
+For honest clients following gradient descent:
+\begin{equation*}
+\mathbb{E}[\|\theta_k^{(r)} - \theta^*\|^2] \leq \left(1 - \frac{\mu\eta}{2}\right)^r \|\theta_0 - \theta^*\|^2 + \frac{\sigma^2}{\mu K}
+\end{equation*}
+
+Trimming removes Byzantine updates, yielding:
+\begin{equation*}
+\mathbb{E}[\|\bar{\theta}^{(r)} - \theta^*\|^2] \leq \frac{1}{(1-q)K} \sum_{k \text{ honest}} \mathbb{E}[\|\theta_k^{(r)} - \theta^*\|^2] + O\left(\frac{q^2}{K}\right)
+\end{equation*}
+
+Substituting and telescoping over $R$ rounds yields the stated convergence rate.
+\end{proof}
+
+\section{Additional Derivations}
+
+\subsection{Sinkhorn Iteration Convergence}
+
+The Sinkhorn algorithm solves the entropic regularized optimal transport:
+\begin{equation*}
+\min_{\gamma \in \Pi(\mu, \nu)} \langle C, \gamma \rangle - \lambda H(\gamma)
+\end{equation*}
+
+Setting Lagrangian derivatives to zero yields:
+\begin{equation*}
+\gamma_{ij}^* = u_i \exp(-C_{ij}/\lambda) v_j
+\end{equation*}
+
+The scaling vectors $u, v$ satisfy:
+\begin{align*}
+u_i &= \frac{\mu_i}{\sum_j \exp(-C_{ij}/\lambda) v_j}\\
+v_j &= \frac{\nu_j}{\sum_i u_i \exp(-C_{ij}/\lambda)}
+\end{align*}
+
+Defining $K_{ij} = \exp(-C_{ij}/\lambda)$, the Sinkhorn iterations become:
+\begin{align*}
+u^{(k+1)} &= \mu \oslash (K v^{(k)})\\
+v^{(k+1)} &= \nu \oslash (K^T u^{(k+1)})
+\end{align*}
+
+Convergence follows from contraction mapping properties in the log domain.
+
+\subsection{Evidence Lower Bound Derivation}
+
+For Bayesian neural networks with latent variables $\theta$:
+\begin{align*}
+\log p(\mathcal{D}) &= \log \int p(\mathcal{D} | \theta) p(\theta) d\theta\\
+&= \log \int \frac{p(\mathcal{D} | \theta) p(\theta)}{q(\theta)} q(\theta) d\theta\\
+&\geq \int q(\theta) \log \frac{p(\mathcal{D} | \theta) p(\theta)}{q(\theta)} d\theta\\
+&= \mathbb{E}_{q(\theta)}[\log p(\mathcal{D} | \theta)] - \mathrm{KL}(q(\theta) \| p(\theta))\\
+&= \text{ELBO}(q)
+\end{align*}
+
+where the inequality follows from Jensen's inequality. Maximizing the ELBO provides a tractable lower bound on the log marginal likelihood.

@@ -1,0 +1,199 @@
+# AWS EKS Cluster Configuration for RobustIDPS.ai
+# =================================================
+#
+# Production-ready Kubernetes cluster on AWS
+# with GPU support, auto-scaling, and high availability
+#
+# Author: Roger Nick Anaedevha
+
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: robustidps-production
+  region: us-east-1
+  version: "1.28"
+  tags:
+    Environment: production
+    Project: RobustIDPS
+    ManagedBy: eksctl
+    Owner: RogerAnaedevha
+
+# VPC Configuration
+vpc:
+  cidr: 10.0.0.0/16
+  nat:
+    gateway: HighlyAvailable
+  clusterEndpoints:
+    publicAccess: true
+    privateAccess: true
+
+# IAM Configuration
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: robustidps-backend
+        namespace: robustidps
+      attachPolicyARNs:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+    - metadata:
+        name: robustidps-autoscaler
+        namespace: kube-system
+      wellKnownPolicies:
+        autoScaler: true
+
+# Node Groups
+nodeGroups:
+  # General Purpose Nodes (API, DB, Redis)
+  - name: general-purpose
+    instanceType: m5.2xlarge
+    minSize: 3
+    maxSize: 10
+    desiredCapacity: 3
+    volumeSize: 100
+    volumeType: gp3
+    availabilityZones:
+      - us-east-1a
+      - us-east-1b
+      - us-east-1c
+    labels:
+      role: general
+      workload: backend
+    tags:
+      nodegroup-role: general-purpose
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+        ebs: true
+        efs: true
+        albIngress: true
+    ssh:
+      allow: true
+      publicKeyName: robustidps-ssh-key
+
+  # GPU Nodes for AI Detection
+  - name: gpu-detection
+    instanceType: g4dn.xlarge  # NVIDIA T4 GPU
+    minSize: 2
+    maxSize: 20
+    desiredCapacity: 3
+    volumeSize: 200
+    volumeType: gp3
+    availabilityZones:
+      - us-east-1a
+      - us-east-1b
+    labels:
+      role: detection
+      workload: ai-inference
+      nvidia.com/gpu: "true"
+    tags:
+      nodegroup-role: gpu-detection
+    taints:
+      - key: nvidia.com/gpu
+        value: "true"
+        effect: NoSchedule
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+    ssh:
+      allow: true
+      publicKeyName: robustidps-ssh-key
+    preBootstrapCommands:
+      - |
+        # Install NVIDIA drivers
+        sudo yum install -y gcc kernel-devel-$(uname -r)
+        aws s3 cp --recursive s3://ec2-linux-nvidia-drivers/latest/ .
+        chmod +x NVIDIA-Linux-x86_64*.run
+        sudo /bin/sh ./NVIDIA-Linux-x86_64*.run --silent
+
+  # High-Memory Nodes for Model Training
+  - name: high-memory
+    instanceType: r5.4xlarge
+    minSize: 0
+    maxSize: 5
+    desiredCapacity: 1
+    volumeSize: 500
+    volumeType: gp3
+    availabilityZones:
+      - us-east-1a
+    labels:
+      role: training
+      workload: model-training
+    tags:
+      nodegroup-role: high-memory
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+        cloudWatch: true
+    ssh:
+      allow: true
+      publicKeyName: robustidps-ssh-key
+
+# Add-ons
+addons:
+  - name: vpc-cni
+    version: latest
+  - name: coredns
+    version: latest
+  - name: kube-proxy
+    version: latest
+  - name: aws-ebs-csi-driver
+    version: latest
+    attachPolicyARNs:
+      - arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy
+
+# CloudWatch Logging
+cloudWatch:
+  clusterLogging:
+    enableTypes:
+      - api
+      - audit
+      - authenticator
+      - controllerManager
+      - scheduler
+
+# Managed Add-ons
+managedNodeGroups: []
+
+# Git Configuration (for GitOps)
+gitops:
+  flux:
+    gitProvider: github
+    flags:
+      owner: rogerpanel
+      repository: CV
+      branch: main
+      namespace: flux-system
+      path: robustidps_web_app/k8s
+
+---
+# Post-Cluster Setup Commands
+# ============================
+#
+# After cluster creation, run:
+#
+# 1. Install NVIDIA Device Plugin:
+#    kubectl apply -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/main/nvidia-device-plugin.yml
+#
+# 2. Install AWS Load Balancer Controller:
+#    helm repo add eks https://aws.github.io/eks-charts
+#    helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+#      -n kube-system \
+#      --set clusterName=robustidps-production
+#
+# 3. Install Cluster Autoscaler:
+#    kubectl apply -f cluster-autoscaler.yaml
+#
+# 4. Install Metrics Server:
+#    kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+#
+# 5. Deploy RobustIDPS:
+#    kubectl apply -f ../k8s/namespace.yaml
+#    kubectl apply -f ../k8s/
+#
+# 6. Verify GPU:
+#    kubectl get nodes "-o=custom-columns=NAME:.metadata.name,GPU:.status.allocatable.nvidia\.com/gpu"

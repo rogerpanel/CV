@@ -1,0 +1,246 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: robustidps-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-robustidps}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-robustidps_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - robustidps-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-robustidps}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Redis Cache
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: robustidps-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - robustidps-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Backend API
+  # ==========================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: robustidps-backend
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-robustidps}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-robustidps_db}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - ./models:/app/models
+      - ./logs:/var/log/robustidps
+      - ./data:/data
+    ports:
+      - "8000:8000"
+    networks:
+      - robustidps-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ==========================================
+  # Detection Workers (Celery)
+  # ==========================================
+  detection-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: robustidps-worker
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-robustidps}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-robustidps_db}
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+      - ./models:/app/models
+      - ./logs:/var/log/robustidps
+    networks:
+      - robustidps-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ==========================================
+  # Traffic Capture Agent
+  # ==========================================
+  capture-agent:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.capture
+    container_name: robustidps-capture
+    env_file:
+      - .env
+    network_mode: host  # Required for packet capture
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    privileged: true
+    volumes:
+      - ./backend:/app
+      - ./data/pcaps:/data/pcaps
+    command: python -m app.services.traffic_capture
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # ==========================================
+  # Frontend (React)
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: robustidps-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000/api/v1
+      - REACT_APP_WS_URL=ws://localhost:8000/ws
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - robustidps-network
+    depends_on:
+      - backend
+    command: npm start
+    restart: unless-stopped
+
+  # ==========================================
+  # Nginx Reverse Proxy
+  # ==========================================
+  nginx:
+    image: nginx:alpine
+    container_name: robustidps-nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./frontend/build:/usr/share/nginx/html:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - robustidps-network
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ==========================================
+  # Prometheus (Metrics)
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: robustidps-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    ports:
+      - "9090:9090"
+    networks:
+      - robustidps-network
+    restart: unless-stopped
+
+  # ==========================================
+  # Grafana (Dashboard)
+  # ==========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: robustidps-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SERVER_ROOT_URL=https://robustidps.ai/grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - robustidps-network
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  robustidps-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
