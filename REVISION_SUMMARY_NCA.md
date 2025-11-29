@@ -436,9 +436,16 @@ enable full reproducibility.
 
 ## Files Delivered
 
-1. **NotP4_v5cg_NCA_REVISED.tex** (660 lines) - Complete revised paper in NCA format
+1. **NotP4_v5cg_NCA_REVISED.tex** (730 lines) - Complete revised paper in NCA format with native TikZ figures
 2. **REVISION_SUMMARY_NCA.md** (this file) - Comprehensive documentation of all changes
 3. **Original NotP4_v5cg.tex** (1,339 lines) - Preserved for reference
+
+### ✨ Bonus: Native TikZ Figures
+
+All figures are now embedded as native TikZ code directly in the LaTeX:
+- **Figure 1:** Privacy-utility trade-off (log-scale plot, 3 methods, annotated operating point)
+- **Figure 2:** Efficiency comparison (3 subfigures with bar charts)
+- **Benefits:** No external PDF dependencies, publication-ready, easily editable, vector graphics
 
 ---
 
@@ -448,9 +455,9 @@ enable full reproducibility.
 
 1. ✅ **Review revised paper** - Verify all changes implemented correctly
 2. ⏳ **Compile with LaTeX** - Ensure no compilation errors (requires sn-jnl.cls class file)
-3. ⏳ **Generate figures** - Create PDF versions of:
-   - `figures/privacy_utility_curve.pdf`
-   - `figures/efficiency_comparison.pdf`
+3. ✅ **Generate figures** - TikZ figures embedded directly (no external PDFs needed):
+   - Privacy-utility curve: Native TikZ with log-scale x-axis, 3 methods, operating point
+   - Efficiency comparison: Native TikZ with 3 bar chart subfigures
 4. ⏳ **Final proofreading** - One more pass for typos/formatting
 5. ⏳ **Prepare supplementary materials** - Code, data, trained models
 
