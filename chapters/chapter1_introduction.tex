@@ -1,0 +1,144 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{Motivation and Background}
+
+The landscape of cybersecurity has undergone profound transformation over the past decade, driven by the convergence of several technological and societal trends. The exponential growth of interconnected devices through the Internet of Things, the migration of enterprise computing to multi-cloud environments, the widespread adoption of encryption protocols for privacy protection, and the increasing sophistication of cyber attacks have collectively created unprecedented challenges for network security practitioners and researchers.
+
+Network intrusion detection systems represent a critical component of cybersecurity infrastructure, serving as the first line of defense against malicious activities in digital networks. Traditional approaches to intrusion detection, primarily relying on signature-based pattern matching and rule-based anomaly detection, face fundamental limitations when confronted with modern threat landscapes. These conventional methods struggle to detect zero-day exploits, cannot analyze encrypted traffic without compromising privacy, fail to adapt to evolving attack strategies, and exhibit poor generalization across heterogeneous network environments.
+
+The emergence of machine learning and deep learning technologies has opened new avenues for addressing these limitations. However, direct application of standard machine learning techniques to network security introduces its own set of challenges. Network traffic exhibits complex temporal dependencies spanning multiple time scales, from microsecond-level timing attacks to month-long advanced persistent threat campaigns. Security datasets suffer from severe class imbalance, with malicious traffic typically representing less than 5\% of total network flows. Privacy regulations and competitive concerns prevent centralized data aggregation necessary for training comprehensive models. Resource constraints on edge devices and IoT gateways limit the deployment of computationally expensive deep learning architectures. Adversarial actors actively manipulate detection systems through poisoning attacks and adversarial examples.
+
+\section{Research Problems and Challenges}
+
+This dissertation addresses five fundamental research problems at the intersection of machine learning and network security:
+
+\textbf{Problem 1: Temporal Modeling of Network Attacks.} Network attacks exhibit complex temporal dynamics that cannot be adequately captured by discrete-time architectures operating at fixed sampling intervals. Consider an advanced persistent threat conducting reconnaissance through carefully randomized port probes spanning intervals from 10 seconds to 60 minutes, specifically designed to evade fixed-window detectors. Traditional systems sampling every minute miss 73\% of such probes. The fundamental challenge lies in developing models that jointly capture continuous system state evolution and discrete event occurrences across eight orders of magnitude in time scales.
+
+\textbf{Problem 2: Multi-Cloud Domain Adaptation Under Privacy Constraints.} Multi-cloud deployments create critical domain adaptation challenges where intrusion detection systems trained on one cloud provider must generalize to heterogeneous environments without sharing sensitive security data. Microsoft's 2024 State of Multicloud Security Risk Report documents that the average multi-cloud deployment contains 351 exploitable attack paths, with security models achieving only 54--67\% accuracy when transferred across cloud boundaries without adaptation. The challenge involves developing principled distribution alignment methods that maintain strong privacy guarantees while enabling effective threat detection across clouds.
+
+\textbf{Problem 3: Encrypted Traffic Analysis Without Decryption.} The proliferation of encrypted network communications, with over 85.9\% of cyberattacks utilizing encrypted channels, has rendered traditional deep packet inspection ineffective. Decrypting traffic introduces privacy violations, legal complications under regulations such as GDPR, and computational overhead prohibitive at network scale. The research problem requires developing approaches that learn discriminative patterns from observable traffic metadata without accessing encrypted payload contents.
+
+\textbf{Problem 4: Privacy-Preserving Collaborative Threat Intelligence.} Effective threat detection benefits from learning diverse attack patterns across organizations, yet security data cannot be centrally aggregated due to privacy regulations and competitive concerns. Federated learning provides a framework for collaborative model training, but faces challenges including severe distribution heterogeneity across participants, Byzantine attacks from malicious nodes, and communication overhead incompatible with real-time detection requirements. The fundamental problem involves designing federated architectures with provable convergence guarantees under adversarial conditions.
+
+\textbf{Problem 5: Zero-Shot Detection and Adaptation to Novel Threats.} The continuous evolution of cyber attacks through new exploit techniques, malware variants, and attack strategies renders purely supervised learning approaches inadequate. Security systems must detect previously unseen attack types without labeled training examples while adapting to concept drift from software updates and infrastructure changes. This necessitates developing models with few-shot learning capabilities and semantic understanding of attack principles rather than mere pattern matching.
+
+\section{Research Objectives}
+
+The overarching objective of this dissertation is to develop a comprehensive framework of advanced machine learning approaches that address the fundamental challenges identified above while meeting operational requirements for network intrusion detection systems. Specific research objectives include:
+
+\begin{enumerate}[leftmargin=*]
+\item To develop continuous-time neural architectures that model temporal dependencies in network security events across multiple time scales, integrating Neural Ordinary Differential Equations with temporal point processes for unified continuous-discrete modeling.
+
+\item To establish theoretical foundations and practical algorithms for optimal transport-based domain adaptation in multi-cloud intrusion detection under differential privacy constraints, with Byzantine-robust aggregation mechanisms.
+
+\item To design hybrid spatial-temporal deep learning architectures for encrypted traffic analysis that achieve high detection accuracy using only observable metadata features without requiring decryption.
+
+\item To create federated learning frameworks for distributed intrusion detection that enable privacy-preserving collaborative threat intelligence sharing while maintaining convergence guarantees under heterogeneous data distributions and adversarial participants.
+
+\item To integrate large language models with temporal reasoning capabilities for zero-shot detection of novel attack patterns through semantic understanding rather than supervised pattern matching.
+
+\item To provide comprehensive experimental validation across diverse security domains including container orchestration, IoT/IIoT networks, encrypted traffic, and enterprise security operations, demonstrating practical deployment viability.
+
+\item To establish theoretical guarantees including convergence analysis, generalization bounds, privacy preservation, and adversarial robustness for the developed approaches.
+\end{enumerate}
+
+\section{Key Contributions}
+
+This dissertation makes several key contributions spanning theoretical foundations, algorithmic innovations, and empirical validation:
+
+\subsection{Theoretical Contributions}
+
+\begin{itemize}[leftmargin=*]
+\item Development of Temporal Adaptive Batch Normalization Neural ODEs with stability analysis through Lyapunov theory, resolving the fundamental incompatibility between batch normalization and continuous dynamics in neural networks.
+
+\item Integration of Neural ODEs with Deep Spatio-Temporal Point Processes for unified modeling of continuous system state evolution and discrete attack event occurrences.
+
+\item Formulation of privacy-preserving optimal transport for multi-cloud intrusion detection with formal $(\epsilon,\delta)$-differential privacy guarantees and utility-preserving bounds characterizing the privacy-accuracy trade-off.
+
+\item Development of Byzantine-robust federated aggregation with provable convergence analysis showing convergence to within $O(\sqrt{q/K})$ of optimal global model under fraction $q$ of Byzantine adversaries across $K$ clients.
+
+\item Establishment of PAC-Bayesian generalization bounds for security-critical decision making with calibrated confidence intervals achieving 91.7\% coverage probability.
+
+\item Theoretical analysis of online learning convergence under concept drift with adaptive learning rates achieving sublinear regret bounds even with distribution shift.
+\end{itemize}
+
+\subsection{Algorithmic and Architectural Contributions}
+
+\begin{itemize}[leftmargin=*]
+\item Security-specific TA-BN-ODE architectures achieving 97.3\% accuracy with 60--90\% parameter reduction through continuous-depth adaptation that allocates computational resources proportional to input complexity.
+
+\item Transformer-enhanced marked temporal point processes with logarithmic barrier optimization reducing computational complexity from $O(n^3)$ to $O(n^2)$ in sequence length while capturing multi-scale temporal patterns spanning microseconds to months.
+
+\item Privacy-Preserving Federated Optimal Transport (PPFOT-IDS) framework with adaptive entropy regularization achieving 15--23$\times$ computational speedup through Sinkhorn divergence while maintaining strong privacy guarantees.
+
+\item Hybrid spatial-temporal architectures combining convolutional neural networks for spatial feature extraction with long short-term memory networks for temporal modeling, achieving 97--99.9\% detection accuracy on encrypted traffic without decryption.
+
+\item Integration of large language models with carefully designed prompt engineering achieving 87.6\% F1-score on zero-shot detection of novel attack patterns absent from training data.
+
+\item Spiking neural network conversion for edge deployment reducing energy consumption by 73\% while maintaining 98\%+ accuracy on resource-constrained IoT devices.
+\end{itemize}
+
+\subsection{Empirical Contributions}
+
+\begin{itemize}[leftmargin=*]
+\item Comprehensive experimental validation on the Integrated Cloud Security 3Datasets (ICS3D) comprising 18.9 million security records across container orchestration (697,289 Kubernetes flows), IoT/IIoT networks (4 million records from seven-layer testbed), and enterprise security operations (1 million alerts from 6,100 organizations with MITRE ATT\&CK annotations).
+
+\item Evaluation on standard benchmarks including CIC-IDS2018, UNSW-NB15, and CIC-IoT-2023 enabling direct comparison with published baselines, demonstrating 15--21\% accuracy improvements over state-of-the-art approaches.
+
+\item Cross-domain validation on speech event detection (LibriSpeech achieving 94.2\% F1-score) and healthcare monitoring (MIMIC-III, eICU) confirming broad applicability of continuous-discrete hybrid modeling beyond network security.
+
+\item Demonstration of real-time operational viability through processing 12.3 million events per second with sub-100 millisecond detection latency suitable for production deployment.
+
+\item Ablation studies quantifying the contribution of individual components including temporal adaptive normalization, multi-scale point process modeling, optimal transport alignment, Byzantine-robust aggregation, and zero-shot language model integration.
+\end{itemize}
+
+\section{Research Methodology}
+
+The research methodology employed throughout this dissertation follows a systematic approach integrating theoretical analysis, algorithm design, implementation, and empirical validation:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Problem Formulation:} Each research problem is rigorously formulated using mathematical notation, establishing clear objectives, constraints, and evaluation criteria.
+
+\item \textbf{Theoretical Development:} Mathematical frameworks are developed drawing from continuous-time dynamical systems, optimal transport theory, differential privacy, Bayesian inference, and statistical learning theory to provide principled foundations for algorithmic design.
+
+\item \textbf{Algorithm Design:} Novel algorithms are designed based on theoretical foundations, incorporating domain-specific requirements from network security including real-time constraints, privacy preservation, adversarial robustness, and computational efficiency.
+
+\item \textbf{Implementation:} Algorithms are implemented using modern deep learning frameworks including PyTorch and TensorFlow, with careful attention to numerical stability, computational efficiency, and reproducibility.
+
+\item \textbf{Experimental Validation:} Comprehensive experiments are conducted on diverse security datasets spanning multiple domains, with rigorous evaluation using standard metrics including accuracy, precision, recall, F1-score, false positive rate, and area under ROC curve.
+
+\item \textbf{Comparative Analysis:} Results are compared against established baselines and state-of-the-art methods through standardized benchmarks, with statistical significance testing to validate claimed improvements.
+
+\item \textbf{Ablation Studies:} Systematic ablation studies quantify the contribution of individual components, providing insights into which design choices drive performance improvements.
+
+\item \textbf{Cross-Domain Evaluation:} Approaches are evaluated on domains beyond network security to assess generalizability and identify fundamental versus domain-specific contributions.
+\end{enumerate}
+
+\section{Thesis Organization}
+
+The remainder of this dissertation is organized as follows:
+
+\textbf{Chapter 2} establishes the mathematical foundations and problem formulations for advanced intrusion detection systems. The chapter rigorously defines five fundamental research problems through formal mathematical notation, including temporal modeling of network attacks, multi-cloud domain adaptation under privacy constraints, encrypted traffic analysis, privacy-preserving federated learning, and uncertainty quantification. Each problem includes mathematical definitions, theoretical analysis with proofs, and justification of the chosen approaches.
+
+\textbf{Chapter 3} presents a comprehensive literature review and theoretical foundations, surveying prior work in intrusion detection systems, machine learning for cybersecurity, neural ordinary differential equations, optimal transport theory, differential privacy, federated learning, and related areas. The chapter identifies research gaps that motivate the contributions of this dissertation.
+
+\textbf{Chapter 4} develops Temporal Adaptive Neural ODEs with Deep Spatio-Temporal Point Processes for real-time network intrusion detection. The chapter introduces continuous-depth neural architectures with stability guarantees, multi-scale temporal point process modeling, and structured variational Bayesian inference for uncertainty quantification. Integration with large language models for zero-shot detection and spiking neural network conversion for edge deployment are also presented.
+
+\textbf{Chapter 5} introduces Differentially Private Optimal Transport for multi-cloud intrusion detection, establishing the first application of optimal transport theory to network security under privacy constraints. The chapter develops the PPFOT-IDS framework with adaptive Sinkhorn optimization, Byzantine-robust aggregation, and formal privacy-utility trade-off analysis.
+
+\textbf{Chapter 6} presents hybrid deep learning architectures for privacy-preserving encrypted traffic analysis without requiring decryption. The chapter develops spatial-temporal models combining convolutional and recurrent networks, transformer architectures with self-attention mechanisms, and federated learning frameworks for distributed encrypted traffic detection.
+
+\textbf{Chapter 7} develops federated learning approaches for distributed intrusion detection, including graph temporal dynamics modeling, knowledge distillation for model compression, and Byzantine-robust aggregation mechanisms. The chapter establishes convergence guarantees under heterogeneous data distributions and adversarial participants.
+
+\textbf{Chapter 8} introduces graph-based methods for network security, leveraging network topology through heterogeneous graph pooling and attention mechanisms to capture attack propagation patterns. The chapter develops graph neural network architectures specifically designed for security graph analysis.
+
+\textbf{Chapter 9} provides comprehensive experimental evaluation and comparative analysis across all developed approaches. The chapter presents results on diverse datasets, comparison with baseline methods, ablation studies, computational efficiency analysis, and cross-domain validation. Detailed performance analysis across attack categories and operational deployment considerations are discussed.
+
+\textbf{Chapter 10} concludes the dissertation with a summary of contributions, discussion of implications for network security practice, acknowledgment of limitations, and identification of promising directions for future research.
+
+\textbf{Appendices} provide supplementary material including detailed mathematical proofs, algorithmic pseudocode, implementation details, hyperparameter configurations, additional experimental results, and dataset descriptions.
+
+\section{Summary}
+
+This chapter has introduced the fundamental research problems addressed in this dissertation, outlined the research objectives and key contributions, and provided an organizational roadmap for the remainder of the thesis. The following chapters present detailed technical developments, comprehensive experimental validation, and thorough analysis of the proposed approaches for advancing the state of the art in network intrusion detection through modern machine learning techniques.
