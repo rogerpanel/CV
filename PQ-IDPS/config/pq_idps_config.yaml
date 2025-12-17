@@ -1,0 +1,277 @@
+# PQ-IDPS Configuration
+# All experimental settings for reproducibility
+
+# Model configuration
+model:
+  # Classical pathway (CNN-LSTM)
+  classical_channels: [128, 256, 512]
+  lstm_hidden_size: 256
+  lstm_num_layers: 2
+  lstm_dropout: 0.3
+
+  # Quantum pathway (VQC)
+  num_qubits: 12
+  num_vqc_layers: 6
+  quantum_device: "default.qubit"  # Options: default.qubit, lightning.gpu
+
+  # Fusion
+  fusion_method: "adaptive"  # Options: adaptive, fixed
+  fusion_hidden_dim: 128
+
+  # Defense
+  adversarial_defense: true
+  lipschitz_constant: 1.0
+
+# Data configuration
+data:
+  # Dataset selection
+  dataset: "cesnet_tls22"  # Options: cesnet_tls22, quic_pqc, iot_pqc
+  data_dir: "./datasets/cesnet_tls22"
+
+  # Preprocessing
+  max_packets: 100
+  packet_features: 47
+  statistical_features: 12
+
+  # Splits
+  train_split: 0.70
+  val_split: 0.15
+  test_split: 0.15
+
+  # Augmentation
+  augmentation: false
+  noise_augmentation_prob: 0.1
+
+# Training configuration
+training:
+  # Optimization
+  epochs: 30
+  batch_size: 64
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  optimizer: "adamw"  # Options: adam, adamw, sgd
+  beta1: 0.9
+  beta2: 0.999
+  epsilon: 1.0e-8
+
+  # Learning rate schedule
+  scheduler: "cosine"  # Options: constant, linear, cosine, step
+  warmup_epochs: 3
+  min_lr: 1.0e-6
+
+  # Gradient management
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 1
+
+  # Mixed precision
+  mixed_precision: false
+
+  # Device
+  device: "cuda"  # Options: cuda, cpu
+  num_gpus: 1
+
+  # DataLoader
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+
+# Adversarial training configuration
+adversarial:
+  enable: true
+  adversarial_ratio: 0.5  # Fraction of adversarial examples in batch
+
+  # Attack parameters
+  epsilon: 0.10  # L_inf perturbation budget
+  alpha: 0.01  # Step size
+  num_iterations: 10  # PGD iterations
+  grover_speedup: true  # Simulate Grover O(√N) speedup
+
+  # Attack types (for evaluation)
+  attack_types:
+    - "pgd"
+    - "grover_optimized"
+    - "quantum_gan"
+    - "amplitude_amplification"
+
+# Defense mechanisms
+defense:
+  # Quantum noise injection
+  quantum_noise:
+    enable: true
+    depolarizing_prob: 0.01
+    amplitude_damping_gamma: 0.05
+    phase_damping_lambda: 0.03
+    apply_during_inference: false
+
+  # Randomized smoothing
+  randomized_smoothing:
+    enable: true
+    noise_scale: 0.25  # σ for Gaussian noise
+    num_samples_train: 10
+    num_samples_certify: 1000
+    certification_alpha: 0.001  # Confidence level
+
+  # Lipschitz constraints
+  lipschitz:
+    enable: true
+    constant: 1.0
+    n_power_iterations: 1
+
+# Evaluation configuration
+evaluation:
+  # Metrics
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "auroc"
+    - "auprc"
+    - "false_positive_rate"
+
+  # Pathway analysis
+  compute_pathway_accuracies: true
+
+  # Protocol-wise evaluation
+  evaluate_by_protocol: true  # Classical, Hybrid, Pure PQC
+
+  # Adversarial robustness
+  evaluate_adversarial: true
+  adversarial_epsilons: [0.05, 0.10, 0.15, 0.20]
+
+  # Certified robustness
+  compute_certified_radius: true
+  certification_samples: 100  # Number of test samples to certify
+
+# Logging and checkpointing
+logging:
+  # TensorBoard
+  log_dir: "./logs"
+  tensorboard_dir: "./runs"
+  log_interval: 10  # Log every N batches
+
+  # Metrics logging
+  log_train_metrics: true
+  log_val_metrics: true
+  log_pathway_weights: true
+  log_fusion_distribution: true
+
+  # Visualization
+  plot_confusion_matrix: true
+  plot_roc_curves: true
+  save_predictions: true
+
+checkpoint:
+  save_dir: "./checkpoints"
+  save_interval: 5  # Save every N epochs
+  save_best: true  # Save best model based on val accuracy
+  keep_last_n: 3  # Keep last N checkpoints
+  resume_from: null  # Path to checkpoint for resuming
+
+# Reproducibility
+seed: 42
+deterministic: true
+cudnn_benchmark: false
+
+# Experiment tracking
+experiment:
+  name: "pq_idps_cesnet_tls22"
+  tags: ["post-quantum", "hybrid-classical-quantum", "intrusion-detection"]
+  notes: "Main PQ-IDPS experiment on CESNET-TLS-22 dataset"
+
+  # Version tracking
+  paper_version: "v1.0"
+  code_version: "1.0.0"
+
+# Ablation studies (for reproducibility)
+ablation:
+  baseline:
+    disable_quantum: false
+    disable_classical: false
+    disable_adaptive_fusion: false
+    disable_adversarial_defense: false
+    disable_quantum_noise: false
+    disable_randomized_smoothing: false
+
+# Baselines to compare
+baselines:
+  run_cnn_lstm: true
+  run_pure_vqc: true
+  run_fixed_ensemble: true
+  run_flowformer: false  # Transformer baseline (optional)
+  run_graph_saint: false  # Graph neural network baseline (optional)
+
+# Hardware-specific optimizations
+optimization:
+  # Quantum simulation
+  quantum_gpu_acceleration: false  # Use lightning.gpu if available
+  quantum_batch_simulation: false  # Batch quantum circuit execution
+
+  # Classical optimization
+  torch_compile: false  # PyTorch 2.0 compilation (experimental)
+  channels_last_memory: false  # Memory format optimization
+
+  # Distributed training
+  distributed: false
+  backend: "nccl"  # Options: nccl, gloo
+  world_size: 1
+
+# Dataset-specific configurations
+dataset_configs:
+  cesnet_tls22:
+    expected_samples:
+      train: 1470000
+      val: 315000
+      test: 315000
+    protocol_distribution:
+      classical: 0.60
+      hybrid: 0.35
+      pure_pqc: 0.05
+    adversary_type: "grover_optimized"
+
+  quic_pqc:
+    expected_samples:
+      train: 592900
+      val: 127050
+      test: 127050
+    protocol_distribution:
+      classical: 0.0
+      hybrid: 0.0
+      pure_pqc: 1.0
+    adversary_type: "quantum_gan"
+
+  iot_pqc:
+    expected_samples:
+      train: 1120000
+      val: 240000
+      test: 240000
+    protocol_distribution:
+      classical: 0.30
+      hybrid: 0.0
+      pure_pqc: 0.70
+    adversary_type: "amplitude_amplification"
+
+# Performance targets (from paper)
+expected_results:
+  cesnet_tls22:
+    accuracy: 0.953
+    precision: 0.948
+    recall: 0.957
+    f1_score: 0.952
+    false_positive_rate: 0.021
+    adversarial_accuracy_eps01: 0.917
+    certified_radius: 0.42
+
+  quic_pqc:
+    accuracy: 0.938
+    precision: 0.921
+    recall: 0.949
+    f1_score: 0.935
+    false_positive_rate: 0.032
+
+  iot_pqc:
+    accuracy: 0.945
+    precision: 0.937
+    recall: 0.951
+    f1_score: 0.944
+    false_positive_rate: 0.027
