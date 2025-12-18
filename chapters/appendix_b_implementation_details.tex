@@ -160,6 +160,173 @@ All implementations utilize Python 3.10 with the following core dependencies:
 \item Temporal attention heads: 4
 \end{itemize}
 
+\textbf{Continuous-Time Temporal Graph Neural Network (CT-TGNN):}
+\begin{itemize}
+\item Graph ODE hidden dimension: 256
+\item Time constants $\tau_s$: $\{10^{-6}, 10^{-3}, 1, 3600\}$ seconds
+\item ODE solver: Dopri5 with adaptive step size
+\item Encrypted edge feature dimension: 128
+\item Attention heads for edge weighting: 8
+\item Integration tolerance: $10^{-4}$
+\end{itemize}
+
+\textbf{Triple-Embedding Temporal Graph Neural Network (TripleE-TGNN):}
+\begin{itemize}
+\item Service-level embedding dimension: 128
+\item Trace-level embedding dimension: 256
+\item Node-level embedding dimension: 128
+\item BiLSTM hidden size (trace paths): 256
+\item Cross-granularity attention heads: 8
+\item GRU hidden size (temporal dynamics): 256
+\end{itemize}
+
+\section{Novel Algorithm Pseudocode}
+
+This section provides formal algorithm pseudocode for the major novel methods developed in this dissertation.
+
+\begin{algorithm}
+\caption{CT-TGNN Training for Encrypted Traffic}
+\label{alg:cttgnn_training}
+\begin{algorithmic}[1]
+\REQUIRE Temporal graph sequence $\{\mathcal{G}^{(t)}\}_{t=1}^T$, encrypted edge features $\{\mathbf{E}^{(t)}\}$, labels $\mathbf{y}$
+\REQUIRE Learning rate $\eta$, ODE tolerance $\epsilon_{ode}$, time constants $\{\tau_s\}_{s=1}^S$
+\ENSURE Trained parameters $\theta^*$
+\STATE Initialize node embeddings $\mathbf{H}(0)$, parameters $\theta$
+\FOR{epoch $= 1$ to $N_{epochs}$}
+    \FOR{each time interval $[t_i, t_{i+1}]$}
+        \STATE // Multi-scale continuous graph dynamics
+        \FOR{scale $s = 1$ to $S$}
+            \STATE $\mathbf{H}_s(t_i) \leftarrow \text{ScaleEncoder}_s(\mathbf{H}(t_i))$
+            \STATE Solve $\frac{d\mathbf{H}_s(\tau)}{d\tau} = \frac{1}{\tau_s}\text{GNODE}_s(\mathbf{H}_s(\tau), \mathcal{A}(\tau), \tau)$
+            \STATE \quad for $\tau \in [t_i, t_{i+1}]$ using Dopri5 with tolerance $\epsilon_{ode}$
+        \ENDFOR
+        \STATE // Compute attention weights over scales
+        \STATE $\beta_s(t_{i+1}) \leftarrow \text{Softmax}(\mathbf{w}_s^T \mathbf{H}_s(t_{i+1}))$ for all $s$
+        \STATE $\mathbf{H}(t_{i+1}) \leftarrow \sum_{s=1}^S \beta_s(t_{i+1}) \mathbf{H}_s(t_{i+1})$
+        \STATE // Discrete event update (if event occurs at $t_{i+1}$)
+        \IF{event at $t_{i+1}$}
+            \STATE $\Delta\mathbf{H} \leftarrow g_\psi(\mathbf{H}(t_{i+1}^-), \mathbf{x}_{event}, k_{event})$
+            \STATE $\mathbf{H}(t_{i+1}^+) \leftarrow \mathbf{H}(t_{i+1}^-) + \Delta\mathbf{H}$
+        \ENDIF
+    \ENDFOR
+    \STATE // Compute predictions and loss
+    \STATE $\hat{\mathbf{y}} \leftarrow \text{Classifier}(\mathbf{H}(T))$
+    \STATE $\mathcal{L} \leftarrow \text{CrossEntropy}(\hat{\mathbf{y}}, \mathbf{y}) + \lambda_{reg}\|\theta\|_2^2$
+    \STATE // Backpropagation through adjoint method
+    \STATE $\nabla_\theta \mathcal{L} \leftarrow \text{AdjointBackward}(\mathcal{L}, \theta)$
+    \STATE $\theta \leftarrow \theta - \eta \nabla_\theta \mathcal{L}$
+\ENDFOR
+\RETURN $\theta^*$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{TripleE-TGNN Multi-Granularity Inference}
+\label{alg:triplee_inference}
+\begin{algorithmic}[1]
+\REQUIRE Microservices graph $\mathcal{G}(t) = (\mathcal{V}_S, \mathcal{V}_T, \mathcal{V}_P, \mathcal{E})$
+\REQUIRE Service features $\{\mathbf{x}_s\}$, trace features $\{\mathbf{x}_\tau\}$, pod features $\{\mathbf{x}_p\}$
+\REQUIRE Trained parameters $\theta^*$
+\ENSURE Threat prediction $\hat{y}$ and granularity-specific scores
+\STATE // Service-level embedding
+\FOR{each service $s \in \mathcal{V}_S$}
+    \STATE $\mathbf{x}_s^{agg} \leftarrow \text{AggregateMetrics}(\mathbf{x}_s)$
+    \STATE $\mathbf{h}_s^{service} \leftarrow \text{GNN}_{service}(\mathbf{x}_s^{agg}, \mathcal{G}_S)$
+\ENDFOR
+\STATE // Trace-level embedding
+\FOR{each trace $\tau \in \mathcal{V}_T$}
+    \STATE Extract service path $(s_1, s_2, \ldots, s_k)$ from trace $\tau$
+    \STATE $\mathbf{h}_\tau^{path} \leftarrow \text{BiLSTM}(\mathbf{e}_{s_1}, \ldots, \mathbf{e}_{s_k})$
+    \STATE $\{\alpha_i\} \leftarrow \text{Attention}(\{\mathbf{h}_i^{span}\}, \mathbf{h}_\tau^{context})$
+    \STATE $\mathbf{h}_\tau^{trace} \leftarrow \mathbf{h}_\tau^{path} \oplus \sum_i \alpha_i \mathbf{h}_i^{span}$
+\ENDFOR
+\STATE // Node-level embedding
+\FOR{each pod $p \in \mathcal{V}_P$}
+    \STATE $\mathbf{x}_p^{combined} \leftarrow [\mathbf{x}_p^{resource}; \mathbf{x}_p^{syscall}]$
+    \STATE $\mathbf{h}_p^{node} \leftarrow \text{GNN}_{node}(\mathbf{x}_p^{combined}, \mathcal{G}_P)$
+\ENDFOR
+\STATE // Cross-granularity attention fusion
+\FOR{each service $s$}
+    \STATE Find connected traces $\mathcal{T}_s$ and pods $\mathcal{P}_s$
+    \STATE $\mathbf{h}_s^{trace\rightarrow service} \leftarrow \text{Attention}(\mathbf{h}_s^{service}, \{\mathbf{h}_\tau^{trace}\}_{\tau \in \mathcal{T}_s})$
+    \STATE $\mathbf{h}_s^{node\rightarrow service} \leftarrow \text{Attention}(\mathbf{h}_s^{service}, \{\mathbf{h}_p^{node}\}_{p \in \mathcal{P}_s})$
+    \STATE $\mathbf{h}_s^{fused} \leftarrow [\mathbf{h}_s^{service}; \mathbf{h}_s^{trace\rightarrow service}; \mathbf{h}_s^{node\rightarrow service}]$
+\ENDFOR
+\STATE // Hierarchical pooling
+\STATE $\mathbf{h}_{graph}^{service} \leftarrow \text{MeanPool}(\{\mathbf{h}_s^{service}\})$
+\STATE $\mathbf{h}_{graph}^{trace} \leftarrow \text{MaxPool}(\{\mathbf{h}_\tau^{trace}\})$
+\STATE $\mathbf{h}_{graph}^{node} \leftarrow \text{AttentionPool}(\{\mathbf{h}_p^{node}\})$
+\STATE // Final classification
+\STATE $\mathbf{h}_{graph} \leftarrow [\mathbf{h}_{graph}^{service}; \mathbf{h}_{graph}^{trace}; \mathbf{h}_{graph}^{node}]$
+\STATE $\hat{y} \leftarrow \text{MLP}_{classifier}(\mathbf{h}_{graph})$
+\RETURN $\hat{y}$, $\{\mathbf{h}_s^{service}\}$, $\{\mathbf{h}_\tau^{trace}\}$, $\{\mathbf{h}_p^{node}\}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Graph Neural ODE Forward Pass}
+\label{alg:gnode_forward}
+\begin{algorithmic}[1]
+\REQUIRE Initial node embeddings $\mathbf{H}(t_0)$, adjacency matrix $\mathcal{A}$
+\REQUIRE Integration interval $[t_0, t_1]$, ODE solver parameters
+\ENSURE Final node embeddings $\mathbf{H}(t_1)$
+\STATE Define ODE dynamics function:
+\STATE \quad $f_{ode}(\mathbf{H}, t) = \text{GraphConv}(\text{TA-BN}(\mathbf{H}, t), \mathcal{A})$
+\STATE where:
+\STATE \quad $\text{TA-BN}(\mathbf{H}, t) = \gamma(t) \odot \frac{\mathbf{H} - \mu(t)}{\sqrt{\sigma^2(t) + \epsilon}} + \beta(t)$
+\STATE \quad $\text{GraphConv}(\mathbf{H}, \mathcal{A}) = \sigma(\tilde{\mathcal{D}}^{-1/2}\tilde{\mathcal{A}}\tilde{\mathcal{D}}^{-1/2}\mathbf{H}\mathbf{W})$
+\STATE // Integrate ODE using adaptive solver
+\STATE $\mathbf{H}(t_1) \leftarrow \text{ODESolve}(f_{ode}, \mathbf{H}(t_0), [t_0, t_1])$
+\STATE // ODESolve uses Dormand-Prince (Dopri5) method with:
+\STATE \quad Relative tolerance: $rtol = 10^{-3}$
+\STATE \quad Absolute tolerance: $atol = 10^{-4}$
+\STATE \quad Adaptive step size control
+\RETURN $\mathbf{H}(t_1)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Privacy-Preserving Federated Optimal Transport}
+\label{alg:ppfot}
+\begin{algorithmic}[1]
+\REQUIRE $K$ clients with local data $\{\mathcal{D}_k\}_{k=1}^K$, target data $\mathcal{D}_T$
+\REQUIRE Privacy budget $\epsilon$, failure probability $\delta$, Byzantine fraction $\beta$
+\ENSURE Global adapted model $f_T$
+\STATE Initialize global model $f_0$
+\FOR{round $r = 1$ to $R$}
+    \STATE Server samples client subset $\mathcal{S}_r \subseteq [K]$ with $|\mathcal{S}_r| = C$
+    \STATE Server broadcasts $f_{r-1}$ to clients in $\mathcal{S}_r$
+    \STATE // Parallel client updates
+    \FOR{each client $k \in \mathcal{S}_r$ in parallel}
+        \STATE // Compute local-to-target optimal transport
+        \STATE Sample local features $\{\mathbf{x}_i^{(k)}\}_{i=1}^{n_k}$, target features $\{\mathbf{y}_j^{(T)}\}_{j=1}^{n_T}$
+        \STATE Compute cost matrix $\mathbf{C}_{ij}^{(k)} = \|\mathbf{x}_i^{(k)} - \mathbf{y}_j^{(T)}\|_2^2$
+        \STATE // Differentially private Sinkhorn
+        \STATE $\tilde{\mathbf{C}}^{(k)} \leftarrow \mathbf{C}^{(k)} + \text{GaussianNoise}(\sigma_{DP})$
+        \STATE $\boldsymbol{\gamma}^{(k)} \leftarrow \text{Sinkhorn}(\tilde{\mathbf{C}}^{(k)}, \lambda, \epsilon_{conv})$
+        \STATE // Transport-based domain adaptation
+        \STATE $\tilde{\mathbf{x}}_i^{(k)} \leftarrow \sum_j \gamma_{ij}^{(k)} \mathbf{y}_j^{(T)}$ for all $i$
+        \STATE // Local model training on transported features
+        \STATE $f_k^{(r)} \leftarrow \text{Train}(f_{r-1}, \{(\tilde{\mathbf{x}}_i^{(k)}, y_i^{(k)})\}, E_{local})$
+        \STATE // Differential privacy for model update
+        \STATE $\Delta_k^{(r)} \leftarrow f_k^{(r)} - f_{r-1}$
+        \STATE Clip: $\tilde{\Delta}_k^{(r)} \leftarrow \Delta_k^{(r)} / \max(1, \|\Delta_k^{(r)}\|_2 / C_{clip})$
+        \STATE Add noise: $\hat{\Delta}_k^{(r)} \leftarrow \tilde{\Delta}_k^{(r)} + \mathcal{N}(0, \sigma_{DP}^2 C_{clip}^2 \mathbf{I})$
+        \STATE Send $\hat{\Delta}_k^{(r)}$ to server
+    \ENDFOR
+    \STATE // Byzantine-robust aggregation at server
+    \STATE Collect $\{\hat{\Delta}_k^{(r)}\}_{k \in \mathcal{S}_r}$
+    \STATE Compute Wasserstein distances: $d_k \leftarrow W_2(\hat{\Delta}_k^{(r)}, \bar{\Delta}^{(r)})$
+    \STATE Identify outliers: $\mathcal{O} \leftarrow \{k : d_k > \text{percentile}(\{d_j\}, 100(1-\beta))\}$
+    \STATE Remove outliers: $\mathcal{S}_r' \leftarrow \mathcal{S}_r \setminus \mathcal{O}$
+    \STATE Trimmed mean: $\bar{\Delta}^{(r)} \leftarrow \frac{1}{|\mathcal{S}_r'|}\sum_{k \in \mathcal{S}_r'} \hat{\Delta}_k^{(r)}$
+    \STATE // Update global model
+    \STATE $f_r \leftarrow f_{r-1} + \bar{\Delta}^{(r)}$
+\ENDFOR
+\RETURN $f_T \leftarrow f_R$
+\end{algorithmic}
+\end{algorithm}
+
 \section{Data Preprocessing}
 
 \subsection{Feature Engineering}
