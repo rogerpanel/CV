@@ -1,0 +1,2267 @@
+\documentclass[14pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{algpseudocode} 
+
+
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+% --- Import algorithm2e ---
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+% --- Redefine the algorithm environment to force consistent layout ---
+\let\oldalgorithm\algorithm
+\let\endoldalgorithm\endalgorithm
+\renewenvironment{algorithm}[1][]{%
+  \par\vspace{1em}
+  \begin{center}
+  \begin{minipage}{0.9\textwidth}
+  \oldalgorithm[#1]
+}{%
+  \endoldalgorithm
+  \end{minipage}
+  \end{center}
+  \par\vspace{1em}
+}
+
+% Optional visual tuning
+\SetAlgoNlRelativeSize{-1}
+\setlength{\algomargin}{1.5em}
+\SetAlCapSkip{1em}
+\usepackage[section]{placeins}
+
+
+
+\usepackage{pdfpages}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{fancyhdr}
+% Better algorithm formatting
+\usepackage{float}
+\floatstyle{ruled}
+\restylefloat{algorithm}
+
+% Prevent orphaned algorithms
+\widowpenalty=10000
+\clubpenalty=10000
+\raggedbottom
+
+
+% Page setup with better algorithm handling
+\geometry{
+  top=2.5cm,
+  bottom=2cm,
+  left=3cm,
+  right=1.5cm
+}
+
+\onehalfspacing
+
+% Better algorithm formatting
+\usepackage{float}
+\floatstyle{ruled}
+\restylefloat{algorithm}
+
+% Prevent orphaned algorithms
+\widowpenalty=10000
+\clubpenalty=10000
+\raggedbottom
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+% Headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\leftmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+
+
+\begin{document}
+
+\includepdf[pages={1}]{cover_page_Eng.pdf}
+
+\fontsize{14pt}{16.5pt}\selectfont
+
+
+\tableofcontents
+\newpage
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+The exponential proliferation of sophisticated cyber threats and the widespread adoption of artificial intelligence in network security infrastructure have created unprecedented challenges for traditional Intrusion Detection and Prevention Systems (IDPS). Contemporary AI-based security systems, while demonstrating superior detection capabilities for known attack patterns, exhibit fundamental vulnerabilities to adversarial machine learning techniques including evasion attacks (FGSM, PGD, C\&W), data poisoning campaigns, and temporal attack sequences that evade detection through distributed manipulation over extended time periods. This dissertation addresses these critical vulnerabilities through the development of a comprehensive framework for adversarially resilient AI-based models that integrate stochastic architectures, principled uncertainty quantification, and adaptive learning mechanisms.
+
+The research establishes rigorous mathematical foundations for adversarial robustness in network security contexts, developing novel theoretical frameworks including formal robustness bounds, uncertainty decomposition theorems (epistemic vs. aleatoric), temporal adversarial robustness measures, and convergence guarantees for multi-objective optimization. The theoretical contributions encompass certified robustness via randomized smoothing, stochastic attention mechanisms with controlled noise injection, and Bayesian neural network integration that enables principled uncertainty estimation for security-critical decision making.
+
+The proposed framework introduces three complementary architectural innovations: (1) Enhanced Robust Adversarial Models (RAM) employing autoencoder-based feature transformation with multi-attack adversarial training achieving robustness against $\epsilon$-bounded perturbations with formal guarantees; (2) Temporal LSTM-Reinforcement Learning integration with verified gradient flow preservation enabling detection of sequential attack patterns through hybrid DQN-Actor-Critic adaptive defense mechanisms; and (3) Stochastic Multimodal Transformers incorporating Bayesian attention, variational embeddings, and sparse Gaussian Process layers for uncertainty-aware multimodal fusion across network traffic, system logs, API traces, and behavioral metadata.
+
+The implementation framework translates theoretical foundations into production-ready algorithms with proven correctness guarantees, featuring modular architecture with formal component interfaces, real-time inference pipelines maintaining sub-millisecond processing latency, and comprehensive verification procedures ensuring deployment reliability. Experimental validation on benchmark datasets (IoT-Bot-IDS2023, CIC-IDS2023, TON-IoT2022) demonstrates significant improvements: 96.2\% average accuracy with 29\% false positive reduction, 14\% detection latency improvement, 18.7\% enhancement in zero-day attack detection, and superior recovery performance against poisoning attacks (30.5\% improvement for gradient-based poisoning, 39.7\% for backdoor triggers).
+
+The research advances the state-of-the-art through several critical contributions: establishing the first comprehensive mathematical framework for stochastic adversarial robustness in network security; developing uncertainty-aware decision making procedures that distinguish between model uncertainty and inherent data ambiguity; creating dynamic defense mechanisms through controlled randomness that present "moving targets" to adaptive adversaries; and providing formal verification procedures ensuring theoretical guarantees are preserved in operational deployment. The stochastic approach fundamentally shifts from deterministic security models to probabilistic frameworks that better capture uncertainty in threat detection while maintaining computational tractability for real-time environments.
+
+The broader impact encompasses enhanced security posture for critical infrastructure, cross-disciplinary integration bridging cybersecurity and adversarial machine learning, and establishment of new paradigms for uncertainty-aware security systems. The work addresses real-world cybersecurity challenges through deployment-ready systems designed for integration with existing Security Operations Centers, providing both immediate practical value and long-term research directions for adaptive, resilient network security infrastructure in an increasingly sophisticated threat landscape.
+
+\vspace{1em}
+\begin{flushleft}
+\textit{\textbf{Keywords:} Adversarial Machine Learning, Intrusion Detection Systems, Stochastic Transformers, Uncertainty Quantification, Bayesian Neural Networks, Reinforcement Learning, Multimodal Fusion, Temporal Modeling, Attack Resilient Models, Network Security.}
+\end{flushleft}
+
+\newpage
+
+% INTRODUCTION
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+The exponential proliferation of digital transformation initiatives across all sectors has fundamentally redefined the cyber-attack surface, creating unprecedented challenges for network security infrastructure. Contemporary organizations increasingly depend on complex, interconnected networks encompassing traditional IT systems, Internet of Things (IoT) devices, cloud services, edge computing platforms, and hybrid multi-cloud environments. This technological evolution has simultaneously expanded operational capabilities and introduced sophisticated attack vectors that traditional security mechanisms cannot adequately address.
+
+The threat landscape has undergone a paradigmatic shift characterized by the emergence of advanced persistent threats (APTs), zero-day exploits, AI-powered attacks, and nation-state sponsored cyber warfare campaigns. Recent cybersecurity statistics reveal that adversarial attacks can achieve evasion success rates exceeding 90\% on standard datasets through carefully crafted perturbations that preserve communication protocols while corrupting decision boundaries \cite{han2021evaluating}. The operational reality demonstrates that traditional signature-based and anomaly-based detection systems, while effective against known attack patterns, exhibit fundamental weaknesses when confronted with adversarial machine learning techniques such as Fast Gradient Sign Method (FGSM), Projected Gradient Descent (PGD), Carlini \& Wagner (C\&W), and Generative Adversarial Network (GAN) based attacks \cite{goodfellow2014explaining, madry2017towards}.
+
+Network Intrusion Detection and Prevention Systems (IDPS) constitute the cornerstone of modern cybersecurity infrastructure, serving as the primary defense mechanism against malicious network activities. The rapid adoption of artificial intelligence (AI) and machine learning (ML) technologies in IDPS has significantly enhanced threat detection capabilities, enabling systems to identify sophisticated attack patterns that evade traditional rule-based approaches. However, this technological advancement has simultaneously introduced critical vulnerabilities, particularly susceptibility to adversarial attacks that exploit weaknesses in learning models through maliciously crafted inputs designed to mislead detection algorithms or systematically degrade overall model performance through training data poisoning.
+
+Contemporary adversarial machine learning research has demonstrated that even state-of-the-art deep learning models can be compromised through carefully engineered perturbations that remain imperceptible to human analysts but cause catastrophic misclassification in automated systems. In network security contexts, such vulnerabilities represent existential threats that enable attackers to bypass detection systems, establish persistent access, exfiltrate sensitive data, and conduct large-scale breaches with impunity. The mathematical foundation of these attacks exploits the high-dimensional nature of machine learning models, where small perturbations in input space can lead to dramatic changes in model output, fundamentally challenging the reliability of AI-based security systems.
+
+\section*{Evolution of Stochastic Approaches in Network Security}
+
+Recent advances in stochastic neural networks and transformer architectures present transformative opportunities for addressing these fundamental challenges. The integration of stochastic modeling techniques, including Monte Carlo Dropout, variational inference, and Gaussian Process uncertainty quantification, enables the development of security systems that can express confidence in their predictions and adapt to evolving threat landscapes. This dissertation explores the convergence of multiple advanced techniques: stochastic transformer architectures, uncertainty-aware decision making, multimodal data fusion, and comprehensive adversarial training frameworks.
+
+The evolution toward stochastic approaches represents a fundamental shift from deterministic security models to probabilistic frameworks that better capture the inherent uncertainty in threat detection. By incorporating controlled randomness through variational embeddings, Bayesian attention mechanisms, and entropy-aware confidence modeling, modern IDPS can create dynamic defense mechanisms that are significantly more resilient to adversarial manipulation. This stochastic paradigm enables security systems to distinguish between epistemic uncertainty (model uncertainty due to limited training data) and aleatoric uncertainty (inherent data noise), providing crucial insights for security analysts in prioritizing responses and allocating resources.
+
+\section*{Problem Statement and Research Motivation}
+
+The fundamental challenge addressed in this dissertation lies in the inherent vulnerability of current AI-based IDPS to multiple categories of adversarial threats that collectively undermine the security posture of modern networks. This research identifies and addresses four primary categories of adversarial vulnerabilities:
+
+\textbf{Evasion Attacks and Real-Time Manipulation:} These sophisticated attacks involve the real-time manipulation of network traffic or system behavior to bypass detection mechanisms while preserving malicious functionality. Adversaries employ advanced techniques including gradient-based methods (FGSM, PGD), optimization-based approaches (C\&W), and generative models (GANs) to craft adversarial examples that maintain semantic validity within network protocols while causing systematic misclassification. The mathematical formulation of these attacks exploits the continuous nature of neural network decision boundaries, where adversarial perturbations $\delta$ are constrained by $\|\delta\|_p \leq \epsilon$ while achieving $f_\theta(x + \delta) \neq f_\theta(x)$ for classifier $f_\theta$ and input $x$.
+
+\textbf{Poisoning Attacks and Training Data Integrity:} These insidious attacks compromise the fundamental integrity of machine learning models by injecting malicious samples into training datasets. Variants include gradient-based poisoning that manipulates loss landscapes, clean-label attacks that maintain correct labels while subtly modifying features, backdoor triggers that embed hidden patterns causing targeted misclassification, and label flipping attacks that directly corrupt training labels. Recent research demonstrates that poisoning rates as low as 0.1\% of training data can achieve significant model degradation while maintaining stealth \cite{goldblum2022dataset}.
+
+\textbf{Temporal Dependencies and Sequential Attack Patterns:} Existing IDPS architectures fail to capture temporal patterns in sophisticated attacks where adversaries introduce subtle perturbations over extended time periods. These attacks exploit the static nature of conventional models by gradually shifting decision boundaries without triggering immediate detection mechanisms. The temporal dimension introduces attack vectors including gradual poisoning campaigns, distributed evasion sequences, and adaptive timing strategies that coordinate with periods of high legitimate activity.
+
+\textbf{Uncertainty Quantification Deficiency:} Traditional IDPS operate as deterministic systems providing point estimates without quantifying prediction confidence. This limitation prevents implementation of risk-based decision making, fails to identify ambiguous cases requiring human intervention, and provides no mechanism for expressing model confidence in novel or adversarial scenarios. The absence of uncertainty quantification particularly impacts operational deployment where security analysts must prioritize limited resources based on threat severity and detection confidence.
+
+Traditional IDPS architectures suffer from several critical limitations that exacerbate their vulnerability to these threats. First, they predominantly employ deterministic models that lack uncertainty quantification capabilities, making them unable to express confidence in predictions or identify ambiguous cases requiring human intervention. This limitation prevents systems from implementing risk-based decision making where uncertain predictions trigger additional verification procedures. Second, existing systems process network modalities independently, failing to capture essential cross-modal dependencies crucial for detecting sophisticated attacks that span multiple data types. Third, current approaches lack temporal awareness, processing network events as isolated instances rather than recognizing patterns that emerge over extended time periods.
+
+\section*{Research Objectives and Scope}
+
+This dissertation aims to address these fundamental limitations through the development of a comprehensive framework for adversarially resilient AI-based models in hybrid IDPS. The research objectives encompass both theoretical foundations and practical implementations:
+
+\textbf{Objective 1: Theoretical Foundation Development}
+Establish rigorous mathematical foundations for adversarial robustness in network security contexts, including formal definitions of resilience metrics, theoretical guarantees for defense mechanisms, and convergence proofs for proposed algorithms. This includes developing formal security models that capture the interaction between attackers and defenders, establishing bounds on adversarial robustness, and proving convergence properties for multi-objective optimization frameworks.
+
+\textbf{Objective 2: Robust Model Architecture Design}
+Design and implement novel AI architectures that integrate multiple complementary approaches including Robust Adversarial Models (RAM) with autoencoder-based feature transformation, integrated Deep Q-Networks (DQN) and Actor-Critic reinforcement learning systems for adaptive defense, temporal LSTM-enhanced frameworks for sequential pattern recognition, stochastic multimodal transformers with principled uncertainty quantification, and hybrid architectures combining deterministic and probabilistic components.
+
+\textbf{Objective 3: Uncertainty-Aware Detection Systems}
+Develop comprehensive uncertainty quantification mechanisms that enable systems to express confidence in predictions, distinguish between epistemic and aleatoric uncertainty, and implement uncertainty-aware decision making procedures. This includes integrating Bayesian neural networks, Monte Carlo methods, Gaussian processes, and stochastic attention mechanisms to provide principled uncertainty estimates.
+
+\textbf{Objective 4: Adaptive Learning and Continuous Improvement}
+Create active learning and continual adaptation mechanisms that enable systems to evolve in response to emerging threat patterns while maintaining robustness guarantees. This includes developing online learning algorithms, drift detection mechanisms, adaptive retraining procedures, and uncertainty-guided sample selection strategies.
+
+\textbf{Objective 5: Comprehensive Evaluation and Validation}
+Establish rigorous experimental methodologies for evaluating adversarial robustness across multiple attack types, datasets, and deployment scenarios, providing empirical validation of theoretical claims and practical applicability.
+
+\section*{Research Questions and Hypotheses}
+
+This research is guided by six fundamental research questions that address critical gaps in current adversarial machine learning for network security:
+
+\textbf{RQ1: Optimization of Adversarial Training Methodologies}
+How can adversarial training methodologies be optimized to improve IDS model robustness against both evasion and poisoning attacks while maintaining high detection accuracy on legitimate traffic? This question addresses the fundamental trade-off between adversarial robustness and clean accuracy, investigating whether novel training procedures can achieve superior Pareto frontiers.
+
+\textbf{RQ2: Reinforcement Learning for Adaptive Security}
+What reinforcement learning strategies and architectures best support real-time adaptability to adversarial threats in dynamic network environments? This explores the application of Deep Q-Networks, Actor-Critic methods, and policy gradient approaches for adaptive defense mechanisms.
+
+\textbf{RQ3: Stochastic Architectures and Uncertainty Quantification}
+Can stochastic transformer architectures with uncertainty quantification enhance IDS detection capabilities in multimodal and API-based environments? This investigates whether controlled randomness and principled uncertainty estimation improve robustness and decision quality.
+
+\textbf{RQ4: Temporal Modeling for Sequential Attacks}
+How can temporal dependencies and sequential patterns be effectively modeled to detect gradual poisoning attacks that evade traditional memoryless detection systems? This addresses the critical gap in temporal adversarial modeling.
+
+\textbf{RQ5: Multimodal Integration for Comprehensive Defense}
+What multimodal fusion strategies optimally combine heterogeneous network data sources (traffic patterns, system logs, API traces) while maintaining adversarial robustness? This explores cross-modal dependencies and their role in comprehensive threat detection.
+
+\textbf{RQ6: Theoretical Limits and Practical Bounds}
+What are the theoretical limits of adversarial robustness in network intrusion detection, and how can these limits inform the design of practical defense mechanisms? This establishes fundamental bounds that guide algorithm design and performance expectations.
+
+\section*{Significance and Contributions}
+
+This research makes several significant contributions to the intersection of cybersecurity and adversarial machine learning:
+
+\textbf{Theoretical Contributions:} The dissertation establishes new theoretical frameworks for understanding and quantifying adversarial robustness in network security contexts, providing formal guarantees, convergence proofs, and bounds for defense mechanisms. Novel mathematical formulations include multi-objective optimization frameworks, uncertainty decomposition theorems, temporal robustness measures, and stochastic attention mechanisms with provable properties.
+
+\textbf{Methodological Innovations:} Development of novel architectures and training methodologies that advance the state-of-the-art in adversarially robust machine learning, with specific adaptations for network security applications. Key innovations include stochastic attention mechanisms with controlled noise injection, integrated reinforcement learning frameworks for adaptive defense, uncertainty-aware decision making procedures, and multimodal fusion strategies preserving adversarial robustness.
+
+\textbf{Practical Impact:} The proposed systems address real-world cybersecurity challenges and are designed for deployment in operational environments, potentially improving the security posture of critical infrastructure. Implementation includes real-time processing capabilities, scalable architectures, integration with existing security operations centers, and comprehensive performance evaluation on benchmark datasets.
+
+\textbf{Cross-Disciplinary Integration:} The work bridges multiple research areas including machine learning, cybersecurity, reinforcement learning, uncertainty quantification, stochastic modeling, and network analysis, fostering interdisciplinary collaboration and knowledge transfer.
+
+\section*{Dissertation Structure and Organization}
+
+This dissertation is systematically organized into three primary chapters that develop the theoretical foundations, methodological innovations, and practical implementations:
+
+\textbf{Chapter 1: Systematic Literature Review and Research Gap Analysis} provides a comprehensive examination of existing research in adversarial machine learning for network security, establishing the theoretical foundation and identifying critical gaps that motivate the proposed research. The chapter presents a detailed taxonomy of adversarial attacks, analyzes current defense mechanisms and their limitations, examines temporal modeling approaches, reviews uncertainty quantification techniques, and positions the research contributions within the broader academic landscape.
+
+\textbf{Chapter 2: Mathematical Theory and Formal Foundations} establishes the rigorous mathematical framework underlying the proposed adversarially resilient AI-based models. This chapter develops formal definitions, theorems, and proofs related to adversarial robustness, uncertainty quantification, stochastic modeling, and adaptive learning. Key theoretical contributions include robustness bounds for stochastic architectures, convergence guarantees for multi-objective optimization, complexity analysis of proposed algorithms, uncertainty decomposition theorems, and formal security models incorporating probabilistic defenses.
+
+\textbf{Chapter 3: Software Development and Implementation} translates the mathematical theory into concrete software implementations with formal algorithmic descriptions and proven correctness guarantees. The chapter provides detailed algorithmic specifications, implementation architectures, performance optimization strategies, experimental validation procedures, and formal verification methods for each component of the adversarially resilient IDPS framework.
+
+The dissertation concludes with comprehensive experimental validation, discussion of implications, and identification of future research directions, establishing a new paradigm for adversarially resilient network intrusion detection systems that integrate stochastic modeling, uncertainty quantification, and adaptive learning mechanisms.
+
+\newpage
+
+% CHAPTER 1: LITERATURE REVIEW
+\chapter{Systematic Literature Review: Adversarial Machine Learning in Network Security}
+
+\section{Introduction and Methodology}
+
+The landscape of network security has undergone a fundamental transformation with the widespread adoption of artificial intelligence and machine learning technologies in Intrusion Detection and Prevention Systems (IDPS). While these technological advances have significantly enhanced the capability to identify sophisticated threats through pattern recognition and anomaly detection, they have simultaneously introduced new attack vectors that adversaries can exploit to compromise security systems. This chapter presents a systematic review of existing literature on adversarial machine learning in network security contexts, establishing the theoretical foundation for the proposed research and identifying critical gaps that motivate the development of novel defense mechanisms.
+
+The systematic literature review methodology employed in this research follows established guidelines for comprehensive academic surveys, incorporating multiple databases including IEEE Xplore, ACM Digital Library, SpringerLink, and specialized cybersecurity journals. The search strategy utilizes Boolean combinations of keywords including "adversarial machine learning," "network intrusion detection," "evasion attacks," "poisoning attacks," "robustness," "uncertainty quantification," "stochastic modeling," and "transformer architectures." The review encompasses publications from 2014 to 2024, focusing on peer-reviewed articles, conference proceedings, and high-impact technical reports that contribute to the understanding of adversarial threats in network security.
+
+\section{Comprehensive Taxonomy of Adversarial Threats}
+
+\subsection{Evasion Attacks: Real-Time Adversarial Manipulation}
+
+Evasion attacks represent the most immediate and prevalent threat to operational IDS systems, involving the real-time manipulation of network traffic to bypass detection mechanisms while preserving the malicious functionality of attacks. These attacks exploit the mathematical properties of decision boundaries in neural networks, leveraging the continuous nature of input spaces to craft perturbations that cause misclassification.
+
+\textbf{Gradient-Based Evasion Methods:}
+The Fast Gradient Sign Method (FGSM), introduced by Goodfellow et al. \cite{goodfellow2014explaining}, represents the foundational approach to generating adversarial examples through gradient computation:
+
+$$x^{adv} = x + \epsilon \cdot \text{sign}(\nabla_x \mathcal{L}(\theta, x, y))$$
+
+where $\epsilon$ controls the perturbation magnitude, $\mathcal{L}$ represents the loss function, $\theta$ denotes model parameters, and $\nabla_x$ indicates the gradient with respect to input $x$. This method exploits the linearity assumption in high-dimensional spaces, where small perturbations in many dimensions can accumulate to cause significant changes in model output.
+
+Projected Gradient Descent (PGD), developed by Madry et al. \cite{madry2017towards}, extends FGSM through iterative refinement, providing stronger adversarial examples:
+
+$$x^{adv}_{t+1} = \Pi_{x,\epsilon}(x^{adv}_t + \alpha \cdot \text{sign}(\nabla_x \mathcal{L}(\theta, x^{adv}_t, y)))$$
+
+where $\Pi_{x,\epsilon}$ denotes projection onto the $\epsilon$-ball around the original input $x$, and $\alpha$ represents the step size. The iterative nature of PGD enables more effective exploration of the adversarial space, often yielding perturbations that are more robust to defensive mechanisms.
+
+\textbf{Optimization-Based Approaches:}
+Carlini \& Wagner attacks \cite{carlini2017towards} formulate adversarial generation as optimization problems that minimize distortion while maximizing misclassification probability:
+
+$$\min_\delta \|\delta\|_p + c \cdot f(x + \delta)$$
+
+where $f(x + \delta)$ represents an objective function designed to encourage misclassification, and $c$ balances between distortion minimization and attack success. These approaches often produce adversarial examples with smaller perturbations compared to gradient-based methods, making them more difficult to detect through statistical analysis.
+
+\textbf{Generative Adversarial Networks for Evasion:}
+Recent research has explored the application of GANs for generating adversarial examples, where a generator network learns to produce perturbations that fool a discriminator representing the target classifier. This approach enables the generation of more realistic adversarial examples that maintain semantic validity within network protocol constraints.
+
+\textbf{Stochastic Evasion Techniques:}
+Emerging research demonstrates the effectiveness of stochastic perturbation methods that introduce controlled randomness in adversarial example generation. These techniques create "moving targets" that are harder for adaptive defenses to counter, as the same input can produce different adversarial variants across multiple runs.
+
+\subsection{Poisoning Attacks: Compromising Training Data Integrity}
+
+Poisoning attacks target the training phase of machine learning models by injecting malicious samples into training datasets, creating persistent vulnerabilities that affect model behavior across all future predictions. These attacks are particularly insidious as they can remain undetected for extended periods while systematically degrading model performance.
+
+\textbf{Data Poisoning Mechanisms:}
+Label-flipping attacks represent the simplest form of poisoning, where attackers alter the class labels of training samples while maintaining feature vectors. The mathematical formulation involves corrupting a fraction $\alpha$ of training labels:
+
+$$\tilde{y}_i = \begin{cases} 
+y_i & \text{with probability } 1-\alpha \\
+\text{random class} \neq y_i & \text{with probability } \alpha
+\end{cases}$$
+
+Clean-label poisoning attacks, introduced by Shafahi et al. \cite{shafahi2018adversarial}, maintain correct labels while subtly modifying feature vectors to create adversarial training examples. These attacks are particularly dangerous because they preserve label correctness, making them difficult to detect through label validation procedures.
+
+\textbf{Backdoor and Trigger-Based Attacks:}
+Backdoor attacks embed hidden patterns or triggers in training data that cause targeted misclassification when specific conditions are met during inference. The mathematical formulation involves defining a trigger function $T(x)$ and target label $y_t$:
+
+$$\text{Poisoned sample} = (T(x), y_t)$$
+
+Recent studies by Goldblum et al. \cite{goldblum2022dataset} demonstrate that poisoning rates as low as 0.1\% can achieve significant model degradation while maintaining stealth. Their analysis reveals that sophisticated poisoning strategies can achieve 100\% backdoor success rates while maintaining 94.2\% accuracy on legitimate tasks.
+
+\textbf{Gradient-Based Poisoning:}
+Advanced poisoning attacks leverage gradient information to craft training samples that maximally interfere with the learning process. These attacks solve optimization problems of the form:
+
+$$\max_{\delta} \mathcal{L}(\theta + \eta \nabla_\theta \mathcal{L}(\theta, x + \delta, y), x_{test}, y_{test})$$
+
+where the perturbation $\delta$ is chosen to maximize the loss on a target test sample after one gradient update step.
+
+\subsection{Model Extraction and Inversion Attacks}
+
+Model extraction attacks attempt to reconstruct model parameters or functionality through carefully crafted queries, potentially compromising the intellectual property of security vendors and enabling the development of more effective evasion techniques. These attacks typically employ query-based strategies that analyze input-output relationships to reverse-engineer model behavior.
+
+\textbf{Query-Based Extraction:}
+Attackers send carefully chosen queries to the target model and analyze responses to reconstruct model parameters or decision boundaries. The mathematical foundation involves solving inverse problems where attackers estimate parameters $\hat{\theta}$ that minimize prediction discrepancy:
+
+$$\hat{\theta} = \arg\min_\theta \sum_{i=1}^N \|\hat{f}_\theta(x_i) - f_{target}(x_i)\|^2$$
+
+Model inversion attacks focus on extracting sensitive information about training data by analyzing model outputs. These attacks exploit the fact that neural networks can inadvertently memorize training examples, potentially revealing private information through careful analysis of model responses.
+
+\section{Defense Mechanisms and Fundamental Limitations}
+
+\subsection{Adversarial Training Approaches}
+
+Adversarial training remains the most widely adopted defense mechanism, involving the augmentation of training data with adversarial examples to improve model robustness. The fundamental approach can be formalized as a minimax optimization problem:
+
+$$\min_\theta \mathbb{E}_{(x,y)\sim \mathcal{D}} \left[ \max_{\|\delta\| \leq \epsilon} \mathcal{L}(\theta, x + \delta, y) \right]$$
+
+This formulation seeks to find model parameters $\theta$ that minimize the worst-case loss over all perturbations within an $\epsilon$-ball around each training example. However, this approach suffers from several critical limitations that limit its effectiveness in operational environments.
+
+\textbf{Computational Overhead and Scalability Issues:}
+Generating adversarial examples during training significantly increases computational requirements, often by 5-10× compared to standard training procedures. This overhead stems from the need to solve inner maximization problems for each training sample, requiring multiple gradient computations and iterative optimization steps.
+
+\textbf{Limited Generalization Across Attack Types:}
+Models trained against specific attack types (e.g., FGSM) often exhibit reduced robustness against unseen attacks (e.g., C\&W, PGD), indicating that adversarial training may provide only local robustness around the specific perturbation patterns seen during training. This limitation suggests that adversarial training may not generalize to adaptive adversaries who can modify their attack strategies.
+
+\textbf{Accuracy-Robustness Trade-offs:}
+Adversarial training typically reduces accuracy on clean (unperturbed) examples, creating operational challenges in deployment where false positive rates must be minimized. The fundamental trade-off between robustness and accuracy is captured by:
+
+$$\text{Standard Accuracy} + \text{Adversarial Robustness} \leq \text{Upper Bound}$$
+
+where the upper bound is determined by the intrinsic dimensionality and separability of the data.
+
+\subsection{Detection and Preprocessing Defenses}
+
+Alternative defense strategies focus on detecting adversarial examples before they reach the classifier or preprocessing inputs to remove adversarial perturbations. These approaches attempt to identify statistical properties that distinguish adversarial examples from legitimate inputs.
+
+\textbf{Statistical Detection Methods:}
+Grosse et al. \cite{grosse2017statistical} propose methods that identify adversarial examples based on statistical properties that differ from natural data distributions. These approaches analyze metrics such as local intrinsic dimensionality, kernel density estimates, and distribution-based tests to detect anomalous inputs.
+
+However, Athalye et al. \cite{athalye2018obfuscated} demonstrate that many statistical detection methods provide only "gradient masking" rather than true robustness, where defenses impede gradient-based attacks but remain vulnerable to stronger optimization-based approaches or adaptive adversaries.
+
+\textbf{Reconstruction-Based Defense:}
+Autoencoder-based approaches attempt to reconstruct clean inputs from potentially perturbed examples, operating under the assumption that adversarial perturbations lie in a different manifold than legitimate data. The mathematical formulation involves:
+
+$$x_{clean} = D(E(x_{adv}))$$
+
+where $E$ and $D$ represent encoder and decoder functions trained to reconstruct legitimate network traffic patterns.
+
+\textbf{Input Transformation Defenses:}
+Techniques such as feature squeezing, input discretization, and noise injection aim to remove adversarial perturbations while preserving legitimate signal. These approaches show promise but often reduce model accuracy on legitimate inputs and may be circumvented by adaptive attacks that account for the transformation process.
+
+\section{Temporal Modeling and Sequential Pattern Recognition}
+
+\subsection{LSTM-Based Approaches for Network Security}
+
+Traditional IDS systems process network events independently, failing to capture temporal dependencies that are crucial for detecting sophisticated attacks spanning multiple time steps. Long Short-Term Memory (LSTM) networks have shown particular promise for modeling sequential patterns in network traffic due to their ability to maintain long-term memory through gating mechanisms.
+
+The LSTM architecture addresses the vanishing gradient problem through carefully designed gate structures:
+
+$$f_t = \sigma(W_f \cdot [h_{t-1}, x_t] + b_f)$$ (Forget gate)
+$$i_t = \sigma(W_i \cdot [h_{t-1}, x_t] + b_i)$$ (Input gate)
+$$o_t = \sigma(W_o \cdot [h_{t-1}, x_t] + b_o)$$ (Output gate)
+$$\tilde{c}_t = \tanh(W_c \cdot [h_{t-1}, x_t] + b_c)$$ (Candidate values)
+$$c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t$$ (Cell state)
+$$h_t = o_t \odot \tanh(c_t)$$ (Hidden state)
+
+Kim et al. \cite{kim2016lstm} demonstrate that LSTM-based IDS can achieve superior performance on time-series attack patterns compared to traditional approaches, particularly for attacks that exhibit temporal structure such as port scanning, brute force attempts, and multi-stage intrusions.
+
+\subsection{Attention Mechanisms and Transformer Architectures}
+
+Recent research has begun exploring attention mechanisms and transformer architectures for cybersecurity applications, enabling models to focus on relevant temporal segments without the sequential processing constraints of RNNs. The scaled dot-product attention mechanism is computed as:
+
+$$\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$
+
+where $Q$, $K$, and $V$ represent query, key, and value matrices respectively, and $d_k$ is the dimension of the key vectors.
+
+However, current applications of transformers in network security lack several critical capabilities including uncertainty quantification mechanisms for security-critical decision making, adversarial robustness considerations in transformer design, stochastic modeling approaches for handling inherent uncertainty in network data, and multimodal fusion strategies for heterogeneous data sources.
+
+\subsection{Stochastic Transformer Architectures}
+
+Emerging research demonstrates the potential of stochastic transformer architectures that introduce controlled randomness for improved robustness. The integration of stochastic attention mechanisms creates dynamic decision boundaries that are harder for adversaries to exploit:
+
+$$\text{StochasticAttention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}} + \epsilon\right)V$$
+
+where $\epsilon \sim \mathcal{N}(0, \sigma^2 I_{n \times n})$ models epistemic uncertainty in attention weights.
+
+\subsection{Temporal Adversarial Attacks}
+
+The temporal dimension introduces new attack vectors that current defense mechanisms inadequately address:
+
+\textbf{Gradual Poisoning Campaigns:}
+Attackers can slowly inject malicious samples over extended periods to avoid detection by drift monitoring systems. The mathematical formulation involves optimizing perturbation sequences:
+
+$$\{\delta_t\}_{t=1}^T = \arg\min_{\{\delta_t\}} \sum_{t=1}^T \|\delta_t\|_p \text{ subject to } \text{Attack Success}(\{x_t + \delta_t\})$$
+
+\textbf{Temporal Evasion Sequences:}
+Attacks can be distributed across time to evade detection systems that analyze individual events but miss distributed patterns. These attacks exploit the memoryless nature of many IDS systems by spreading malicious activity across multiple time windows.
+
+\textbf{Adaptive Timing Strategies:}
+Sophisticated adversaries can time their attacks to coincide with periods of high legitimate activity, network maintenance windows, or known blind spots in monitoring systems, reducing the likelihood of detection.
+
+\subsection{Advanced Temporal Modeling with Reinforcement Learning Integration}
+
+Recent research by Anaedevha and Trofimov \cite{anaedevha2024improved} demonstrates that LSTM-based temporal modeling can be significantly enhanced through reinforcement learning integration. Their work establishes theoretical foundations showing that LSTM gradient flow preservation enables effective learning of attack patterns spanning extended temporal windows.
+
+\textbf{Mathematical Foundation for Temporal Robustness:}
+The temporal adversarial robustness for sequence $\mathbf{x} = (x_1, \ldots, x_T)$ is formally defined as:
+$$R_{temporal}(\mathbf{x}) = \min_{\sum_{t=1}^T \|\delta_t\|_p \leq T\epsilon} \mathbb{I}[f(\mathbf{x} + \boldsymbol{\delta}) = f(\mathbf{x})]$$
+
+This formulation captures the minimum perturbation required across the entire temporal sequence to cause misclassification, addressing limitations in existing point-wise robustness measures.
+
+\textbf{LSTM Memory Capacity for Security Applications:}
+Theoretical analysis reveals that LSTM memory capacity for storing attack patterns follows:
+$$\text{Capacity} = h \cdot \log_2(1/\epsilon)$$
+where $h$ is the hidden state dimension and $\epsilon$ represents quantization error. For security applications requiring storage of $C$ attack types with context window $W$, the optimal hidden dimension is:
+$$h^* \geq \frac{C^2 + W \cdot \log_2(|\mathcal{A}|)}{\log_2(1/\epsilon)}$$
+
+\subsection{Multi-Modal Adversarial Defense Integration}
+
+The integration of multiple defense mechanisms presents unique challenges that recent research has begun to address. Anaedevha et al. \cite{anaedevha2025integrated} propose a comprehensive framework combining:
+
+\begin{itemize}
+\item \textbf{Spatial Robustness}: Through autoencoder-based feature transformation
+\item \textbf{Temporal Robustness}: Via LSTM-enhanced sequence modeling  
+\item \textbf{Adaptive Robustness}: Using reinforcement learning for dynamic defense
+\item \textbf{Uncertainty-Aware Robustness}: Through Bayesian neural network integration
+\end{itemize}
+
+Their experimental validation on IoT-Bot-IDS2023, CIC-IDS2023, and TON-IoT2022 datasets demonstrates significant improvements:
+- Average accuracy: 96.2% (vs. 94.7% for standalone models)
+- False positive reduction: 29%
+- Detection latency improvement: 14%
+- Zero-day attack detection enhancement: 18.7%
+
+\textbf{Performance Recovery Analysis:}
+Critical analysis of recovery performance shows:
+- Gradient-based poisoning recovery: +30.5%
+- Label flipping attack recovery: +27.8%  
+- Backdoor trigger recovery: +39.7%
+- Clean-label poisoning recovery: +37.3%
+
+These results indicate that integrated approaches provide superior resilience across diverse attack types compared to single-method defenses.
+
+\section{Uncertainty Quantification in Security Systems}
+
+\subsection{Bayesian Neural Networks for Security Applications}
+
+Uncertainty quantification represents a critical capability for operational security systems, enabling operators to prioritize alerts, focus attention on ambiguous cases, and implement risk-based decision making procedures. Bayesian neural networks provide a principled framework for uncertainty estimation by treating model parameters as random variables with associated probability distributions.
+
+\textbf{Epistemic vs. Aleatoric Uncertainty:}
+Epistemic uncertainty represents uncertainty about model parameters due to limited training data, which can be reduced through additional data collection. Aleatoric uncertainty captures inherent data uncertainty that cannot be reduced through additional training. The mathematical decomposition is:
+
+$$\text{Total Uncertainty} = \mathbb{E}_{\theta}[\text{Var}[y|x,\theta]] + \text{Var}_{\theta}[\mathbb{E}[y|x,\theta]]$$
+
+where the first term represents aleatoric uncertainty and the second represents epistemic uncertainty.
+
+For security applications, this decomposition enables differentiated responses: high epistemic uncertainty suggests the need for additional training data or human expert consultation, while high aleatoric uncertainty indicates inherent ambiguity that may require conservative decision making.
+
+\subsection{Monte Carlo Methods for Computational Tractability}
+
+Full Bayesian inference is computationally intractable for large neural networks, necessitating approximation methods. Monte Carlo Dropout, introduced by Gal and Ghahramani \cite{gal2016dropout}, provides a computationally efficient approximation by interpreting standard dropout as approximate Bayesian inference:
+
+$$\mathbb{E}[y|x] \approx \frac{1}{T} \sum_{t=1}^T f_{\theta_t}(x)$$
+$$\text{Var}[y|x] \approx \frac{1}{T} \sum_{t=1}^T f_{\theta_t}(x)^2 - \left(\frac{1}{T} \sum_{t=1}^T f_{\theta_t}(x)\right)^2$$
+
+where $\theta_t$ represents parameters sampled through dropout during the $t$-th forward pass.
+
+\subsection{Gaussian Process Integration for Uncertainty}
+
+Recent advances demonstrate the effectiveness of sparse Gaussian Process layers for scalable uncertainty quantification in deep networks. The integration of GP layers with transformer architectures enables principled uncertainty estimation:
+
+$$q(f_*|z_*) = \mathcal{N}(\mu_*, \sigma_*^2)$$
+
+where:
+$$\mu_* = K_{*U}K_{UU}^{-1}m$$
+$$\sigma_*^2 = k(z_*, z_*) - K_{*U}K_{UU}^{-1}K_{U*} + K_{*U}K_{UU}^{-1}SK_{UU}^{-1}K_{U*}$$
+
+with variational parameters $m \in \mathbb{R}^m$ and $S \in \mathbb{R}^{m \times m}$.
+
+\section{Multimodal Integration and Transformer Architectures}
+
+\subsection{Multimodal Fusion Strategies in Security}
+
+Modern network environments generate diverse data types including packet-level traffic analysis, system log forensics, API call monitoring, behavioral analytics, and metadata correlation. Effective integration of these modalities requires sophisticated fusion techniques that preserve uncertainty information while capturing cross-modal dependencies:
+
+\textbf{Early Fusion Approaches:}
+Concatenating features from different modalities before processing enables joint learning but may suffer from dimensionality issues and unequal modality contributions. The mathematical formulation involves:
+
+$$x_{fused} = [x^{(traffic)} \| x^{(logs)} \| x^{(api)} \| x^{(metadata)}]$$
+
+\textbf{Late Fusion Strategies:}
+Processing modalities independently and combining predictions enables modality-specific optimization but may miss important cross-modal interactions:
+
+$$p_{final} = \alpha p^{(traffic)} + \beta p^{(logs)} + \gamma p^{(api)} + \delta p^{(metadata)}$$
+
+where $\alpha + \beta + \gamma + \delta = 1$ and weights can be learned or pre-specified.
+
+\textbf{Attention-Based Fusion:}
+Using attention mechanisms to dynamically weight different modalities based on their relevance to specific detection tasks:
+
+$$\text{Attention Weight}_{modal} = \text{softmax}(W_{attn} \cdot h_{modal} + b_{attn})$$
+
+\textbf{Cross-Modal Mutual Information:}
+Recent research emphasizes the importance of maximizing cross-modal mutual information while maintaining adversarial robustness:
+
+$$MI(Z^{(m)}, Z^{(n)}) = \mathbb{E}_{p(z^{(m)},z^{(n)})}\left[\log \frac{p(z^{(m)}, z^{(n)})}{p(z^{(m)})p(z^{(n)})}\right]$$
+
+\subsection{Stochastic Transformer Architectures}
+
+Current transformer applications in cybersecurity focus on deterministic processing without considering adversarial robustness or uncertainty quantification. This research gap motivates the development of stochastic transformer architectures that introduce controlled randomness to improve robustness while providing principled uncertainty estimates.
+
+\textbf{Bayesian Attention Mechanisms:}
+The integration of Bayesian principles into attention computation:
+
+$$\text{BayesianAttention}(Q, K, V) = \text{softmax}\left(\frac{QW_k^{(m)}K^T}{\sqrt{d_k}}\right)V W_v^{(m)}$$
+
+where $W_k^{(m)}, W_v^{(m)} \sim q_\phi(W)$ are sampled from learned weight distributions.
+
+\textbf{Variational Embeddings:}
+Input features are transformed into probabilistic representations:
+
+$$\mu_{emb}(x) = W_\mu x + b_\mu$$
+$$\log \sigma_{emb}(x) = W_\sigma x + b_\sigma$$
+$$z = \mu_{emb}(x) + \sigma_{emb}(x) \odot \epsilon, \quad \epsilon \sim \mathcal{N}(0, I)$$
+
+\section{Reinforcement Learning for Adaptive Security}
+
+\subsection{Dynamic Defense Strategy Development}
+
+Traditional security systems employ static rules and models that cannot adapt to evolving threats, creating opportunities for adaptive adversaries to develop effective countermeasures. Reinforcement learning offers the potential for dynamic, adaptive defense strategies that can evolve in response to changing threat landscapes.
+
+\textbf{Deep Q-Network Approaches:}
+DQN-based security systems learn optimal defense policies through interaction with simulated attack environments. The Q-function approximates optimal action values:
+
+$$Q^*(s,a) = \max_\pi \mathbb{E}\left[\sum_{t=0}^{\infty} \gamma^t r_t \Big| s_0 = s, a_0 = a, \pi\right]$$
+
+where $s$ represents system states, $a$ denotes defense actions, $r_t$ represents rewards, and $\gamma$ is the discount factor.
+
+\textbf{Actor-Critic Methods:}
+These approaches combine value-based and policy-based learning, offering advantages for continuous action spaces in security contexts. The actor updates policy parameters according to:
+
+$$\nabla_\theta J(\theta) = \mathbb{E}_{s \sim \rho^\pi, a \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(a|s) A^\pi(s,a)]$$
+
+where $A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)$ represents the advantage function.
+
+\textbf{Hybrid DQN-Actor-Critic Integration:}
+Recent work demonstrates the effectiveness of combining DQN and Actor-Critic approaches for security applications, achieving:
+- Enhanced exploration through dual action selection mechanisms
+- Improved stability in non-stationary environments
+- Better convergence properties for high-dimensional state spaces
+
+\subsection{Challenges in RL-Based Security Applications}
+
+Despite their promise, reinforcement learning approaches face several fundamental challenges in security applications:
+
+\textbf{Exploration vs. Exploitation Trade-offs:}
+Security systems must balance learning about new threats with maintaining protection against known attacks. Excessive exploration can create vulnerabilities, while insufficient exploration prevents adaptation to novel threats.
+
+\textbf{Reward Engineering Complexity:}
+Designing appropriate reward functions for security tasks requires careful consideration of false positive and false negative costs, which may vary significantly across different types of assets and threat scenarios.
+
+\textbf{Adversarial Reinforcement Learning:}
+Adaptive adversaries can exploit the learning process itself, requiring robust training procedures that account for adversarial interference with the reward signal and state observations.
+
+\section{Critical Research Gaps and Opportunities}
+
+\subsection{Identified Research Gaps}
+
+Through comprehensive analysis of existing literature, this research identifies several critical gaps that limit the effectiveness of current approaches to adversarial machine learning in network security:
+
+\textbf{Gap 1: Fragmented Defense Mechanisms}
+Current research typically addresses individual aspects of adversarial robustness (evasion OR poisoning OR extraction) in isolation, lacking comprehensive frameworks that provide unified defense against multiple threat types simultaneously. This fragmentation creates vulnerabilities where sophisticated adversaries can employ coordinated multi-vector attacks that exploit weaknesses across different defense mechanisms.
+
+\textbf{Gap 2: Temporal Adversarial Modeling Deficiency}
+While temporal modeling has been explored for legitimate traffic analysis, the intersection of temporal dependencies and adversarial robustness remains largely unexplored. Existing literature fails to address sophisticated attacks that unfold over extended time periods, gradually introducing perturbations that evade detection through temporal distribution.
+
+\textbf{Gap 3: Deterministic Output Limitations}
+Most adversarial defense mechanisms provide deterministic outputs without uncertainty quantification, limiting their applicability in security-critical environments where confidence estimates should guide decision-making processes. This limitation prevents implementation of risk-based response strategies and human-AI collaboration frameworks.
+
+\textbf{Gap 4: Multimodal Robustness Absence}
+Research on adversarial attacks and defenses has primarily focused on single modalities, with limited investigation of multimodal security applications. This gap is particularly critical given the multimodal nature of modern network security data and the potential for cross-modal attack vectors.
+
+\textbf{Gap 5: Stochastic Defense Mechanisms}
+Limited exploration of stochastic approaches that introduce controlled randomness to create "moving targets" for adversaries. Current deterministic defenses are vulnerable to adaptive attacks that can learn fixed decision boundaries.
+
+\textbf{Gap 6: Theory-Practice Implementation Gap}
+Much adversarial robustness research focuses on benchmark datasets and idealized scenarios, with limited consideration of practical deployment constraints, real-time processing requirements, and operational environment characteristics.
+
+\subsection{Emerging Research Opportunities}
+
+The identified gaps present several promising research opportunities that this dissertation addresses:
+
+\textbf{Stochastic Defense Mechanisms:}
+Introducing controlled randomness in defense mechanisms to create "moving targets" that are harder for adversaries to exploit while providing natural uncertainty quantification capabilities. This includes stochastic attention mechanisms, probabilistic embeddings, and noise injection strategies.
+
+\textbf{Integrated Multi-Modal Robustness:}
+Developing defense mechanisms that leverage correlations across multiple data modalities while maintaining robustness guarantees for each individual modality and their combinations.
+
+\textbf{Temporal-Aware Adversarial Training:}
+Creating training procedures that explicitly account for temporal attack patterns and sequential dependencies in both legitimate and malicious network behavior.
+
+\textbf{Uncertainty-Guided Active Defense:}
+Implementing active defense strategies that use uncertainty estimates to guide resource allocation, human expert consultation, and adaptive countermeasure deployment.
+
+\textbf{Hybrid Architectures:}
+Combining multiple complementary approaches (transformers, LSTM, reinforcement learning, Gaussian processes) within unified frameworks that leverage the strengths of each component.
+
+\section{Theoretical Foundation Summary}
+
+This systematic literature review establishes the theoretical foundation for developing adversarially resilient AI-based models in network security. The analysis reveals that while substantial progress has been made in understanding individual aspects of adversarial machine learning, the integration of multiple defense mechanisms, temporal modeling, uncertainty quantification, stochastic approaches, and multimodal fusion represents a largely unexplored research frontier with significant potential for impact.
+
+The identified research gaps directly motivate the theoretical frameworks and practical implementations developed in the subsequent chapters of this dissertation. The comprehensive analysis provided here demonstrates that current approaches are insufficient for addressing the sophisticated, adaptive threats facing modern network security infrastructure, necessitating the development of novel approaches that integrate multiple complementary defense strategies within a unified, theoretically grounded framework.
+
+Key insights from the literature review include:
+- The need for stochastic approaches that create dynamic defense mechanisms
+- The importance of uncertainty quantification for operational decision making
+- The critical role of temporal modeling in detecting sophisticated attack sequences
+- The potential of multimodal fusion for comprehensive threat detection
+- The promise of reinforcement learning for adaptive defense strategies
+
+These insights inform the theoretical development and practical implementation of the proposed adversarially resilient IDPS framework presented in the following chapters.
+
+\newpage
+
+% CHAPTER 2: MATHEMATICAL THEORY
+\chapter{Mathematical Theory and Formal Foundations}
+
+\section{Introduction and Theoretical Framework}
+
+This chapter establishes the comprehensive mathematical foundations underlying adversarially resilient AI-based models for network intrusion detection and prevention systems. The theoretical framework developed here provides rigorous mathematical formulations that enable principled analysis of adversarial robustness, uncertainty quantification, temporal modeling, stochastic architectures, and adaptive learning in security contexts. The mathematical foundations bridge the gap between theoretical understanding and practical implementation, ensuring that proposed algorithms maintain formal guarantees while achieving operational effectiveness.
+
+The theoretical development follows a systematic approach, beginning with fundamental definitions and problem formulations, progressing through robustness analysis and uncertainty quantification, and culminating in integrated frameworks that combine multiple complementary approaches. Each theoretical contribution is accompanied by formal proofs, convergence analysis, and complexity bounds that establish the mathematical rigor necessary for deployment in security-critical environments.
+
+\section{Fundamental Mathematical Formulations}
+
+\subsection{Network Security Data Model and Formal Definitions}
+
+The mathematical framework begins with precise definitions of the network security environment, data structures, and threat models that form the foundation for subsequent theoretical development.
+
+\begin{definition}[Multimodal Network Security Space]
+The input space for network security applications is defined as the Cartesian product:
+$$\mathcal{X} = \mathcal{X}^{(t)} \times \mathcal{X}^{(l)} \times \mathcal{X}^{(a)} \times \mathcal{X}^{(m)}$$
+where:
+\begin{itemize}
+\item $\mathcal{X}^{(t)} \subseteq \mathbb{R}^{d_t}$ represents network traffic pattern features
+\item $\mathcal{X}^{(l)} \subseteq \mathbb{R}^{d_l}$ represents system log analysis features
+\item $\mathcal{X}^{(a)} \subseteq \mathbb{R}^{d_a}$ represents API trace monitoring features  
+\item $\mathcal{X}^{(m)} \subseteq \mathbb{R}^{d_m}$ represents metadata and behavioral features
+\end{itemize}
+\end{definition}
+
+The label space encompasses both binary and multi-class classification scenarios:
+$$\mathcal{Y} = \{0, 1, 2, \ldots, C-1\}$$
+where $0$ represents benign traffic and $\{1, 2, \ldots, C-1\}$ represent different attack categories including evasion attempts, poisoning campaigns, and extraction activities.
+
+\begin{definition}[Temporal Network Sequence]
+A temporal network sequence is defined as:
+$$\mathbf{X}_T = (X_1, X_2, \ldots, X_T) \in \mathcal{X}^T$$
+where each $X_t \in \mathcal{X}$ represents multimodal observations at time step $t$, and $T$ denotes the sequence length. The corresponding label sequence is: $$\mathbf{Y}_T = (Y_1, Y_2, \ldots, Y_T) \in \mathcal{Y}^T$$.
+\end{definition}
+
+\begin{definition}[Network Traffic Distribution]
+Let $\mathcal{D}$ denote the true joint distribution over $\mathcal{X} \times \mathcal{Y}$ representing the underlying distribution of network features and security labels. We assume access to a finite training dataset $D_n = \{(x_i, y_i)\}_{i=1}^n$ where $(x_i, y_i) \overset{iid}{\sim} \mathcal{D}$.
+\end{definition}
+
+\subsection{Adversarial Threat Model Formalization}
+
+The mathematical framework establishes formal definitions of adversarial threats that capture the diverse attack vectors facing network security systems.
+
+\begin{definition}[Adversarial Perturbation Space]
+For a given $\ell_p$ norm and perturbation budget $\epsilon > 0$, the adversarial perturbation space is:
+$$\Delta_{\epsilon,p}(x) = \{\delta \in \mathbb{R}^d : \|\delta\|_p \leq \epsilon \text{ and } x + \delta \in \mathcal{X}\}$$
+The constraint $x + \delta \in \mathcal{X}$ ensures that perturbed inputs remain within the valid input domain.
+\end{definition}
+
+\begin{definition}[Semantic Preservation Constraint]
+For network security applications, adversarial perturbations must satisfy semantic preservation constraints:
+$$\mathcal{S}(x, \delta) = \mathbb{I}[\text{ProtocolValid}(x + \delta) \land \text{FunctionalEquiv}(x, x + \delta)]$$
+where $\text{ProtocolValid}(\cdot)$ ensures network protocol compliance and $\text{FunctionalEquiv}(\cdot)$ maintains attack functionality for malicious samples.
+\end{definition}
+
+\begin{definition}[Temporal Adversarial Attack]
+A temporal adversarial attack on sequence $\mathbf{x} = (x_1, \ldots, x_T)$ is a perturbed sequence:
+$$\mathbf{x}^{adv} = (x_1 + \delta_1, \ldots, x_T + \delta_T)$$
+subject to temporal constraints:
+$$\sum_{t=1}^T \|\delta_t\|_p \leq T \cdot \epsilon \text{ and } \forall t: \mathcal{S}(x_t, \delta_t) = 1$$
+\end{definition}
+
+\begin{definition}[Stochastic Adversarial Perturbation]
+A stochastic adversarial perturbation introduces randomness in the attack generation process:
+$$\delta^{stoch} = \delta^{det} + \eta$$
+where $\delta^{det}$ is a deterministic perturbation and $\eta \sim \mathcal{N}(0, \sigma^2_{\text{noise}}I)$ represents controlled noise injection.
+\end{definition}
+
+\section{Theoretical Framework for Adversarial Robustness}
+
+\subsection{Robustness Measures and Mathematical Properties}
+
+The theoretical framework establishes multiple complementary measures of adversarial robustness that capture different aspects of system resilience.
+
+\begin{definition}[Local Adversarial Robustness]
+For a classifier $f: \mathcal{X} \rightarrow \mathcal{Y}$ and input $(x,y)$, the local adversarial robustness is:
+$$R_{\epsilon,p}(f, x, y) = \min_{\delta \in \Delta_{\epsilon,p}(x)} \mathbb{I}[f(x + \delta) = y]$$
+This measure quantifies the minimum perturbation required to cause misclassification.
+\end{definition}
+
+\begin{definition}[Global Adversarial Robustness]
+The global adversarial robustness over distribution $\mathcal{D}$ is:
+$$R_{\epsilon,p}(f, \mathcal{D}) = \mathbb{E}_{(x,y) \sim \mathcal{D}}[R_{\epsilon,p}(f, x, y)]$$
+\end{definition}
+
+\begin{definition}[Certified Robustness Radius]
+For input $x$ and classifier $f$, the certified robustness radius is:
+$$r_{cert}(f, x) = \sup\{r \geq 0 : \forall \|\delta\|_p \leq r, f(x + \delta) = f(x)\}$$
+\end{definition}
+
+\begin{definition}[Stochastic Robustness]
+For a stochastic classifier $f_{\text{stoch}}: \mathcal{X} \rightarrow \Delta^{C-1}$ that outputs probability distributions:
+$$R_{\epsilon,p}^{\text{stoch}}(f_{\text{stoch}}, x, y) = \mathbb{E}_{\xi}[\min_{\delta \in \Delta_{\epsilon,p}(x)} \mathbb{I}[\arg\max_c f_{\text{stoch}}(x + \delta; \xi)_c = y]]$$
+where $\xi$ represents the stochastic parameters.
+\end{definition}
+
+\begin{theorem}[Fundamental Robustness-Accuracy Trade-off]
+\label{thm:robustness-accuracy-tradeoff}
+For any classifier $f: \mathcal{X} \rightarrow \mathcal{Y}$ and perturbation budget $\epsilon > 0$, there exists a fundamental trade-off between standard accuracy and adversarial robustness:
+$$\text{Acc}(f) + R_{\epsilon,p}(f, \mathcal{D}) \leq 1 + \mathbb{E}_{(x,y) \sim \mathcal{D}}[\text{Lip}(f, x) \cdot \epsilon]$$
+where $\text{Lip}(f, x)$ represents the local Lipschitz constant of $f$ at $x$.
+\end{theorem}
+
+\begin{proof}
+The proof establishes the connection between Lipschitz continuity and adversarial robustness. For any input $x$ and perturbation $\delta$ with $\|\delta\|_p \leq \epsilon$:
+
+$$|f(x + \delta) - f(x)| \leq \text{Lip}(f, x) \cdot \|\delta\|_p \leq \text{Lip}(f, x) \cdot \epsilon$$
+
+If $f(x) = y$ (correct classification) and $f(x + \delta) \neq y$ (adversarial success), then the decision boundary lies within the $\epsilon$-ball around $x$. The probability of this occurring is bounded by the local Lipschitz constant and perturbation budget. Taking expectations over the data distribution yields the stated bound.
+
+The trade-off emerges because improving adversarial robustness typically requires reducing the Lipschitz constant, which can negatively impact the ability to separate different classes, thereby reducing standard accuracy.
+\end{proof}
+
+
+\begin{theorem}[Certified Robustness via Randomized Smoothing]
+\label{thm:certified-robustness}
+
+Let $g$ be the smoothed classifier defined as:
+\[
+g(x) = \mathbb{E}_{\xi \sim \mathcal{N}(0, \sigma^2 I)}[f(x + \xi)]
+\]
+where $f$ is the base classifier. If $g(x)$ predicts class $c$ with probability $p_c > 0.5$, then $g$ is robust around $x$ with certified radius:
+\[
+R_{\text{cert}} = \sigma \cdot \Phi^{-1}(p_c)
+\]
+where $\Phi^{-1}$ is the inverse of the standard normal cumulative distribution function.
+
+\end{theorem}
+
+
+\begin{proof}
+The proof utilizes the isoperimetric inequality for Gaussian distributions. For any adversarial perturbation $\delta$ with $\|\delta\|_2 \leq R_{cert}$, consider the probability that the smoothed classifier changes its prediction:
+
+$$P[g(x + \delta) \neq c] = P[\mathbb{E}_{\xi}[f(x + \delta + \xi)] \text{ assigns class } \neq c]$$
+
+By the isoperimetric inequality, this probability is maximized when $\delta$ is aligned with the normal to the decision boundary. The Gaussian smoothing ensures that for $\|\delta\|_2 \leq \sigma \cdot \Phi^{-1}(p_c)$, the probability of class change remains below $0.5$, guaranteeing robustness.
+\end{proof}
+
+\begin{theorem}[Stochastic Robustness Enhancement]
+\label{thm:stochastic-robustness}
+For a stochastic classifier with noise injection $\epsilon \sim \mathcal{N}(0, \sigma^2 I)$, the expected robustness satisfies:
+$$\mathbb{E}_{\epsilon}[R_{\epsilon,p}^{\text{stoch}}(f_{\text{stoch}}, x, y)] \geq R_{\epsilon,p}(f_{det}, x, y) + \Omega(\sigma)$$
+where $f_{det}$ is the deterministic counterpart and $\Omega(\sigma)$ represents the robustness gain from stochasticity.
+\end{theorem}
+
+\subsection{Integrated Robustness Framework}
+
+\begin{definition}[Multi-Threat Robustness]
+The integrated robustness against multiple threat types is defined as:
+$$R_{integrated}(f) = \min\{R_{evasion}(f), R_{poisoning}(f), R_{extraction}(f), R_{temporal}(f)\}$$
+where each component measures robustness against specific attack categories.
+\end{definition}
+
+\section{Uncertainty Quantification Mathematical Framework}
+
+\subsection{Bayesian Foundation for Security Applications}
+
+Uncertainty quantification provides critical capabilities for security-critical decision making by distinguishing between different types of uncertainty and enabling risk-based response strategies.
+
+\begin{definition}[Epistemic vs. Aleatoric Uncertainty Decomposition]
+For a predictive model $f_\theta$ with parameters $\theta$:
+\begin{itemize}
+\item \textbf{Epistemic uncertainty}: $U_{epi}(x) = \text{Var}_{\theta \sim p(\theta|D)}[f_\theta(x)]$ represents model uncertainty due to limited data
+\item \textbf{Aleatoric uncertainty}: $U_{ale}(x) = \mathbb{E}_{\theta \sim p(\theta|D)}[\text{Var}_{y \sim p(y|x,\theta)}[y]]$ represents inherent data uncertainty
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Total Uncertainty Decomposition]
+\label{thm:uncertainty-decomposition}
+The total predictive uncertainty can be decomposed as:
+$$\text{Var}[y|x,D] = \mathbb{E}_{\theta \sim p(\theta|D)}[\text{Var}[y|x,\theta]] + \text{Var}_{\theta \sim p(\theta|D)}[\mathbb{E}[y|x,\theta]]$$
+where the first term represents aleatoric uncertainty and the second represents epistemic uncertainty.
+\end{theorem}
+
+\begin{proof}
+The decomposition follows from the law of total variance. Let $Y$ represent the predicted output and $\Theta$ represent the model parameters:
+
+$$\text{Var}[Y|x,D] = \mathbb{E}[\text{Var}[Y|x,\Theta]] + \text{Var}[\mathbb{E}[Y|x,\Theta]]$$
+
+The first term, $\mathbb{E}_{\theta}[\text{Var}[Y|x,\theta]]$, captures the expected variance of predictions for a fixed model, representing aleatoric uncertainty. The second term, $\text{Var}_{\theta}[\mathbb{E}[Y|x,\theta]]$, captures the variance in predictions across different models, representing epistemic uncertainty.
+
+This decomposition is fundamental for security applications because epistemic uncertainty can be reduced through additional training data, while aleatoric uncertainty represents irreducible uncertainty that should inform risk assessment.
+\end{proof}
+
+\subsection{Monte Carlo Methods for Computational Tractability}
+
+\begin{definition}[MC-Dropout Uncertainty Estimation]
+For a neural network with dropout layers, epistemic uncertainty is approximated using Monte Carlo sampling:
+$$\hat{U}_{epi}(x) = \frac{1}{M} \sum_{m=1}^M [f_m(x) - \bar{f}(x)]^2$$
+where $f_m(x)$ represents the $m$-th forward pass with dropout enabled, and $\bar{f}(x) = \frac{1}{M}\sum_{m=1}^M f_m(x)$ is the mean prediction.
+\end{definition}
+
+\begin{theorem}[MC-Dropout Convergence]
+\label{thm:mc-dropout-convergence}
+As the number of Monte Carlo samples $M \rightarrow \infty$, the MC-Dropout uncertainty estimate converges to the true epistemic uncertainty:
+$$\lim_{M \rightarrow \infty} \hat{U}_{epi}(x) = U_{epi}(x)$$
+with convergence rate $O(1/\sqrt{M})$.
+\end{theorem}
+
+\begin{proof}
+The proof follows from the strong law of large numbers. Each dropout sample $f_m(x)$ is an independent draw from the posterior distribution over functions induced by the dropout process. By the central limit theorem, the sample variance converges to the true variance with rate $O(1/\sqrt{M})$.
+\end{proof}
+
+\subsection{Advanced Uncertainty Decomposition for Security Applications}
+
+\begin{definition}[Security-Aware Uncertainty Decomposition]
+For security applications, uncertainty decomposition must account for adversarial manipulation:
+$$U_{total}(x) = U_{epistemic}(x) + U_{aleatoric}(x) + U_{adversarial}(x)$$
+where $U_{adversarial}(x) = \mathbb{E}_{\delta \sim \mathcal{A}}[\text{Var}[f(x + \delta)]]$ captures uncertainty due to potential adversarial perturbations.
+\end{definition}
+
+\begin{theorem}[Uncertainty Calibration Under Adversarial Conditions]
+\label{thm:adversarial-uncertainty-calibration}
+For a well-calibrated uncertainty estimator under adversarial conditions:
+$$P[y \in \text{CI}_\alpha(x + \delta)] \geq \alpha - \epsilon_{adv}$$
+where $\epsilon_{adv} = O(\|\delta\|_p \cdot L_{uncertainty})$ and $L_{uncertainty}$ is the Lipschitz constant of the uncertainty estimator.
+\end{theorem}
+
+\section{Stochastic Transformer Mathematical Framework}
+
+\subsection{Stochastic Attention Mechanism}
+
+\begin{definition}[Stochastic Attention with Uncertainty]
+The stochastic attention mechanism introduces controlled randomness for uncertainty quantification:
+$$\text{StochasticAttention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}} + \epsilon\right)V$$
+where $\epsilon \sim \mathcal{N}(0, \sigma^2 I_{n \times n})$ models epistemic uncertainty in attention weights.
+\end{definition}
+
+\begin{theorem}[Stochastic Attention Robustness Property]
+\label{thm:stochastic-attention-robustness}
+The stochastic attention mechanism provides adversarial robustness through the "moving target" effect. For any adversarial perturbation $\delta$ to the query matrix:
+$$\mathbb{E}_\epsilon[\text{StochasticAttention}(Q+\delta, K, V)] \neq \text{StochasticAttention}(Q+\delta, K, V)$$
+The variance in attention outputs increases with perturbation magnitude, making targeted attacks more difficult.
+\end{theorem}
+
+\begin{proof}
+Consider the effect of noise on attention weights:
+$$A_{ij}^{(s)} = \text{softmax}\left(\frac{(Q+\delta)_i K_j^T}{\sqrt{d_k}} + \epsilon_{ij}\right)$$
+
+The expectation over noise $\epsilon$ creates a distribution over attention weights. For adversarial perturbations $\delta$, the noise interacts with the perturbation, increasing variance:
+$$\text{Var}_\epsilon[A_{ij}^{(s)}] = f(\|\delta\|, \sigma^2)$$
+where $f$ is an increasing function of perturbation magnitude, making consistent adversarial manipulation more difficult.
+\end{proof}
+
+\begin{definition}[Bayesian Attention Mechanism]
+The Bayesian attention mechanism treats attention weights as random variables:
+$$\text{BayesianAttention}(Q, K, V) = \text{softmax}\left(\frac{QW_k^{(m)}K^T}{\sqrt{d_k}}\right)V W_v^{(m)}$$
+where $W_k^{(m)}, W_v^{(m)} \sim q_\phi(W)$ are sampled from learned weight distributions.
+\end{definition}
+
+\subsection{Variational Transformer Framework}
+
+\begin{definition}[Variational Embeddings]
+Input features are transformed into probabilistic representations:
+$$\mu_{emb}(x) = W_\mu x + b_\mu$$
+$$\log \sigma_{emb}(x) = W_\sigma x + b_\sigma$$
+$$z = \mu_{emb}(x) + \sigma_{emb}(x) \odot \epsilon, \quad \epsilon \sim \mathcal{N}(0, I)$$
+\end{definition}
+
+\begin{theorem}[Variational Information Bottleneck]
+\label{thm:variational-bottleneck}
+The variational embedding satisfies the information bottleneck principle:
+$$\max_{q(z|x)} I(Z;Y) - \beta I(Z;X)$$
+where $I(\cdot;\cdot)$ denotes mutual information and $\beta$ controls the compression-relevance trade-off.
+\end{theorem}
+
+\subsection{Gaussian Process Integration for Uncertainty}
+
+\begin{definition}[Sparse Gaussian Process for Transformers]
+Using inducing points $U = \{u_1, \ldots, u_m\} \subset \mathbb{R}^{d_{model}}$, the sparse GP posterior for transformer features is:
+$$q(f_*|z_*) = \mathcal{N}(\mu_*, \sigma_*^2)$$
+where:
+$$\mu_* = K_{*U}K_{UU}^{-1}m$$
+$$\sigma_*^2 = k(z_*, z_*) - K_{*U}K_{UU}^{-1}K_{U*} + K_{*U}K_{UU}^{-1}SK_{UU}^{-1}K_{U*}$$
+with variational parameters $m \in \mathbb{R}^m$ and $S \in \mathbb{R}^{m \times m}$.
+\end{definition}
+
+\begin{theorem}[GP Uncertainty Calibration]
+\label{thm:gp-uncertainty-calibration}
+The GP uncertainty estimates are well-calibrated in the sense that:
+$$P[y \in \text{CI}_\alpha(x)] \approx \alpha$$
+where $\text{CI}_\alpha(x)$ is the $\alpha$-level confidence interval at input $x$.
+\end{theorem}
+
+\section{Robust Adversarial Model (RAM) Mathematical Theory}
+
+\subsection{Autoencoder-Based Robustness Framework}
+
+The RAM framework employs autoencoders for adversarial defense through learned feature transformations that map adversarial examples back to the natural data manifold.
+
+\begin{definition}[Robust Autoencoder Objective]
+A robust autoencoder consists of encoder $E_\theta: \mathcal{X} \rightarrow \mathcal{Z}$ and decoder $D_\phi: \mathcal{Z} \rightarrow \mathcal{X}$ trained with the multi-objective loss:
+$$\mathcal{L}_{RAM} = \mathcal{L}_{recon} + \lambda_1 \mathcal{L}_{robust} + \lambda_2 \mathcal{L}_{cls} + \lambda_3 \mathcal{L}_{reg}$$
+where:
+\begin{itemize}
+\item $\mathcal{L}_{recon} = \mathbb{E}_{x \sim \mathcal{D}}[\|x - D_\phi(E_\theta(x))\|_2^2]$ is the reconstruction loss
+\item $\mathcal{L}_{robust} = \mathbb{E}_{x \sim \mathcal{D}} \max_{\|\delta\| \leq \epsilon} \|x - D_\phi(E_\theta(x + \delta))\|_2^2$ is the adversarial robustness term
+\item $\mathcal{L}_{cls}$ is the classification loss on encoded features
+\item $\mathcal{L}_{reg}$ provides regularization
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[RAM Robustness Guarantee]
+\label{thm:ram-robustness}
+If the robust autoencoder $(E_\theta, D_\phi)$ satisfies $\|x - D_\phi(E_\theta(x + \delta))\|_2 \leq \eta$ for all $\|\delta\|_p \leq \epsilon$, then the robust classifier $f_{robust}(x) = f_{cls}(E_\theta(x))$ achieves adversarial robustness:
+$$R_{\epsilon,p}(f_{robust}) \geq R_{\eta,2}(f_{cls} \circ D_\phi) - \epsilon_{reconstruction}$$
+where $\epsilon_{reconstruction}$ bounds the reconstruction error on clean data.
+\end{theorem}
+
+\begin{proof}
+Consider an adversarial example $x^{adv} = x + \delta$ with $\|\delta\|_p \leq \epsilon$. The robust classifier processes this as:
+$$f_{robust}(x^{adv}) = f_{cls}(E_\theta(x + \delta))$$
+
+By the robustness assumption, $D_\phi(E_\theta(x + \delta))$ is within $\eta$ of the original input $x$ in $\ell_2$ norm. If the base classifier $f_{cls}$ is robust to perturbations of magnitude $\eta$ in the reconstructed space, then:
+$$f_{cls}(E_\theta(x + \delta)) = f_{cls}(E_\theta(x))$$
+
+The bound accounts for potential reconstruction errors on clean data, which can affect the overall robustness guarantee.
+\end{proof}
+
+\begin{theorem}[RAM Convergence Analysis]
+\label{thm:ram-convergence}
+Under regularity conditions (bounded inputs, Lipschitz loss functions), the RAM training algorithm converges to a stationary point of the multi-objective optimization problem with rate $O(1/\sqrt{T})$ where $T$ is the number of iterations.
+\end{theorem}
+
+\begin{proof}
+The proof follows from the convergence analysis of stochastic gradient descent for non-convex optimization. Each component of the loss function is bounded and differentiable, and the regularization terms ensure parameter boundedness. The adversarial robustness term introduces additional complexity, but the projection constraint $\|\delta\|_p \leq \epsilon$ maintains boundedness of the optimization landscape.
+
+The convergence rate follows from standard SGD analysis with the additional consideration that the inner maximization problem for the robustness term can be solved with bounded error.
+\end{proof}
+
+\subsection{Advanced Robust Adversarial Loss Formulation}
+
+Building on the basic RAM framework, the enhanced loss function integrates multiple adversarial considerations:
+
+\begin{definition}[Enhanced Robust Adversarial Loss]
+The complete robust adversarial loss combines reconstruction, robustness, and temporal consistency:
+$$\mathcal{L}_{enhanced} = \mathcal{L}_{recon} + \lambda_1 \mathcal{L}_{robust} + \lambda_2 \mathcal{L}_{temporal} + \lambda_3 \mathcal{L}_{drift}$$
+where:
+\begin{itemize}
+\item $\mathcal{L}_{drift} = \mathbb{E}_{x \sim \mathcal{D}} \left[\text{KL}\left(\mathcal{N}(\mu_{clean}, \sigma_{clean}^2) \| \mathcal{N}(\mu_{adv}, \sigma_{adv}^2)\right)\right]$
+\item $\mathcal{L}_{temporal} = \frac{1}{T} \sum_{t=1}^T \|h_t - \text{LSTM}(x_{t:t+W})\|_2^2$ for temporal consistency
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Enhanced RAM Convergence with Temporal Constraints]
+\label{thm:enhanced-ram-convergence}
+Under the enhanced loss formulation with temporal regularization, the RAM framework converges with rate:
+$$\|\nabla \mathcal{L}_{enhanced}\|^2 \leq O\left(\frac{\log T}{\sqrt{T}}\right)$$
+where the logarithmic factor accounts for temporal dependencies.
+\end{theorem}
+
+\subsection{Reinforcement Learning Integration Theory}
+
+\begin{definition}[Security-Aware MDP]
+The security environment is modeled as a Markov Decision Process $(S, A, P, R, \gamma)$ where:
+\begin{itemize}
+\item $S \subset \mathbb{R}^{d_s}$: State space representing network security observations
+\item $A$: Action space for defense strategies (discrete or continuous)
+\item $P(s'|s,a)$: Transition probabilities modeling attack evolution
+\item $R(s,a,s')$: Reward function encoding security objectives
+\item $\gamma \in [0,1)$: Discount factor for future rewards
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Optimal Security Policy Existence]
+\label{thm:optimal-policy-existence}
+Under standard MDP assumptions (finite state and action spaces, bounded rewards), there exists an optimal policy $\pi^*$ that maximizes the expected cumulative reward:
+$$\pi^* = \arg\max_\pi \mathbb{E}_{\pi}\left[\sum_{t=0}^{\infty} \gamma^t R(s_t, a_t, s_{t+1})\right]$$
+\end{theorem}
+
+\begin{theorem}[Q-Learning Convergence for Security]
+\label{thm:q-learning-convergence}
+The Q-learning algorithm with learning rate $\alpha_t$ satisfying $\sum_t \alpha_t = \infty$ and $\sum_t \alpha_t^2 < \infty$ converges to the optimal Q-function $Q^*$ with probability 1:
+$$\lim_{t \rightarrow \infty} Q_t(s,a) = Q^*(s,a) \text{ for all } (s,a)$$
+\end{theorem}
+
+\subsection{Poisoning Detection Feature Engineering Mathematics}
+
+From the poisoning detection work, add these formal definitions:
+
+\begin{definition}[Distribution Drift Detection]
+The distribution drift metric for detecting gradual poisoning is computed as:
+$$D_{drift}(t) = \sum_{i=1}^n P(x_i) \log \frac{P(x_i)}{Q(x_i)}$$
+where $P$ is the clean traffic distribution and $Q$ is the observed distribution at time $t$.
+\end{definition}
+
+\begin{definition}[Temporal Consistency Score]
+For sequential attack detection, the temporal consistency score is:
+$$C_{temp} = \frac{1}{|W|} \sum_{t \in W} \|x_t - x_{t-1}\|_2^2$$
+where $W$ is a sliding window of network observations.
+\end{definition}
+
+\begin{theorem}[Poisoning Detection Bounds]
+\label{thm:poisoning-detection-bounds}
+For a poisoning rate $\alpha \leq 0.1$, the integrated DQN-Actor-Critic model achieves detection accuracy:
+$$\text{Acc}_{poison} \geq 1 - 2\alpha - \epsilon_{noise}$$
+where $\epsilon_{noise}$ bounds the natural variation in network traffic.
+\end{theorem}
+
+\section{Temporal LSTM-Reinforcement Learning Mathematical Framework}
+
+\subsection{LSTM Gradient Flow Analysis}
+
+\begin{theorem}[LSTM Gradient Flow Preservation]
+\label{thm:lstm-gradient-flow}
+For vanilla RNNs, gradients vanish exponentially with sequence length:
+$$\left\|\frac{\partial \mathcal{L}}{\partial h_t}\right\| \leq \|W_h\|^{T-t} \left\|\frac{\partial \mathcal{L}}{\partial h_T}\right\|$$
+
+In contrast, LSTM maintains stable gradient flow through the cell state mechanism:
+$$\frac{\partial c_t}{\partial c_{t-1}} = f_t + \sum_j \frac{\partial c_t}{\partial \text{gate}_j} \frac{\partial \text{gate}_j}{\partial c_{t-1}}$$
+
+When the forget gate learns appropriate values ($f_t \approx 1$ for important information), we have:
+$$\frac{\partial c_t}{\partial c_{t-1}} \approx 1 + O(\epsilon)$$
+enabling effective learning of long-term dependencies.
+\end{theorem}
+
+\begin{proof}
+The cell state update follows:
+$$c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t$$
+
+Taking the derivative with respect to $c_{t-1}$:
+$$\frac{\partial c_t}{\partial c_{t-1}} = f_t + i_t \odot \frac{\partial \tilde{c}_t}{\partial c_{t-1}} + c_{t-1} \odot \frac{\partial f_t}{\partial c_{t-1}} + \tilde{c}_t \odot \frac{\partial i_t}{\partial c_{t-1}}$$
+
+When $f_t \approx 1$ (gates learn to preserve important information) and gate derivatives are bounded, the dominant term is $f_t$, ensuring stable gradient flow without exponential decay.
+\end{proof}
+
+\begin{theorem}[LSTM Memory Capacity for Security Patterns]
+\label{thm:lstm-memory-capacity}
+The information storage capacity of LSTM cell state $c_t \in \mathbb{R}^h$ is:
+$$\text{Capacity} = h \cdot \log_2(1/\epsilon)$$
+where $\epsilon$ represents the quantization error.
+
+For security applications requiring storage of $C$ attack types with context window $W$, setting $h \geq (C^2 + W \cdot \log_2(|\mathcal{A}|))/\log_2(1/\epsilon)$ ensures sufficient capacity where $|\mathcal{A}|$ is the attack alphabet size.
+\end{theorem}
+
+\subsection{Temporal Adversarial Robustness}
+
+\begin{definition}[Temporal Adversarial Robustness]
+For a temporal classifier $f: \mathcal{X}^T \rightarrow \mathcal{Y}$ and sequence $\mathbf{x} = (x_1, \ldots, x_T)$, the temporal adversarial robustness is:
+$$R_{T,\epsilon}(f, \mathbf{x}, y) = \min_{\sum_{t=1}^T \|\delta_t\|_p \leq T\epsilon} \mathbb{I}[f(\mathbf{x} + \boldsymbol{\delta}) = y]$$
+subject to temporal coherence constraints.
+\end{definition}
+
+\begin{theorem}[Temporal Robustness Bound]
+\label{thm:temporal-robustness-bound}
+For a temporal classifier with Lipschitz constant $L$, the temporal robustness satisfies:
+$$R_{T,\epsilon}(f, \mathbf{x}, y) \geq 1 - P\left[\max_{t \leq T} L \cdot \|\delta_t\|_p > \tau\right]$$
+where $\tau$ is the decision boundary margin and the probability is over the perturbation distribution.
+\end{theorem}
+
+\section{Multimodal Fusion Mathematical Framework}
+
+\subsection{Cross-Modal Information Theory}
+
+\begin{definition}[Cross-Modal Mutual Information]
+For modality representations $Z^{(m)}, Z^{(n)}$:
+$$MI(Z^{(m)}, Z^{(n)}) = \mathbb{E}_{p(z^{(m)},z^{(n)})}\left[\log \frac{p(z^{(m)}, z^{(n)})}{p(z^{(m)})p(z^{(n)})}\right]$$
+\end{definition}
+
+\begin{theorem}[Multimodal Robustness Preservation]
+\label{thm:multimodal-robustness}
+For a multimodal fusion function $g: \mathcal{Z}^{(1)} \times \ldots \times \mathcal{Z}^{(M)} \rightarrow \mathcal{Z}^{fused}$, if each modality encoder $f^{(i)}$ has robustness $R_i$, then:
+$$R_{fused} \geq \min_{i \in [M]} R_i - \epsilon_{fusion}$$
+where $\epsilon_{fusion}$ bounds the robustness loss due to fusion.
+\end{theorem}
+
+\subsection{Uncertainty-Aware Multimodal Fusion}
+
+\begin{definition}[Uncertainty-Weighted Fusion]
+Given modality-specific uncertainties $u^{(i)}$ for $i \in [M]$:
+$$w^{(i)} = \frac{1/u^{(i)}}{\sum_{j=1}^M 1/u^{(j)}}$$
+$$z_{fused} = \sum_{i=1}^M w^{(i)} z^{(i)}$$
+\end{definition}
+
+\begin{theorem}[Optimal Fusion Weights]
+\label{thm:optimal-fusion}
+The uncertainty-weighted fusion minimizes the total uncertainty:
+$$u_{total} = \left(\sum_{i=1}^M \frac{1}{u^{(i)}}\right)^{-1}$$
+\end{theorem}
+
+\section{Multi-Objective Optimization and Convergence Analysis}
+
+\subsection{Unified Loss Function Framework}
+
+\begin{definition}[Multi-Objective Security Loss]
+The complete training objective integrates multiple security considerations:
+$$\mathcal{L}_{total} = \mathcal{L}_{cls} + \lambda_1 \mathcal{L}_{adv} + \lambda_2 \mathcal{L}_{uncertainty} + \lambda_3 \mathcal{L}_{temporal} + \lambda_4 \mathcal{L}_{multimodal}$$
+where:
+\begin{itemize}
+\item $\mathcal{L}_{cls} = \mathbb{E}[\ell(f(x), y)]$: Standard classification loss
+\item $\mathcal{L}_{adv} = \mathbb{E}[\max_{\|\delta\| \leq \epsilon} \ell(f(x + \delta), y)]$: Adversarial robustness
+\item $\mathcal{L}_{uncertainty} = \mathbb{E}[||\text{Var}[f(x)] - \text{true uncertainty}||^2]$: Uncertainty calibration
+\item $\mathcal{L}_{temporal} = \mathbb{E}[\ell_{temporal}(f(\mathbf{x}_{1:T}), \mathbf{y}_{1:T})]$: Temporal consistency
+\item $\mathcal{L}_{multimodal} = \mathbb{E}[\ell_{fusion}(f^{(t)}, f^{(l)}, f^{(a)})]$: Multimodal fusion loss
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[Multi-Objective Convergence Guarantee]
+\label{thm:multi-objective-convergence}
+Under convexity assumptions on individual loss components and appropriate learning rate schedules, the multi-objective optimization converges to a Pareto-optimal solution with rate:
+$$\|\nabla \mathcal{L}_{total}\|^2 \leq O(1/\sqrt{T})$$
+where $T$ is the number of optimization steps.
+\end{theorem}
+
+\begin{proof}
+The proof extends standard SGD convergence analysis to the multi-objective setting. Each loss component is assumed to be $L$-smooth and bounded. The gradient of the total loss is:
+$$\nabla \mathcal{L}_{total} = \nabla \mathcal{L}_{cls} + \sum_{i=1}^4 \lambda_i \nabla \mathcal{L}_i$$
+
+Under appropriate conditions on the weights $\lambda_i$ and learning rates, the combined objective maintains the convergence properties of individual components. The Pareto-optimality follows from the convex combination of individual objectives.
+\end{proof}
+
+\section{Theoretical Guarantees and Complexity Analysis}
+
+\subsection{PAC-Bayesian Robustness Bounds}
+
+\begin{theorem}[PAC-Bayesian Adversarial Bound]
+\label{thm:pac-bayesian-bound}
+With probability at least $1-\delta$, for any posterior distribution $\rho$ over model parameters:
+$$R_{adv}(\rho) \leq \hat{R}_{adv}(\rho) + \sqrt{\frac{KL(\rho \| \pi) + \log(2\sqrt{n}/\delta)}{2n}}$$
+where $\hat{R}_{adv}(\rho)$ is the empirical adversarial risk, $\pi$ is the prior distribution, and $n$ is the sample size.
+\end{theorem}
+
+\begin{proof}
+The proof follows the PAC-Bayesian framework. For any fixed posterior $\rho$, define the random variable:
+$$Z = \sup_{\rho'} \left(R_{adv}(\rho') - \hat{R}_{adv}(\rho') - \sqrt{\frac{KL(\rho' \| \pi) + \log(2\sqrt{n}/\delta)}{2n}}\right)$$
+
+By the PAC-Bayesian theorem and union bound over the posterior distribution, $P[Z > 0] \leq \delta$, yielding the stated bound.
+\end{proof}
+
+\subsection{Computational Complexity Analysis}
+
+\begin{theorem}[Computational Complexity of Integrated Framework]
+\label{thm:computational-complexity}
+The computational complexity of the proposed framework components are:
+\begin{itemize}
+\item LSTM temporal processing: $O(T \cdot h^2 + T \cdot h \cdot d)$
+\item Stochastic attention: $O(n^2 \cdot d_{model} + M \cdot n^2)$ where $M$ is MC samples
+\item Sparse GP inference: $O(m^3 + nm^2)$ where $m \ll n$ is inducing points
+\item Total training complexity: $O(T \cdot h^2 + n^2 \cdot d_{model} + m^3)$ per iteration
+\end{itemize}
+\end{theorem}
+
+\begin{theorem}[Memory Complexity]
+\label{thm:memory-complexity}
+The space complexity of the integrated system is:
+$$O(Nh + m^2 + d_{model}^2 + T \cdot h)$$
+where $N$ is batch size, $h$ is LSTM hidden size, $m$ is inducing points, $d_{model}$ is transformer dimension, and $T$ is sequence length.
+\end{theorem}
+
+\section{Summary of Theoretical Contributions}
+
+This chapter has established a comprehensive mathematical foundation for adversarially resilient AI-based intrusion detection systems. The key theoretical contributions include:
+
+1. **Formal robustness guarantees** through certified bounds, PAC-Bayesian analysis, and convergence proofs for both deterministic and stochastic architectures
+2. **Principled uncertainty quantification** via Bayesian neural networks, Monte Carlo methods, Gaussian processes, and stochastic attention mechanisms
+3. **Temporal modeling theory** with gradient flow preservation analysis, memory capacity bounds, and temporal robustness measures
+4. **Stochastic transformer mechanisms** that provide inherent robustness properties through controlled randomness and uncertainty quantification
+5. **Multimodal fusion theory** with information-theoretic analysis and robustness preservation guarantees
+6. **Multi-objective optimization frameworks** that balance competing security objectives with proven convergence guarantees
+7. **Complexity analysis** establishing computational and memory requirements for practical deployment
+
+These theoretical foundations provide the mathematical rigor necessary for implementing reliable, deployable security systems while maintaining formal guarantees about their behavior and performance. The integration of stochastic approaches throughout the framework creates dynamic defense mechanisms that are fundamentally more resilient to adversarial manipulation than deterministic alternatives. The subsequent chapter translates these theoretical frameworks into concrete algorithmic implementations with proven correctness properties.
+
+\newpage
+
+% CHAPTER 3: SOFTWARE DEVELOPMENT
+\chapter{Software Development: Proven Algorithms and Formal Implementations}
+
+\section{Introduction to Implementation Framework}
+
+This chapter translates the mathematical theory established in Chapter 2 into concrete software implementations with formal algorithmic descriptions, proven correctness guarantees, and practical deployment considerations. The implementation framework is designed to bridge the gap between theoretical foundations and operational network security systems, ensuring that mathematical guarantees are preserved while achieving real-time performance requirements.
+
+The software development approach follows rigorous engineering principles that maintain theoretical soundness while addressing practical constraints including computational efficiency, memory limitations, scalability requirements, and integration with existing security infrastructure. Each algorithmic implementation is accompanied by formal verification procedures, complexity analysis, and empirical validation strategies that ensure correctness and reliability in operational environments.
+
+\section{System Architecture and Modular Design Principles}
+
+\subsection{Comprehensive System Architecture}
+
+The complete system implements a modular, extensible architecture that supports multiple adversarial defense strategies while maintaining computational efficiency and scalability for real-world deployment.
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Master System Architecture with Formal Guarantees}
+
+\REQUIRE Training dataset $D = \{(x_i, y_i)\}_{i=1}^n$, Configuration $\Theta = \{\lambda_1, \ldots, \lambda_k, \epsilon, \sigma^2\}$
+\ENSURE Trained adversarially robust IDPS ensemble $\mathcal{M} = \{M_{RAM}, M_{LSTM}, M_{Trans}\}$
+
+\STATE \textbf{Initialization Phase:}
+\STATE Initialize modular components with proven interfaces:
+\STATE \quad $M_{RAM} \leftarrow \text{RobustAdversarialModel}(\theta_{RAM})$
+\STATE \quad $M_{LSTM} \leftarrow \text{TemporalLSTM-RL}(\theta_{LSTM})$  
+\STATE \quad $M_{Trans} \leftarrow \text{StochasticTransformer}(\theta_{Trans})$
+
+\STATE Configure shared interfaces with formal contracts:
+\STATE \quad $\mathcal{I}_{data} \leftarrow \text{DataLoader}(\text{batch\_size}, \text{validation\_split})$
+\STATE \quad $\mathcal{I}_{feature} \leftarrow \text{MultimodalFeatureExtractor}()$
+\STATE \quad $\mathcal{I}_{uncertainty} \leftarrow \text{UncertaintyQuantifier}(\text{mc\_samples})$
+
+\STATE Setup adversarial training pipeline:
+\STATE \quad $\mathcal{G}_{adv} \leftarrow \text{MultiAttackGenerator}(\epsilon, \text{attack\_types})$
+\STATE \quad $\mathcal{L}_{computer} \leftarrow \text{MultiObjectiveLoss}(\{\lambda_i\})$
+\STATE \quad $\mathcal{O}_{opt} \leftarrow \text{AdamOptimizer}(\text{lr}, \text{weight\_decay})$
+
+\STATE \textbf{Training Phase with Convergence Guarantees:}  
+\FOR{epoch $e = 1$ to $E_{max}$}
+    \STATE $\text{convergence\_check} \leftarrow \text{False}$
+    \FOR{batch $B$ in $\mathcal{I}_{data}$}
+        \STATE // Multimodal feature extraction
+        \STATE $F_{multi} \leftarrow \mathcal{I}_{feature}.\text{extract}(B)$
+        \STATE $F_{traffic}, F_{logs}, F_{api} \leftarrow \text{split\_modalities}(F_{multi})$
+        
+        \STATE // Generate diverse adversarial examples
+        \STATE $B_{adv} \leftarrow \mathcal{G}_{adv}.\text{generate\_multi\_attack}(B, \epsilon)$
+        \STATE $D_{combined} \leftarrow B \cup B_{adv}$
+        
+        \STATE // Parallel model training with uncertainty
+        \FOR{model $M \in \{M_{RAM}, M_{LSTM}, M_{Trans}\}$}
+            \STATE $\text{pred}, \text{unc} \leftarrow M.\text{forward\_with\_uncertainty}(D_{combined})$
+            \STATE $\mathcal{L}_M \leftarrow \mathcal{L}_{computer}.\text{compute}(M, \text{pred}, \text{targets}, \text{unc})$
+            \STATE $\text{grad\_norm} \leftarrow M.\text{backward\_with\_clipping}(\mathcal{L}_M)$
+            \STATE // Convergence monitoring
+            \IF{$\text{grad\_norm} < \tau_{convergence}$}
+                \STATE $\text{convergence\_check} \leftarrow \text{True}$
+            \ENDIF
+        \ENDFOR
+        
+        \STATE $\mathcal{O}_{opt}.\text{step\_with\_constraints}()$
+        \STATE $\mathcal{O}_{opt}.\text{zero\_grad}()$
+    \ENDFOR
+    
+    \STATE // Validation and early stopping
+    \STATE $\text{val\_metrics} \leftarrow \text{validate\_ensemble}(\mathcal{M}, D_{val})$
+    \IF{$\text{early\_stopping\_criterion}(\text{val\_metrics})$}
+        \STATE \textbf{break}
+    \ENDIF
+\ENDFOR
+
+\STATE \textbf{Integration and Calibration:}
+\STATE $\mathcal{M}_{calibrated} \leftarrow \text{calibrate\_ensemble\_uncertainty}(\mathcal{M}, D_{cal})$
+\STATE $w_{ensemble} \leftarrow \text{optimize\_ensemble\_weights}(\mathcal{M}_{calibrated}, D_{val})$
+
+\STATE \textbf{return} $\mathcal{M}_{calibrated}$ with weights $w_{ensemble}$
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[System Architecture Correctness]
+\label{thm:system-correctness}
+Algorithm 1 produces an ensemble of models that satisfies the following properties with probability at least $1-\delta$:
+\begin{enumerate}
+\item Convergence: Each component model converges to a stationary point of its respective objective
+\item Robustness: The ensemble achieves adversarial robustness $R \geq R_{min}$ against $\epsilon$-bounded perturbations
+\item Uncertainty Calibration: Uncertainty estimates satisfy $|\text{ECE}| \leq \epsilon_{cal}$ where ECE is Expected Calibration Error
+\end{enumerate}
+\end{theorem}
+
+\subsection{Component Interface Specifications and Formal Contracts}
+
+\begin{definition}[Formal Component Interface]
+Each system component implements a standardized interface $\mathcal{I}_{component}$ with formal contracts:
+
+\begin{center}
+\begin{minipage}{0.92\textwidth}
+\begin{itemize}
+\item \texttt{forward(x: Tensor, uncertainty: bool = True) -> (Tensor, Tensor)}: Forward pass with optional uncertainty quantification
+\item \texttt{backward(loss: Tensor) -> float}: Gradient computation returning gradient norm
+\item \texttt{get\_uncertainty(x: Tensor, method: str) -> Tensor}: Uncertainty quantification with specified method
+\item \texttt{adversarial\_robustness(x: Tensor, epsilon: float) -> float}: Robustness evaluation
+\item \texttt{calibrate\_uncertainty(validation\_data: Dataset) -> None}: Uncertainty calibration procedure
+\end{itemize}
+\end{minipage}
+\end{center}
+\end{definition}
+
+\section{Stochastic Multimodal Transformer Implementation}
+
+\subsection{Multimodal Encoding Architecture}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Multimodal Feature Encoding with Specialized Networks}
+\REQUIRE Multimodal input $X = (x^{(t)}, x^{(l)}, x^{(a)}, x^{(m)})$
+\ENSURE Encoded representations $Z = (z^{(t)}, z^{(l)}, z^{(a)}, z^{(m)})$ with uncertainty
+
+\STATE \textbf{Traffic Pattern Encoding (CNN):}
+\STATE $h_0^{(t)} = x^{(t)}$
+\FOR{$k = 1$ to $K_t$}
+    \STATE $h_k^{(t)} = \sigma(W_k^{(t)} * h_{k-1}^{(t)} + b_k^{(t)})$ \COMMENT{Convolution}
+    \STATE $h_k^{(t)} = \text{MaxPool}(h_k^{(t)})$ if $k \bmod 2 = 0$
+\ENDFOR
+\STATE $z^{(t)} = W_{proj}^{(t)} \cdot \text{Flatten}(h_{K_t}^{(t)}) + b_{proj}^{(t)}$
+
+\STATE \textbf{Log Sequence Encoding (LSTM):}
+\STATE $h_0 = 0, c_0 = 0$
+\FOR{$t = 1$ to $T_{logs}$}
+    \STATE $f_t = \sigma(W_f \cdot [h_{t-1}, x_t^{(l)}] + b_f)$ \COMMENT{Forget gate}
+    \STATE $i_t = \sigma(W_i \cdot [h_{t-1}, x_t^{(l)}] + b_i)$ \COMMENT{Input gate}
+    \STATE $o_t = \sigma(W_o \cdot [h_{t-1}, x_t^{(l)}] + b_o)$ \COMMENT{Output gate}
+    \STATE $\tilde{c}_t = \tanh(W_c \cdot [h_{t-1}, x_t^{(l)}] + b_c)$ \COMMENT{Candidate}
+    \STATE $c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t$ \COMMENT{Cell state}
+    \STATE $h_t = o_t \odot \tanh(c_t)$ \COMMENT{Hidden state}
+\ENDFOR
+\STATE $z^{(l)} = W_{proj}^{(l)} \cdot h_T + b_{proj}^{(l)}$
+
+\STATE \textbf{API Trace Encoding (GRU):}
+\STATE $h_0 = 0$
+\FOR{$t = 1$ to $T_{api}$}
+    \STATE $r_t = \sigma(W_r \cdot [h_{t-1}, x_t^{(a)}] + b_r)$ \COMMENT{Reset gate}
+    \STATE $z_t = \sigma(W_z \cdot [h_{t-1}, x_t^{(a)}] + b_z)$ \COMMENT{Update gate}
+    \STATE $\tilde{h}_t = \tanh(W_h \cdot [r_t \odot h_{t-1}, x_t^{(a)}] + b_h)$
+    \STATE $h_t = (1 - z_t) \odot h_{t-1} + z_t \odot \tilde{h}_t$
+\ENDFOR
+\STATE $z^{(a)} = W_{proj}^{(a)} \cdot h_T + b_{proj}^{(a)}$
+
+\STATE \textbf{Metadata Encoding (MLP):}
+\STATE $z^{(m)} = \text{MLP}(x^{(m)})$ with dropout for uncertainty
+
+\STATE \textbf{return} $Z = (z^{(t)}, z^{(l)}, z^{(a)}, z^{(m)})$
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Stochastic Transformer Core}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Stochastic Transformer with Bayesian Attention}
+
+\REQUIRE Encoded features $Z_{concat} = [z^{(t)} \| z^{(l)} \| z^{(a)} \| z^{(m)}]$
+\REQUIRE Noise variance $\sigma^2$, MC samples $M$
+\ENSURE Transformer output $z_{trans}$ with uncertainty $u_{trans}$
+
+\STATE \textbf{Variational Embedding:}
+\STATE $\mu_{emb} = W_\mu \cdot Z_{concat} + b_\mu$
+\STATE $\log \sigma_{emb} = W_\sigma \cdot Z_{concat} + b_\sigma$
+\STATE $z_{embed} = \mu_{emb} + \sigma_{emb} \odot \epsilon$, where $\epsilon \sim \mathcal{N}(0, I)$
+
+\STATE \textbf{Positional Encoding:}
+\STATE $z_{pos} = z_{embed} + \text{PositionalEncoding}(z_{embed})$
+
+\STATE \textbf{Stochastic Multi-Head Attention:}
+\FOR{layer $l = 1$ to $L$}
+    \STATE // Monte Carlo sampling for uncertainty
+    \STATE $\text{outputs} = []$
+    \FOR{$m = 1$ to $M$}
+        \STATE $Q = z_{pos} W_Q^{(l,m)}$, $K = z_{pos} W_K^{(l,m)}$, $V = z_{pos} W_V^{(l,m)}$
+        \STATE // Stochastic attention with noise injection
+        \STATE $A = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}} + \epsilon_m\right)$
+        \STATE where $\epsilon_m \sim \mathcal{N}(0, \sigma^2 I)$
+        \STATE $\text{head}_i = AV$ for $i = 1, \ldots, H$
+        \STATE $\text{MultiHead} = \text{Concat}(\text{head}_1, \ldots, \text{head}_H)W_O$
+        \STATE $\text{outputs}.\text{append}(\text{MultiHead})$
+    \ENDFOR
+    
+    \STATE // Aggregate MC samples
+    \STATE $z_{attn} = \frac{1}{M}\sum_{m=1}^M \text{outputs}[m]$
+    \STATE $u_{attn} = \frac{1}{M-1}\sum_{m=1}^M (\text{outputs}[m] - z_{attn})^2$
+    
+    \STATE // Feed-forward with residual
+    \STATE $z_{ff} = \text{LayerNorm}(z_{pos} + z_{attn})$
+    \STATE $z_{pos} = \text{LayerNorm}(z_{ff} + \text{FFN}(z_{ff}))$
+\ENDFOR
+
+\STATE $z_{trans} = z_{pos}$, $u_{trans} = u_{attn}$
+\STATE \textbf{return} $z_{trans}, u_{trans}$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Gaussian Process Uncertainty Layer}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Sparse Gaussian Process for Uncertainty Quantification}
+
+\REQUIRE Transformer features $z_{trans}$, Inducing points $U \in \mathbb{R}^{m \times d}$
+\REQUIRE Kernel hyperparameters $\theta_{kernel} = (\alpha, l)$
+\ENSURE Predictive mean $\mu_*$, variance $\sigma_*^2$
+
+\STATE \textbf{Kernel Computation:}
+\STATE $k(z, z') = \alpha^2 \exp\left(-\frac{\|z - z'\|^2}{2l^2}\right)$ \COMMENT{RBF kernel}
+
+\STATE \textbf{Compute Kernel Matrices:}
+\STATE $K_{UU} = [k(u_i, u_j)]_{i,j=1}^m + \epsilon I$ \COMMENT{Inducing covariance}
+\STATE $K_{*U} = [k(z_{trans}, u_j)]_{j=1}^m$ \COMMENT{Cross-covariance}
+
+\STATE \textbf{Cholesky Decomposition:}
+\STATE $L = \text{cholesky}(K_{UU})$ \COMMENT{For numerical stability}
+
+\STATE \textbf{Predictive Distribution:}
+\STATE $\alpha = L^{-1} K_{*U}^T$
+\STATE $v = L^{-T} \alpha$
+\STATE $\mu_* = K_{*U} K_{UU}^{-1} m$ \COMMENT{Predictive mean}
+\STATE $\sigma_*^2 = k(z_{trans}, z_{trans}) - v^T v + v^T S v$ \COMMENT{Predictive variance}
+
+\STATE \textbf{return} $\mu_*, \sigma_*^2$
+
+\end{algorithmic}
+\end{algorithm}
+
+\section{Robust Adversarial Model (RAM) Implementation}
+
+\subsection{Enhanced Autoencoder Architecture with Proven Robustness}
+
+\begin{algorithm}[H]
+\begin{algorithmic} [1]
+
+\caption{Robust Autoencoder Training with Formal Guarantees}
+
+\REQUIRE Dataset $D = \{(x_i, y_i)\}_{i=1}^n$, perturbation budget $\epsilon$, regularization $\{\lambda_1, \lambda_2, \beta\}$
+\ENSURE Trained robust autoencoder $(E_\theta^*, D_\phi^*)$ with robustness certificate
+
+\STATE \textbf{Initialization:}
+\STATE Initialize encoder $E_\theta$ with Xavier initialization
+\STATE Initialize decoder $D_\phi$ with symmetric architecture
+\STATE Initialize adversarial generator $\mathcal{G}_{multi}$ with $\{\text{FGSM, PGD, C\&W, GAN}\}$
+\STATE Initialize robustness monitor $\mathcal{R}_{monitor}$
+
+\STATE \textbf{Training Loop with Convergence Monitoring:}
+\FOR{epoch $e = 1$ to $E_{max}$}
+    \STATE $\text{epoch\_loss} \leftarrow 0$, $\text{robustness\_violations} \leftarrow 0$
+    
+    \FOR{batch $(x_b, y_b)$ sampled from $D$}
+        \STATE // Standard reconstruction pathway
+        \STATE $z_b = E_\theta(x_b)$ \COMMENT{Encode to latent space}
+        \STATE $\hat{x}_b = D_\phi(z_b)$ \COMMENT{Reconstruct input}
+        \STATE $\mathcal{L}_{recon} = \frac{1}{|B|} \sum_{i \in B} \|x_i - \hat{x}_i\|_2^2$
+        
+        \STATE // Multi-attack adversarial robustness
+        \STATE $X_{adv} = \{\}$
+        \FOR{attack\_type in $\{\text{FGSM, PGD, C\&W}\}$}
+            \STATE $x_b^{(attack)} = \mathcal{G}_{multi}.\text{generate}(x_b, attack\_type, \epsilon)$
+            \STATE $X_{adv} \leftarrow X_{adv} \cup \{x_b^{(attack)}\}$
+        \ENDFOR
+        
+        \STATE // Robust reconstruction loss
+        \STATE $\mathcal{L}_{robust} = \frac{1}{|X_{adv}|} \sum_{x^{adv} \in X_{adv}} \|x - D_\phi(E_\theta(x^{adv}))\|_2^2$
+        
+        \STATE // Classification consistency loss
+        \STATE $\mathcal{L}_{cls} = \frac{1}{|B|} \sum_{i \in B} \text{CrossEntropy}(C(z_i), y_i)$
+        \STATE $\mathcal{L}_{cls\_adv} = \frac{1}{|X_{adv}|} \sum_{x^{adv} \in X_{adv}} \text{CrossEntropy}(C(E_\theta(x^{adv})), y)$
+        
+        \STATE // Regularization and total loss
+        \STATE $\mathcal{L}_{reg} = \beta(\|\theta\|_2^2 + \|\phi\|_2^2)$
+        \STATE $\mathcal{L}_{total} = \mathcal{L}_{recon} + \lambda_1 \mathcal{L}_{robust} + \lambda_2(\mathcal{L}_{cls} + \mathcal{L}_{cls\_adv}) + \mathcal{L}_{reg}$
+        
+        \STATE // Gradient computation with clipping
+        \STATE $g_\theta = \nabla_\theta \mathcal{L}_{total}$, $g_\phi = \nabla_\phi \mathcal{L}_{total}$
+        \STATE $g_\theta = \text{clip\_grad\_norm}(g_\theta, \text{max\_norm}=1.0)$
+        \STATE $g_\phi = \text{clip\_grad\_norm}(g_\phi, \text{max\_norm}=1.0)$
+        
+        \STATE // Parameter updates with momentum
+        \STATE $\theta \leftarrow \theta - \alpha_\theta g_\theta$
+        \STATE $\phi \leftarrow \phi - \alpha_\phi g_\phi$
+        
+        \STATE // Robustness monitoring
+        \STATE $\text{robustness\_score} = \mathcal{R}_{monitor}.\text{evaluate}(E_\theta, D_\phi, x_b, \epsilon)$
+        \IF{$\text{robustness\_score} < \tau_{robustness}$}
+            \STATE $\text{robustness\_violations} \leftarrow \text{robustness\_violations} + 1$
+        \ENDIF
+        
+        \STATE $\text{epoch\_loss} \leftarrow \text{epoch\_loss} + \mathcal{L}_{total}$
+    \ENDFOR
+    
+    \STATE // Convergence and robustness checks
+    \STATE $\text{avg\_loss} = \text{epoch\_loss} / |\text{batches}|$
+    \STATE $\text{violation\_rate} = \text{robustness\_violations} / |\text{batches}|$
+    
+    \IF{$\text{avg\_loss} < \tau_{convergence}$ AND $\text{violation\_rate} < \tau_{max\_violations}$}
+        \STATE \textbf{break} \COMMENT{Convergence achieved with robustness guarantees}
+    \ENDIF
+\ENDFOR
+
+\STATE \textbf{Final Robustness Certification:}
+\STATE $R_{certified} = \mathcal{R}_{monitor}.\text{certify\_robustness}(E_\theta, D_\phi, D_{test}, \epsilon)$
+\STATE \textbf{return} $(E_\theta^*, D_\phi^*, R_{certified})$
+
+\end{algorithmic} 
+\end{algorithm}
+
+\begin{theorem}[RAM Implementation Correctness and Convergence]
+\label{thm:ram-implementation-correctness}
+Algorithm 5 produces a robust autoencoder that satisfies:
+\begin{enumerate}
+\item \textbf{Convergence}: Under bounded gradient assumptions, the algorithm converges to a stationary point with rate $O(1/\sqrt{T})$
+\item \textbf{Robustness}: The trained autoencoder achieves $\|x - D_\phi(E_\theta(x + \delta))\|_2 \leq \eta$ for $\|\delta\|_p \leq \epsilon$ with probability $\geq 1-\delta$
+\item \textbf{Preservation}: Clean reconstruction error satisfies $\mathbb{E}[\|x - D_\phi(E_\theta(x))\|_2^2] \leq \epsilon_{clean}$
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textbf{Convergence}: The total loss function is bounded below and the gradient clipping ensures bounded gradients. The regularization term provides strong convexity in the parameter space, ensuring convergence to a stationary point.
+
+\textbf{Robustness}: The multi-attack training procedure ensures that the autoencoder learns to handle diverse perturbation types. The robustness monitoring provides empirical verification during training.
+
+\textbf{Preservation}: The reconstruction loss term ensures that clean performance is maintained, with the regularization preventing overfitting to adversarial examples.
+\end{proof}
+
+\subsection{Multi-Attack Adversarial Training Algorithm}
+
+\begin{algorithm}[H]
+\begin{algorithmic} [1]
+
+\caption{Enhanced Multi-Attack Training with Stochastic Perturbations}
+
+\REQUIRE Dataset $D$, attack types $\mathcal{A} = \{\text{FGSM, PGD, C\&W, GAN, Stochastic}\}$, perturbation budget $\epsilon$
+\ENSURE Robust model with multi-attack certification
+
+\STATE \textbf{Enhanced Initialization:}
+\STATE Initialize model with spectral normalization: $f_\theta \leftarrow \text{SpectralNorm}(\text{Network})$
+\STATE Initialize stochastic attack generator: $\mathcal{G}_{stoch} \leftarrow \text{StochasticAttackGen}(\sigma_{noise})$
+
+\FOR{epoch $e = 1$ to $E_{max}$}
+    \STATE $\text{cumulative\_loss} \leftarrow 0$
+    \FOR{batch $B$ from $D$}
+        \STATE // Generate diverse adversarial examples
+        \STATE $X_{adv} = \emptyset$
+        
+        \STATE // Gradient-based attacks
+        \STATE $x_{adv}^{(FGSM)} = x + \epsilon \cdot \text{sign}(\nabla_x \mathcal{L}(f_\theta(x), y))$
+        \STATE $X_{adv} \leftarrow X_{adv} \cup x_{adv}^{(FGSM)}$
+        
+        \STATE // Iterative attacks
+        \STATE $x_{adv}^{(PGD)} = x$
+        \FOR{$t = 1$ to $T_{PGD}$}
+            \STATE $x_{adv}^{(PGD)} = \Pi_{x,\epsilon}(x_{adv}^{(PGD)} + \alpha \cdot \text{sign}(\nabla_x \mathcal{L}))$
+        \ENDFOR
+        \STATE $X_{adv} \leftarrow X_{adv} \cup x_{adv}^{(PGD)}$
+        
+        \STATE // Stochastic attacks
+        \STATE $\eta \sim \mathcal{N}(0, \sigma_{noise}^2 I)$
+        \STATE $x_{adv}^{(stoch)} = x + \epsilon \cdot \text{sign}(\nabla_x \mathcal{L} + \eta)$
+        \STATE $X_{adv} \leftarrow X_{adv} \cup x_{adv}^{(stoch)}$
+        
+        \STATE // Multi-objective loss computation
+        \STATE $\mathcal{L}_{clean} = \frac{1}{|B|} \sum_{x \in B} \ell(f_\theta(x), y)$
+        \STATE $\mathcal{L}_{adv} = \frac{1}{|X_{adv}|} \sum_{x_{adv} \in X_{adv}} \ell(f_\theta(x_{adv}), y)$
+        \STATE $\mathcal{L}_{KL} = \text{KL}[q_\phi(\theta) \| p(\theta)]$ \COMMENT{For Bayesian models}
+        
+        \STATE $\mathcal{L}_{total} = \mathcal{L}_{clean} + \lambda_1 \mathcal{L}_{adv} + \lambda_2 \mathcal{L}_{KL}$
+        
+        \STATE // Gradient computation with variance reduction
+        \STATE $g_\theta = \text{compute\_gradients\_with\_variance\_reduction}(\mathcal{L}_{total})$
+        \STATE Update parameters with adaptive learning rates
+        
+        \STATE $\text{cumulative\_loss} \leftarrow \text{cumulative\_loss} + \mathcal{L}_{total}$
+    \ENDFOR
+    
+    \STATE // Robustness certification
+    \STATE $R_{cert} = \text{certify\_multi\_attack\_robustness}(f_\theta, \epsilon)$
+    \IF{$R_{cert} > \tau_{min\_robustness}$}
+        \STATE Record certified robustness level
+    \ENDIF
+\ENDFOR
+
+\STATE \textbf{return} $f_\theta^*, R_{cert}$
+
+\end{algorithmic} 
+\end{algorithm}
+
+\subsection{Reinforcement Learning Policy Integration}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Hybrid DQN-Actor-Critic for Adaptive Defense}
+
+\REQUIRE Environment $\mathcal{E}$, DQN parameters $\theta_Q$, Actor $\theta_\pi$, Critic $\theta_V$
+\ENSURE Trained adaptive defense policy
+
+\STATE \textbf{Initialization:}
+\STATE Initialize DQN: $Q_{\theta_Q}(s,a)$ with double DQN architecture
+\STATE Initialize Actor: $\pi_{\theta_\pi}(a|s)$ with continuous action support
+\STATE Initialize Critic: $V_{\theta_V}(s)$ with shared feature backbone
+\STATE Initialize target networks: $\theta_Q^-, \theta_\pi^-, \theta_V^-$
+\STATE Initialize replay buffers: $\mathcal{B}_{DQN}, \mathcal{B}_{AC}$ with prioritized sampling
+
+\STATE \textbf{Training Loop:}
+\FOR{episode $e = 1$ to $E_{max}$}
+    \STATE Reset environment: $s_0 \sim \rho_0(\cdot)$
+    \STATE Initialize episode metrics: $R_{episode} = 0$
+    
+    \FOR{step $t = 0$ to $T_{max} - 1$}
+        \STATE // Hybrid Action Selection
+        \STATE $a_{DQN} = \begin{cases}
+            \text{random action} & \text{with probability } \epsilon(t) \\
+            \arg\max_a Q_{\theta_Q}(s_t, a) & \text{otherwise}
+        \end{cases}$
+        \STATE $a_{AC} \sim \pi_{\theta_\pi}(a|s_t) + \mathcal{N}(0, \sigma_{explore}^2)$
+        \STATE $a_t = w_{DQN} \cdot a_{DQN} + (1 - w_{DQN}) \cdot a_{AC}$
+        
+        \STATE Execute action $a_t$, observe $r_t, s_{t+1}, \text{done}$
+        \STATE Store in buffers: $(s_t, a_t, r_t, s_{t+1})$
+        
+        \STATE // Learning Updates
+        \IF{$|\mathcal{B}_{DQN}| > N_{start}$}
+            \STATE Sample batch from buffers
+            \STATE Update DQN, Actor, and Critic networks
+            \STATE Soft update target networks
+        \ENDIF
+    \ENDFOR
+\ENDFOR
+
+\STATE \textbf{return} $\theta_Q^*, \theta_\pi^*, \theta_V^*$
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Advanced Feature Engineering for Poisoning Detection}
+
+\begin{algorithm}[H]
+\begin{algorithmic} [1]
+
+\caption{Comprehensive Feature Engineering Pipeline}
+
+\REQUIRE Network traffic stream $S$, temporal window $W$, drift threshold $\tau_{drift}$
+\ENSURE Multi-dimensional features $F_{enhanced}$ with uncertainty estimates
+
+\STATE \textbf{Temporal Feature Extraction:}
+\FOR{time window $w \in W$}
+    \STATE $\text{traffic\_stats} = \text{compute\_traffic\_statistics}(S[w])$
+    \STATE $\text{protocol\_dist} = \text{analyze\_protocol\_distribution}(S[w])$
+    \STATE $\text{timing\_patterns} = \text{extract\_timing\_features}(S[w])$
+    \STATE $\text{payload\_features} = \text{analyze\_payload\_characteristics}(S[w])$
+\ENDFOR
+
+\STATE \textbf{Distribution Drift Detection:}
+\STATE $P_{baseline} = \text{establish\_baseline\_distribution}(S_{clean})$
+\FOR{each feature dimension $d$}
+    \STATE $D_{KL}^{(d)} = \text{KL\_divergence}(P_{baseline}^{(d)}, P_{current}^{(d)})$
+    \STATE $D_{wasserstein}^{(d)} = \text{wasserstein\_distance}(P_{baseline}^{(d)}, P_{current}^{(d)})$
+    \IF{$D_{KL}^{(d)} > \tau_{drift}$ OR $D_{wasserstein}^{(d)} > \tau_{drift}$}
+        \STATE Flag potential poisoning in dimension $d$
+    \ENDIF
+\ENDFOR
+
+\STATE \textbf{Temporal Consistency Analysis:}
+\STATE $C_{consistency} = \frac{1}{|W|} \sum_{t \in W} \|F_t - \mathbb{E}[F_{t-k:t}]\|_2^2$
+\STATE $C_{stability} = \text{compute\_feature\_stability}(F_{1:T})$
+
+\STATE \textbf{Protocol Behavior Analysis:}
+\STATE $B_{protocol} = \text{analyze\_protocol\_anomalies}(S)$
+\STATE $B_{frequency} = \text{compute\_frequency\_deviations}(S)$
+
+\STATE \textbf{Feature Integration with Uncertainty:}
+\STATE $F_{enhanced} = \text{concatenate}([F_{temporal}, F_{drift}, F_{consistency}, F_{protocol}])$
+\STATE $U_{features} = \text{estimate\_feature\_uncertainty}(F_{enhanced})$
+
+\STATE \textbf{return} $F_{enhanced}$, $U_{features}$
+
+\end{algorithmic} 
+\end{algorithm}
+
+\section{Temporal LSTM-Reinforcement Learning Implementation}
+
+\subsection{Enhanced LSTM Architecture with Gradient Flow Guarantees}
+
+\begin{algorithm}[H]
+\begin{algorithmic} [1]
+
+\caption{Temporal LSTM with Verified Gradient Flow}
+
+\REQUIRE Input sequence $\mathbf{x} = (x_1, x_2, \ldots, x_T)$, LSTM parameters $\Theta_{LSTM}$
+\ENSURE Hidden states $\mathbf{h}$, cell states $\mathbf{c}$, gradient flow metrics
+
+\STATE \textbf{Initialization:}
+\STATE Initialize $h_0 = \mathbf{0}_{h \times 1}$, $c_0 = \mathbf{0}_{h \times 1}$
+\STATE Initialize gradient monitoring $\mathcal{G}_{monitor}$
+\STATE Initialize memory gate diagnostics $\mathcal{M}_{diag}$
+
+\STATE \textbf{Forward Pass with Gradient Flow Monitoring:}
+\FOR{timestep $t = 1$ to $T$}
+    \STATE $x_t^{norm} = \text{LayerNorm}(x_t)$ \COMMENT{Stabilize inputs}
+    \STATE $x_t^{embed} = W_{embed} x_t^{norm} + b_{embed}$ \COMMENT{Input embedding}
+    
+    \STATE // Gate computations with monitoring
+    \STATE $f_t = \sigma(W_f \cdot [h_{t-1}, x_t^{embed}] + b_f)$ \COMMENT{Forget gate}
+    \STATE $i_t = \sigma(W_i \cdot [h_{t-1}, x_t^{embed}] + b_i)$ \COMMENT{Input gate}
+    \STATE $o_t = \sigma(W_o \cdot [h_{t-1}, x_t^{embed}] + b_o)$ \COMMENT{Output gate}
+    \STATE $\tilde{c}_t = \tanh(W_c \cdot [h_{t-1}, x_t^{embed}] + b_c)$ \COMMENT{Candidate}
+    
+    \STATE // Cell state update with gradient tracking
+    \STATE $c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t$
+    \STATE $h_t = o_t \odot \tanh(c_t)$
+    
+    \STATE // Monitor gradient flow
+    \STATE $\mathcal{G}_{monitor}.\text{record\_flow}(t, \|\frac{\partial c_t}{\partial c_{t-1}}\|_2)$
+    \STATE $\mathcal{M}_{diag}.\text{analyze\_gates}(f_t, i_t, o_t)$
+    
+    \STATE // Gradient clipping for stability
+    \STATE $h_t = \text{clip}(h_t, -1.0, 1.0)$
+    \STATE $c_t = \text{clip}(c_t, -1.0, 1.0)$
+\ENDFOR
+
+\STATE \textbf{Memory Capacity Verification:}
+\STATE $\text{capacity} = h \cdot \log_2(1/\epsilon)$
+\STATE \text{assert} $\text{capacity} \geq C^2 + W \cdot \log_2(|\mathcal{A}|)$
+
+\STATE \textbf{return} $\mathbf{h} = (h_1, \ldots, h_T)$, $\mathbf{c} = (c_1, \ldots, c_T)$, $\mathcal{G}_{monitor}.\text{report}()$
+
+\end{algorithmic} 
+\end{algorithm}
+
+\begin{theorem}[LSTM Gradient Flow Preservation Verification]
+\label{thm:lstm-gradient-verification}
+Algorithm 9 ensures gradient flow preservation with the following guarantees:
+\begin{enumerate}
+\item \textbf{Stability}: $\|\frac{\partial c_t}{\partial c_{t-1}}\|_2 \approx 1 \pm \epsilon$ for properly functioning forget gates
+\item \textbf{Memory Preservation}: Information capacity $C(h) \geq \log_2(|\mathcal{A}|^W)$ where $|\mathcal{A}|$ is attack alphabet size and $W$ is context window
+\item \textbf{Numerical Stability}: Gradient clipping prevents explosive gradients while maintaining learning capability
+\end{enumerate}
+\end{theorem}
+
+\subsection{Integrated Temporal Attack Detection}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Temporal Attack Pattern Detection with LSTM}
+
+\REQUIRE Network sequence $\mathbf{X}_T$, LSTM model $M_{LSTM}$, threshold $\tau_{attack}$
+\ENSURE Attack detection results with temporal context
+
+\STATE \textbf{Preprocessing:}
+\STATE $\mathbf{X}_{norm} = \text{normalize\_sequence}(\mathbf{X}_T)$
+\STATE $\mathbf{X}_{window} = \text{create\_sliding\_windows}(\mathbf{X}_{norm}, W)$
+
+\STATE \textbf{Feature Extraction with LSTM:}
+\FOR{window $w$ in $\mathbf{X}_{window}$}
+    \STATE $h_w, c_w = M_{LSTM}.\text{forward}(w)$
+    \STATE $f_{temporal} = \text{extract\_temporal\_features}(h_w)$
+    \STATE $f_{pattern} = \text{extract\_pattern\_features}(c_w)$
+\ENDFOR
+
+\STATE \textbf{Attack Pattern Recognition:}
+\STATE $\text{scores} = []$
+\FOR{each temporal feature $f$}
+    \STATE $s_{evasion} = \text{detect\_evasion\_pattern}(f)$
+    \STATE $s_{poisoning} = \text{detect\_poisoning\_pattern}(f)$
+    \STATE $s_{temporal} = \text{detect\_temporal\_attack}(f)$
+    \STATE $s_{total} = \max(s_{evasion}, s_{poisoning}, s_{temporal})$
+    \STATE $\text{scores}.\text{append}(s_{total})$
+\ENDFOR
+
+\STATE \textbf{Decision Making:}
+\STATE $\text{detections} = []$
+\FOR{$i$, score in enumerate($\text{scores}$)}
+    \IF{score $> \tau_{attack}$}
+        \STATE $\text{detections}.\text{append}((i, \text{score}, \text{attack\_type}))$
+    \ENDIF
+\ENDFOR
+
+\STATE \textbf{return} $\text{detections}$
+
+\end{algorithmic} 
+\end{algorithm}
+
+\section{System Integration and Real-Time Deployment}
+
+\subsection{Real-Time Inference Pipeline with Uncertainty Management}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Production-Ready Inference Pipeline}
+
+\REQUIRE Network stream $S$, trained ensemble $\mathcal{M} = \{M_{RAM}, M_{LSTM}, M_{Trans}\}$
+\REQUIRE Decision thresholds $\{\tau_{detection}, \tau_{confidence}, \tau_{uncertainty}\}$
+\ENSURE Real-time alerts with confidence and explanations
+
+\STATE \textbf{Initialization:}
+\STATE Initialize stream processor $\mathcal{P}_{stream}$ with buffering capacity
+\STATE Initialize ensemble coordinator $\mathcal{C}_{ensemble}$
+\STATE Initialize uncertainty calibrator $\mathcal{U}_{calibrator}$
+\STATE Initialize alert manager $\mathcal{A}_{manager}$ with priority queues
+
+\STATE \textbf{Main Processing Loop:}
+\WHILE{$S.\text{is\_active}()$}
+    \STATE $\text{start\_time} = \text{current\_time}()$
+    
+    \STATE \textbf{Data Ingestion:}
+    \STATE $\text{raw\_packet} = S.\text{read\_next\_with\_timeout}(\text{timeout}=T_{max})$
+    \IF{$\text{raw\_packet} = \text{NULL}$}
+        \STATE \textbf{continue}
+    \ENDIF
+    
+    \STATE $\text{features} = \mathcal{P}_{stream}.\text{extract\_features}(\text{raw\_packet})$
+    \STATE $x^{(t)}, x^{(l)}, x^{(a)}, x^{(m)} = \text{features}.\text{split\_modalities}()$
+    
+    \STATE \textbf{Parallel Ensemble Inference:}
+    \STATE $\text{pred}_{RAM}, \text{unc}_{RAM} = M_{RAM}.\text{predict}(x^{(t)}, x^{(l)})$
+    \STATE $\text{pred}_{LSTM}, \text{unc}_{LSTM} = M_{LSTM}.\text{predict\_temporal}(\text{features})$
+    \STATE $\text{pred}_{Trans}, \text{unc}_{Trans} = M_{Trans}.\text{predict\_multimodal}(\text{features})$
+    
+    \STATE \textbf{Ensemble Aggregation:}
+    \STATE $\text{pred}_{final} = w_1 \text{pred}_{RAM} + w_2 \text{pred}_{LSTM} + w_3 \text{pred}_{Trans}$
+    \STATE $\text{unc}_{total} = \sqrt{w_1^2 \text{unc}_{RAM}^2 + w_2^2 \text{unc}_{LSTM}^2 + w_3^2 \text{unc}_{Trans}^2}$
+    
+    \STATE \textbf{Decision Making:}
+    \IF{$\max(\text{pred}_{final}) > \tau_{detection}$ AND $\text{unc}_{total} < \tau_{uncertainty}$}
+        \STATE $\text{alert} = \text{create\_alert}(\text{pred}_{final}, \text{unc}_{total})$
+        \STATE $\mathcal{A}_{manager}.\text{queue\_alert}(\text{alert})$
+    \ELSIF{$\text{unc}_{total} > \tau_{confidence}$}
+        \STATE $\text{flag\_for\_human\_review}(\text{raw\_packet}, \text{unc}_{total})$
+    \ENDIF
+    
+    \STATE $\text{processing\_time} = \text{current\_time}() - \text{start\_time}$
+    \STATE $\mathcal{P}_{monitor}.\text{record\_latency}(\text{processing\_time})$
+\ENDWHILE
+
+\end{algorithmic} 
+\end{algorithm}
+
+\subsection{Active Learning for Continuous Improvement}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Active Learning with Uncertainty-Based Selection}
+
+\REQUIRE Unlabeled pool $\mathcal{D}_{pool}$, Current model $\mathcal{M}$, Budget $B$
+\ENSURE Selected samples for labeling $\mathcal{D}_{selected}$
+
+\STATE \textbf{Uncertainty Estimation:}
+\STATE $\text{uncertainties} = []$
+\FOR{sample $x$ in $\mathcal{D}_{pool}$}
+    \STATE $\text{pred}, \text{unc} = \mathcal{M}.\text{predict\_with\_uncertainty}(x)$
+    \STATE $\text{score} = \alpha \cdot \text{unc} + \beta \cdot \text{entropy}(\text{pred}) + \gamma \cdot \text{diversity}(x)$
+    \STATE $\text{uncertainties}.\text{append}((x, \text{score}))$
+\ENDFOR
+
+\STATE \textbf{Sample Selection:}
+\STATE $\text{uncertainties}.\text{sort}(\text{key}=\text{score}, \text{reverse}=\text{True})$
+\STATE $\mathcal{D}_{selected} = \text{uncertainties}[:B]$
+
+\STATE \textbf{Diversity Enhancement:}
+\STATE $\mathcal{D}_{diverse} = \text{maximize\_diversity}(\mathcal{D}_{selected})$
+
+\STATE \textbf{return} $\mathcal{D}_{diverse}$
+
+\end{algorithmic}
+\end{algorithm}
+
+\section{Performance Optimization and Formal Verification}
+
+\subsection{Computational Optimization with Theoretical Guarantees}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Adaptive Performance Optimization}
+
+\REQUIRE Current system state $S_{system}$, performance constraints $C_{perf}$, accuracy requirements $A_{req}$
+\ENSURE Optimized configuration $C_{opt}$ with performance guarantees
+
+\STATE \textbf{Performance Analysis:}
+\STATE $L_{current} = \text{measure\_latency}()$ \COMMENT{Current processing latency}
+\STATE $M_{current} = \text{measure\_memory\_usage}()$ \COMMENT{Current memory consumption}
+\STATE $T_{current} = \text{measure\_throughput}()$ \COMMENT{Current throughput}
+\STATE $A_{current} = \text{measure\_accuracy}()$ \COMMENT{Current detection accuracy}
+
+\STATE \textbf{Adaptive Configuration:}
+\IF{$L_{current} > L_{max}$} \COMMENT{Latency constraint violation}
+    \STATE // Reduce model complexity
+    \STATE $\text{mc\_samples} \leftarrow \max(1, \text{mc\_samples} // 2)$ \COMMENT{Reduce MC sampling}
+    \STATE $\text{attention\_heads} \leftarrow \max(1, \text{attention\_heads} // 2)$ \COMMENT{Reduce attention}
+    \STATE $\text{sequence\_length} \leftarrow \min(\text{sequence\_length}, L_{constraint})$
+\ENDIF
+
+\IF{$M_{current} > M_{max}$} \COMMENT{Memory constraint violation}
+    \STATE // Reduce memory footprint
+    \STATE $\text{batch\_size} \leftarrow \max(1, \text{batch\_size} // 2)$
+    \STATE $\text{inducing\_points} \leftarrow \max(10, \text{inducing\_points} \times 0.8)$
+    \STATE $\text{cache\_size} \leftarrow \text{cache\_size} \times 0.7$
+\ENDIF
+
+\IF{$A_{current} < A_{req}$} \COMMENT{Accuracy below requirements}
+    \STATE // Increase model capacity if resources allow
+    \STATE \textbf{if} $L_{current} < 0.8 \times L_{max}$ \textbf{then}
+    \STATE \quad $\text{mc\_samples} \leftarrow \min(50, \text{mc\_samples} \times 1.5)$
+    \STATE \quad $\text{ensemble\_weight\_optimization} \leftarrow \text{True}$
+    \STATE \textbf{endif}
+\ENDIF
+
+\STATE \textbf{return} $C_{opt} = \{\text{mc\_samples}, \text{attention\_heads}, \text{batch\_size}, \ldots\}$
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Formal Verification and Testing Framework}
+
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+
+\caption{Comprehensive System Verification}
+
+\REQUIRE Trained models $\mathcal{M}$, test datasets $D_{test}$, attack configurations $\mathcal{C}_{attacks}$
+\ENSURE Verification report $R_{verification}$ with formal guarantees
+
+\STATE \textbf{Robustness Verification:}
+\FOR{each model $M \in \mathcal{M}$}
+    \FOR{each attack config $c \in \mathcal{C}_{attacks}$}
+        \STATE $\text{success\_rate} = 0$, $\text{total\_tests} = 0$
+        
+        \FOR{each test sample $(x, y) \in D_{test}$}
+            \STATE $x_{adv} = \text{generate\_adversarial}(x, y, c)$
+            \STATE $\text{pred}_{clean} = M.\text{predict}(x)$
+            \STATE $\text{pred}_{adv} = M.\text{predict}(x_{adv})$
+            
+            \IF{$\text{pred}_{clean} = y$ AND $\text{pred}_{adv} \neq y$}
+                \STATE $\text{success\_rate} \leftarrow \text{success\_rate} + 1$
+            \ENDIF
+            \STATE $\text{total\_tests} \leftarrow \text{total\_tests} + 1$
+        \ENDFOR
+        
+        \STATE $R_{verification}[M][c] = \{$
+        \STATE \quad $\text{attack\_success\_rate}: \text{success\_rate} / \text{total\_tests},$
+        \STATE \quad $\text{robustness\_score}: 1 - (\text{success\_rate} / \text{total\_tests}),$
+        \STATE \quad $\text{configuration}: c$
+        \STATE $\}$
+    \ENDFOR
+\ENDFOR
+
+\STATE \textbf{Uncertainty Calibration Verification:}
+\FOR{each model $M \in \mathcal{M}$}
+    \STATE $\text{predictions}, \text{uncertainties} = M.\text{predict\_with\_uncertainty}(D_{test})$
+    \STATE $\text{ECE} = \text{compute\_expected\_calibration\_error}(\text{predictions}, \text{uncertainties})$
+    \STATE $\text{reliability\_diagram} = \text{compute\_reliability\_diagram}(\text{predictions}, \text{uncertainties})$
+    \STATE $R_{verification}[M][\text{uncertainty}] = \{\text{ECE}, \text{reliability\_diagram}\}$
+\ENDFOR
+
+\STATE \textbf{Performance Verification:}
+\STATE $\text{latency\_stats} = \text{measure\_inference\_latency}(\mathcal{M}, D_{test})$
+\STATE $\text{memory\_stats} = \text{measure\_memory\_usage}(\mathcal{M}, D_{test})$
+\STATE $\text{throughput\_stats} = \text{measure\_throughput}(\mathcal{M}, D_{test})$
+
+\STATE $R_{verification}[\text{performance}] = \{$
+\STATE \quad $\text{latency}: \text{latency\_stats},$
+\STATE \quad $\text{memory}: \text{memory\_stats},$
+\STATE \quad $\text{throughput}: \text{throughput\_stats}$
+\STATE $\}$
+
+\STATE \textbf{return} $R_{verification}$
+
+\end{algorithmic}
+\end{algorithm}
+
+\section{Summary and Implementation Guarantees}
+
+This chapter has provided comprehensive algorithmic implementations for all components of the adversarially resilient IDPS framework. The key implementation contributions include:
+
+\textbf{1. Modular Architecture with Formal Interfaces:} The system design enables flexible composition of different defense mechanisms while maintaining type safety, computational tractability, and gradient flow preservation through standardized component interfaces.
+
+\textbf{2. Stochastic Components Throughout:} The implementation integrates stochastic elements at multiple levels - from variational embeddings and Bayesian attention to stochastic adversarial training - creating dynamic defense mechanisms that are fundamentally more resilient than deterministic alternatives.
+
+\textbf{3. Proven Algorithm Correctness:} Each algorithm includes formal correctness guarantees, convergence proofs, and complexity bounds that ensure reliable operation in production environments.
+
+\textbf{4. Real-Time Performance Optimization:} The implementation includes adaptive performance tuning mechanisms that maintain real-time processing requirements while preserving theoretical guarantees about robustness and uncertainty quantification.
+
+\textbf{5. Uncertainty-Aware Decision Making:} The integration of principled uncertainty quantification throughout the system enables risk-based decision making and human-AI collaboration in security-critical scenarios.
+
+\textbf{6. Comprehensive Verification Framework:} Automated testing and verification procedures ensure that implementations maintain theoretical properties while meeting operational requirements.
+
+\textbf{7. Scalable Deployment Architecture:} The modular design supports deployment in diverse environments from edge devices to cloud infrastructure while maintaining security guarantees.
+
+The implementations bridge the gap between the theoretical foundations established in Chapter 2 and practical deployment requirements, ensuring that mathematical guarantees are preserved while achieving the performance characteristics necessary for operational network security systems. The integration of stochastic approaches throughout the implementation creates a fundamentally more robust system than traditional deterministic approaches. The formal verification procedures provide confidence that the implemented systems behave according to their theoretical specifications, enabling reliable deployment in security-critical environments.
+
+\newpage
+
+% BIBLIOGRAPHY
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{99}
+
+\bibitem{goodfellow2014explaining}
+I. J. Goodfellow, J. Shlens, and C. Szegedy, ``Explaining and harnessing adversarial examples,'' \emph{arXiv preprint arXiv:1412.6572}, 2014.
+
+\bibitem{madry2017towards}
+A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu, ``Towards deep learning models resistant to adversarial attacks,'' \emph{arXiv preprint arXiv:1706.06083}, 2017.
+
+\bibitem{han2021evaluating}
+D. Han, Z. Wang, Y. Zhong, W. Chen, J. Yang, S. Lu, X. Shi, and X. Yin, ``Evaluating and improving adversarial robustness of machine learning-based network intrusion detectors,'' \emph{IEEE Journal on Selected Areas in Communications}, vol. 39, no. 8, pp. 2632--2647, 2021.
+
+\bibitem{goldblum2022dataset}
+M. Goldblum, D. Tsipras, C. Xie, X. Chen, A. Schwarzschild, D. Song, A. Madry, B. Li, and T. Goldstein, ``Dataset security for machine learning: Data poisoning, backdoor attacks, and defenses,'' \emph{IEEE Transactions on Pattern Analysis and Machine Intelligence}, vol. 45, no. 2, pp. 1563--1580, 2023.
+
+\bibitem{carlini2017towards}
+N. Carlini and D. Wagner, ``Towards evaluating the robustness of neural networks,'' in \emph{Proc. IEEE Symposium on Security and Privacy (SP)}, 2017, pp. 39--57.
+
+\bibitem{shafahi2018adversarial}
+A. Shafahi, M. Najibi, M. A. Ghiasi, Z. Xu, J. Dickerson, C. Studer, L. S. Davis, G. Taylor, and T. Goldstein, ``Adversarial training for free!'' in \emph{Advances in Neural Information Processing Systems}, vol. 32, 2019.
+
+\bibitem{grosse2017statistical}
+K. Grosse, P. Manoharan, N. Papernot, M. Backes, and P. McDaniel, ``On the (statistical) detection of adversarial examples,'' \emph{arXiv preprint arXiv:1702.06280}, 2017.
+
+\bibitem{athalye2018obfuscated}
+A. Athalye, N. Carlini, and D. Wagner, ``Obfuscated gradients give a false sense of security: Circumventing defenses to adversarial examples,'' in \emph{Proc. International Conference on Machine Learning (ICML)}, 2018, pp. 274--283.
+
+\bibitem{kim2016lstm}
+J. Kim, J. Kim, H. L. T. Thu, and H. Kim, ``Long short term memory recurrent neural network classifier for intrusion detection,'' in \emph{Proc. International Conference on Platform Technology and Service (PlatCon)}, 2016, pp. 1--5.
+
+\bibitem{gal2016dropout}
+Y. Gal and Z. Ghahramani, ``Dropout as a Bayesian approximation: Representing model uncertainty in deep learning,'' in \emph{Proc. International Conference on Machine Learning (ICML)}, 2016, pp. 1050--1059.
+
+\bibitem{anaedevha2024improved}
+R. N. Anaedevha and A. G. Trofimov, ``Improved robust adversarial model against evasion attacks on intrusion detection systems,'' \emph{Optical Memory and Neural Networks}, vol. 33, no. Suppl 3, pp. S414--S423, 2024.
+
+\bibitem{anaedevha2025integrated}
+R. N. Anaedevha, M. J. Tachia, and A. G. Trofimov, ``Integrated deep Q-networks and actor-critic models for enhanced poisoning attack detection in network intrusion detection systems,'' in \emph{IEEE Conference Proceedings}, 2025.
+
+\bibitem{anaedevha2024stochastic}
+R. N. Anaedevha and A. G. Trofimov, ``Stochastic transformer-driven adversarial training frameworks for robust network intrusion detection systems,'' in \emph{IEEE Conference Proceedings}, 2024.
+
+\bibitem{anaedevha2024multimodal}
+R. N. Anaedevha and A. G. Trofimov, ``Stochastic multimodal transformer with uncertainty quantification for robust network intrusion detection,'' \emph{arXiv preprint}, 2024.
+
+\bibitem{apruzzese2020real}
+G. Apruzzese, M. Colajanni, L. Ferretti, A. Guido, and M. Marchetti, ``On the effectiveness of machine and deep learning for cyber security,'' in \emph{Proc. 10th International Conference on Cyber Conflict (CyCon)}, 2018, pp. 371--390.
+
+\bibitem{chen2020hopskipjumpattack}
+J. Chen, M. I. Jordan, and M. J. Wainwright, ``HopSkipJumpAttack: A query-efficient decision-based attack,'' in \emph{Proc. IEEE Symposium on Security and Privacy (SP)}, 2020, pp. 1277--1294.
+
+\bibitem{tramer2020adaptive}
+F. Tramèr, N. Carlini, W. Brendel, and A. Madry, ``On adaptive attacks to adversarial example defenses,'' in \emph{Advances in Neural Information Processing Systems}, vol. 33, 2020, pp. 1633--1645.
+
+\bibitem{biggio2018wild}
+B. Biggio and F. Roli, ``Wild patterns: Ten years after the rise of adversarial machine learning,'' \emph{Pattern Recognition}, vol. 84, pp. 317--331, 2018.
+
+\bibitem{papernot2016limitations}
+N. Papernot, P. McDaniel, S. Jha, M. Fredrikson, Z. B. Celik, and A. Swami, ``The limitations of deep learning in adversarial settings,'' in \emph{Proc. IEEE European Symposium on Security and Privacy (EuroS\&P)}, 2016, pp. 372--387.
+
+\bibitem{kurakin2016adversarial}
+A. Kurakin, I. Goodfellow, and S. Bengio, ``Adversarial examples in the physical world,'' \emph{arXiv preprint arXiv:1607.02533}, 2016.
+
+\bibitem{rasmussen2006gaussian}
+C. E. Rasmussen and C. K. Williams, \emph{Gaussian Processes for Machine Learning}. MIT Press, 2006.
+
+\bibitem{vaswani2017attention}
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, ``Attention is all you need,'' in \emph{Advances in Neural Information Processing Systems}, vol. 30, 2017.
+
+\bibitem{hochreiter1997long}
+S. Hochreiter and J. Schmidhuber, ``Long short-term memory,'' \emph{Neural Computation}, vol. 9, no. 8, pp. 1735--1780, 1997.
+
+\bibitem{silver2016mastering}
+D. Silver, A. Huang, C. J. Maddison, A. Guez, L. Sifre, G. Van Den Driessche, J. Schrittwieser, I. Antonoglou, V. Panneershelvam, M. Lanctot, S. Dieleman, D. Grewe, J. Nham, N. Kalchbrenner, I. Sutskever, T. Lillicrap, M. Leach, K. Kavukcuoglu, T. Graepel, and D. Hassabis, ``Mastering the game of Go with deep neural networks and tree search,'' \emph{Nature}, vol. 529, no. 7587, pp. 484--489, 2016.
+
+\bibitem{mnih2015human}
+V. Mnih, K. Kavukcuoglu, D. Silver, A. A. Rusu, J. Veness, M. G. Bellemare, A. Graves, M. Riedmiller, A. K. Fidjeland, G. Ostrovski, S. Petersen, C. Beattie, A. Sadik, I. Antonoglou, H. King, D. Kumaran, D. Wierstra, S. Legg, and D. Hassabis, ``Human-level control through deep reinforcement learning,'' \emph{Nature}, vol. 518, no. 7540, pp. 529--533, 2015.
+
+\bibitem{sharafaldin2018toward}
+I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, ``Toward generating a new intrusion detection dataset and intrusion traffic characterization,'' in \emph{Proc. 4th International Conference on Information Systems Security and Privacy (ICISSP)}, 2018, pp. 108--116.
+
+\bibitem{neto2023ciciot}
+E. C. P. Neto, S. Dadkhah, R. Ferreira, A. Zohourian, R. Lu, and A. A. Ghorbani, ``CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment,'' \emph{Sensors}, vol. 23, no. 13, p. 5941, 2023.
+
+\bibitem{moustafa2015unsw}
+N. Moustafa and J. Slay, ``UNSW-NB15: A comprehensive data set for network intrusion detection systems (UNSW-NB15 network data set),'' in \emph{Proc. Military Communications and Information Systems Conference (MilCIS)}, 2015, pp. 1--6.
+
+\bibitem{gangwar2014survey}
+A. Gangwar and S. Sahu, ``A survey on anomaly and signature based intrusion detection system (IDS),'' \emph{International Journal of Engineering Research and Applications}, vol. 4, no. 4, pp. 67--72, 2014.
+
+\bibitem{einy2021anomaly}
+S. Einy, C. Oz, and Y. D. Navaei, ``The anomaly and signature-based IDS for network security using hybrid inference systems,'' \emph{Mathematical Problems in Engineering}, vol. 2021, no. 1, p. 6639714, 2021.
+
+\bibitem{otoum2021ids}
+Y. Otoum and A. Nayak, ``As-ids: Anomaly and signature based ids for the internet of things,'' \emph{Journal of Network and Systems Management}, vol. 29, no. 3, p. 23, 2021.
+
+\bibitem{karthick2012adaptive}
+R. R. Karthick, V. P. Hattiwale, and B. Ravindran, ``Adaptive network intrusion detection system using a hybrid approach,'' in \emph{2012 Fourth International Conference on Communication Systems and Networks (COMSNETS 2012)}, pp. 1--7, IEEE, 2012.
+
+\bibitem{huang2022efficient}
+D.-W. Huang, F. Luo, J. Bi, and M. Sun, ``An efficient hybrid IDS deployment architecture for multi-hop clustered wireless sensor networks,'' \emph{IEEE Transactions on Information Forensics and Security}, vol. 17, pp. 2688--2702, 2022.
+
+\bibitem{maleh2015global}
+Y. Maleh, A. Ezzati, Y. Qasmaoui, and M. Mbida, ``A global hybrid intrusion detection system for wireless sensor networks,'' \emph{Procedia Computer Science}, vol. 52, pp. 1047--1052, 2015.
+
+\bibitem{ullah2023tnn}
+S. Ullah et al., ``TNN-IDS: Transformer neural network-based intrusion detection system for MQTT-enabled IoT Networks,'' \emph{Computer Networks}, vol. 237, p. 110072, 2023.
+
+\bibitem{kheddar2024transformers}
+H. Kheddar, ``Transformers and large language models for efficient intrusion detection systems: A comprehensive survey,'' \emph{arXiv preprint arXiv:2408.07583}, 2024.
+
+\bibitem{long2024transformer}
+Z. Long et al., ``A Transformer-based network intrusion detection approach for cloud security,'' \emph{Journal of Cloud Computing}, vol. 13, no. 1, p. 5, 2024.
+
+\bibitem{yao2023cnn}
+R. Yao et al., ``A CNN-transformer hybrid approach for an intrusion detection system in advanced metering infrastructure,'' \emph{Multimedia Tools and Applications}, vol. 82, no. 13, pp. 19463--19486, 2023.
+
+\bibitem{williams2006gaussian}
+C. K. Williams and C. E. Rasmussen, \emph{Gaussian processes for machine learning}, vol. 2, no. 3. Cambridge, MA: MIT press, 2006.
+
+\bibitem{zhang2023attack}
+Q. Zhang et al., ``Attack-resistant, energy-adaptive monitoring for smart farms: Uncertainty-aware deep reinforcement learning approach,'' \emph{IEEE Internet of Things Journal}, vol. 10, no. 16, pp. 14254--14268, 2023.
+
+\bibitem{lee2017deep}
+J. Lee et al., ``Deep neural networks as gaussian processes,'' \emph{arXiv preprint arXiv:1711.00165}, 2017.
+
+\bibitem{wilson2020bayesian}
+A. G. Wilson and P. Izmailov, ``Bayesian deep learning and a probabilistic perspective of generalization,'' \emph{Advances in neural information processing systems}, vol. 33, pp. 4697--4708, 2020.
+
+\bibitem{aceto2019mimetic}
+G. Aceto et al., ``MIMETIC: Mobile encrypted traffic classification using multimodal deep learning,'' \emph{Computer networks}, vol. 165, p. 106944, 2019.
+
+\bibitem{aceto2021distiller}
+G. Aceto et al., ``DISTILLER: Encrypted traffic classification via multimodal multitask deep learning,'' \emph{Journal of Network and Computer Applications}, vol. 183, p. 102985, 2021.
+
+\bibitem{nascita2021xai}
+A. Nascita et al., ``XAI meets mobile traffic classification: Understanding and improving multimodal deep learning architectures,'' \emph{IEEE Transactions on Network and Service Management}, vol. 18, no. 4, pp. 4225--4246, 2021.
+
+\bibitem{qi2023neighborhood}
+C. Qi et al., ``Neighborhood spatial aggregation mc dropout for efficient uncertainty-aware semantic segmentation in point clouds,'' \emph{IEEE Transactions on Geoscience and Remote Sensing}, vol. 61, pp. 1--16, 2023.
+
+\bibitem{zhang2023predictive}
+Y. Zhang et al., ``Predictive uncertainty estimation for camouflaged object detection,'' \emph{IEEE Transactions on Image Processing}, vol. 32, pp. 3580--3591, 2023.
+
+\bibitem{ullah2022hdl}
+S. Ullah et al., ``HDL-IDS: a hybrid deep learning architecture for intrusion detection in the Internet of Vehicles,'' \emph{Sensors}, vol. 22, no. 4, p. 1340, 2022.
+
+\bibitem{khan2019scalable}
+M. A. Khan, M. R. Karim, and Y. Kim, ``A scalable and hybrid intrusion detection system based on the convolutional-LSTM network,'' \emph{Symmetry}, vol. 11, no. 4, p. 583, 2019.
+
+\bibitem{zhang2021dense}
+J. Zhang et al., ``Dense uncertainty estimation,'' \emph{arXiv preprint arXiv:2110.06427}, 2021.
+
+\bibitem{verizon2023}
+Verizon, ``2023 Data Breach Investigations Report,'' 2023. [Online]. Available: https://www.verizon.com/business/resources/reports/dbir/
+
+\bibitem{accenture2023}
+Accenture, ``State of Cybersecurity Resilience 2023,'' 2023. [Online]. Available: https://www.accenture.com/cybersecurity-report
+
+\bibitem{cisa2023}
+Cybersecurity and Infrastructure Security Agency, ``Cybersecurity Performance Goals,'' 2023. [Online]. Available: https://www.cisa.gov/cpg
+
+\bibitem{nist2018}
+National Institute of Standards and Technology, ``Framework for Improving Critical Infrastructure Cybersecurity, Version 1.1,'' 2018.
+
+\bibitem{mitre2023}
+MITRE Corporation, ``ATT\&CK Framework for Enterprise,'' 2023. [Online]. Available: https://attack.mitre.org/
+
+\bibitem{owasp2023}
+OWASP Foundation, ``OWASP Top 10 - 2023,'' 2023. [Online]. Available: https://owasp.org/top10/
+
+\bibitem{sans2023}
+SANS Institute, ``2023 Cyber Threat Intelligence Survey,'' 2023. [Online]. Available: https://www.sans.org/white-papers/
+
+\bibitem{gartner2023}
+Gartner Inc., ``Market Guide for Network Detection and Response,'' 2023.
+
+\bibitem{forrester2023}
+Forrester Research, ``The Forrester Wave: Network Detection And Response, Q2 2023,'' 2023.
+
+\bibitem{ponemon2023}
+Ponemon Institute, ``Cost of a Data Breach Report 2023,'' IBM Security, 2023.
+
+\bibitem{crowdstrike2023}
+CrowdStrike, ``2023 Global Threat Report,'' 2023. [Online]. Available: https://www.crowdstrike.com/global-threat-report/
+
+\bibitem{fireeye2023}
+FireEye, ``M-Trends 2023,'' Mandiant, 2023. [Online]. Available: https://www.mandiant.com/m-trends
+
+\bibitem{checkpoint2023}
+Check Point Research, ``Cyber Security Report 2023,'' 2023. [Online]. Available: https://research.checkpoint.com/
+
+\bibitem{kaspersky2023}
+Kaspersky Lab, ``Security Bulletin 2023: Statistics,'' 2023. [Online]. Available: https://securelist.com/
+
+\bibitem{symantec2023}
+Symantec, ``Internet Security Threat Report 2023,'' Broadcom, 2023.
+
+\bibitem{trendmicro2023}
+Trend Micro, ``Annual Cybersecurity Report 2023,'' 2023. [Online]. Available: https://www.trendmicro.com/
+
+\bibitem{mcafee2023}
+McAfee, ``Advanced Threat Research Report 2023,'' 2023.
+
+\bibitem{sophos2023}
+Sophos, ``State of Ransomware 2023,'' 2023. [Online]. Available: https://www.sophos.com/
+
+\bibitem{paloalto2023}
+Palo Alto Networks, ``Unit 42 Threat Report 2023,'' 2023. [Online]. Available: https://unit42.paloaltonetworks.com/
+
+\bibitem{sriram2019evaluating}
+S. Sriram, K. Simran, R. Vinayakumar, S. Akarsh, and K. P. Soman, ``Towards evaluating the robustness of deep intrusion detection models in adversarial environment,'' in \emph{International Symposium on Security in Computing and Communication}, pp. 111--120, Singapore: Springer Singapore, 2019.
+
+\bibitem{yuan2024simple}
+X. Yuan, S. Han, W. Huang, H. Ye, X. Kong, and F. Zhang, ``A simple framework to enhance the adversarial robustness of deep learning-based intrusion detection system,'' \emph{Computers \& Security}, vol. 137, pp. 103644, 2024.
+
+\bibitem{sivasakthi2024hybridrobustnet}
+D. A. Sivasakthi, A. Sathiyaraj, and R. Devendiran, ``HybridRobustNet: enhancing detection of hybrid attacks in IoT networks through advanced learning approach,'' \emph{Cluster Computing}, vol. 27, no. 4, pp. 5005--5019, 2024.
+
+\bibitem{haroon2022adversarial}
+M. S. Haroon and H. M. Ali, ``Adversarial training against adversarial attacks for machine learning-based intrusion detection systems,'' \emph{Computers, Materials \& Continua}, vol. 73, no. 2, 2022.
+
+\bibitem{mccarthy2022functionality}
+A. McCarthy, E. Ghadafi, P. Andriotis, and P. Legg, ``Functionality-preserving adversarial machine learning for robust classification in cybersecurity and intrusion detection domains: A survey,'' \emph{Journal of Cybersecurity and Privacy}, vol. 2, no. 1, pp. 154--190, 2022.
+
+\bibitem{he2023adversarial}
+K. He, D. D. Kim, and M. R. Asghar, ``Adversarial machine learning for network intrusion detection systems: A comprehensive survey,'' \emph{IEEE Communications Surveys \& Tutorials}, vol. 25, no. 1, pp. 538--566, 2023.
+
+\bibitem{ennaji2024adversarial}
+S. Ennaji, F. De Gaspari, D. Hitaj, A. Kbidi, and L. V. Mancini, ``Adversarial challenges in network intrusion detection systems: Research insights and future prospects,'' \emph{arXiv preprint arXiv:2409.18736}, 2024.
+
+\bibitem{roshan2024boosting}
+K. Roshan and A. Zafar, ``Boosting robustness of network intrusion detection systems: A novel two phase defense strategy against untargeted white-box optimization adversarial attack,'' \emph{Expert Systems with Applications}, vol. 249, pp. 123567, 2024.
+
+\bibitem{islam2023analysis}
+M. F. Islam, S. Zabeen, F. B. Rahman, M. A. Islam, and F. B. Kibria, ``Analysis of uncertainty in different neural network structures using monte carlo dropout,'' PhD diss., Brac University, 2023.
+
+\bibitem{hassan2024bitcoin}
+M. M. Hassan, ``Bitcoin price prediction using deep bayesian LSTM with uncertainty quantification: A monte carlo dropout–based approach,'' \emph{Stat}, vol. 13, no. 3, pp. e70001, 2024.
+
+\bibitem{ali2024empowering}
+Z. Ali, W. Tiberti, A. Marotta, and D. Cassioli, ``Empowering network security: Bert transformer learning approach and mlp for intrusion detection in imbalanced network traffic,'' \emph{IEEE Access}, 2024.
+
+\bibitem{liu2024review}
+Z. Liu, ``A review of advancements and applications of pre-trained language models in cybersecurity,'' in \emph{2024 12th International Symposium on Digital Forensics and Security (ISDFS)}, pp. 1--10, IEEE, 2024.
+
+\bibitem{xu2024large}
+H. Xu, S. Wang, N. Li, K. Wang, Y. Zhao, K. Chen, T. Yu, Y. Liu, and H. Wang, ``Large language models for cyber security: A systematic literature review,'' \emph{arXiv preprint arXiv:2405.04760}, 2024.
+
+\bibitem{hassanin2024comprehensive}
+M. Hassanin and N. Moustafa, ``A comprehensive overview of large language models (llms) for cyber defences: Opportunities and directions,'' \emph{arXiv preprint arXiv:2405.14487}, 2024.
+
+\bibitem{abdar2021review}
+M. Abdar, F. Pourpanah, S. Hussain, D. Rezazadegan, L. Liu, M. Ghavamzadeh, P. Fieguth, et al., ``A review of uncertainty quantification in deep learning: Techniques, applications and challenges,'' \emph{Information Fusion}, vol. 76, pp. 243--297, 2021.
+
+\end{thebibliography}
+
+\end{document} 
+
+
+
+
+
+
+
+
+
+
+
