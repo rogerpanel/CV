@@ -1,0 +1,143 @@
+# FedLLM-API Configuration
+# All experimental settings for reproducibility
+
+# Model configuration
+model:
+  backbone: "distilbert-base-uncased"
+  lora_rank: 8
+  lora_alpha: 16
+  prompt_length: 20
+  hidden_dim: 768
+  num_classes: 2
+  dropout: 0.1
+
+# Privacy configuration
+privacy:
+  epsilon: 0.5                    # Privacy budget per request
+  delta: 1.0e-5                   # Privacy parameter
+  feature_sensitivity: 10.0        # L2 sensitivity of features
+  gradient_clipping: 1.0           # Gradient clipping threshold
+  noise_multiplier: 1.1            # Noise multiplier for DP-SGD
+  enable_dp: true                  # Enable differential privacy
+
+# Federated learning configuration
+federated:
+  num_clients: 10                  # Number of participating organizations
+  num_rounds: 50                   # Total federated training rounds
+  epochs_per_round: 5              # Local epochs per client per round
+  client_fraction: 1.0             # Fraction of clients per round
+  min_clients: 8                   # Minimum clients required per round
+
+  # Aggregation
+  aggregation_method: "attention_weighted"  # Options: simple_avg, median, trimmed_mean, krum, multi_krum, attention_weighted
+  aggregation_temperature: 0.5     # Temperature for attention weighting
+
+  # Communication
+  use_lora: true                   # Use LoRA for parameter efficiency
+  use_prompt_aggregation: false    # Use prompt-based aggregation (more efficient)
+  compression: false               # Enable gradient compression
+
+# Byzantine robustness
+byzantine:
+  enable: true                     # Enable Byzantine-robust aggregation
+  malicious_fraction: 0.0          # Fraction of malicious clients (for testing)
+  attack_type: "sign_flipping"     # Options: random_noise, sign_flipping, targeted_poisoning
+  krum_neighbors: 8                # Number of neighbors for Krum
+
+# Training configuration
+training:
+  learning_rate: 3.0e-4            # Learning rate for AdamW
+  weight_decay: 0.01               # L2 regularization
+  warmup_steps: 500                # LR warmup steps
+  max_grad_norm: 1.0               # Gradient clipping norm
+  batch_size: 32                   # Training batch size
+  eval_batch_size: 128             # Evaluation batch size
+  num_workers: 4                   # DataLoader workers
+  mixed_precision: false           # Use FP16 mixed precision
+  gradient_checkpointing: false    # Enable gradient checkpointing
+
+  # Optimization
+  optimizer: "adamw"               # Options: adam, adamw, sgd
+  scheduler: "cosine"              # Options: constant, linear, cosine
+  beta1: 0.9
+  beta2: 0.999
+  epsilon: 1.0e-8
+
+# Data configuration
+data:
+  datasets:
+    - "aws_api_gateway"
+    - "azure_apim"
+    - "gcp_cloudapi"
+    - "graphql_security"
+    - "microservices_mesh"
+    - "ecommerce_api"
+
+  data_dir: "./datasets"
+  cache_dir: "./cache"
+
+  # Federated partitioning
+  partition_method: "dirichlet"    # Options: iid, dirichlet, label_skew
+  dirichlet_alpha: 0.5             # Concentration parameter for Dirichlet
+  min_samples_per_client: 1000     # Minimum samples per client
+
+  # Data preprocessing
+  max_sequence_length: 50          # Max API requests per sequence
+  max_params: 20                   # Max parameters per request
+
+  # Splits
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+# Evaluation configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "auroc"
+    - "auprc"
+
+  save_predictions: true
+  compute_confusion_matrix: true
+
+  # Privacy auditing
+  run_membership_inference: true
+  run_gradient_inversion: false    # Expensive, disable for quick eval
+
+# Logging and checkpointing
+logging:
+  log_dir: "./logs"
+  tensorboard_dir: "./runs"
+  log_interval: 10                 # Log every N batches
+  eval_interval: 1                 # Evaluate every N rounds
+
+checkpoint:
+  save_dir: "./checkpoints"
+  save_interval: 5                 # Save every N rounds
+  keep_last_n: 3                   # Keep last N checkpoints
+  save_best: true                  # Save best model based on val accuracy
+
+# Reproducibility
+seed: 42
+deterministic: true
+
+# Hardware
+device: "cuda"                     # Options: cuda, cpu, mps
+num_gpus: 1                        # Number of GPUs per client (for distributed)
+
+# Experiment tracking
+experiment:
+  name: "fedllm_api_main"
+  tags: ["federated", "api_security", "zero_day"]
+  notes: "Main FedLLM-API experiment with 10 clients"
+
+# Baseline comparisons
+baselines:
+  run_centralized: true
+  run_local: true
+  run_fedavg: true
+  run_fedprox: true
+  run_zeroday_llm: true
