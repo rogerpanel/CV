@@ -6,7 +6,20 @@ This chapter develops the unified mathematical framework integrating all seven n
 \section{Continuous-Time Temporal Graph Neural Networks}
 \label{sec:models_cttgnn}
 
-Continuous-time modeling of temporal graphs addresses fundamental limitations of discrete-time approaches requiring fixed sampling intervals that trade off between temporal resolution and computational efficiency. We formulate graph evolution through continuous-time dynamics enabling principled handling of irregular event occurrences across multiple time scales.
+Continuous-time modeling of temporal graphs addresses fundamental limitations of discrete-time approaches requiring fixed sampling intervals that trade off between temporal resolution and computational efficiency. We formulate graph evolution through continuous-time dynamics~\cite{chen2018neural,salvi2024tabn} enabling principled handling of irregular event occurrences across multiple time scales.
+
+% CT-TGNN Architecture Diagram
+% Option 1: Compile TikZ directly (recommended for vector graphics)
+\input{figures/ct_tgnn_architecture}
+
+% Option 2: Use pre-compiled figure (uncomment if using PNG/PDF version)
+% \begin{figure}[htbp]
+% \centering
+% \includegraphics[width=0.95\textwidth]{figures/ct_tgnn_architecture.pdf}
+% % Alternative formats: ct_tgnn_architecture.png or ct_tgnn_architecture.jpg
+% \caption{CT-TGNN architecture combining continuous-time neural ordinary differential equations with temporal point processes.}
+% \label{fig:ct_tgnn_arch_alt}
+% \end{figure}
 
 \subsection{Mathematical Formulation}
 
@@ -121,7 +134,11 @@ for $T_{train}$ training iterations. Sparse graphs with $|\mathcal{E}| = O(|\mat
 \section{Triple-Embedding Temporal Graph Neural Networks}
 \label{sec:models_tripleegnn}
 
-Microservices architectures exhibit hierarchical structure where security behaviors manifest at multiple granularities: service-level interactions between components, trace-level request flows spanning services, and node-level host communications. Single-granularity representations fail to capture cross-level dependencies enabling sophisticated attacks. We develop multi-granularity graph embeddings jointly modeling security across abstraction levels.
+Microservices architectures exhibit hierarchical structure where security behaviors manifest at multiple granularities: service-level interactions between components, trace-level request flows spanning services, and node-level host communications~\cite{hong2022multi}. Single-granularity representations fail to capture cross-level dependencies enabling sophisticated attacks. We develop multi-granularity graph embeddings~\cite{hu2020heterogeneous} jointly modeling security across abstraction levels.
+
+% TripleE-TGNN Architecture Diagram
+\input{figures/triplee_tgnn_architecture}
+% Alternativepre-compiled: \includegraphics[width=0.95\textwidth]{figures/triplee_tgnn_architecture.pdf}
 
 \subsection{Hierarchical Graph Representation}
 
