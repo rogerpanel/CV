@@ -67,7 +67,7 @@ where scale weights $\beta_s(t) = \text{Softmax}(\mathbf{w}_s^\top \mathbf{h}_v^
 
 \subsection{Adjoint Sensitivity Method}
 
-Training requires computing gradients of loss with respect to parameters $\theta$ through backpropagation involving ODE solutions. Direct backpropagation through numerical integration is memory-intensive, storing all intermediate states. The adjoint sensitivity method computes gradients efficiently through augmented dynamics.
+Training requires computing gradients of loss with respect to parameters $\theta$ through backpropagation involving ODE solutions. Direct backpropagation through numerical integration is memory-intensive, storing all intermediate states. The adjoint sensitivity method~\cite{pontryagin1962mathematical,chen2018neural} computes gradients efficiently through augmented dynamics.
 
 Define the loss $L = \mathcal{L}(\mathbf{h}(T))$ depending on final embeddings $\mathbf{h}(T)$ at time $T$. The adjoint state $\mathbf{a}(t) = \frac{\partial L}{\partial \mathbf{h}(t)}$ satisfies the backward ODE:
 
@@ -108,7 +108,7 @@ For encrypted network traffic where packet payloads are unavailable, edge featur
 &\quad \text{mean}(\Delta t_i), \text{std}(\Delta t_i), \text{burstiness}, \text{entropy}]
 \end{align}
 
-where $\Delta t_i = t_{i+1} - t_i$ represents inter-arrival times, burstiness quantifies temporal clustering through autocorrelation, and entropy measures predictability of size distributions.
+where $\Delta t_i = t_{i+1} - t_i$ represents inter-arrival times, burstiness quantifies temporal clustering through autocorrelation, and entropy measures predictability of size distributions~\cite{anderson2017tls}.
 
 \subsection{Convergence Analysis}
 
@@ -232,7 +232,11 @@ measuring KL divergence between predicted distributions of linked entities acros
 \section{Federated Learning with Large Language Models}
 \label{sec:models_fedllm}
 
-Federated learning enables collaborative threat detection across organizations without centralizing sensitive security data. However, standard federated optimization assumes non-adversarial participants and homogeneous data distributions. We develop Byzantine-robust federated learning integrated with large language models for zero-shot detection and differentially private optimal transport for distribution alignment.
+Federated learning enables collaborative threat detection across organizations without centralizing sensitive security data~\cite{mcmahan2017communication,kairouz2021advances}. However, standard federated optimization assumes non-adversarial participants and homogeneous data distributions. We develop Byzantine-robust federated learning~\cite{blanchard2017machine} integrated with large language models~\cite{brown2020language,devlin2019bert} for zero-shot detection and differentially private optimal transport~\cite{cuturi2013sinkhorn,courty2017optimal} for distribution alignment.
+
+% FedLLM-API Architecture Diagram
+\input{figures/fedllm_api_architecture}
+% Alternative: \includegraphics[width=0.95\textwidth]{figures/fedllm_api_architecture.pdf}
 
 \subsection{Byzantine-Robust Federated Optimization}
 
@@ -329,7 +333,7 @@ where sensitivity $\Delta T = \max_{D, D'} \|\mathbf{T}^*(D) - \mathbf{T}^*(D')\
 
 \subsection{Large Language Model Integration}
 
-Zero-shot detection of novel API attacks leverages large language models understanding attack semantics. Given API request sequence $\mathbf{r} = (r_1, \ldots, r_n)$ with endpoint paths, parameters, and response codes, we construct natural language prompt:
+Zero-shot detection of novel API attacks leverages large language models~\cite{brown2020language,devlin2019bert} understanding attack semantics~\cite{wei2022chain,fang2023llm4ids}. Given API request sequence $\mathbf{r} = (r_1, \ldots, r_n)$ with endpoint paths, parameters, and response codes, we construct natural language prompt:
 
 \begin{quote}
 \textit{An API request sequence calls endpoints: [list endpoints]. The sequence exhibits [statistical features]. Does this sequence represent a security threat? Provide reasoning.}
@@ -346,7 +350,11 @@ where $\mathcal{G}(\mathbf{r})$ constructs request graph and weight $\lambda_{LL
 \section{Post-Quantum Intrusion Detection}
 \label{sec:models_pqidps}
 
-Post-quantum cryptographic protocols introduce distinct traffic patterns and attack surfaces requiring specialized detection capabilities. We develop feature extraction and modeling techniques for lattice-based, code-based, and hash-based post-quantum schemes.
+Post-quantum cryptographic protocols~\cite{bernstein2017post,alagic2020nist} introduce distinct traffic patterns and attack surfaces requiring specialized detection capabilities. We develop feature extraction and modeling techniques for lattice-based~\cite{avanzi2019crystals}, code-based, and hash-based post-quantum schemes.
+
+% PQ-IDPS Architecture Diagram
+\input{figures/pq_idps_architecture}
+% Alternative: \includegraphics[width=0.95\textwidth]{figures/pq_idps_architecture.pdf}
 
 \subsection{Post-Quantum Protocol Feature Extraction}
 
@@ -395,7 +403,11 @@ p(\text{attack}, \text{protocol}) = \text{Softmax}(\mathbf{W}_{out} \mathbf{z}_{
 \section{MambaShield: Adversarially Resilient State Space Models}
 \label{sec:models_mambashield}
 
-State space models provide efficient temporal sequence modeling through linear differential equations, but their adversarial robustness under poisoning attacks requires formal analysis. We integrate Mamba's selective scan mechanism with progressive adversarial robustness distillation and PAC-Bayesian certification.
+State space models provide efficient temporal sequence modeling through linear differential equations~\cite{gu2022efficiently}, but their adversarial robustness under poisoning attacks~\cite{biggio2012poisoning} requires formal analysis. We integrate Mamba's selective scan mechanism~\cite{gu2024mamba} with progressive adversarial robustness distillation~\cite{papernot2016distillation} and PAC-Bayesian certification~\cite{mcallester2003pac,dziugaite2017computing}.
+
+% MambaShield Architecture Diagram
+\input{figures/mambashield_architecture}
+% Alternative: \includegraphics[width=0.95\textwidth]{figures/mambashield_architecture.pdf}
 
 \subsection{Selective State Space Formulation}
 
@@ -474,7 +486,11 @@ for $d$-dimensional parameter space.
 \section{Stochastic Transformer with Bayesian Uncertainty Quantification}
 \label{sec:models_stochastic_transformer}
 
-Transformers achieve state-of-the-art performance on sequence modeling but lack principled uncertainty quantification and adversarial robustness. We develop variational Bayesian transformers with stochastic adversarial training providing calibrated uncertainty estimates and certified robustness.
+Transformers~\cite{vaswani2017attention} achieve state-of-the-art performance on sequence modeling but lack principled uncertainty quantification and adversarial robustness. We develop variational Bayesian transformers~\cite{blundell2015weight,kingma2014auto} with stochastic adversarial training~\cite{madry2018towards} providing calibrated uncertainty estimates~\cite{guo2017calibration} and certified robustness.
+
+% Stochastic Transformer Architecture Diagram
+\input{figures/stochastic_transformer_architecture}
+% Alternative: \includegraphics[width=0.95\textwidth]{figures/stochastic_transformer_architecture.pdf}
 
 \subsection{Variational Bayesian Attention}
 
@@ -602,7 +618,11 @@ Regularization controls model complexity:
 \section{Game-Theoretic Evasion Resistance}
 \label{sec:models_game_theory}
 
-Adaptive adversaries observe deployed detection mechanisms and craft evasion strategies. Game-theoretic modeling characterizes equilibrium strategies where neither defender nor attacker benefits from unilateral deviation.
+Adaptive adversaries observe deployed detection mechanisms and craft evasion strategies. Game-theoretic modeling~\cite{bruckner2011stackelberg,liu2017decision} characterizes equilibrium strategies~\cite{nash1950equilibrium} where neither defender nor attacker benefits from unilateral deviation.
+
+% Game-Theoretic Framework Architecture Diagram
+\input{figures/game_theoretic_architecture}
+% Alternative: \includegraphics[width=0.95\textwidth]{figures/game_theoretic_architecture.pdf}
 
 \subsection{Stackelberg Game Formulation}
 
