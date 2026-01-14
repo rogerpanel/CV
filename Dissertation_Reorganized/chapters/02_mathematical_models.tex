@@ -1,0 +1,724 @@
+\chapter{Mathematical Models and Unified Framework}
+\label{ch:mathematical_models}
+
+This chapter develops the unified mathematical framework integrating all seven novel methods addressing sub-problems from both master problem formulations. We establish theoretical foundations spanning continuous-time graph neural ordinary differential equations, differentially private optimal transport, PAC-Bayesian generalization bounds, variational Bayesian inference, and game-theoretic adversarial modeling. For each method, we provide formal problem statements, algorithmic frameworks, convergence guarantees, robustness certificates, and computational complexity analysis. The unified treatment reveals deep connections between seemingly disparate approaches through shared mathematical structures including adjoint sensitivity analysis, Wasserstein geometry, and KL divergence regularization.
+
+\section{Continuous-Time Temporal Graph Neural Networks}
+\label{sec:models_cttgnn}
+
+Continuous-time modeling of temporal graphs addresses fundamental limitations of discrete-time approaches requiring fixed sampling intervals that trade off between temporal resolution and computational efficiency. We formulate graph evolution through continuous-time dynamics enabling principled handling of irregular event occurrences across multiple time scales.
+
+\subsection{Mathematical Formulation}
+
+Consider a temporal heterogeneous graph $\mathcal{G}(t) = (\mathcal{V}, \mathcal{E}(t), \mathbf{X}(t), \mathbf{E}(t))$ where node set $\mathcal{V} = \bigcup_{k=1}^K \mathcal{V}_k$ comprises $K$ node types, time-varying edge set $\mathcal{E}(t) \subseteq \mathcal{V} \times \mathcal{V}$ represents interactions, node features $\mathbf{X}(t) = \{\mathbf{x}_v(t) \in \mathbb{R}^{d_x}\}_{v \in \mathcal{V}}$ capture entity attributes, and edge features $\mathbf{E}(t) = \{\mathbf{e}_{uv}(t) \in \mathbb{R}^{d_e}\}_{(u,v) \in \mathcal{E}(t)}$ encode interaction characteristics.
+
+The continuous-time graph neural ODE defines node embedding evolution through the differential equation:
+
+\begin{equation}
+\frac{d\mathbf{h}_v(t)}{dt} = f_\theta(\mathbf{h}_v(t), \{\mathbf{h}_u(t)\}_{u \in \mathcal{N}_v(t)}, \mathcal{A}(t), t)
+\end{equation}
+
+where $\mathbf{h}_v(t) \in \mathbb{R}^{d_h}$ denotes the embedding of node $v$ at time $t$, $\mathcal{N}_v(t)$ represents the neighborhood of $v$ at time $t$, $\mathcal{A}(t)$ encodes the adjacency structure, and $f_\theta$ is a neural network parameterized by $\theta$.
+
+For heterogeneous temporal graphs in network security contexts, we employ type-specific message passing:
+
+\begin{equation}
+\frac{d\mathbf{h}_v^{(k)}(t)}{dt} = \sum_{k'=1}^K \sum_{u \in \mathcal{N}_v^{(k')}(t)} \alpha_{uv}^{(k,k')}(t) \cdot \text{MSG}_{k,k'}(\mathbf{h}_u^{(k')}(t), \mathbf{e}_{uv}(t))
+\end{equation}
+
+where $\mathbf{h}_v^{(k)}(t)$ denotes embeddings of type-$k$ nodes, $\mathcal{N}_v^{(k')}(t)$ represents type-$k'$ neighbors, attention coefficients $\alpha_{uv}^{(k,k')}(t)$ weight neighbor importance, and $\text{MSG}_{k,k'}$ computes type-specific messages.
+
+The attention mechanism adaptively weighs neighbor contributions:
+
+\begin{equation}
+\alpha_{uv}^{(k,k')}(t) = \frac{\exp(\text{LeakyReLU}(\mathbf{a}_{k,k'}^\top [\mathbf{W}_k\mathbf{h}_v^{(k)}(t) || \mathbf{W}_{k'}\mathbf{h}_u^{(k')}(t)]))}{\sum_{w \in \mathcal{N}_v(t)} \exp(\text{LeakyReLU}(\mathbf{a}_{k,k'}^\top [\mathbf{W}_k\mathbf{h}_v^{(k)}(t) || \mathbf{W}_{k'}\mathbf{h}_w^{(k')}(t)]))}
+\end{equation}
+
+where $\mathbf{W}_k, \mathbf{W}_{k'}$ are learnable projection matrices, $\mathbf{a}_{k,k'}$ represents attention parameters, and $||$ denotes concatenation.
+
+\subsection{Multi-Scale Temporal Modeling}
+
+Network attacks unfold across multiple time scales from microseconds (packet-level) to months (APT campaigns). We model multi-scale dynamics through parallel ODEs with distinct time constants:
+
+\begin{equation}
+\frac{d\mathbf{h}_v^{(s)}(t)}{dt} = \frac{1}{\tau_s} \cdot f_{\theta_s}(\mathbf{h}_v^{(s)}(t), \{\mathbf{h}_u^{(s)}(t)\}_{u \in \mathcal{N}_v(t)}, \mathcal{A}(t), t)
+\end{equation}
+
+for scales $s = 1, \ldots, S$ with time constants $\tau_1 < \tau_2 < \cdots < \tau_S$ spanning fast to slow dynamics. Final embeddings aggregate across scales through learned attention:
+
+\begin{equation}
+\mathbf{h}_v(t) = \sum_{s=1}^S \beta_s(t) \cdot \mathbf{h}_v^{(s)}(t)
+\end{equation}
+
+where scale weights $\beta_s(t) = \text{Softmax}(\mathbf{w}_s^\top \mathbf{h}_v^{(s)}(t))$ adapt based on current dynamics.
+
+\subsection{Adjoint Sensitivity Method}
+
+Training requires computing gradients of loss with respect to parameters $\theta$ through backpropagation involving ODE solutions. Direct backpropagation through numerical integration is memory-intensive, storing all intermediate states. The adjoint sensitivity method computes gradients efficiently through augmented dynamics.
+
+Define the loss $L = \mathcal{L}(\mathbf{h}(T))$ depending on final embeddings $\mathbf{h}(T)$ at time $T$. The adjoint state $\mathbf{a}(t) = \frac{\partial L}{\partial \mathbf{h}(t)}$ satisfies the backward ODE:
+
+\begin{equation}
+\frac{d\mathbf{a}(t)}{dt} = -\mathbf{a}(t)^\top \frac{\partial f_\theta}{\partial \mathbf{h}}(\mathbf{h}(t), t)
+\end{equation}
+
+integrated backward from $\mathbf{a}(T) = \frac{\partial \mathcal{L}}{\partial \mathbf{h}(T)}$ to $\mathbf{a}(0)$. Parameter gradients follow from:
+
+\begin{equation}
+\frac{\partial L}{\partial \theta} = -\int_0^T \mathbf{a}(t)^\top \frac{\partial f_\theta}{\partial \theta}(\mathbf{h}(t), t) dt
+\end{equation}
+
+The adjoint method requires memory proportional to model size rather than trajectory length, enabling efficient training on long temporal sequences.
+
+\subsection{Temporal Adaptive Batch Normalization}
+
+Standard batch normalization conflicts with continuous-time dynamics where statistics change continuously. We introduce temporal adaptive batch normalization computing statistics over temporal windows:
+
+\begin{equation}
+\text{TABN}(\mathbf{h}(t)) = \gamma(t) \cdot \frac{\mathbf{h}(t) - \mu_{[t-\Delta, t]}}{\sqrt{\sigma_{[t-\Delta, t]}^2 + \epsilon}} + \beta(t)
+\end{equation}
+
+where $\mu_{[t-\Delta, t]}$ and $\sigma_{[t-\Delta, t]}^2$ denote mean and variance computed over window $[t-\Delta, t]$, and learned parameters $\gamma(t), \beta(t)$ adapt temporally through:
+
+\begin{equation}
+\frac{d\gamma(t)}{dt} = g_\gamma(\mathbf{h}(t)), \quad \frac{d\beta(t)}{dt} = g_\beta(\mathbf{h}(t))
+\end{equation}
+
+with neural networks $g_\gamma, g_\beta$ learning temporal adaptation policies.
+
+\subsection{Encrypted Traffic Analysis}
+
+For encrypted network traffic where packet payloads are unavailable, edge features extract timing and size patterns from metadata. Given encrypted flow $(t_1, s_1), \ldots, (t_n, s_n)$ with packet arrival times $t_i$ and sizes $s_i$, we compute statistical features:
+
+\begin{align}
+\mathbf{e}_{uv} &= [\text{mean}(s_i), \text{std}(s_i), \text{max}(s_i), \text{min}(s_i), \\
+&\quad \text{mean}(\Delta t_i), \text{std}(\Delta t_i), \text{burstiness}, \text{entropy}]
+\end{align}
+
+where $\Delta t_i = t_{i+1} - t_i$ represents inter-arrival times, burstiness quantifies temporal clustering through autocorrelation, and entropy measures predictability of size distributions.
+
+\subsection{Convergence Analysis}
+
+We establish convergence guarantees for continuous-time graph neural ODE training under Lipschitz continuity assumptions.
+
+\begin{theorem}[CT-TGNN Convergence]
+\label{thm:cttgnn_convergence}
+Assume the dynamics function $f_\theta$ is $L_f$-Lipschitz continuous in $\mathbf{h}$ and $L_\theta$-Lipschitz in $\theta$. Under gradient descent with learning rate $\eta$ satisfying $\eta < \frac{2}{L_f L_\theta}$, the training loss converges to a stationary point at rate $O(1/\sqrt{T})$ where $T$ denotes the number of gradient steps.
+\end{theorem}
+
+The proof appears in Appendix A. The theorem guarantees that continuous-time graph neural ODEs converge to local minima at rates comparable to standard neural networks despite the infinite-dimensional optimization over continuous trajectories.
+
+\subsection{Computational Complexity}
+
+Solving graph ODEs requires numerical integration trading accuracy for computational cost. Using adaptive Runge-Kutta methods with tolerance $\epsilon_{ode}$, the number of function evaluations scales as $O(|\mathcal{E}| \cdot \epsilon_{ode}^{-1/5})$ where $|\mathcal{E}|$ denotes edge count. For graphs with bounded degree $d$, message passing complexity per evaluation is $O(|\mathcal{V}| \cdot d \cdot d_h)$ for $|\mathcal{V}|$ nodes and embedding dimension $d_h$. Total training complexity becomes:
+
+\begin{equation}
+O\left(|\mathcal{V}| \cdot d \cdot d_h \cdot |\mathcal{E}| \cdot \epsilon_{ode}^{-1/5} \cdot T_{train}\right)
+\end{equation}
+
+for $T_{train}$ training iterations. Sparse graphs with $|\mathcal{E}| = O(|\mathcal{V}|)$ achieve near-linear complexity in graph size.
+
+\section{Triple-Embedding Temporal Graph Neural Networks}
+\label{sec:models_tripleegnn}
+
+Microservices architectures exhibit hierarchical structure where security behaviors manifest at multiple granularities: service-level interactions between components, trace-level request flows spanning services, and node-level host communications. Single-granularity representations fail to capture cross-level dependencies enabling sophisticated attacks. We develop multi-granularity graph embeddings jointly modeling security across abstraction levels.
+
+\subsection{Hierarchical Graph Representation}
+
+The microservices environment induces three coupled temporal graphs:
+
+\begin{enumerate}[label=(\roman*), leftmargin=2em]
+\item \textbf{Service Graph} $\mathcal{G}_s(t) = (\mathcal{V}_s, \mathcal{E}_s(t), \mathbf{X}_s(t))$ where nodes represent microservices and edges denote API calls aggregated over time windows
+
+\item \textbf{Trace Graph} $\mathcal{G}_r(t) = (\mathcal{V}_r, \mathcal{E}_r(t), \mathbf{X}_r(t))$ where nodes correspond to distributed traces and edges connect traces sharing services
+
+\item \textbf{Node Graph} $\mathcal{G}_n(t) = (\mathcal{V}_n, \mathcal{E}_n(t), \mathbf{X}_n(t))$ where nodes represent infrastructure hosts and edges encode network flows
+\end{enumerate}
+
+Bipartite coupling graphs $\mathcal{B}_{sr}, \mathcal{B}_{sn}, \mathcal{B}_{rn}$ link entities across granularities where service $s$ deploys on node $n$, trace $r$ traverses service $s$, and trace $r$ executes on node $n$.
+
+\subsection{Multi-Granularity Embedding Learning}
+
+Each granularity $g \in \{s, r, n\}$ maintains specialized encoder computing embeddings through temporal message passing:
+
+\begin{equation}
+\mathbf{h}_v^{(g)}(t) = \text{ENC}_g\left(\mathbf{x}_v^{(g)}(t), \{\mathbf{h}_u^{(g)}(t-1)\}_{u \in \mathcal{N}_v^{(g)}(t)}, \Delta t\right)
+\end{equation}
+
+where $\text{ENC}_g$ represents granularity-specific graph neural network, $\mathbf{h}_u^{(g)}(t-1)$ denotes neighbor embeddings from previous timestep, and $\Delta t$ captures temporal intervals.
+
+Cross-granularity message passing integrates information across abstraction levels through bipartite attention:
+
+\begin{align}
+\mathbf{m}_v^{(g \to g')}(t) &= \sum_{u \in \mathcal{N}_v^{(g,g')}} \alpha_{uv}^{(g,g')}(t) \cdot \mathbf{W}_{g \to g'} \mathbf{h}_u^{(g)}(t) \\
+\alpha_{uv}^{(g,g')}(t) &= \text{Softmax}_u\left(\frac{(\mathbf{Q}_{g'}\mathbf{h}_v^{(g')}(t))^\top (\mathbf{K}_g\mathbf{h}_u^{(g)}(t))}{\sqrt{d_k}}\right)
+\end{align}
+
+where $\mathcal{N}_v^{(g,g')}$ denotes neighbors in coupling graph $\mathcal{B}_{gg'}$, projection matrices $\mathbf{W}_{g \to g'}$ transform between representation spaces, and query/key projections $\mathbf{Q}_{g'}, \mathbf{K}_g$ compute compatibility scores.
+
+Final embeddings fuse intra-granularity evolution and cross-granularity messages:
+
+\begin{equation}
+\mathbf{h}_v^{(g)}(t) \leftarrow \text{LayerNorm}\left(\mathbf{h}_v^{(g)}(t) + \sum_{g' \neq g} \mathbf{m}_v^{(g' \to g)}(t)\right)
+\end{equation}
+
+\subsection{Dual Attention Mechanism}
+
+We employ dual attention integrating temporal and spatial attention for each granularity. Temporal attention weighs historical states:
+
+\begin{equation}
+\tilde{\mathbf{h}}_v^{(g)}(t) = \sum_{\tau=t-w}^{t-1} \alpha_\tau^{temp} \cdot \mathbf{h}_v^{(g)}(\tau)
+\end{equation}
+
+where temporal weights $\alpha_\tau^{temp} = \text{Softmax}_\tau(\mathbf{w}_{temp}^\top \mathbf{h}_v^{(g)}(\tau))$ prioritize relevant historical context. Spatial attention aggregates neighborhood:
+
+\begin{equation}
+\hat{\mathbf{h}}_v^{(g)}(t) = \sum_{u \in \mathcal{N}_v^{(g)}(t)} \alpha_u^{spat} \cdot \mathbf{h}_u^{(g)}(t)
+\end{equation}
+
+with spatial weights $\alpha_u^{spat} = \text{Softmax}_u(\mathbf{w}_{spat}^\top [\mathbf{h}_v^{(g)}(t) || \mathbf{h}_u^{(g)}(t)])$.
+
+Combined attention produces final representations:
+
+\begin{equation}
+\mathbf{h}_v^{(g)}(t) = \text{MLP}\left([\tilde{\mathbf{h}}_v^{(g)}(t) || \hat{\mathbf{h}}_v^{(g)}(t) || \mathbf{h}_v^{(g)}(t)]\right)
+\end{equation}
+
+\subsection{Adaptive Learning Under Topology Evolution}
+
+Microservices topologies evolve through deployments modifying service structure. Catastrophic forgetting occurs when models overwrite previously learned patterns. We employ elastic weight consolidation preventing destructive updates to important parameters.
+
+After learning task $T_i$ with optimal parameters $\theta_i^*$, subsequent task $T_{i+1}$ optimization includes regularization:
+
+\begin{equation}
+\mathcal{L}_{T_{i+1}}(\theta) + \lambda_{ewc} \sum_j F_j(\theta_j - \theta_{i,j}^*)^2
+\end{equation}
+
+where Fisher information matrix diagonal $F_j = \mathbb{E}[(\frac{\partial \log p(y|x,\theta_{i}^*)}{\partial \theta_j})^2]$ quantifies parameter importance, and $\lambda_{ewc}$ controls regularization strength. Important parameters for previous tasks receive strong regularization preventing significant updates, while unimportant parameters remain flexible for new task adaptation.
+
+\subsection{Joint Classification Objective}
+
+The model performs simultaneous classification at all three granularities through multi-task learning. Given labeled examples $\{(\mathcal{G}_s, y_s), (\mathcal{G}_r, y_r), (\mathcal{G}_n, y_n)\}$, the joint objective combines granularity-specific losses:
+
+\begin{equation}
+\mathcal{L}_{joint} = \lambda_s \mathcal{L}_s + \lambda_r \mathcal{L}_r + \lambda_n \mathcal{L}_n + \lambda_{consist} \mathcal{L}_{consist}
+\end{equation}
+
+where $\mathcal{L}_g$ denotes cross-entropy loss at granularity $g$, weights $\lambda_g$ balance objectives, and consistency loss $\mathcal{L}_{consist}$ enforces agreement across granularities:
+
+\begin{equation}
+\mathcal{L}_{consist} = \sum_{(v_s, v_r) \in \mathcal{B}_{sr}} \text{KL}(p_s(y_s|v_s) || p_r(y_r|v_r)) + \sum_{(v_s, v_n) \in \mathcal{B}_{sn}} \text{KL}(p_s(y_s|v_s) || p_n(y_n|v_n))
+\end{equation}
+
+measuring KL divergence between predicted distributions of linked entities across granularities.
+
+\section{Federated Learning with Large Language Models}
+\label{sec:models_fedllm}
+
+Federated learning enables collaborative threat detection across organizations without centralizing sensitive security data. However, standard federated optimization assumes non-adversarial participants and homogeneous data distributions. We develop Byzantine-robust federated learning integrated with large language models for zero-shot detection and differentially private optimal transport for distribution alignment.
+
+\subsection{Byzantine-Robust Federated Optimization}
+
+Consider $K$ participating organizations with local datasets $\mathcal{D}_1, \ldots, \mathcal{D}_K$. At round $t$, the server broadcasts global model $\mathbf{w}_t$ and clients compute local updates through gradient descent on local data:
+
+\begin{equation}
+\mathbf{w}_{t+1}^k = \mathbf{w}_t - \eta \nabla_{\mathbf{w}} \mathcal{L}_k(\mathbf{w}_t; \mathcal{D}_k)
+\end{equation}
+
+where $\mathcal{L}_k$ denotes local loss and $\eta$ represents learning rate. Malicious clients submit corrupted updates $\tilde{\mathbf{w}}_{t+1}^k$ designed to degrade global model performance.
+
+Coordinate-wise trimmed mean aggregation achieves robustness by removing extreme values along each dimension. For parameter dimension $j$, sort client updates $\{\mathbf{w}_{t+1,j}^1, \ldots, \mathbf{w}_{t+1,j}^K\}$ and compute:
+
+\begin{equation}
+\bar{\mathbf{w}}_{t+1,j} = \frac{1}{K - 2b} \sum_{i=b+1}^{K-b} \mathbf{w}_{t+1,j}^{(i)}
+\end{equation}
+
+where $\mathbf{w}_{t+1,j}^{(i)}$ denotes the $i$-th order statistic (sorted value) and $b = \lfloor K \cdot q \rfloor$ removes $q$ fraction of extreme values from both tails. When the fraction of Byzantine clients satisfies $f < q < \frac{1}{2}$, trimmed mean provably converges to optimal parameters.
+
+\begin{theorem}[Byzantine-Robust Convergence]
+\label{thm:byzantine_convergence}
+Assume $\mathcal{L}$ is $\mu$-strongly convex and $L$-smooth, and the fraction of Byzantine clients is bounded by $f < q < \frac{1}{2}$ where $q$ determines trimming. With learning rate $\eta \leq \frac{1}{L}$, coordinate-wise trimmed mean achieves convergence:
+
+\begin{equation}
+\mathbb{E}[\|\mathbf{w}_T - \mathbf{w}^*\|^2] \leq \left(1 - \frac{\mu\eta}{2}\right)^T \|\mathbf{w}_0 - \mathbf{w}^*\|^2 + \frac{2\eta}{\mu(K-2b)}\left(\sum_{k=1}^{K-2b} \sigma_k^2 + C_{byz}\right)
+\end{equation}
+
+where $\mathbf{w}^*$ denotes optimal parameters, $\sigma_k^2$ represents variance of honest client gradients, and $C_{byz}$ bounds Byzantine influence depending on trimming ratio $q$.
+\end{theorem}
+
+The theorem establishes that despite malicious participants, the global model converges to a neighborhood of the optimum with error controlled by the Byzantine bound $C_{byz}$.
+
+\subsection{Differential Privacy Through Local Noise Addition}
+
+To protect privacy of local training data, clients add calibrated noise to gradients before aggregation. For $(\epsilon, \delta)$-differential privacy under composition over $T$ rounds, each client clips gradient norm and adds Gaussian noise:
+
+\begin{align}
+\bar{\mathbf{g}}_k &= \mathbf{g}_k / \max\left(1, \frac{\|\mathbf{g}_k\|_2}{C}\right) \\
+\tilde{\mathbf{g}}_k &= \bar{\mathbf{g}}_k + \mathcal{N}(0, \sigma^2 C^2 \mathbf{I})
+\end{align}
+
+where $C$ denotes clipping threshold and noise scale $\sigma$ satisfies privacy requirements through moments accountant analysis. Privacy amplification by sampling with batch sampling probability $q_{batch}$ and composition over $T$ iterations yields overall privacy:
+
+\begin{equation}
+\epsilon_{total} = \min_{\alpha > 1} \left\{\log\left(\frac{1}{\delta}\right) + \frac{T q_{batch}^2}{\alpha - 1} \left(\frac{\alpha(\alpha-1)}{2\sigma^2}\right)\right\}
+\end{equation}
+
+\subsection{Optimal Transport for Distribution Alignment}
+
+Heterogeneous data distributions across clients degrade federated model performance. Optimal transport provides geometrically principled distribution alignment minimizing Wasserstein distance between source and target distributions.
+
+Given source distribution $\mu_s$ and target distribution $\mu_t$ over feature space $\mathcal{X}$, the optimal transport plan solves:
+
+\begin{equation}
+\mathbf{T}^* = \argmin_{\mathbf{T} \in \Pi(\mu_s, \mu_t)} \int_{\mathcal{X} \times \mathcal{X}} c(x, y) d\mathbf{T}(x, y)
+\end{equation}
+
+subject to marginal constraints $\int_{\mathcal{X}} d\mathbf{T}(x, y) = d\mu_t(y)$ and $\int_{\mathcal{X}} d\mathbf{T}(x, y) = d\mu_s(x)$, where $c(x,y)$ quantifies transport cost.
+
+For discrete distributions with samples $\{\mathbf{x}_i\}_{i=1}^{n_s}$ from source and $\{\mathbf{y}_j\}_{j=1}^{n_t}$ from target, the discrete optimal transport problem becomes:
+
+\begin{equation}
+\mathbf{T}^* = \argmin_{\mathbf{T} \in \mathbb{R}^{n_s \times n_t}_+} \langle \mathbf{C}, \mathbf{T} \rangle_F \quad \text{s.t.} \quad \mathbf{T}\mathbf{1}_{n_t} = \mathbf{a}, \mathbf{T}^\top\mathbf{1}_{n_s} = \mathbf{b}
+\end{equation}
+
+where cost matrix $\mathbf{C}_{ij} = c(\mathbf{x}_i, \mathbf{y}_j)$, source weights $\mathbf{a} \in \Delta_{n_s}$, and target weights $\mathbf{b} \in \Delta_{n_t}$ lie in probability simplexes.
+
+Sinkhorn algorithm efficiently computes regularized transport through iterative scaling:
+
+\begin{align}
+\mathbf{u}^{(t+1)} &= \mathbf{a} \oslash (\mathbf{K}\mathbf{v}^{(t)}) \\
+\mathbf{v}^{(t+1)} &= \mathbf{b} \oslash (\mathbf{K}^\top\mathbf{u}^{(t+1)})
+\end{align}
+
+where $\mathbf{K} = \exp(-\mathbf{C}/\lambda)$ represents entropic kernel, $\oslash$ denotes element-wise division, and $\lambda > 0$ controls regularization strength. After convergence, transport plan follows from $\mathbf{T}^* = \text{diag}(\mathbf{u}) \mathbf{K} \text{diag}(\mathbf{v})$.
+
+\subsection{Differentially Private Optimal Transport}
+
+Combining differential privacy with optimal transport requires protecting both sample locations and transport plans. We add noise to empirical distributions and transport optimization.
+
+Noisy empirical distribution approximates source through:
+
+\begin{equation}
+\tilde{\mu}_s = \frac{1}{n_s} \sum_{i=1}^{n_s} \delta_{\mathbf{x}_i + \xi_i}
+\end{equation}
+
+where $\xi_i \sim \mathcal{N}(0, \sigma_{DP}^2 \mathbf{I})$ provides differential privacy with scale $\sigma_{DP}$ calibrated to privacy parameters. Noisy transport plan adds Laplace noise to optimal solution:
+
+\begin{equation}
+\tilde{\mathbf{T}} = \mathbf{T}^* + \text{Lap}\left(\frac{\Delta T}{\epsilon_{OT}}\right)
+\end{equation}
+
+where sensitivity $\Delta T = \max_{D, D'} \|\mathbf{T}^*(D) - \mathbf{T}^*(D')\|_1$ measures maximum change in transport plan under single sample modification, and $\epsilon_{OT}$ allocates privacy budget to transport computation.
+
+\subsection{Large Language Model Integration}
+
+Zero-shot detection of novel API attacks leverages large language models understanding attack semantics. Given API request sequence $\mathbf{r} = (r_1, \ldots, r_n)$ with endpoint paths, parameters, and response codes, we construct natural language prompt:
+
+\begin{quote}
+\textit{An API request sequence calls endpoints: [list endpoints]. The sequence exhibits [statistical features]. Does this sequence represent a security threat? Provide reasoning.}
+\end{quote}
+
+The LLM generates response $p_{LLM}(\text{malicious} | \mathbf{r})$ through few-shot prompting with attack descriptions. Ensemble prediction combines LLM output with graph neural network prediction:
+
+\begin{equation}
+p_{final} = \lambda_{LLM} \cdot p_{LLM}(\text{malicious}|\mathbf{r}) + (1-\lambda_{LLM}) \cdot p_{GNN}(\text{malicious}|\mathcal{G}(\mathbf{r}))
+\end{equation}
+
+where $\mathcal{G}(\mathbf{r})$ constructs request graph and weight $\lambda_{LLM}$ balances contributions.
+
+\section{Post-Quantum Intrusion Detection}
+\label{sec:models_pqidps}
+
+Post-quantum cryptographic protocols introduce distinct traffic patterns and attack surfaces requiring specialized detection capabilities. We develop feature extraction and modeling techniques for lattice-based, code-based, and hash-based post-quantum schemes.
+
+\subsection{Post-Quantum Protocol Feature Extraction}
+
+Lattice-based key exchange using CRYSTALS-Kyber exhibits timing variations correlated with secret key Hamming weights exploitable through timing side-channels. We extract timing features capturing statistical distributions:
+
+\begin{equation}
+\mathbf{f}_{lattice} = [\mu_t, \sigma_t, \text{skew}(t), \text{kurt}(t), \text{percentiles}(t), \text{autocorr}(t)]
+\end{equation}
+
+where $t = (t_1, \ldots, t_n)$ represents decapsulation timing measurements, moments $\mu_t, \sigma_t$ capture central tendency and spread, higher moments skewness and kurtosis characterize distribution shape, percentiles identify outliers, and autocorrelation reveals temporal dependencies.
+
+Code-based cryptosystems like Classic McEliece exhibit large public keys (hundreds of KB) and structured error patterns. Structural features detect attacks exploiting specific parameter choices:
+
+\begin{equation}
+\mathbf{f}_{code} = [\text{keysize}, \text{error\_weight}, \text{syndrome\_entropy}, \text{decode\_iterations}]
+\end{equation}
+
+Hash-based signatures like Sphincs+ generate large signatures (kilobytes) with computational overhead. Anomaly detection identifies attacks through resource consumption patterns:
+
+\begin{equation}
+\mathbf{f}_{hash} = [\text{sig\_size}, \text{gen\_time}, \text{verify\_time}, \text{hash\_invocations}, \text{merkle\_depth}]
+\end{equation}
+
+\subsection{Unified Post-Quantum Detection Architecture}
+
+The detection architecture processes protocol-specific features through specialized encoders before fusion:
+
+\begin{align}
+\mathbf{z}_{lattice} &= \text{ENC}_{lattice}(\mathbf{f}_{lattice}) \\
+\mathbf{z}_{code} &= \text{ENC}_{code}(\mathbf{f}_{code}) \\
+\mathbf{z}_{hash} &= \text{ENC}_{hash}(\mathbf{f}_{hash})
+\end{align}
+
+Cross-attention fusion enables interaction between protocol representations:
+
+\begin{equation}
+\mathbf{z}_{fused} = \text{MultiHeadAttention}([\mathbf{z}_{lattice}, \mathbf{z}_{code}, \mathbf{z}_{hash}])
+\end{equation}
+
+Final classification employs multi-task learning predicting both attack type and target protocol:
+
+\begin{equation}
+p(\text{attack}, \text{protocol}) = \text{Softmax}(\mathbf{W}_{out} \mathbf{z}_{fused} + \mathbf{b}_{out})
+\end{equation}
+
+\section{MambaShield: Adversarially Resilient State Space Models}
+\label{sec:models_mambashield}
+
+State space models provide efficient temporal sequence modeling through linear differential equations, but their adversarial robustness under poisoning attacks requires formal analysis. We integrate Mamba's selective scan mechanism with progressive adversarial robustness distillation and PAC-Bayesian certification.
+
+\subsection{Selective State Space Formulation}
+
+The selective state space model extends classical SSMs through input-dependent state transitions. Given input sequence $\mathbf{u}(t) \in \mathbb{R}^{d_{in}}$, the continuous-time dynamics evolve as:
+
+\begin{align}
+\frac{d\mathbf{x}(t)}{dt} &= \mathbf{A}(\mathbf{u}(t)) \mathbf{x}(t) + \mathbf{B}(\mathbf{u}(t)) \mathbf{u}(t) \\
+\mathbf{y}(t) &= \mathbf{C} \mathbf{x}(t) + \mathbf{D} \mathbf{u}(t)
+\end{align}
+
+where latent state $\mathbf{x}(t) \in \mathbb{R}^{d_{state}}$ captures temporal dependencies, observation $\mathbf{y}(t) \in \mathbb{R}^{d_{out}}$ provides output, and input-dependent matrices:
+
+\begin{align}
+\mathbf{A}(\mathbf{u}) &= f_A(\mathbf{u}; \theta_A) \in \mathbb{R}^{d_{state} \times d_{state}} \\
+\mathbf{B}(\mathbf{u}) &= f_B(\mathbf{u}; \theta_B) \in \mathbb{R}^{d_{state} \times d_{in}}
+\end{align}
+
+implement selection mechanism through neural network projections $f_A, f_B$.
+
+Discretization through zero-order hold produces discrete-time update:
+
+\begin{equation}
+\mathbf{x}_k = \bar{\mathbf{A}}_k \mathbf{x}_{k-1} + \bar{\mathbf{B}}_k \mathbf{u}_k
+\end{equation}
+
+where discretized matrices depend on step size $\Delta$:
+
+\begin{align}
+\bar{\mathbf{A}}_k &= \exp(\mathbf{A}(\mathbf{u}_k) \Delta) \\
+\bar{\mathbf{B}}_k &= (\mathbf{A}(\mathbf{u}_k))^{-1}(\exp(\mathbf{A}(\mathbf{u}_k)\Delta) - \mathbf{I})\mathbf{B}(\mathbf{u}_k)
+\end{align}
+
+\subsection{Progressive Adversarial Robustness Distillation}
+
+Training on potentially poisoned data requires robustness mechanisms preventing performance degradation under corrupted samples. Progressive distillation transfers robustness from ensemble teachers to student model through curriculum learning.
+
+Maintain ensemble of $M$ teacher models $\{f_{\theta_m}\}_{m=1}^M$ trained on disjoint data subsets. Student model $f_\phi$ learns from teachers through distillation loss:
+
+\begin{equation}
+\mathcal{L}_{distill} = \sum_{m=1}^M w_m \cdot \text{KL}\left(p_\phi(y|x) || p_{\theta_m}(y|x)\right)
+\end{equation}
+
+where teacher weights $w_m$ determined by validation performance balance contributions.
+
+Progressive curriculum increases poisoning fraction over training. Define curriculum schedule $\rho(t) = \min(\rho_0 + \alpha t, \rho_{max})$ starting from clean data $\rho_0 = 0$ and linearly increasing to maximum poisoning rate $\rho_{max}$ over training. At iteration $t$, sample mini-batch with poisoning fraction $\rho(t)$ and optimize combined loss:
+
+\begin{equation}
+\mathcal{L}_{total} = (1-\lambda(t))\mathcal{L}_{task} + \lambda(t)\mathcal{L}_{distill}
+\end{equation}
+
+where distillation weight $\lambda(t) = \min(\lambda_0 + \beta t, 1)$ progressively increases teacher influence as poisoning intensifies.
+
+\subsection{PAC-Bayesian Generalization Bounds}
+
+PAC-Bayesian analysis provides distribution-dependent generalization bounds accounting for model complexity through KL divergence. Given prior distribution $P$ over model parameters and posterior $Q$ learned from data, the PAC-Bayesian bound states:
+
+\begin{theorem}[PAC-Bayesian Bound for SSMs]
+\label{thm:pacbayes_ssm}
+For any $\delta \in (0,1)$, with probability at least $1-\delta$ over draw of training set $S$ of size $n$, for all posterior distributions $Q$:
+
+\begin{equation}
+\mathbb{E}_{\theta \sim Q}[\mathcal{R}(\theta)] \leq \mathbb{E}_{\theta \sim Q}[\hat{\mathcal{R}}_n(\theta)] + \sqrt{\frac{\text{KL}(Q||P) + \log(2\sqrt{n}/\delta)}{2n}}
+\end{equation}
+
+where $\mathcal{R}(\theta)$ denotes true risk, $\hat{\mathcal{R}}_n(\theta)$ represents empirical risk on training set, and $\text{KL}(Q||P)$ measures posterior-prior divergence.
+\end{theorem}
+
+The bound quantifies the price of complexity: models with posterior far from prior incur generalization penalty through increased KL divergence. Practical application employs Gaussian prior $P = \mathcal{N}(0, \sigma_P^2 \mathbf{I})$ and Gaussian posterior $Q = \mathcal{N}(\mu_Q, \sigma_Q^2 \mathbf{I})$ with closed-form KL divergence:
+
+\begin{equation}
+\text{KL}(Q||P) = \frac{d}{2}\left[\frac{\sigma_Q^2}{\sigma_P^2} + \frac{\|\mu_Q\|^2}{\sigma_P^2} - 1 - \log\left(\frac{\sigma_Q^2}{\sigma_P^2}\right)\right]
+\end{equation}
+
+for $d$-dimensional parameter space.
+
+\section{Stochastic Transformer with Bayesian Uncertainty Quantification}
+\label{sec:models_stochastic_transformer}
+
+Transformers achieve state-of-the-art performance on sequence modeling but lack principled uncertainty quantification and adversarial robustness. We develop variational Bayesian transformers with stochastic adversarial training providing calibrated uncertainty estimates and certified robustness.
+
+\subsection{Variational Bayesian Attention}
+
+Standard attention mechanisms compute deterministic compatibility scores. Variational attention introduces probabilistic query and key projections enabling uncertainty quantification.
+
+For input sequence $\mathbf{X} = [\mathbf{x}_1, \ldots, \mathbf{x}_n] \in \mathbb{R}^{n \times d}$, learn variational distributions over query, key, value transformations:
+
+\begin{align}
+q_\phi^Q(\mathbf{W}_Q) &= \mathcal{N}(\mu_Q, \text{diag}(\sigma_Q^2)) \\
+q_\phi^K(\mathbf{W}_K) &= \mathcal{N}(\mu_K, \text{diag}(\sigma_K^2)) \\
+q_\phi^V(\mathbf{W}_V) &= \mathcal{N}(\mu_V, \text{diag}(\sigma_V^2))
+\end{align}
+
+Reparameterization trick enables gradient-based learning: sample $\mathbf{W}_Q = \mu_Q + \sigma_Q \odot \epsilon_Q$ for $\epsilon_Q \sim \mathcal{N}(0, \mathbf{I})$.
+
+Attention scores become random variables:
+
+\begin{equation}
+\mathbf{A}_{ij} = \frac{(\mathbf{x}_i \mathbf{W}_Q)^\top (\mathbf{x}_j \mathbf{W}_K)}{\sqrt{d_k}}
+\end{equation}
+
+with uncertainty propagating to attention weights and output. Monte Carlo estimation approximates expectations through sampling:
+
+\begin{equation}
+\mathbb{E}_{q_\phi}[\text{Attention}(\mathbf{X})] \approx \frac{1}{M}\sum_{m=1}^M \text{Attention}(\mathbf{X}; \mathbf{W}_Q^{(m)}, \mathbf{W}_K^{(m)}, \mathbf{W}_V^{(m)})
+\end{equation}
+
+\subsection{Epistemic and Aleatoric Uncertainty Decomposition}
+
+Total predictive uncertainty decomposes into epistemic model uncertainty and aleatoric data uncertainty through variance decomposition.
+
+Epistemic uncertainty captures model parameter uncertainty:
+
+\begin{equation}
+\mathbb{U}_{epistemic} = \mathbb{V}_{p(\theta|\mathcal{D})}[\mathbb{E}_{p(y|x,\theta)}[y]]
+\end{equation}
+
+measuring variance of expected predictions across parameter posterior. Aleatoric uncertainty represents inherent data noise:
+
+\begin{equation}
+\mathbb{U}_{aleatoric} = \mathbb{E}_{p(\theta|\mathcal{D})}[\mathbb{V}_{p(y|x,\theta)}[y]]
+\end{equation}
+
+averaging predictive variance over parameter distribution.
+
+Practical decomposition through sampling:
+
+\begin{align}
+\mathbb{U}_{epistemic} &\approx \frac{1}{M}\sum_{m=1}^M (\hat{y}^{(m)} - \bar{\hat{y}})^2 \\
+\mathbb{U}_{aleatoric} &\approx \frac{1}{M}\sum_{m=1}^M \hat{\sigma}^{(m)2}
+\end{align}
+
+where $\hat{y}^{(m)}$ represents prediction from $m$-th parameter sample, $\bar{\hat{y}} = \frac{1}{M}\sum_m \hat{y}^{(m)}$ denotes mean prediction, and $\hat{\sigma}^{(m)2}$ captures predicted variance from $m$-th sample.
+
+\subsection{Stochastic Adversarial Training}
+
+Standard adversarial training generates worst-case perturbations with fixed budgets. Stochastic adversarial training samples attack parameters from learned distributions improving robustness diversity.
+
+Define stochastic perturbation distribution:
+
+\begin{equation}
+\delta \sim q_\psi(\delta | x) = \mathcal{N}(\mu_\psi(x), \sigma_\psi(x)^2 \mathbf{I})
+\end{equation}
+
+parameterized by neural networks $\mu_\psi, \sigma_\psi$ learning spatially-adaptive perturbation statistics. Training optimizes:
+
+\begin{equation}
+\min_\theta \max_\psi \mathbb{E}_{(x,y) \sim \mathcal{D}} \mathbb{E}_{\delta \sim q_\psi(\delta|x)}[\mathcal{L}(f_\theta(x + \delta), y)]
+\end{equation}
+
+The inner maximization learns attack distribution maximizing expected loss, while outer minimization trains robust model.
+
+Practical implementation alternates between perturbation learning:
+
+\begin{equation}
+\psi \leftarrow \psi + \alpha_\psi \nabla_\psi \mathbb{E}_{\delta \sim q_\psi(\delta|x)}[\mathcal{L}(f_\theta(x+\delta), y)]
+\end{equation}
+
+and model training:
+
+\begin{equation}
+\theta \leftarrow \theta - \alpha_\theta \nabla_\theta \mathbb{E}_{\delta \sim q_\psi(\delta|x)}[\mathcal{L}(f_\theta(x+\delta), y)]
+\end{equation}
+
+\subsection{Multi-Objective Loss Function}
+
+Training balances multiple objectives through weighted combination:
+
+\begin{equation}
+\mathcal{L}_{total} = \lambda_1 \mathcal{L}_{task} + \lambda_2 \mathcal{L}_{KL} + \lambda_3 \mathcal{L}_{adv} + \lambda_4 \mathcal{L}_{calib} + \lambda_5 \mathcal{L}_{reg}
+\end{equation}
+
+Task loss measures classification performance:
+
+\begin{equation}
+\mathcal{L}_{task} = \mathbb{E}_{(x,y)}[-\log p_\theta(y|x)]
+\end{equation}
+
+KL divergence regularizes posterior toward prior:
+
+\begin{equation}
+\mathcal{L}_{KL} = \text{KL}(q_\phi(\theta) || p(\theta))
+\end{equation}
+
+Adversarial loss enforces robustness:
+
+\begin{equation}
+\mathcal{L}_{adv} = \mathbb{E}_{(x,y)} \mathbb{E}_{\delta \sim q_\psi}[-\log p_\theta(y|x+\delta)]
+\end{equation}
+
+Calibration loss encourages well-calibrated confidence:
+
+\begin{equation}
+\mathcal{L}_{calib} = \text{ECE}(\{(p_\theta(\hat{y}|x_i), \mathbb{1}[\hat{y} = y_i])\}_i)
+\end{equation}
+
+where Expected Calibration Error bins predictions by confidence and measures confidence-accuracy gap.
+
+Regularization controls model complexity:
+
+\begin{equation}
+\mathcal{L}_{reg} = \|\theta\|_2^2
+\end{equation}
+
+\section{Game-Theoretic Evasion Resistance}
+\label{sec:models_game_theory}
+
+Adaptive adversaries observe deployed detection mechanisms and craft evasion strategies. Game-theoretic modeling characterizes equilibrium strategies where neither defender nor attacker benefits from unilateral deviation.
+
+\subsection{Stackelberg Game Formulation}
+
+The defender-attacker interaction follows Stackelberg game structure where defender commits to detection policy observable by attacker who then optimizes evasion strategy.
+
+Defender selects detection model $f_\theta$ and deployment configuration $\mathbf{c}$ comprising monitoring coverage and response policies. Attacker observes $(f_\theta, \mathbf{c})$ and chooses attack strategy $\mathbf{a}$ including target selection, attack type, and evasion technique.
+
+Defender utility combines detection accuracy and operational cost:
+
+\begin{equation}
+U_d(f_\theta, \mathbf{c}, \mathbf{a}) = \mathbb{E}_{x \sim \mathcal{D}(\mathbf{a})}[\mathbb{1}[f_\theta(x) = y]] - \text{Cost}(\mathbf{c})
+\end{equation}
+
+where attack-dependent data distribution $\mathcal{D}(\mathbf{a})$ reflects attacker's chosen strategy.
+
+Attacker utility measures attack success minus evasion cost:
+
+\begin{equation}
+U_a(f_\theta, \mathbf{c}, \mathbf{a}) = \mathbb{P}[\text{attack succeeds} | f_\theta, \mathbf{c}, \mathbf{a}] - \text{Cost}(\mathbf{a})
+\end{equation}
+
+The Stackelberg equilibrium solves the bi-level optimization:
+
+\begin{align}
+(f_\theta^*, \mathbf{c}^*) &= \argmax_{f_\theta, \mathbf{c}} U_d(f_\theta, \mathbf{c}, \mathbf{a}^*(f_\theta, \mathbf{c})) \\
+\text{where } \mathbf{a}^*(f_\theta, \mathbf{c}) &= \argmax_\mathbf{a} U_a(f_\theta, \mathbf{c}, \mathbf{a})
+\end{align}
+
+The inner optimization computes attacker's best response to defender's strategy, while outer optimization finds defender's optimal commitment accounting for attacker's rational response.
+
+\subsection{Nash Equilibrium Characterization}
+
+When both players select strategies simultaneously without observing opponent choices, Nash equilibrium characterizes stability. Mixed strategy profile $(\pi_d, \pi_a)$ forms Nash equilibrium when:
+
+\begin{align}
+\mathbb{E}_{\pi_a}[U_d(\pi_d, \mathbf{a})] &\geq \mathbb{E}_{\pi_a}[U_d(\pi_d', \mathbf{a})] \quad \forall \pi_d' \\
+\mathbb{E}_{\pi_d}[U_a(f_\theta, \pi_a)] &\geq \mathbb{E}_{\pi_d}[U_a(f_\theta, \pi_a')] \quad \forall \pi_a'
+\end{align}
+
+Neither player improves utility through unilateral strategy change.
+
+For zero-sum security games where $U_d + U_a = 0$, Nash equilibrium coincides with minimax solution:
+
+\begin{equation}
+\pi_d^* = \argmax_{\pi_d} \min_\mathbf{a} \mathbb{E}_{\pi_d}[U_d(f_\theta, \mathbf{a})]
+\end{equation}
+
+computing the maximin strategy for defender.
+
+\subsection{Online Learning with No-Regret Algorithms}
+
+When payoff structures and opponent strategies are unknown, online learning algorithms enable adaptive strategy selection while maintaining sublinear regret bounds.
+
+At round $t$, defender selects detection configuration $\mathbf{c}_t$ from finite action space $\mathcal{C}$, attacker selects $\mathbf{a}_t$ from $\mathcal{A}$, and defender observes reward $r_t = U_d(\mathbf{c}_t, \mathbf{a}_t)$. Regret after $T$ rounds measures performance gap against best fixed strategy:
+
+\begin{equation}
+R(T) = \max_{\mathbf{c} \in \mathcal{C}} \sum_{t=1}^T U_d(\mathbf{c}, \mathbf{a}_t) - \sum_{t=1}^T U_d(\mathbf{c}_t, \mathbf{a}_t)
+\end{equation}
+
+Multiplicative weights update maintains distribution over actions with exponential weighting by cumulative rewards:
+
+\begin{equation}
+p_t(\mathbf{c}) \propto \exp\left(\eta \sum_{s=1}^{t-1} \mathbb{1}[\mathbf{c}_s = \mathbf{c}] \cdot r_s\right)
+\end{equation}
+
+where learning rate $\eta = \sqrt{\frac{\log |\mathcal{C}|}{T}}$ balances exploration and exploitation.
+
+\begin{theorem}[Regret Bound for Multiplicative Weights]
+\label{thm:regret_bound}
+The multiplicative weights algorithm with learning rate $\eta = \sqrt{\frac{\log |\mathcal{C}|}{T}}$ achieves regret bound:
+
+\begin{equation}
+R(T) \leq 2\sqrt{T \log |\mathcal{C}|}
+\end{equation}
+
+yielding average per-round regret $\frac{R(T)}{T} = O\left(\sqrt{\frac{\log |\mathcal{C}|}{T}}\right) \to 0$ as $T \to \infty$.
+\end{theorem}
+
+The theorem guarantees that average regret vanishes asymptotically, and in repeated zero-sum games, empirical frequencies of play converge to Nash equilibrium.
+
+\subsection{Uncertainty-Guided Strategy Selection}
+
+Integrating Bayesian uncertainty quantification with game-theoretic optimization enables risk-aware decision making. High epistemic uncertainty signals lack of confidence where human analyst review is appropriate.
+
+Define uncertainty-conditioned utility:
+
+\begin{equation}
+\tilde{U}_d(\mathbf{c}, \mathbf{a}) = \begin{cases}
+U_d(\mathbf{c}, \mathbf{a}) - \kappa \mathbb{U}_{epistemic} & \text{if } \mathbb{U}_{epistemic} < \tau \\
+-\infty & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where penalty $\kappa$ discounts utility under uncertainty and threshold $\tau$ triggers rejection for human review. This yields risk-sensitive policies avoiding predictions with high model uncertainty.
+
+\section{Unified Optimization Framework}
+\label{sec:models_unified}
+
+The seven methods share mathematical structures enabling unified treatment through coupled optimization. We formulate the joint learning problem and establish convergence guarantees.
+
+\subsection{Coupled Objective Function}
+
+Let $\theta = \{\theta_{CTTGNN}, \theta_{TripleE}, \theta_{FedLLM}, \theta_{PQIDPS}, \theta_{Mamba}, \theta_{Stochastic}, \theta_{Game}\}$ denote parameters across all methods. The unified objective couples component losses:
+
+\begin{equation}
+\mathcal{L}_{unified}(\theta) = \sum_{i=1}^7 \lambda_i \mathcal{L}_i(\theta_i) + \sum_{i<j} \lambda_{ij} \mathcal{L}_{ij}(\theta_i, \theta_j)
+\end{equation}
+
+where $\mathcal{L}_i$ represents method-specific loss and $\mathcal{L}_{ij}$ encodes coupling between methods $i$ and $j$ through:
+
+\begin{equation}
+\mathcal{L}_{ij}(\theta_i, \theta_j) = \text{KL}(p_{\theta_i}(y|x) || p_{\theta_j}(y|x)) + \|\mathbf{z}_{\theta_i}(x) - \mathbf{z}_{\theta_j}(x)\|_2^2
+\end{equation}
+
+enforcing consistency between predictions and learned representations.
+
+\subsection{Convergence Analysis}
+
+Under standard smoothness and convexity assumptions, alternating minimization over component parameters converges to stationary points.
+
+\begin{theorem}[Unified Framework Convergence]
+\label{thm:unified_convergence}
+Assume each component loss $\mathcal{L}_i$ is $L_i$-smooth and coupling losses $\mathcal{L}_{ij}$ are $L_{ij}$-smooth. Under alternating gradient descent with learning rates $\eta_i \leq \frac{1}{L_i + \sum_j L_{ij}}$, the unified optimization converges at rate:
+
+\begin{equation}
+\|\nabla \mathcal{L}_{unified}(\theta_T)\|^2 \leq \frac{2(\mathcal{L}_{unified}(\theta_0) - \mathcal{L}_{unified}(\theta^*))}{\eta_{min} T}
+\end{equation}
+
+where $\eta_{min} = \min_i \eta_i$ and $\theta^*$ denotes a stationary point.
+\end{theorem}
+
+This establishes that the coupled optimization converges to local optima at rates comparable to standard neural network training despite the complex interdependencies between methods.
+
+\section{Summary}
+
+This chapter developed unified mathematical frameworks for all seven novel methods addressing sub-problems from both master problem formulations. Continuous-time graph neural ODEs enable principled temporal modeling across irregular event occurrences through adjoint sensitivity analysis. Multi-granularity embeddings capture security behaviors across service, trace, and node abstraction levels. Byzantine-robust federated learning with differentially private optimal transport achieves collaborative threat detection under malicious participants and privacy constraints. Post-quantum intrusion detection provides specialized analysis of lattice-based, code-based, and hash-based cryptographic protocols. PAC-Bayesian state space models offer certified generalization bounds supporting reliable security-critical deployment. Variational Bayesian transformers with stochastic adversarial training provide calibrated uncertainty quantification and formal robustness guarantees. Game-theoretic frameworks characterize equilibrium strategies under adaptive adversaries with online learning providing no-regret adaptation. The unified optimization framework couples all methods through consistency regularization, establishing convergence guarantees for the integrated system. Chapter 3 presents software implementations and comprehensive experimental evaluations validating theoretical predictions and demonstrating practical effectiveness across multiple benchmark datasets.
