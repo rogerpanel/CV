@@ -1,0 +1,109 @@
+% TikZ Diagram: MambaShield Architecture - State Space Model with Progressive Distillation
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.88,
+    every node/.style={font=\small},
+    layerbox/.style={rectangle, draw=primaryblue, thick, fill=primaryblue!10,
+                     rounded corners, minimum width=3cm, minimum height=0.9cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.5cm, minimum height=0.75cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2.3cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10.5) {MambaShield Architecture};
+
+% Input
+\node[databox] (input) at (0, 9) {Sequential\\Network Events};
+
+% State Space Block
+\node[layerbox, minimum width=10cm, minimum height=3.5cm] (ssm) at (0, 6.5) {};
+\node[font=\bfseries] at (0, 8) {Selective State Space Model (Mamba)};
+
+% SSM Components
+\node[componentbox] (proj) at (-3.5, 7) {Input Projection\\$\mathbf{x} \rightarrow \mathbf{u}$};
+\node[componentbox] (select) at (0, 7) {Selective Scan\\$\Delta, \mathbf{B}, \mathbf{C}$};
+\node[componentbox] (scan) at (3.5, 7) {Parallel Scan\\$\mathbf{h}_t = \mathbf{A}\mathbf{h}_{t-1} + \mathbf{B}\mathbf{u}_t$};
+
+\node[componentbox] (gate) at (-3.5, 5.5) {Gating\\Mechanism};
+\node[componentbox] (output) at (0, 5.5) {Output\\Projection};
+\node[componentbox] (norm) at (3.5, 5.5) {RMS\\Normalization};
+
+% Stacked Mamba Blocks
+\node[layerbox] (mamba1) at (-4, 3.5) {Mamba Block 1\\$L=1024$};
+\node[layerbox] (mamba2) at (0, 3.5) {Mamba Block 2\\$L=2048$};
+\node[layerbox] (mamba3) at (4, 3.5) {Mamba Block 3\\$L=4096$};
+
+% Progressive Distillation
+\node[font=\bfseries, primaryblue] at (0, 2) {Progressive Distillation};
+\node[componentbox] (teacher) at (-3.5, 0.8) {Teacher Model\\(Full capacity)};
+\node[componentbox] (student) at (3.5, 0.8) {Student Model\\(Efficient)};
+
+% Poisoning Defense
+\node[layerbox, minimum width=8cm] (defense) at (0, -0.5) {
+    Data Poisoning Defense: Spectral Signature Filtering
+};
+
+% Classification
+\node[componentbox] (classify) at (0, -2) {Attack\\Classification};
+
+% Output
+\node[databox] (out) at (0, -3.3) {Prediction with\\Efficiency};
+
+% Performance Box
+\node[databox, minimum width=3.5cm, minimum height=1.8cm] (perf) at (7.5, 6.5) {\footnotesize \textbf{Performance:}\\91.4\% under poisoning\\73\% energy reduction\\$O(L)$ complexity\\3.2$\times$ faster};
+
+% Arrows within SSM
+\draw[arrow, primaryblue] (proj) -- (select);
+\draw[arrow, primaryblue] (select) -- (scan);
+\draw[arrow, secondaryblue] (gate) -- (output);
+\draw[arrow, secondaryblue] (output) -- (norm);
+
+% Input to SSM
+\draw[arrow, accentorange] (input) -- (ssm);
+
+% SSM to Mamba blocks
+\draw[arrow, secondaryblue] (ssm) -- (mamba1);
+\draw[arrow, secondaryblue] (ssm) -- (mamba2);
+\draw[arrow, secondaryblue] (ssm) -- (mamba3);
+
+% Mamba blocks connection
+\draw[arrow, primaryblue] (mamba1) -- (mamba2);
+\draw[arrow, primaryblue] (mamba2) -- (mamba3);
+
+% Progressive Distillation arrows
+\draw[arrow, darkgreen] (mamba3) -- (teacher);
+\draw[darrow, darkgreen] (teacher) -- (student);
+\node[font=\footnotesize, darkgreen] at (0, 0.8) {Knowledge\\Transfer};
+
+% To Defense
+\draw[arrow, secondaryblue] (teacher) -- (defense);
+\draw[arrow, secondaryblue] (student) -- (defense);
+
+% To Output
+\draw[arrow, primaryblue] (defense) -- (classify);
+\draw[arrow, accentorange] (classify) -- (out);
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-7.5, 1) {
+    \textbf{Key Innovations:}\\
+    $\bullet$ Selective scan mechanism\\
+    $\bullet$ Linear $O(L)$ complexity\\
+    $\bullet$ Hardware-efficient parallel scan\\
+    $\bullet$ Progressive distillation\\
+    $\bullet$ Poisoning-robust filtering
+};
+
+% Mathematical annotation
+\node[font=\footnotesize, align=center] at (0, -4.5) {
+    State Space Equation: $\mathbf{h}'(t) = \mathbf{A}\mathbf{h}(t) + \mathbf{B}\mathbf{x}(t)$, $\mathbf{y}(t) = \mathbf{C}\mathbf{h}(t)$
+};
+
+\end{tikzpicture}
+\caption{MambaShield architecture leveraging selective state space models with progressive knowledge distillation for efficient intrusion detection. The system achieves 91.4\% accuracy under data poisoning attacks with 73\% energy reduction through linear complexity $O(L)$ parallel scanning and hardware-efficient implementation, enabling real-time edge deployment.}
+\label{fig:mambashield_arch}
+\end{figure>

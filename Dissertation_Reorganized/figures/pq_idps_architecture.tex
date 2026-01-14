@@ -1,0 +1,99 @@
+% TikZ Diagram: PQ-IDPS Architecture - Post-Quantum Intrusion Detection and Prevention System
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.9,
+    every node/.style={font=\small},
+    layerbox/.style={rectangle, draw=primaryblue, thick, fill=primaryblue!10,
+                     rounded corners, minimum width=3cm, minimum height=0.9cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.8cm, minimum height=0.75cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2.5cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10.5) {PQ-IDPS Architecture};
+
+% Input Layer
+\node[databox] (input) at (0, 9) {Network Traffic\\Classical + PQ Crypto};
+
+% Feature Extraction
+\node[componentbox] (feat) at (-3.5, 7.5) {Classical Features\\TLS handshakes};
+\node[componentbox] (pqfeat) at (3.5, 7.5) {PQ Features\\Kyber, Dilithium};
+
+% Dual-Stream Processing
+\node[font=\bfseries, primaryblue] at (0, 6.2) {Dual-Stream Attention};
+
+% Classical Stream
+\node[layerbox] (classical) at (-3.5, 5) {Classical\\Attention};
+\node[componentbox] (c1) at (-3.5, 3.5) {Multi-Head\\Self-Attention};
+\node[componentbox] (c2) at (-3.5, 2) {Positional\\Encoding};
+
+% Post-Quantum Stream
+\node[layerbox] (pqstream) at (3.5, 5) {PQ-Specific\\Attention};
+\node[componentbox] (pq1) at (3.5, 3.5) {Lattice Pattern\\Detection};
+\node[componentbox] (pq2) at (3.5, 2) {Key Exchange\\Analysis};
+
+% Stochastic Variational Layer
+\node[layerbox, minimum width=8cm] (stochastic) at (0, 0.5) {
+    Stochastic Variational Inference $q_\phi(\mathbf{z}|\mathbf{x})$
+};
+
+% Fusion Layer
+\node[componentbox] (fusion) at (0, -1) {Cross-Stream\\Fusion};
+
+% Output
+\node[databox] (output) at (0, -2.5) {Attack Classification\\with Uncertainty};
+
+% Performance Box
+\node[databox, minimum width=3.5cm, minimum height=1.5cm] (perf) at (7, 5) {\footnotesize \textbf{Performance:}\\96.2\% PQ detection\\94.8\% classical attacks\\0.082 ECE (calibration)};
+
+% Arrows
+\draw[arrow, accentorange] (input) -- ++(-3.5,-0.5) -- (feat);
+\draw[arrow, accentorange] (input) -- ++(3.5,-0.5) -- (pqfeat);
+
+\draw[arrow, secondaryblue] (feat) -- (classical);
+\draw[arrow, secondaryblue] (pqfeat) -- (pqstream);
+
+\draw[arrow, primaryblue] (classical) -- (c1);
+\draw[arrow, primaryblue] (c1) -- (c2);
+
+\draw[arrow, primaryblue] (pqstream) -- (pq1);
+\draw[arrow, primaryblue] (pq1) -- (pq2);
+
+\draw[arrow, secondaryblue] (c2) -- (stochastic);
+\draw[arrow, secondaryblue] (pq2) -- (stochastic);
+
+\draw[arrow, primaryblue] (stochastic) -- (fusion);
+\draw[arrow, accentorange] (fusion) -- (output);
+
+% Cross-stream attention
+\draw[darrow, darkgreen] (c1.east) -- (pq1.west);
+\node[font=\footnotesize, darkgreen] at (0, 3.5) {Cross-Stream\\Attention};
+
+% Uncertainty annotation
+\node[font=\footnotesize, align=center] at (0, -3.5) {
+    Epistemic + Aleatoric Uncertainty\\
+    $\mathbb{V}[\mathbf{y}] = \mathbb{E}[\mathbb{V}[\mathbf{y}|\mathbf{z}]] + \mathbb{V}[\mathbb{E}[\mathbf{y}|\mathbf{z}]]$
+};
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-7, 0.5) {
+    \textbf{PQ Algorithms:}\\
+    $\bullet$ Kyber (KEM)\\
+    $\bullet$ Dilithium (Signature)\\
+    $\bullet$ FALCON (Signature)\\
+    $\bullet$ Classical TLS 1.3
+};
+
+% Adversarial Training
+\node[componentbox, minimum width=2.5cm] (adv) at (7, 2) {Adversarial\\Training\\PGD-AT};
+\draw[darrow, red] (adv) -- (stochastic);
+
+\end{tikzpicture}
+\caption{PQ-IDPS architecture with dual-stream processing for classical and post-quantum cryptographic protocols. The system uses cross-stream attention mechanisms and stochastic variational inference to provide uncertainty-quantified predictions, achieving 96.2\% detection accuracy on post-quantum attacks with well-calibrated confidence estimates (0.082 ECE).}
+\label{fig:pq_idps_arch}
+\end{figure>

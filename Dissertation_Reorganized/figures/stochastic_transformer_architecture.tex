@@ -1,0 +1,121 @@
+% TikZ Diagram: Stochastic Transformer Architecture - Variational Bayesian Attention
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.87,
+    every node/.style={font=\small},
+    layerbox/.style={rectangle, draw=primaryblue, thick, fill=primaryblue!10,
+                     rounded corners, minimum width=3.2cm, minimum height=0.9cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.7cm, minimum height=0.75cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2.5cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10.5) {Stochastic Multimodal Transformer};
+
+% Multimodal Input
+\node[databox] (pkt) at (-4, 9) {Packet\\Features};
+\node[databox] (flow) at (0, 9) {Flow\\Statistics};
+\node[databox] (proto) at (4, 9) {Protocol\\Metadata};
+
+% Embedding Layer
+\node[componentbox] (emb1) at (-4, 7.5) {Packet\\Embedding};
+\node[componentbox] (emb2) at (0, 7.5) {Flow\\Embedding};
+\node[componentbox] (emb3) at (4, 7.5) {Protocol\\Embedding};
+
+% Multimodal Fusion
+\node[layerbox, minimum width=10cm] (fusion) at (0, 6) {
+    Multimodal Cross-Attention Fusion
+};
+
+% Stochastic Transformer Encoder
+\node[layerbox, minimum width=10cm, minimum height=4cm] (encoder) at (0, 3.5) {};
+\node[font=\bfseries] at (0, 5) {Stochastic Transformer Encoder};
+
+% Encoder Components
+\node[componentbox] (vae1) at (-3.5, 4) {Variational\\Self-Attention};
+\node[componentbox] (vae2) at (0, 4) {Stochastic\\Latent $\mathbf{z}$};
+\node[componentbox] (vae3) at (3.5, 4) {Reparameterization\\$\mu, \sigma^2$};
+
+\node[componentbox] (ff1) at (-3.5, 2.5) {Feed-Forward\\Network};
+\node[componentbox] (ff2) at (0, 2.5) {Layer\\Normalization};
+\node[componentbox] (ff3) at (3.5, 2.5) {Residual\\Connection};
+
+% Uncertainty Quantification
+\node[layerbox, minimum width=8cm] (uq) at (0, 1) {
+    Epistemic + Aleatoric Uncertainty Decomposition
+};
+
+% Adversarial Training
+\node[componentbox] (adv) at (-3.5, -0.5) {PGD Adversarial\\Training};
+
+% Calibration
+\node[componentbox] (calib) at (3.5, -0.5) {Temperature\\Scaling};
+
+% Classification Head
+\node[layerbox] (head) at (0, -2) {Classification Head\\$p(\mathbf{y}|\mathbf{x})$};
+
+% Output
+\node[databox] (output) at (0, -3.5) {Attack Type\\+ Confidence};
+
+% Performance Box
+\node[databox, minimum width=3.5cm, minimum height=2cm] (perf) at (7.5, 6) {\footnotesize \textbf{Performance:}\\94.2\% cross-dataset\\0.078 ECE\\88.7\% under PGD\\Well-calibrated uncertainty};
+
+% Arrows
+\draw[arrow, accentorange] (pkt) -- (emb1);
+\draw[arrow, accentorange] (flow) -- (emb2);
+\draw[arrow, accentorange] (proto) -- (emb3);
+
+\draw[arrow, secondaryblue] (emb1) -- (fusion);
+\draw[arrow, secondaryblue] (emb2) -- (fusion);
+\draw[arrow, secondaryblue] (emb3) -- (fusion);
+
+\draw[arrow, primaryblue] (fusion) -- (encoder);
+
+\draw[arrow, primaryblue] (vae1) -- (vae2);
+\draw[arrow, primaryblue] (vae2) -- (vae3);
+
+\draw[arrow, secondaryblue] (ff1) -- (ff2);
+\draw[arrow, secondaryblue] (ff2) -- (ff3);
+
+\draw[arrow, primaryblue] (encoder) -- (uq);
+
+\draw[arrow, secondaryblue] (uq) -- (adv);
+\draw[arrow, secondaryblue] (uq) -- (calib);
+
+\draw[arrow, primaryblue] (adv) -- (head);
+\draw[arrow, primaryblue] (calib) -- (head);
+
+\draw[arrow, accentorange] (head) -- (output);
+
+% Residual connections
+\draw[darrow, darkgreen] (vae3.east) -- ++(1,0) |- (ff1.east);
+\node[font=\footnotesize, darkgreen] at (5.5, 3.2) {Residual\\Skip};
+
+% ELBO annotation
+\node[font=\footnotesize, align=center] at (0, -4.5) {
+    ELBO: $\mathcal{L}_{\text{ELBO}} = \mathbb{E}_{q_\phi(\mathbf{z}|\mathbf{x})}[\log p_\theta(\mathbf{y}|\mathbf{z})] - \text{KL}(q_\phi(\mathbf{z}|\mathbf{x}) \| p(\mathbf{z}))$
+};
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-7.5, 1.5) {
+    \textbf{Stochastic Components:}\\
+    $\bullet$ Variational posterior $q_\phi(\mathbf{z}|\mathbf{x})$\\
+    $\bullet$ Latent variable $\mathbf{z} \sim \mathcal{N}(\mu, \sigma^2)$\\
+    $\bullet$ ELBO optimization\\
+    $\bullet$ Monte Carlo sampling\\
+    $\bullet$ Temperature calibration
+};
+
+% Cross-dataset annotation
+\node[componentbox, minimum width=2.5cm] (cross) at (7.5, 2) {Cross-Dataset\\Generalization};
+\draw[darrow, darkgreen] (cross) -- (uq);
+
+\end{tikzpicture}
+\caption{Stochastic Multimodal Transformer architecture integrating variational Bayesian attention mechanisms with uncertainty quantification. The system processes packet-level, flow-level, and protocol metadata through multimodal cross-attention fusion, achieving 94.2\% cross-dataset accuracy with well-calibrated uncertainty estimates (0.078 ECE) and 88.7\% robustness under PGD adversarial perturbations.}
+\label{fig:stochastic_transformer_arch}
+\end{figure>
