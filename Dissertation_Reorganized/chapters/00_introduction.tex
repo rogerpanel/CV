@@ -1,0 +1,190 @@
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+\markboth{Introduction}{Introduction}
+
+The cybersecurity landscape has undergone profound transformation driven by the proliferation of heterogeneous network architectures spanning cloud computing, Internet of Things deployments, and distributed microservices environments. Traditional intrusion detection systems relying on signature-based pattern matching and rule-based heuristics prove inadequate against sophisticated adversaries employing adaptive evasion strategies, polymorphic attack vectors, and coordinated multi-stage campaigns. The emergence of machine learning techniques for network security introduces powerful capabilities for automated threat detection through data-driven pattern recognition. However, these approaches face fundamental challenges including adversarial vulnerability, privacy preservation constraints, cross-domain generalization failures, and concept drift under evolving attack landscapes.
+
+\section*{Motivation and Context}
+
+Contemporary network intrusion detection confronts three critical imperatives that demand unified theoretical treatment and practical solutions. First, adversarial resilience remains insufficient as demonstrated by empirical studies showing deep learning models exhibiting 40--60\% accuracy degradation under adversarial perturbations. Adversaries exploit gradient-based optimization to generate evasive variants of malicious traffic that circumvent detection while maintaining functional attack payloads. Existing adversarial training approaches achieve limited robustness gains through computationally expensive iterative perturbation generation during training, yet fail to provide formal robustness guarantees or maintain detection accuracy on benign traffic.
+
+Second, privacy preservation requirements constrain collaborative threat intelligence sharing across organizational boundaries. Centralized model training on aggregated security data violates regulatory frameworks including GDPR and sector-specific compliance mandates while exposing sensitive network topology and traffic patterns to potential compromise. Federated learning paradigms enable decentralized model training on local data partitions, yet introduce vulnerabilities to poisoning attacks where malicious participants inject corrupted gradients to degrade global model performance. Differential privacy mechanisms provide formal privacy guarantees through controlled noise injection, but exhibit unfavorable privacy-utility trade-offs degrading detection accuracy below operationally acceptable thresholds.
+
+Third, heterogeneous network environments spanning diverse deployment contexts exhibit distribution shifts preventing cross-domain generalization. Models trained on enterprise network traffic fail when deployed on IoT environments exhibiting distinct traffic characteristics, protocol distributions, and attack manifestations. Concept drift arising from evolving attack strategies and infrastructure changes requires continuous model adaptation without catastrophic forgetting of previously learned threat patterns. Zero-shot detection of novel attack types absent from training data remains an open challenge limiting proactive defense capabilities.
+
+These challenges interconnect through fundamental trade-offs between detection accuracy, adversarial robustness, privacy preservation, computational efficiency, and cross-domain generalization. Existing research addresses individual aspects in isolation without unified theoretical frameworks or integrated solutions maintaining acceptable performance across all constraints simultaneously.
+
+\section*{The Fundamental Problem}
+
+This dissertation addresses two complementary master problems that together encompass the core challenges in developing adversarially resilient artificial intelligence for hybrid intrusion detection and prevention systems.
+
+\subsection*{Master Problem A: Adversarial Resilience in Heterogeneous Networks}
+
+Given a heterogeneous network environment $\mathcal{E} = \{\mathcal{G}^{(t)}_i\}_{i=1}^N$ comprising $N$ network domains with temporal graph evolution $t \in \mathbb{R}^+$, find a unified detection model $f_\theta: \mathcal{X} \times \mathcal{T} \rightarrow \mathcal{Y}$ that minimizes the expected loss while maintaining adversarial robustness, privacy guarantees, adaptation to concept drift, and cross-domain generalization:
+
+\begin{equation}
+\min_\theta \mathbb{E}_{(x,y) \sim \mathcal{D}} \left[ \mathcal{L}(f_\theta(x,t), y) + \lambda_1 \Omega_{adv}(\theta) + \lambda_2 \Omega_{privacy}(\theta) + \lambda_3 \Omega_{drift}(\theta) \right]
+\end{equation}
+
+subject to the following constraints:
+
+\begin{enumerate}[label=(\roman*), leftmargin=2em]
+\item \textbf{Adversarial Robustness:} The model must maintain predictions under bounded perturbations:
+\begin{equation}
+\Prob\left[f_\theta(x + \delta) \neq y\right] \leq \epsilon_{rob} \quad \text{for all } \|\delta\|_p \leq \epsilon
+\end{equation}
+
+\item \textbf{Privacy Guarantee:} The learning mechanism satisfies differential privacy:
+\begin{equation}
+\mathcal{M}(\mathcal{D}) \text{ is } (\epsilon_{DP}, \delta_{DP})\text{-differentially private}
+\end{equation}
+
+\item \textbf{Concept Drift Adaptation:} The model adapts to distribution shift with bounded loss variation:
+\begin{equation}
+|\mathcal{L}_t - \mathcal{L}_{t-1}| \leq \tau_{drift}
+\end{equation}
+
+\item \textbf{Cross-Domain Generalization:} Performance variance across domains remains bounded:
+\begin{equation}
+\mathbb{E}_{D_i \neq D_j}\left[|\text{Acc}(D_i) - \text{Acc}(D_j)|\right] \leq \gamma
+\end{equation}
+\end{enumerate}
+
+This master problem decomposes into seven sub-problems addressing specific architectural and algorithmic challenges:
+
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Sub-Problem A1:} Continuous-time temporal graph modeling capturing irregular event occurrences across multiple time scales
+\item \textbf{Sub-Problem A2:} Multi-granularity embedding learning spanning service-level, trace-level, and node-level representations
+\item \textbf{Sub-Problem A3:} Byzantine-robust federated learning under malicious participants
+\item \textbf{Sub-Problem A4:} Post-quantum cryptographic attack detection resilient to quantum computing threats
+\item \textbf{Sub-Problem A5:} Zero-shot generalization leveraging large language models for semantic threat understanding
+\item \textbf{Sub-Problem A6:} State space model adaptation under data poisoning attacks
+\item \textbf{Sub-Problem A7:} Game-theoretic evasion resistance against adaptive adversaries
+\end{itemize}
+
+\subsection*{Master Problem B: Robustness-Accuracy-Privacy Trade-off Optimization}
+
+Given a dynamic graph $\mathcal{G}(t) = (\mathcal{V}(t), \mathcal{E}(t), \mathbf{X}(t))$ evolving continuously, find the optimal policy $\pi^*$ that maximizes the weighted combination of detection accuracy, adversarial robustness, and privacy preservation:
+
+\begin{equation}
+\max_\pi \left[ \alpha \cdot \text{Acc}(\pi) - \beta \cdot \mathcal{R}_{adv}(\pi) - \gamma \cdot \mathcal{P}_{leak}(\pi) \right]
+\end{equation}
+
+subject to operational constraints ensuring Pareto efficiency, certified robustness, privacy budget limits, real-time latency, and computational resource bounds:
+
+\begin{enumerate}[label=(\roman*), leftmargin=2em]
+\item \textbf{Pareto Efficiency:} No alternative policy strictly dominates $\pi^*$ across all objectives
+\item \textbf{Certified Robustness:} Probabilistic robustness guarantees under adversarial perturbations:
+\begin{equation}
+R_{\epsilon,p}(f_\pi, \mathcal{D}) \geq \rho_{cert}
+\end{equation}
+
+\item \textbf{Privacy Budget Constraint:} Cumulative privacy expenditure remains bounded:
+\begin{equation}
+\sum_{i=1}^T \epsilon_i \leq \epsilon_{total}
+\end{equation}
+
+\item \textbf{Real-Time Latency:} Inference time meets operational requirements:
+\begin{equation}
+\text{Inference}(\pi, x) \leq \tau_{max}
+\end{equation}
+
+\item \textbf{Resource Constraint:} Model complexity and memory footprint satisfy deployment limits:
+\begin{equation}
+|\theta| \leq M_{params}, \quad \text{Memory} \leq M_{mem}
+\end{equation}
+\end{enumerate}
+
+The theoretical foundation of Master Problem B rests on four fundamental principles establishing formal relationships between competing objectives:
+
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Robustness-Accuracy Trade-off Theorem:} For any classifier $f$, the sum of standard accuracy and robust accuracy is bounded by local Lipschitz constants:
+\begin{equation}
+\text{Acc}(f) + R_{\epsilon,p}(f,\mathcal{D}) \leq 1 + \mathbb{E}_{(x,y) \sim \mathcal{D}}[\text{Lip}(f,x) \cdot \epsilon]
+\end{equation}
+
+\item \textbf{Privacy-Utility Trade-off:} Utility degradation under differential privacy mechanisms scales with privacy parameters:
+\begin{equation}
+\text{Utility}(\mathcal{M}(\mathcal{D})) \geq U_0 - O\left(\sqrt{\frac{\log(1/\delta)}{\epsilon}}\right)
+\end{equation}
+
+\item \textbf{Uncertainty Decomposition:} Total prediction uncertainty decomposes into epistemic model uncertainty and aleatoric data uncertainty:
+\begin{equation}
+\mathbb{U}_{total} = \mathbb{U}_{epistemic} + \mathbb{U}_{aleatoric}
+\end{equation}
+
+\item \textbf{PAC-Bayesian Generalization Bound:} True risk is bounded by empirical risk and model complexity through KL divergence:
+\begin{equation}
+\mathcal{R}(f) \leq \hat{\mathcal{R}}_n(f) + \sqrt{\frac{KL(q||p) + \log(2\sqrt{n}/\delta)}{2n}}
+\end{equation}
+\end{itemize}
+
+Master Problem B decomposes into seven sub-problems addressing theoretical optimization and practical implementation:
+
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{Sub-Problem B1:} Stochastic adversarial training with uncertainty quantification
+\item \textbf{Sub-Problem B2:} Differentially private optimal transport for domain adaptation
+\item \textbf{Sub-Problem B3:} Variational Bayesian attention mechanisms for calibrated predictions
+\item \textbf{Sub-Problem B4:} Progressive adversarial robustness distillation
+\item \textbf{Sub-Problem B5:} Multi-objective loss function optimization balancing task performance, regularization, adversarial robustness, and calibration
+\item \textbf{Sub-Problem B6:} Efficient inference on resource-constrained edge and IoT devices
+\item \textbf{Sub-Problem B7:} Online learning under distribution shift with provable regret bounds
+\end{itemize}
+
+\subsection*{Unified Integration}
+
+The two master problems exhibit complementary characteristics enabling integrated solutions. Master Problem A emphasizes architectural innovations and algorithmic frameworks for adversarial resilience across heterogeneous network environments, while Master Problem B establishes theoretical foundations and optimization principles governing fundamental trade-offs with formal performance guarantees. The unified solution framework couples both problems through shared constraints on robustness, privacy, and computational efficiency:
+
+\begin{equation}
+\theta^* = \argmin_\theta \left[ \mathcal{L}_A(\theta) + \mathcal{L}_B(\theta) + \lambda_{couple} \mathcal{L}_{AB}(\theta) \right]
+\end{equation}
+
+where $\mathcal{L}_{AB}$ represents coupling terms enforcing consistency between architectural designs satisfying Problem A constraints and theoretical optimality conditions required by Problem B.
+
+\section*{Research Contributions}
+
+This dissertation makes theoretical, algorithmic, and empirical contributions advancing the state of the art in adversarially resilient intrusion detection through seven novel methods addressing sub-problems from both master problem formulations:
+
+\subsection*{1. Continuous-Time Temporal Graph Neural Networks (CT-TGNN)}
+
+Addresses Sub-Problems A1 and B6 through the first application of graph neural ordinary differential equations to encrypted traffic analysis. The CT-TGNN framework implements continuous-time dynamics enabling detection of attacks unfolding across irregular time scales without requiring fixed sampling intervals. Key contributions include temporal adaptive batch normalization resolving incompatibilities between continuous dynamics and normalization layers, multi-scale temporal graph convolutions spanning microseconds to months through learned time constants, and encrypted edge feature encoding extracting timing patterns from TLS/QUIC metadata without decryption. The architecture achieves 98.3\% accuracy on encrypted lateral movement detection with 47 millisecond median latency while processing 8.7 million events per second, enabling real-time zero-trust policy enforcement through continuous authentication.
+
+\subsection*{2. Triple-Embedding Temporal Graph Neural Networks (TripleE-TGNN)}
+
+Addresses Sub-Problem A2 through multi-granularity graph embeddings jointly modeling service-level, trace-level, and node-level security behaviors in microservices environments. The TripleE-TGNN architecture introduces specialized encoders operating on heterogeneous temporal graphs with dual attention mechanisms integrating intra-granularity evolution and cross-granularity interactions. Adaptive learning under topology evolution maintains 94.7\% accuracy through hundreds of deployment events without retraining. The method achieves 96.8\% detection accuracy on microservices intrusions, outperforming single-granularity baselines by 8.3\% through hierarchical representation learning capturing security behaviors across abstraction levels.
+
+\subsection*{3. Federated Learning with Large Language Models for API Security (FedLLM-API)}
+
+Addresses Sub-Problems A3 and A5 through Byzantine-robust federated learning integrated with large language models enabling zero-shot detection of novel API attack patterns. The framework implements trimmed mean aggregation providing convergence guarantees under malicious participants, achieving 87.1\% accuracy with 40\% Byzantine adversaries. LLM integration through semantic prompting enables 87.6\% F1-score on attack types absent from training data, facilitating proactive defense through principled reasoning about attack semantics rather than reactive pattern matching. Differential privacy mechanisms maintain $(\epsilon = 0.85, \delta = 10^{-5})$ guarantees while degrading detection performance by at most 3.1\% compared to non-private variants.
+
+\subsection*{4. Post-Quantum Intrusion Detection and Prevention System (PQ-IDPS)}
+
+Addresses Sub-Problem A4 through the first comprehensive framework for detecting attacks against post-quantum cryptographic protocols. The system implements specialized feature extraction for lattice-based, code-based, multivariate, and hash-based cryptography, enabling detection of quantum-era attack vectors including timing side-channels on lattice-based schemes and structural attacks on multivariate systems. The framework achieves 96.2\% accuracy detecting CRYSTALS-Kyber timing attacks and 93.8\% accuracy on SPHINCS+ hash collisions, establishing foundational capabilities for quantum-safe network security.
+
+\subsection*{5. MambaShield: Adversarially Resilient State Space Models}
+
+Addresses Sub-Problems A6 and B4 through selective state space models with PAC-Bayesian certified robustness and progressive adversarial robustness distillation. The architecture implements Mamba's selective scan mechanism enabling efficient long-range temporal modeling with linear computational complexity while maintaining robustness under data poisoning attacks. Progressive distillation from ensemble teachers achieves 91.4\% accuracy with 25\% corrupted training data, significantly outperforming standard adversarial training. PAC-Bayes analysis provides finite-sample risk bounds enabling calibrated confidence intervals with 91.7\% empirical coverage probability, supporting reliable security-critical decision making.
+
+\subsection*{6. Stochastic Transformer with Bayesian Uncertainty Quantification}
+
+Addresses Sub-Problems B1, B3, and B5 through variational Bayesian attention mechanisms with stochastic adversarial training and epistemic-aleatoric uncertainty decomposition. The architecture replaces deterministic attention with variational inference enabling principled uncertainty quantification while maintaining computational tractability through reparameterization tricks. Stochastic adversarial training samples attack parameters from learned distributions rather than fixed values, achieving 89.6\% robust accuracy under adaptive attacks compared to 76.3\% for standard adversarial training. Multi-objective optimization balances task loss, KL divergence, adversarial robustness, calibration error, and regularization, achieving Expected Calibration Error of 0.078 compared to 0.192 for baseline transformers. Cross-dataset evaluation demonstrates 94.2\% accuracy with minimal domain-specific tuning.
+
+\subsection*{7. Game-Theoretic Evasion Resistance Framework}
+
+Addresses Sub-Problems A7 and B7 through Stackelberg game formulations modeling strategic interactions between defenders deploying detection models and attackers optimizing evasion strategies. The framework computes Nash equilibria characterizing optimal mixed strategies under incomplete information about adversary capabilities and cost structures. Online learning algorithms adapt detector policies to empirical attack distributions while maintaining sublinear regret bounds $O(\sqrt{T})$ over $T$ interactions. Integration with uncertainty quantification enables risk-aware policy selection rejecting predictions with high epistemic uncertainty for human analyst review, reducing investigation time by 43\% while maintaining 97.2\% recall on high-confidence predictions.
+
+\section*{Thesis Organization}
+
+The remainder of this dissertation is organized as follows to systematically develop theoretical foundations, algorithmic implementations, and empirical validations of the proposed unified framework.
+
+\textbf{Chapter 1} presents comprehensive literature review covering recent advances in adversarial machine learning for network security, graph neural networks for intrusion detection, federated learning under Byzantine faults, post-quantum cryptography, state space models, Bayesian deep learning, and uncertainty quantification. The review identifies critical gaps including insufficient adversarial robustness guarantees, unfavorable privacy-utility trade-offs, cross-domain generalization failures, and lack of unified frameworks addressing multiple constraints simultaneously. Gap analysis directly motivates the master problem formulations and establishes context for the novel contributions of this work.
+
+\textbf{Chapter 2} develops unified mathematical models and theoretical foundations integrating continuous-time graph neural networks, optimal transport theory, variational Bayesian inference, PAC-Bayes generalization bounds, differential privacy, and game-theoretic adversarial modeling. The chapter establishes formal relationships between the two master problems through coupled optimization formulations. Theoretical analysis provides convergence guarantees, robustness certificates, privacy bounds, and generalization error characterizations for each proposed method. Proofs of key theorems including the Robustness-Accuracy Trade-off Theorem, Stochastic Robustness Enhancement Theorem, and Byzantine-Robust Federated Convergence Theorem appear in Appendix A.
+
+\textbf{Chapter 3} presents software implementations and comprehensive experimental evaluations across three benchmark datasets spanning diverse network environments: CIC-IoT-2023 (46.6M samples, modern IoT attacks), CSE-CICIDS2018 (16.2M samples, enterprise threats), and UNSW-NB15 (2.5M samples, hybrid real-synthetic traffic). Unified evaluation framework encompasses 23 metrics including detection accuracy, precision, recall, F1-score, ROC-AUC, Expected Calibration Error, adversarial robustness under FGSM/PGD/C\&W attacks, privacy preservation under membership inference, cross-domain generalization, inference latency, memory footprint, and energy efficiency. Ablation studies quantify contributions of individual components, comparison with state-of-the-art baselines demonstrates performance improvements, and deployment case studies validate operational viability in production environments.
+
+\textbf{Conclusion} synthesizes key findings, discusses implications for network security practice, acknowledges limitations, and outlines future research directions including stochastic differential equations for uncertainty modeling, unbalanced optimal transport for severely imbalanced datasets, foundation models pre-trained on massive security corpora, quantum machine learning for intrusion detection, and human-AI collaboration through interactive learning and explainable continuous-time models.
+
+\textbf{Appendices} provide mathematical proofs of all theorems (Appendix A), detailed algorithm pseudocode (Appendix B), and supplementary experimental results including per-class confusion matrices, parameter sensitivity analyses, convergence plots, and computational complexity measurements (Appendix C).
+
+This comprehensive treatment establishes both theoretical foundations and practical implementations for adversarially resilient artificial intelligence in hybrid intrusion detection and prevention systems, advancing the state of the art while providing actionable solutions for contemporary network security challenges.
