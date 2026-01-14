@@ -1,0 +1,692 @@
+% Postdoctoral Research Paper Proposals
+% Building on PhD Dissertation: Adversarially Resilient AI for Hybrid Intrusion Detection
+% Author: [Your Name]
+% Date: January 2026
+
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+
+\title{\textbf{Postdoctoral Research Agenda:}\\
+Advanced Topics in Adversarially Resilient AI for Cybersecurity}
+\author{Building on PhD Dissertation Contributions}
+\date{January 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document outlines four integrated research paper proposals for postdoctoral work, building directly on the PhD dissertation's seven novel methods. Each proposal addresses critical gaps identified in dissertation future work while targeting high-impact applications for global industry and scientific communities. The papers integrate multiple research themes including stochastic modeling, foundation models, quantum-resistant security, and human-AI collaboration, with projected publication targets in top-tier venues (NeurIPS, ICML, IEEE S\&P, USENIX Security).
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Overview and Integration Strategy}
+
+\subsection{Connection to Dissertation}
+
+The PhD dissertation established seven novel methods addressing adversarial robustness, federated learning, post-quantum security, and uncertainty quantification for intrusion detection. The postdoctoral agenda extends these foundations through four deeply integrated research thrusts:
+
+\begin{enumerate}[leftmargin=2em]
+\item \textbf{Stochastic Continuous-Time Security Models:} Extends CT-TGNN and MambaShield with SDEs for principled uncertainty propagation
+\item \textbf{CyberSecLLM Foundation Models:} Scales FedLLM-API approach to billion-parameter models with quantum-resistant training
+\item \textbf{Quantum-Enhanced Adversarial Robustness:} Combines PQ-IDPS with quantum ML for provably secure learning
+\item \textbf{Human-AI Security Operations Centers:} Integrates Stochastic Transformer with explainability for analyst collaboration
+\end{enumerate}
+
+\subsection{Projected Timeline and Impact}
+
+\begin{itemize}
+\item \textbf{Years 1-2:} Papers 1 \& 2 (Stochastic models + Foundation models)
+\item \textbf{Years 2-3:} Paper 3 (Quantum-enhanced robustness)
+\item \textbf{Years 3-4:} Paper 4 (Human-AI SOC integration)
+\item \textbf{Expected Impact:} 15-20 citations per paper within 2 years, 3-5 industry adoptions, 2 open-source frameworks
+\end{itemize}
+
+\newpage
+
+\section{Paper 1: Stochastic Differential Equation Models for Uncertainty-Aware Network Security}
+
+\subsection{Paper Metadata}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{Target Venue:} NeurIPS 2027 (12 pages) or ICML 2027 (10 pages)
+\item \textbf{Timeline:} 18 months (Jan 2026 - Jun 2027)
+\item \textbf{Collaboration:} ML theory group + Security lab
+\item \textbf{Code Release:} PyTorch library for security SDEs
+\end{itemize}
+
+\subsection{Research Problem}
+
+\textbf{Gap from Dissertation:} CT-TGNN uses deterministic neural ODEs, lacking principled uncertainty quantification in continuous dynamics. Current Monte Carlo methods (50 forward passes) are computationally expensive and don't capture aleatoric uncertainty in temporal evolution.
+
+\textbf{Industry Need:} Security operations centers require real-time uncertainty estimates for threat triage. Current systems either lack uncertainty (deterministic) or are too slow (ensemble methods).
+
+\subsection{Technical Approach}
+
+\subsubsection{Stochastic Graph Neural ODEs}
+
+Extend neural ODEs to stochastic differential equations:
+\begin{equation}
+d\mathbf{h}(t) = f_\theta(\mathbf{h}(t), \mathbf{G}, t) dt + \sigma_\phi(\mathbf{h}(t), \mathbf{G}, t) d\mathbf{W}(t)
+\end{equation}
+where:
+\begin{itemize}
+\item $f_\theta$: drift (deterministic dynamics from CT-TGNN)
+\item $\sigma_\phi$: diffusion (learned uncertainty)
+\item $\mathbf{W}(t)$: Wiener process (Brownian motion)
+\end{itemize}
+
+\subsubsection{Fokker-Planck for Uncertainty Propagation}
+
+Analytically track probability density evolution:
+\begin{equation}
+\frac{\partial p}{\partial t} = -\nabla \cdot (f p) + \frac{1}{2}\nabla \cdot \nabla \cdot (\sigma \sigma^T p)
+\end{equation}
+
+Enables closed-form uncertainty bounds without sampling.
+
+\subsubsection{Adversarial Robustness Under Stochasticity}
+
+Certify robustness through stochastic reachability analysis:
+\begin{equation}
+\mathbb{P}[\|\mathbf{h}(T) - \mathbf{h}_{\text{target}}\| \leq \epsilon] \geq 1 - \delta
+\end{equation}
+
+Provides probabilistic guarantees stronger than deterministic methods.
+
+\subsection{Experimental Validation}
+
+\subsubsection{Datasets}
+\begin{itemize}
+\item CIC-IoT-2023 (46.6M flows) - dissertation baseline
+\item CIC-IDS-2017 (2.8M flows) - cross-validation
+\item UNSW-NB15 (2.5M flows) - generalization
+\item \textbf{New:} Real-world SOC data from industry partner (confidential)
+\end{itemize}
+
+\subsubsection{Metrics}
+\begin{itemize}
+\item Detection: Accuracy, F1, AUC (dissertation metrics)
+\item Uncertainty: Calibration (ECE), Sharpness, Coverage
+\item Efficiency: Inference time, memory, energy
+\item \textbf{New:} Analyst trust scores, false positive reduction
+\end{itemize}
+
+\subsubsection{Baselines}
+\begin{itemize}
+\item CT-TGNN (deterministic, dissertation)
+\item Stochastic Transformer (MC sampling, dissertation)
+\item Neural SDE (Kong et al., 2020)
+\item Latent SDE (Li et al., 2020)
+\end{itemize}
+
+\subsection{Expected Contributions}
+
+\begin{enumerate}
+\item \textbf{Theoretical:} First SDE formulation for graph-structured security data with Fokker-Planck uncertainty bounds
+\item \textbf{Algorithmic:} Efficient SDE solver for irregular temporal graphs (3x faster than MC sampling)
+\item \textbf{Empirical:} 4.2\% accuracy improvement over CT-TGNN with 87\% faster uncertainty quantification
+\item \textbf{Practical:} Open-source library integrated with PyTorch Geometric
+\end{enumerate}
+
+\subsection{Industry Impact Potential}
+
+\begin{itemize}
+\item \textbf{SOC Automation:} Uncertainty-aware alert prioritization reduces analyst workload by 35\%
+\item \textbf{Edge Deployment:} Efficient inference enables IoT security with <100ms latency
+\item \textbf{Compliance:} Probabilistic guarantees meet regulatory requirements for critical infrastructure
+\end{itemize}
+
+\subsection{Paper Outline (12 pages)}
+
+\begin{enumerate}
+\item \textbf{Introduction} (1.5 pages): Motivation, gap, contributions
+\item \textbf{Related Work} (1.5 pages): Neural ODEs, SDEs, security ML
+\item \textbf{Stochastic Graph Neural ODEs} (2 pages): Model architecture, SDE formulation
+\item \textbf{Fokker-Planck Uncertainty} (2 pages): Analytical propagation, certification
+\item \textbf{Efficient Inference} (1 page): Adaptive solvers, GPU optimization
+\item \textbf{Experiments} (3 pages): Datasets, results, ablations
+\item \textbf{Discussion} (0.5 pages): Limitations, future work
+\item \textbf{Conclusion} (0.5 pages): Summary, impact
+\end{enumerate}
+
+\newpage
+
+\section{Paper 2: CyberSecLLM - Foundation Models for Zero-Shot Threat Intelligence}
+
+\subsection{Paper Metadata}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{Target Venue:} NeurIPS 2027 (12 pages) + Workshop on Foundation Models for Security
+\item \textbf{Timeline:} 24 months (Jan 2026 - Dec 2027)
+\item \textbf{Collaboration:} Industry consortium (5 SOCs), academic ML lab
+\item \textbf{Compute:} 10K GPU-hours on A100s (university cluster + industry sponsor)
+\item \textbf{Code Release:} Pre-trained models (3B, 7B, 13B parameters) on HuggingFace
+\end{itemize}
+
+\subsection{Research Problem}
+
+\textbf{Gap from Dissertation:} FedLLM-API uses GPT-3.5 (closed-source) for zero-shot detection but limited to API-level attacks. No security-specific foundation model exists for comprehensive threat intelligence.
+
+\textbf{Industry Need:} Organizations spend \$billions on threat intelligence that becomes outdated within weeks. Zero-shot detection of novel attacks (0-days) without retraining is critical but infeasible with current supervised learning.
+
+\subsection{Technical Approach}
+
+\subsubsection{Security-Specific Pre-training Corpus}
+
+\textbf{Data Sources (1TB total):}
+\begin{itemize}
+\item Network traffic summaries: 500GB (anonymized from 5 SOC partners)
+\item Threat reports: 100GB (MITRE ATT\&CK, CVEs, vendor advisories)
+\item Security blogs/forums: 200GB (Reddit, StackExchange, vendor sites)
+\item Code repositories: 200GB (exploit-db, Metasploit, malware samples)
+\end{itemize}
+
+\textbf{Privacy Preservation:}
+\begin{itemize}
+\item Differential privacy during training ($\epsilon = 8.0$)
+\item Federated pre-training across SOCs (dissertation FedLLM-API approach)
+\item PII scrubbing and anonymization pipeline
+\end{itemize}
+
+\subsubsection{Multi-Task Pre-training Objectives}
+
+\begin{enumerate}
+\item \textbf{Masked Flow Modeling:} Predict missing network flow statistics
+\item \textbf{Contrastive Attack Learning:} Discriminate attack vs benign traffic embeddings
+\item \textbf{Threat Attribution:} Map attacks to MITRE ATT\&CK tactics/techniques
+\item \textbf{Vulnerability Prediction:} Link code patterns to CVE descriptions
+\item \textbf{Incident Summarization:} Generate natural language explanations
+\end{enumerate}
+
+\subsubsection{Architecture: Hybrid Transformer-Mamba}
+
+Combine dissertation contributions:
+\begin{itemize}
+\item \textbf{Mamba blocks} (dissertation MambaShield): Efficient long-context processing (64K tokens)
+\item \textbf{Stochastic attention} (dissertation Stochastic Transformer): Uncertainty quantification
+\item \textbf{Post-quantum training} (dissertation PQ-IDPS): Byzantine-robust aggregation
+\end{itemize}
+
+\begin{equation}
+\text{Layer}_i = \text{Mamba}(\mathbf{x}) + \text{StochasticAttention}(\mathbf{x}) + \text{FFN}(\mathbf{x})
+\end{equation}
+
+\subsection{Experimental Validation}
+
+\subsubsection{Benchmark Tasks (8 total)}
+
+\textbf{Intrusion Detection (3 tasks):}
+\begin{itemize}
+\item CIC-IoT-2023, UNSW-NB15, CIC-IDS-2017 (dissertation baselines)
+\item \textbf{Novel:} Zero-shot on CIC-DDoS-2019 (unseen attack types)
+\end{itemize}
+
+\textbf{Threat Intelligence (3 tasks):}
+\begin{itemize}
+\item CVE severity prediction (NVD dataset)
+\item ATT\&CK technique classification (MITRE Cyber Analytics Repository)
+\item Malware family attribution (VirusTotal metadata)
+\end{itemize}
+
+\textbf{Operational Tasks (2 tasks):}
+\begin{itemize}
+\item Alert triage prioritization (SOC partner data)
+\item Incident report generation (automated documentation)
+\end{itemize}
+
+\subsubsection{Baselines}
+\begin{itemize}
+\item GPT-4 (few-shot, closed-source)
+\item SecBERT (Aghaei et al., 2023) - 110M params
+\item CyBERT (Satyapanich et al., 2020) - 340M params
+\item General LLMs: LLaMA-2-13B, Mistral-7B
+\end{itemize}
+
+\subsection{Expected Contributions}
+
+\begin{enumerate}
+\item \textbf{First security foundation model:} 3B/7B/13B parameter models pre-trained on 1TB security corpus
+\item \textbf{Zero-shot SOTA:} 15-20\% improvement over GPT-4 on security tasks
+\item \textbf{Efficient architecture:} Hybrid Mamba-Transformer reduces inference cost by 60\%
+\item \textbf{Open release:} Models, training code, evaluation benchmarks (CyberSecBench)
+\end{enumerate}
+
+\subsection{Industry Impact Potential}
+
+\begin{itemize}
+\item \textbf{Threat Intelligence:} Automated CVE analysis reduces response time from days to minutes
+\item \textbf{SOC Efficiency:} AI-generated incident reports save 10+ hours/week per analyst
+\item \textbf{Democratization:} Small organizations access enterprise-grade threat intelligence
+\item \textbf{Cost Reduction:} Open-source model eliminates \$100K+/year API costs
+\end{itemize}
+
+\subsection{Paper Outline (12 pages)}
+
+\begin{enumerate}
+\item \textbf{Introduction} (1.5 pages): Security AI gap, foundation model opportunity
+\item \textbf{Related Work} (1 page): LLMs, security ML, domain-specific models
+\item \textbf{CyberSecLLM Architecture} (2 pages): Hybrid design, pre-training objectives
+\item \textbf{Training Infrastructure} (1.5 pages): Federated learning, privacy, scale
+\item \textbf{Evaluation: CyberSecBench} (3 pages): 8 tasks, baselines, results
+\item \textbf{Zero-Shot Case Studies} (1.5 pages): Real-world deployment examples
+\item \textbf{Ablation Studies} (1 page): Architecture choices, data scaling
+\item \textbf{Discussion} (0.5 pages): Limitations, ethical considerations
+\end{enumerate}
+
+\newpage
+
+\section{Paper 3: Quantum-Enhanced Adversarial Robustness for Post-Quantum Cryptographic Systems}
+
+\subsection{Paper Metadata}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{Target Venue:} IEEE Symposium on Security \& Privacy 2028 (16 pages)
+\item \textbf{Timeline:} 20 months (Jan 2027 - Aug 2028)
+\item \textbf{Collaboration:} Quantum computing lab + NIST PQC team + industry partner
+\item \textbf{Quantum Access:} IBM Quantum (127-qubit), Google Quantum AI
+\item \textbf{Code Release:} Hybrid classical-quantum training library
+\end{itemize}
+
+\subsection{Research Problem}
+
+\textbf{Gap from Dissertation:} PQ-IDPS detects attacks on post-quantum crypto but uses classical ML vulnerable to adversarial perturbations. Quantum adversaries (future threat) could exploit classical learning.
+
+\textbf{Industry Need:} Organizations migrating to PQC need assurance that detection systems remain secure in quantum era. Current systems lack provable quantum-resistant learning guarantees.
+
+\subsection{Technical Approach}
+
+\subsubsection{Quantum Kernel Methods for Feature Spaces}
+
+Map classical features to quantum Hilbert space:
+\begin{equation}
+k(\mathbf{x}_i, \mathbf{x}_j) = |\langle \phi(\mathbf{x}_i) | \phi(\mathbf{x}_j) \rangle|^2
+\end{equation}
+where $\phi: \mathbb{R}^d \rightarrow \mathcal{H}_{\text{quantum}}$ via:
+\begin{enumerate}
+\item Feature encoding: $U_{\phi}(\mathbf{x}) = \prod_{i=1}^d R_Y(\arcsin(x_i)) \otimes R_Z(\arccos(x_i^2))$
+\item Entangling layers: $U_{\text{ent}} = \prod_{i=1}^{n-1} \text{CNOT}_{i,i+1}$
+\item Measurement: $\mathcal{M} = \langle \text{Pauli-Z} \otimes \cdots \otimes \text{Pauli-Z} \rangle$
+\end{enumerate}
+
+\textbf{Advantage:} Exponentially large feature space prevents adversarial perturbations from reaching decision boundary.
+
+\subsubsection{Variational Quantum Circuits for Robustness}
+
+Train parameterized quantum circuits (PQCs):
+\begin{equation}
+U(\boldsymbol{\theta}) = \prod_{l=1}^L U_{\text{ent}} \prod_{i=1}^n R_Y(\theta_{li}) R_Z(\phi_{li})
+\end{equation}
+
+\textbf{Adversarial Training:}
+\begin{enumerate}
+\item Classical adversarial attack: $\mathbf{x}' = \mathbf{x} + \epsilon \cdot \text{sign}(\nabla_{\mathbf{x}} \mathcal{L})$
+\item Quantum encoding: $|\psi(\mathbf{x}')\rangle = U_{\phi}(\mathbf{x}') |0\rangle^{\otimes n}$
+\item Robust optimization: $\min_{\boldsymbol{\theta}} \mathbb{E}_{\mathbf{x}} \max_{\|\boldsymbol{\epsilon}\| \leq \delta} \mathcal{L}(U(\boldsymbol{\theta})|\psi(\mathbf{x} + \boldsymbol{\epsilon})\rangle)$
+\end{enumerate}
+
+\subsubsection{Certified Quantum Robustness}
+
+Prove robustness guarantees using quantum information theory:
+\begin{equation}
+\mathbb{P}[\text{misclassify}(\mathbf{x} + \boldsymbol{\epsilon})] \leq e^{-n \cdot I(\mathbf{x}; Y)}
+\end{equation}
+where $I(\mathbf{x}; Y)$ is quantum mutual information.
+
+\textbf{Key Result:} Exponential robustness in number of qubits (classical is polynomial).
+
+\subsection{Experimental Validation}
+
+\subsubsection{Post-Quantum Attack Datasets}
+
+\textbf{Extend dissertation PQ-IDPS datasets:}
+\begin{itemize}
+\item CRYSTALS-Kyber timing attacks (dissertation: 10K samples → 100K samples)
+\item Classic McEliece structural attacks (20K samples)
+\item Sphincs+ resource exhaustion (15K samples)
+\item \textbf{New:} FALCON signature attacks (25K samples)
+\item \textbf{New:} SABER key recovery attacks (30K samples)
+\end{itemize}
+
+\subsubsection{Quantum Adversarial Attacks}
+
+\begin{itemize}
+\item \textbf{Classical:} FGSM, PGD, C\&W (dissertation baselines)
+\item \textbf{Quantum:} Grover-based perturbation search
+\item \textbf{Quantum:} Quantum approximate optimization for adversarial examples
+\item \textbf{Hybrid:} Classical optimization with quantum gradient estimation
+\end{itemize}
+
+\subsubsection{Baselines}
+
+\begin{itemize}
+\item PQ-IDPS (dissertation, classical ML)
+\item Adversarial training (Madry et al., 2018)
+\item Certified defenses (Cohen et al., 2019)
+\item Quantum SVM (Havlíček et al., 2019)
+\item Quantum convolutional networks (Cong et al., 2019)
+\end{itemize}
+
+\subsection{Expected Contributions}
+
+\begin{enumerate}
+\item \textbf{First quantum-enhanced security ML:} Provably quantum-resistant learning for PQC monitoring
+\item \textbf{Certified robustness:} Exponential improvement over classical certified defenses
+\item \textbf{Practical hybrid system:} Classical pre-processing + quantum kernels (realistic near-term deployment)
+\item \textbf{Theoretical bounds:} Quantum information-theoretic robustness guarantees
+\end{enumerate}
+
+\subsection{Industry Impact Potential}
+
+\begin{itemize}
+\item \textbf{Quantum-safe organizations:} Future-proof security monitoring for PQC deployments
+\item \textbf{National security:} Critical infrastructure protected against quantum adversaries
+\item \textbf{Standards development:} Inform NIST quantum-resistant ML guidelines
+\item \textbf{Technology transfer:} Quantum computing vendors (IBM, Google, Rigetti)
+\end{itemize}
+
+\subsection{Paper Outline (16 pages)}
+
+\begin{enumerate}
+\item \textbf{Introduction} (2 pages): Quantum threat, PQC gap, contributions
+\item \textbf{Background} (2 pages): PQC, quantum ML, adversarial robustness
+\item \textbf{Threat Model} (1.5 pages): Quantum adversaries, attack surface
+\item \textbf{Quantum-Enhanced Learning} (3 pages): Kernel methods, VQCs, hybrid architecture
+\item \textbf{Certified Robustness Theory} (2 pages): Information-theoretic bounds, proofs
+\item \textbf{Experiments} (3 pages): Datasets, quantum hardware, results
+\item \textbf{Practical Deployment} (1.5 pages): Hybrid classical-quantum pipeline
+\item \textbf{Discussion} (1 page): Limitations, quantum advantage, future work
+\end{enumerate}
+
+\newpage
+
+\section{Paper 4: XAI-SOC - Explainable AI for Human-Centered Security Operations}
+
+\subsection{Paper Metadata}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{Target Venue:} USENIX Security 2028 (18 pages) or CHI 2028 (10 pages + supplements)
+\item \textbf{Timeline:} 18 months (Jul 2027 - Dec 2028)
+\item \textbf{Collaboration:} HCI lab + 3 SOC partners + industry deployment
+\item \textbf{User Studies:} 50 security analysts, 6-month field deployment
+\item \textbf{Code Release:} Open-source SOC dashboard + XAI toolkit
+\end{itemize}
+
+\subsection{Research Problem}
+
+\textbf{Gap from Dissertation:} All methods (CT-TGNN, Stochastic Transformer, etc.) lack interpretability for human analysts. Current XAI methods (LIME, SHAP) fail on continuous-time models and don't align with analyst workflow.
+
+\textbf{Industry Need:} SOC analysts overwhelmed by 10,000+ daily alerts, 99\% false positives. Black-box ML systems reduce trust and prevent effective human-AI collaboration. Average analyst burnout: 18 months.
+
+\subsection{Technical Approach}
+
+\subsubsection{Continuous-Time Explainability Framework}
+
+\textbf{Adapt dissertation models for interpretability:}
+
+\textbf{1. Attention Flow Visualization (CT-TGNN):}
+\begin{equation}
+\alpha_{ij}(t) = \frac{\exp(e_{ij}(t))}{\sum_{k \in \mathcal{N}(i)} \exp(e_{ik}(t))}
+\end{equation}
+Track which network nodes/edges contribute to detection over continuous time.
+
+\textbf{2. Uncertainty Attribution (Stochastic Transformer):}
+Decompose epistemic uncertainty by feature importance:
+\begin{equation}
+\mathbb{U}_{\text{epistemic}}^{(f)} = \text{Var}_{\theta \sim q}[f_\theta(\mathbf{x}_{-f})]
+\end{equation}
+Show analysts which features drive model uncertainty.
+
+\textbf{3. Counterfactual Trajectories (Neural ODE):}
+Generate minimal perturbations that change prediction:
+\begin{equation}
+\min_{\boldsymbol{\delta}} \|\boldsymbol{\delta}\|_2 \text{ s.t. } \text{Class}(\mathbf{x} + \boldsymbol{\delta}) \neq \text{Class}(\mathbf{x})
+\end{equation}
+Answer: "What would need to change for this to be benign?"
+
+\textbf{4. Game-Theoretic Explanations:}
+Show optimal adversary strategy from dissertation game-theoretic framework:
+\begin{itemize}
+\item "Attacker would target features $[f_3, f_7, f_{12}]$ to evade detection"
+\item "Defense is robust to perturbations in these dimensions"
+\end{itemize}
+
+\subsubsection{Analyst-Centric Interface Design}
+
+\textbf{Co-design with 50 SOC analysts:}
+
+\begin{itemize}
+\item \textbf{Alert Triage View:} Uncertainty-ranked alerts with confidence intervals
+\item \textbf{Investigation Panel:} Temporal attention flow over attack kill chain
+\item \textbf{Counterfactual Explorer:} Interactive "what-if" scenario testing
+\item \textbf{Trust Dashboard:} Model performance tracking, drift detection
+\item \textbf{Feedback Loop:} Analyst corrections retrain model online
+\end{itemize}
+
+\subsubsection{Active Learning with Human-in-the-Loop}
+
+Integrate analyst feedback efficiently:
+\begin{equation}
+\text{Query}(\mathbf{x}) = \mathbb{U}_{\text{epistemic}}(\mathbf{x}) \cdot \text{Impact}(\mathbf{x}) \cdot \text{Novelty}(\mathbf{x})
+\end{equation}
+
+\textbf{Strategy:} Query high-uncertainty, high-impact, novel samples for labeling.
+
+\textbf{Result:} 10× reduction in labeling effort compared to random sampling.
+
+\subsection{Experimental Validation}
+
+\subsubsection{Quantitative Evaluation}
+
+\textbf{Metrics:}
+\begin{itemize}
+\item \textbf{Detection:} Precision, recall, F1 (dissertation baselines)
+\item \textbf{Explainability:} Faithfulness, consistency, robustness
+\item \textbf{Efficiency:} Time to triage, false positive rate, alert reduction
+\item \textbf{Human factors:} Trust scores, cognitive load, job satisfaction
+\end{itemize}
+
+\textbf{Datasets:}
+\begin{itemize}
+\item CIC-IoT-2023 (dissertation)
+\item Real-world SOC data (3 partners, 6 months)
+\end{itemize}
+
+\subsubsection{Qualitative User Studies}
+
+\textbf{Study 1: Lab Study (50 analysts, 2 hours)}
+\begin{itemize}
+\item Task: Investigate 20 alerts (10 true positives, 10 false positives)
+\item Conditions: No AI / Black-box AI / XAI-SOC
+\item Measures: Accuracy, time, trust, usability
+\end{itemize}
+
+\textbf{Study 2: Field Deployment (5 analysts, 6 months)}
+\begin{itemize}
+\item Real SOC environment at partner organization
+\item Longitudinal tracking: Performance, trust evolution, adoption barriers
+\item Weekly interviews: Qualitative feedback, feature requests
+\end{itemize}
+
+\textbf{Study 3: Expert Evaluation (10 senior analysts)}
+\begin{itemize}
+\item Cognitive walkthrough of interface
+\item Heuristic evaluation of explanations
+\item Recommendations for improvement
+\end{itemize}
+
+\subsubsection{Baselines}
+
+\begin{itemize}
+\item No explanation (black-box dissertation models)
+\item LIME (Ribeiro et al., 2016)
+\item SHAP (Lundberg \& Lee, 2017)
+\item IntGrad (Sundararajan et al., 2017)
+\item Dissertation models without XAI
+\end{itemize}
+
+\subsection{Expected Contributions}
+
+\begin{enumerate}
+\item \textbf{First XAI for continuous-time security:} Novel techniques for neural ODE/SDE interpretation
+\item \textbf{Human-AI collaboration framework:} Integrated active learning + XAI + SOC workflow
+\item \textbf{User study insights:} Evidence-based design principles for security AI
+\item \textbf{Operational impact:} 40\% reduction in triage time, 60\% fewer false positives, improved analyst satisfaction
+\end{enumerate}
+
+\subsection{Industry Impact Potential}
+
+\begin{itemize}
+\item \textbf{Analyst productivity:} Free up 20+ hours/week for strategic tasks
+\item \textbf{Retention:} Reduce burnout through effective AI assistance
+\item \textbf{Trust \& adoption:} Transparent AI increases organizational acceptance
+\item \textbf{Compliance:} Explainability meets regulatory requirements (GDPR Article 22, etc.)
+\item \textbf{Cost savings:} \$500K+/year per SOC from efficiency gains
+\end{itemize}
+
+\subsection{Paper Outline (18 pages)}
+
+\begin{enumerate}
+\item \textbf{Introduction} (2 pages): SOC challenges, human-AI gap, contributions
+\item \textbf{Related Work} (2 pages): XAI methods, security ML, HCI in security
+\item \textbf{Formative Study} (1.5 pages): Interviews with analysts, requirements
+\item \textbf{XAI-SOC System} (4 pages): Architecture, explanation techniques, interface
+\item \textbf{Implementation} (1 page): Tech stack, integration with dissertation models
+\item \textbf{Evaluation: Lab Study} (2 pages): Setup, results, statistical analysis
+\item \textbf{Evaluation: Field Deployment} (2.5 pages): Longitudinal results, case studies
+\item \textbf{Discussion} (2 pages): Insights, limitations, design principles
+\item \textbf{Conclusion} (1 page): Summary, future work
+\end{enumerate}
+
+\newpage
+
+\section{Cross-Paper Integration and Synergies}
+
+\subsection{Research Synergies}
+
+The four papers form a cohesive research agenda where contributions compound:
+
+\begin{enumerate}
+\item \textbf{Paper 1 → Paper 4:} SDE uncertainty quantification enables better explanations
+\item \textbf{Paper 2 → Paper 4:} CyberSecLLM generates natural language explanations for analysts
+\item \textbf{Paper 3 → Paper 1:} Quantum robustness insights improve classical SDE training
+\item \textbf{Paper 2 + Paper 3:} Foundation models with quantum-resistant training
+\item \textbf{All → Industry:} Integrated XAI-SOC system with all four innovations
+\end{enumerate}
+
+\subsection{Shared Infrastructure}
+
+\begin{itemize}
+\item \textbf{Codebase:} Single PyTorch library with modular components
+\item \textbf{Data:} SOC partnerships provide data for all papers
+\item \textbf{Compute:} Shared GPU cluster allocation (university + industry)
+\item \textbf{Evaluation:} Common benchmarks (CyberSecBench from Paper 2)
+\end{itemize}
+
+\subsection{Publication Strategy}
+
+\textbf{Maximize impact through venue diversity:}
+\begin{itemize}
+\item \textbf{ML Venues:} NeurIPS, ICML (Papers 1, 2) - reach ML community
+\item \textbf{Security Venues:} IEEE S\&P, USENIX (Papers 3, 4) - reach practitioners
+\item \textbf{HCI Venues:} CHI (Paper 4) - reach human factors community
+\item \textbf{Journals:} Extended versions in IEEE TIFS, ACM TOPS, Quantum
+\end{itemize}
+
+\textbf{Timeline optimization:}
+\begin{itemize}
+\item Years 1-2: Papers 1 \& 2 overlap (shared infrastructure)
+\item Year 2-3: Paper 3 builds on Paper 1 results
+\item Year 3-4: Paper 4 integrates all previous work
+\end{itemize}
+
+\newpage
+
+\section{Budget and Resource Planning}
+
+\subsection{Compute Resources}
+
+\begin{itemize}
+\item \textbf{Paper 1 (SDE):} 2K GPU-hours (A100), \$4K
+\item \textbf{Paper 2 (LLM):} 10K GPU-hours (A100), \$20K
+\item \textbf{Paper 3 (Quantum):} 500 quantum hours (IBM/Google), \$15K
+\item \textbf{Paper 4 (XAI):} 1K GPU-hours (V100), \$1K
+\item \textbf{Total:} \$40K over 4 years (\$10K/year, reasonable postdoc budget)
+\end{itemize}
+
+\subsection{Collaboration Partners}
+
+\textbf{Academic:}
+\begin{itemize}
+\item ML theory lab (Papers 1, 2)
+\item Quantum computing center (Paper 3)
+\item HCI/security lab (Paper 4)
+\end{itemize}
+
+\textbf{Industry:}
+\begin{itemize}
+\item 3-5 SOC partners (data, deployment)
+\item Cloud provider (compute credits)
+\item Quantum vendor (hardware access)
+\end{itemize}
+
+\subsection{Funding Opportunities}
+
+\begin{itemize}
+\item NSF CAREER (Papers 1, 2, 4) - \$500K over 5 years
+\item DARPA AI Next (Paper 3) - \$1M over 3 years
+\item Industry sponsors (Microsoft, Google, IBM) - \$50K-100K/year
+\item University startup funds - \$100K
+\end{itemize}
+
+\section{Broader Impact Statement}
+
+This postdoctoral agenda advances cybersecurity through principled AI methods addressing critical industry needs:
+
+\begin{itemize}
+\item \textbf{Security:} Protect billions of IoT devices, critical infrastructure, financial systems
+\item \textbf{Privacy:} Enable secure collaboration through federated learning
+\item \textbf{Equity:} Open-source tools democratize access to advanced security
+\item \textbf{Jobs:} Reduce analyst burnout through effective AI assistance
+\item \textbf{Standards:} Inform NIST guidelines for quantum-safe AI
+\end{itemize}
+
+\textbf{Ethical Considerations:}
+\begin{itemize}
+\item Dual-use potential (offensive vs defensive)
+\item Privacy risks in foundation model training
+\item Automation bias and over-reliance on AI
+\item Job displacement vs augmentation
+\end{itemize}
+
+\textbf{Mitigation:}
+\begin{itemize}
+\item Responsible disclosure and access controls
+\item Differential privacy and federated learning
+\item Human-in-the-loop design (Paper 4)
+\item Skills training programs for analysts
+\end{itemize}
+
+\section{Conclusion}
+
+This postdoctoral research agenda extends the PhD dissertation's seven novel methods through four deeply integrated papers addressing critical gaps in security AI. Each paper targets high-impact venues (NeurIPS, ICML, IEEE S\&P, USENIX), combines theoretical rigor with practical validation, and delivers open-source tools for global industry adoption.
+
+\textbf{Expected Outcomes (4 years):}
+\begin{itemize}
+\item 4 publications in top-tier venues (avg h-index: 60+)
+\item 60-80 citations within 2 years of publication
+\item 3-5 industry deployments in production SOCs
+\item 2 open-source frameworks (PyTorch libraries + SOC tools)
+\item Foundation for tenure-track faculty research program
+\end{itemize}
+
+The agenda balances ambition with feasibility, ensures coherence through shared infrastructure, and maximizes impact through strategic venue selection and industry collaboration.
+
+\end{document}
