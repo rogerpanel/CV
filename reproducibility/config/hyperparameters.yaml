@@ -1,0 +1,82 @@
+# ============================================================
+# Hyperparameters — Table S1 (Supplementary)
+# Paper: "Temporal Adaptive Neural ODEs with Deep Spatio-Temporal
+#          Point Processes for Real-Time Network Intrusion Detection"
+# ============================================================
+
+# --- Model Architecture ---
+model:
+  hidden_dim: 256
+  n_ode_blocks: 2
+  time_constants: [1.0e-6, 1.0e-3, 1.0, 3600.0]   # seconds
+  activation: elu
+  tabn_mlp_hidden: 64       # TA-BN MLP: 2 layers × 64 units each
+  tabn_omega: 1.0            # sinusoidal frequency for time embedding
+
+# --- Transformer (Point Process) ---
+transformer:
+  n_heads: 8
+  n_layers: 4
+  d_model: 512
+  dropout: 0.1
+
+# --- ODE Solver ---
+solver:
+  method: dopri5              # Dormand-Prince (Runge-Kutta 4/5)
+  rtol: 1.0e-3
+  atol: 1.0e-4
+  n_steps: 10                 # integration grid points
+
+# --- Training ---
+training:
+  optimizer: adam
+  lr: 1.0e-3
+  lr_min: 1.0e-5
+  lr_schedule: cosine         # cosine annealing
+  weight_decay: 1.0e-4
+  batch_size: 256
+  eval_batch_size: 1024
+  max_epochs: 100
+  patience: 10                # early stopping
+  grad_clip: 1.0
+
+# --- Bayesian Inference ---
+bayesian:
+  mc_samples_train: 10
+  mc_samples_test: 50
+  kl_weight: 1.0e-4
+  dropout_rate: 0.1
+
+# --- Point Process ---
+point_process:
+  tpp_weight: 0.1
+  mu_barrier: 0.01           # log-barrier coefficient
+
+# --- Calibration ---
+calibration:
+  method: temperature_scaling  # on validation set
+  n_bins: 10                   # ECE binning
+
+# --- Online Learning ---
+online:
+  ema_rate: 0.98
+  ewc_weight: 5.0e-3
+  psi_threshold: 0.2          # Population Stability Index
+  mini_epochs: 18
+  dp_clip: 1.0
+  dp_noise_sigma: null        # set for DP-SGD
+
+# --- Regularisation ---
+regularisation:
+  tabn_reg_weight: 1.0e-3     # TA-BN stability (Theorem 1)
+
+# --- Data ---
+data:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  num_workers: 4
+
+# --- Reproducibility ---
+seed: 42
+deterministic: true
