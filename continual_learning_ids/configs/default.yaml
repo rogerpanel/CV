@@ -1,0 +1,166 @@
+# ══════════════════════════════════════════════════════════════════════
+# Configuration for CL-RL NIDS Framework
+# Paper: Continual Learning and Constrained RL for Adversarially
+#        Robust Network Intrusion Detection and Autonomous Response
+# ══════════════════════════════════════════════════════════════════════
+
+# ── Dataset Configuration ────────────────────────────────────────────
+datasets:
+  general_network:
+    kaggle_doi: "10.34740/kaggle/dsv/12483891"
+    datasets:
+      cic_iot_2023:
+        name: "CIC-IoT-2023"
+        num_flows: 1621834
+        num_features: 46
+        num_attack_classes: 33
+        benign_pct: 12.4
+        source: "CIC, UNB"
+      cse_cic_ids2018:
+        name: "CSE-CIC-IDS2018"
+        num_flows: 16232943
+        num_features: 79
+        num_attack_classes: 14
+        benign_pct: 83.1
+        source: "CIC/CSE, AWS"
+      unsw_nb15:
+        name: "UNSW-NB15"
+        num_flows: 2540044
+        num_features: 49
+        num_attack_classes: 9
+        benign_pct: 55.0
+        source: "UNSW Canberra"
+
+  cloud_edge:
+    kaggle_doi: "10.34740/KAGGLE/DSV/12479689"
+    datasets:
+      cloudsec_2024:
+        name: "CloudSec-2024"
+        num_flows: 38412201
+        num_features: 62
+        num_attack_classes: 11
+        benign_pct: 71.3
+        source: "Kaggle"
+      container_ids:
+        name: "ContainerIDS"
+        num_flows: 18764592
+        num_features: 54
+        num_attack_classes: 8
+        benign_pct: 68.7
+        source: "Kaggle"
+      edge_iiot_2024:
+        name: "EdgeIIoT-2024"
+        num_flows: 6628386
+        num_features: 61
+        num_attack_classes: 8
+        benign_pct: 42.1
+        source: "Kaggle"
+
+  total_records: 84200000
+  total_unique_attacks: 83
+  num_sequential_splits: 5
+  train_test_ratio: 0.8
+
+# ── SurrogateIDS Detection Backbone ─────────────────────────────────
+model:
+  backbone: "surrogate_ids"
+  num_branches: 7
+  shared_feature_dim: 256
+  branch_hidden_dims: [512, 256, 128]
+  mc_dropout:
+    enabled: true
+    rate: 0.1
+    num_forward_passes: 20
+  activation: "relu"
+  batch_norm: true
+
+# ── Continual Learning (EWC + Experience Replay) ────────────────────
+continual_learning:
+  method: "ewc_replay"
+  ewc:
+    lambda: 5000            # Consolidation strength (grid search: 100-15000)
+    fisher_decay: 0.5       # EMA decay alpha for running FIM
+    fisher_samples: null     # null = use all samples in dataset
+  replay:
+    buffer_size: 5000       # Reservoir sampling capacity M
+    sampling: "reservoir"   # Vitter's Algorithm R
+    replay_ratio: 1.0       # ratio of replay to new samples
+  training:
+    optimizer: "adam"
+    learning_rate: 0.0001
+    epochs_per_task: 10
+    batch_size: 256
+    weight_decay: 0.0001
+
+# ── Drift Detection ─────────────────────────────────────────────────
+drift_detection:
+  method: "kl_divergence"
+  tau_1: 0.05               # Stable threshold
+  tau_2: 0.15               # Drift threshold
+  validation_window: 1000   # Samples for drift estimation
+
+# ── Constrained RL Response Agent ───────────────────────────────────
+rl_agent:
+  algorithm: "cpo"
+  state_dim: 55
+  action_space:
+    - "Monitor"         # severity 0
+    - "RateLimit"       # severity 1
+    - "Reset"           # severity 2
+    - "Block"           # severity 3
+    - "Quarantine"      # severity 4
+  policy_network:
+    hidden_dims: [256, 128]
+    activation: "relu"
+  reward:
+    w_det: 10.0             # Reward for threat mitigation
+    w_fp: 50.0              # Penalty for false-positive block
+    w_sev: [0, 0.5, 1, 2, 5]  # Per-action severity cost
+  constraints:
+    epsilon_fp: 0.001       # FP blocking rate threshold (<0.1%)
+    block_confidence_threshold: 0.95  # Min confidence for Block/Quarantine
+    max_blocks_per_minute: 100
+  training:
+    total_steps: 5000000
+    trust_region_delta: 0.01
+    discount_gamma: 0.99
+    gae_lambda: 0.97
+    batch_size: 4096
+    value_lr: 0.001
+    policy_lr: 0.0003
+    num_eval_episodes: 5000
+
+# ── Unified Fisher Information Framework ────────────────────────────
+unified_fim:
+  enabled: true
+  beta: 0.7                 # Balance: detection (1.0) vs policy (0.0)
+  approximation: "diagonal" # Options: diagonal, block_diagonal, kronecker
+
+# ── Adversarial Robustness Evaluation ───────────────────────────────
+adversarial:
+  attacks:
+    - name: "fgsm"
+      epsilon: 0.1
+    - name: "pgd"
+      epsilon: 0.1
+      steps: 40
+      step_size: 0.01
+    - name: "cw"
+      confidence: 0.0
+      max_iterations: 1000
+      learning_rate: 0.01
+    - name: "deepfool"
+      max_iterations: 50
+    - name: "gaussian"
+      sigma: 0.1
+    - name: "label_masking"
+      flip_ratio: 0.1
+
+# ── Experiment Settings ─────────────────────────────────────────────
+experiment:
+  seed: 42
+  device: "cuda"
+  num_runs: 5              # Independent runs with different seeds
+  checkpoint_dir: "./checkpoints"
+  log_dir: "./logs"
+  results_dir: "./results"
