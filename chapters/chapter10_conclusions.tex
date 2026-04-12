@@ -35,6 +35,10 @@ The algorithmic contributions provide practical implementations realizing theore
 
 \textbf{Edge Deployment Optimizations:} We implemented spiking neural network conversion reducing energy consumption by 73\% while maintaining 98\%+ accuracy on resource-constrained IoT devices. Knowledge distillation achieves 10$\times$ model compression with accuracy degradation under 2.1\%, enabling federated learning over bandwidth-constrained networks.
 
+\textbf{Continuous-Time Temporal Graph Neural Networks (CT-TGNN):} We developed the first framework extending Neural ODEs to graph-structured security data, enabling detection of attacks unfolding across irregular time scales in encrypted traffic. The CT-TGNN architecture implements Graph Neural Ordinary Differential Equations (GNODEs) with Temporal Adaptive Batch Normalization, encrypted edge feature encoding extracting timing patterns and TLS/QUIC metadata, and multi-scale temporal graph convolutions spanning microseconds to months. Zero-trust integration provides sub-100 millisecond policy enforcement through continuous authentication, achieving 98.3\% accuracy on encrypted lateral movement with 47 millisecond median latency while processing 8.7 million events per second.
+
+\textbf{Triple-Embedding Temporal Graph Neural Networks (TripleE-TGNN):} We introduced multi-granularity graph embeddings that jointly model service-level, trace-level, and node-level security behaviors in microservices environments. The TripleE-TGNN architecture learns hierarchical representations through specialized encoders operating on heterogeneous temporal graphs, with temporal heterogeneous graph neural networks integrating intra-granularity evolution and cross-granularity interactions through dual attention mechanisms. Adaptive learning under topology evolution maintains 94.7\% accuracy through hundreds of deployment events, achieving 96.8\% detection accuracy on microservices intrusions and outperforming single-granularity baselines by 8.3\%.
+
 \subsection{Empirical Contributions}
 
 The empirical validation demonstrates practical effectiveness across diverse security domains:

@@ -1,0 +1,118 @@
+% TikZ Diagram: Problem Hierarchy showing Master Problems → Sub-Problems → Methods
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.85,
+    every node/.style={font=\small},
+    masterbox/.style={rectangle, draw=primaryblue, very thick, fill=primaryblue!10,
+                     rounded corners, minimum width=8cm, minimum height=1.2cm, align=center},
+    subbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                  rounded corners, minimum width=3cm, minimum height=0.8cm, align=center},
+    methodbox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                     rounded corners, minimum width=2.5cm, minimum height=0.7cm, align=center},
+    arrow/.style={->, >=stealth, thick}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 11) {Dissertation Problem Hierarchy};
+
+% Master Problem A
+\node[masterbox] (MPA) at (-6, 9) {
+    \textbf{Master Problem A}\\
+    \small Adversarial Resilience in\\
+    \small Heterogeneous Networks
+};
+
+% Master Problem B
+\node[masterbox] (MPB) at (6, 9) {
+    \textbf{Master Problem B}\\
+    \small Robustness-Accuracy-Privacy\\
+    \small Trade-off Optimization
+};
+
+% Sub-Problems for Master Problem A
+\node[subbox] (SPA1) at (-10, 6.5) {\footnotesize SP-A1\\Continuous-Time\\Temporal Graphs};
+\node[subbox] (SPA2) at (-6, 6.5) {\footnotesize SP-A2\\Multi-Granularity\\Embeddings};
+\node[subbox] (SPA3) at (-10, 4.5) {\footnotesize SP-A3\\Byzantine-Robust\\Fed. Learning};
+\node[subbox] (SPA4) at (-6, 4.5) {\footnotesize SP-A4\\Post-Quantum\\Detection};
+\node[subbox] (SPA5) at (-2, 6.5) {\footnotesize SP-A5\\Zero-Shot\\Generalization};
+\node[subbox] (SPA6) at (-2, 4.5) {\footnotesize SP-A6\\State Space\\Under Poisoning};
+\node[subbox] (SPA7) at (-6, 2.5) {\footnotesize SP-A7\\Game-Theoretic\\Evasion};
+
+% Sub-Problems for Master Problem B
+\node[subbox] (SPB1) at (2, 6.5) {\footnotesize SP-B1\\Stochastic\\Adversarial Training};
+\node[subbox] (SPB2) at (6, 6.5) {\footnotesize SP-B2\\Differentially Private\\Optimal Transport};
+\node[subbox] (SPB3) at (10, 6.5) {\footnotesize SP-B3\\Variational\\Bayesian Attention};
+\node[subbox] (SPB4) at (2, 4.5) {\footnotesize SP-B4\\Progressive\\Distillation};
+\node[subbox] (SPB5) at (6, 4.5) {\footnotesize SP-B5\\Multi-Objective\\Optimization};
+\node[subbox] (SPB6) at (10, 4.5) {\footnotesize SP-B6\\Efficient\\Inference};
+\node[subbox] (SPB7) at (6, 2.5) {\footnotesize SP-B7\\Online Learning\\Under Drift};
+
+% Novel Methods
+\node[methodbox] (M1) at (-10, 0) {\textbf{CT-TGNN}\\98.3\% accuracy};
+\node[methodbox] (M2) at (-6, 0) {\textbf{TripleE-TGNN}\\96.8\% accuracy};
+\node[methodbox] (M3) at (-2, 0) {\textbf{FedLLM-API}\\87.1\% w/ Byzantine};
+\node[methodbox] (M4) at (2, 0) {\textbf{PQ-IDPS}\\96.2\% PQ detection};
+\node[methodbox] (M5) at (6, 0) {\textbf{MambaShield}\\91.4\% under poisoning};
+\node[methodbox] (M6) at (10, 0) {\textbf{Stochastic Transformer}\\94.2\% cross-dataset};
+\node[methodbox] (M7) at (2, -2) {\textbf{Game-Theoretic}\\94.7\% equilibrium};
+
+% Arrows from Master Problems to Sub-Problems
+\draw[arrow, primaryblue] (MPA) -- (SPA1);
+\draw[arrow, primaryblue] (MPA) -- (SPA2);
+\draw[arrow, primaryblue] (MPA) -- (SPA3);
+\draw[arrow, primaryblue] (MPA) -- (SPA4);
+\draw[arrow, primaryblue] (MPA) -- (SPA5);
+\draw[arrow, primaryblue] (MPA) -- (SPA6);
+\draw[arrow, primaryblue] (MPA) -- (SPA7);
+
+\draw[arrow, primaryblue] (MPB) -- (SPB1);
+\draw[arrow, primaryblue] (MPB) -- (SPB2);
+\draw[arrow, primaryblue] (MPB) -- (SPB3);
+\draw[arrow, primaryblue] (MPB) -- (SPB4);
+\draw[arrow, primaryblue] (MPB) -- (SPB5);
+\draw[arrow, primaryblue] (MPB) -- (SPB6);
+\draw[arrow, primaryblue] (MPB) -- (SPB7);
+
+% Arrows from Sub-Problems to Methods (Primary mappings)
+\draw[arrow, accentorange] (SPA1) -- (M1);
+\draw[arrow, accentorange] (SPA2) -- (M2);
+\draw[arrow, accentorange] (SPA3) -- (M3);
+\draw[arrow, accentorange] (SPA4) -- (M4);
+\draw[arrow, accentorange] (SPA5) -- (M3);
+\draw[arrow, accentorange] (SPA6) -- (M5);
+\draw[arrow, accentorange] (SPA7) -- (M7);
+
+\draw[arrow, accentorange] (SPB1) -- (M4);
+\draw[arrow, accentorange] (SPB1) -- (M6);
+\draw[arrow, accentorange] (SPB2) -- (M3);
+\draw[arrow, accentorange] (SPB3) -- (M6);
+\draw[arrow, accentorange] (SPB4) -- (M5);
+\draw[arrow, accentorange] (SPB6) -- (M1);
+\draw[arrow, accentorange] (SPB6) -- (M2);
+\draw[arrow, accentorange] (SPB6) -- (M5);
+\draw[arrow, accentorange] (SPB7) -- (M7);
+
+% Legend
+\node[font=\footnotesize, align=left] at (-6, -3.5) {
+    \textbf{Legend:}\\
+    \textcolor{primaryblue}{\rule{0.5cm}{0.1cm}} Master Problems\\
+    \textcolor{secondaryblue}{\rule{0.5cm}{0.1cm}} Sub-Problems\\
+    \textcolor{accentorange}{\rule{0.5cm}{0.1cm}} Novel Methods
+};
+
+% Mathematical Frameworks annotation
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (6, -3.5) {
+    \textbf{Mathematical Frameworks:}\\
+    $\bullet$ Neural ODEs (M1)\\
+    $\bullet$ Graph Theory (M1, M2)\\
+    $\bullet$ Optimal Transport (M3)\\
+    $\bullet$ State Space Models (M5)\\
+    $\bullet$ Bayesian Inference (M6)\\
+    $\bullet$ Game Theory (M7)
+};
+
+\end{tikzpicture}
+\caption{Hierarchical decomposition of two complementary master problems into 14 sub-problems addressed by 7 novel methods. Master Problem A focuses on adversarial resilience across heterogeneous networks, while Master Problem B optimizes fundamental trade-offs between robustness, accuracy, and privacy. Each method addresses multiple sub-problems through integrated mathematical frameworks including neural ODEs, optimal transport, graph theory, state space models, Bayesian inference, and game theory. Performance metrics shown represent key achievements on benchmark datasets.}
+\label{fig:problem_hierarchy}
+\end{figure}

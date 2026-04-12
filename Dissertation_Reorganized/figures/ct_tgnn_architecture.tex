@@ -1,0 +1,71 @@
+% TikZ Diagram: CT-TGNN Architecture - Continuous-Time Temporal Graph Neural Networks
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.9,
+    every node/.style={font=\small},
+    layerbox/.style={rectangle, draw=primaryblue, thick, fill=primaryblue!10,
+                     rounded corners, minimum width=3cm, minimum height=0.8cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.5cm, minimum height=0.7cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10) {CT-TGNN Architecture};
+
+% Input Layer
+\node[databox] (input) at (0, 8.5) {Network Traffic\\$\mathcal{G}^{(t)}$};
+
+% Feature Extraction
+\node[componentbox] (feat) at (0, 7) {Feature Extraction\\$\mathbf{x}_v(t)$};
+
+% Continuous-Time ODE Block
+\node[layerbox, minimum width=8cm, minimum height=2.5cm] (ode) at (0, 4.5) {};
+\node[font=\bfseries] at (0, 5.5) {Continuous-Time ODE Dynamics};
+\node[componentbox] (ode1) at (-3, 4.5) {Neural ODE\\$\frac{d\mathbf{h}_v}{dt} = f_\theta$};
+\node[componentbox] (ode2) at (0, 4.5) {Graph Attention\\$\alpha_{uv}(t)$};
+\node[componentbox] (ode3) at (3, 4.5) {TA-BN\\$\gamma(t), \beta(t)$};
+
+% Temporal Point Process
+\node[layerbox] (tpp) at (0, 2.5) {Temporal Point Process\\$\lambda^*(t) = \mu + \sum_{t_i < t} \kappa(t - t_i)$};
+
+% Integration Layer
+\node[componentbox] (integrate) at (0, 1) {Adjoint Sensitivity\\$\frac{\partial \mathcal{L}}{\partial \theta}$};
+
+% Output Layer
+\node[layerbox] (output) at (0, -0.5) {Classification\\Attack/Benign};
+
+% Performance Metrics Box
+\node[databox, minimum width=3cm] (perf) at (6, 1) {\footnotesize \textbf{Performance:}\\98.3\% Accuracy\\8.7M events/sec\\47ms latency};
+
+% Arrows
+\draw[arrow, accentorange] (input) -- (feat);
+\draw[arrow, secondaryblue] (feat) -- (ode);
+\draw[arrow, primaryblue] (ode1) -- (ode2);
+\draw[arrow, primaryblue] (ode2) -- (ode3);
+\draw[arrow, secondaryblue] (ode) -- (tpp);
+\draw[arrow, secondaryblue] (tpp) -- (integrate);
+\draw[arrow, primaryblue] (integrate) -- (output);
+
+% Feedback arrow for continuous dynamics
+\draw[darrow, darkgreen] (ode3.east) -- ++(1,0) |- (ode1.east);
+\node[font=\footnotesize, darkgreen] at (4.5, 4.5) {Continuous\\Feedback};
+
+% Mathematical Framework annotation
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-6, 1) {
+    \textbf{Key Components:}\\
+    $\bullet$ Neural ODE solver\\
+    $\bullet$ Graph attention mechanism\\
+    $\bullet$ Temporal-adaptive normalization\\
+    $\bullet$ Adjoint gradient computation\\
+    $\bullet$ Hawkes process intensity
+};
+
+\end{tikzpicture}
+\caption{CT-TGNN architecture combining continuous-time neural ordinary differential equations with temporal point processes for modeling irregular network events. The system uses graph attention mechanisms with temporal-adaptive batch normalization to capture both continuous dynamics and discrete event sequences, achieving 98.3\% accuracy on encrypted traffic with 47 millisecond latency.}
+\label{fig:ct_tgnn_arch}
+\end{figure}

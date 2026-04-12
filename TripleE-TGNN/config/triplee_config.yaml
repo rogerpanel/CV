@@ -1,0 +1,176 @@
+# TripleE-TGNN Configuration
+# All experimental settings for reproducibility
+
+# Model configuration
+model:
+  # Service-level encoder
+  service_hidden_dims: [128, 256, 512]
+  service_gru_hidden: 256
+  service_attention_heads: 8
+
+  # Trace-level encoder
+  trace_hidden_dims: [128, 256, 512]
+  trace_gru_hidden: 256
+
+  # Node-level encoder
+  node_hidden_dims: [128, 256, 512]
+  node_lstm_hidden: 256
+
+  # Heterogeneous TGNN
+  hetero_hidden_dim: 256
+  hetero_num_layers: 2
+
+  # Fusion
+  fusion_method: "adaptive"  # Options: adaptive, concat
+  fusion_hidden_dim: 256
+
+  # General
+  dropout: 0.3
+  num_gnn_layers: 3
+
+# Data configuration
+data:
+  # Dataset selection
+  dataset: "train_ticket"  # Options: train_ticket, sock_shop, boutique, deathstar_social, deathstar_hotel
+  data_dir: "./datasets/train_ticket"
+
+  # Features
+  service_features: 47  # Request rate, error rate, latency, resources
+  trace_features: 64    # Span duration, service name, HTTP status
+  pod_features: 32      # CPU, memory, network, processes
+
+  # Graph construction
+  service_graph_window: 300  # seconds
+  trace_max_spans: 50
+  pod_graph_window: 60
+
+  # Splits
+  train_split: 0.70
+  val_split: 0.15
+  test_split: 0.15
+
+# Training configuration
+training:
+  # Optimization
+  epochs: 50
+  batch_size: 32
+  learning_rate: 3.0e-4
+  weight_decay: 0.01
+  optimizer: "adamw"
+  beta1: 0.9
+  beta2: 0.999
+
+  # Loss
+  loss_type: "focal"  # Options: cross_entropy, focal
+  focal_gamma: 2.0
+  class_weights: [1.0, 3.0]  # Benign, Attack
+
+  # Learning rate schedule
+  scheduler: "cosine"
+  warmup_epochs: 5
+  min_lr: 1.0e-6
+
+  # Gradient management
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 1
+
+  # Device
+  device: "cuda"
+  num_workers: 4
+  pin_memory: true
+
+# Evaluation configuration
+evaluation:
+  # Metrics
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "auroc"
+
+  # Granularity analysis
+  compute_granularity_accuracies: true
+
+  # Attack type breakdown
+  evaluate_by_attack_type: true
+
+# Logging and checkpointing
+logging:
+  log_dir: "./logs"
+  tensorboard_dir: "./runs"
+  log_interval: 10
+
+  # Visualization
+  plot_attention_weights: true
+  save_predictions: true
+
+checkpoint:
+  save_dir: "./checkpoints"
+  save_interval: 5
+  save_best: true
+  keep_last_n: 3
+
+# Reproducibility
+seed: 42
+deterministic: true
+cudnn_benchmark: false
+
+# Experiment tracking
+experiment:
+  name: "triplee_tgnn_trainticket"
+  tags: ["microservices", "temporal-gnn", "multi-granularity"]
+  notes: "Main TripleE-TGNN experiment on Train-Ticket dataset"
+
+# Ablation studies
+ablation:
+  service_only: false
+  trace_only: false
+  node_only: false
+  no_temporal: false
+  no_heterogeneous: false
+  no_fusion: false
+
+# Baselines
+baselines:
+  run_tgat: true
+  run_dysat: true
+  run_continuum: true
+  run_gat: true
+  run_graphsage: true
+
+# Dataset-specific configurations
+dataset_configs:
+  train_ticket:
+    num_services: 41
+    num_pods: 150
+    expected_requests: 2400000
+    attack_ratio: 0.08
+
+  sock_shop:
+    num_services: 14
+    num_pods: 56
+    expected_requests: 840000
+    attack_ratio: 0.11
+
+  boutique:
+    num_services: 11
+    num_pods: 44
+    expected_requests: 1600000
+    attack_ratio: 0.06
+
+# Expected performance targets
+expected_results:
+  train_ticket:
+    accuracy: 0.968
+    precision: 0.964
+    recall: 0.972
+    f1_score: 0.968
+
+    service_acc: 0.971
+    trace_acc: 0.974
+    node_acc: 0.959
+
+    attack_ddos: 0.982
+    attack_privilege_escalation: 0.974
+    attack_container_breakout: 0.947

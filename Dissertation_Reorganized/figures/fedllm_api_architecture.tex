@@ -1,0 +1,100 @@
+% TikZ Diagram: FedLLM-API Architecture - Federated Learning with LLM and Optimal Transport
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.85,
+    every node/.style={font=\small},
+    serverbox/.style={rectangle, draw=primaryblue, very thick, fill=primaryblue!10,
+                      rounded corners, minimum width=4cm, minimum height=1.2cm, align=center},
+    clientbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                     rounded corners, minimum width=2.3cm, minimum height=0.8cm, align=center},
+    componentbox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                        rounded corners, minimum width=2.5cm, minimum height=0.7cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10) {FedLLM-API Architecture};
+
+% Global Server
+\node[serverbox] (server) at (0, 8.5) {\textbf{Global Aggregation Server}\\Optimal Transport Alignment};
+
+% Byzantine-Robust Aggregation
+\node[componentbox] (byzantine) at (0, 6.8) {Trimmed Mean\\$\bar{\theta}_t = \text{TrimMean}(\{\theta_k\})$};
+
+% Optimal Transport Layer
+\node[componentbox] (ot) at (0, 5.5) {Wasserstein Distance\\$W_2(\mu_s, \mu_t)$};
+
+% Differential Privacy
+\node[componentbox] (dp) at (0, 4.2) {Gaussian Mechanism\\$(\epsilon, \delta)$-DP};
+
+% Clients
+\node[font=\bfseries, secondaryblue] at (-6, 2.5) {Federated Clients};
+
+\node[clientbox] (c1) at (-8, 1.2) {Client 1\\Domain $\mathcal{D}_1$};
+\node[clientbox] (c2) at (-5.5, 1.2) {Client 2\\Domain $\mathcal{D}_2$};
+\node[clientbox] (c3) at (-3, 1.2) {Client 3\\Domain $\mathcal{D}_3$};
+\node[font=\footnotesize] at (-1, 1.2) {$\cdots$};
+\node[clientbox] (cn) at (1.5, 1.2) {Client $K$\\Domain $\mathcal{D}_K$};
+
+% LLM Zero-Shot Component
+\node[componentbox, minimum width=3cm] (llm) at (5.5, 2.5) {LLM Zero-Shot\\Inference\\GPT-4o API};
+
+% Local Training
+\node[componentbox] (local1) at (-8, -0.3) {Local Update\\$\nabla \mathcal{L}_1$};
+\node[componentbox] (local2) at (-5.5, -0.3) {Local Update\\$\nabla \mathcal{L}_2$};
+\node[componentbox] (local3) at (-3, -0.3) {Local Update\\$\nabla \mathcal{L}_3$};
+\node[componentbox] (localn) at (1.5, -0.3) {Local Update\\$\nabla \mathcal{L}_K$};
+
+% Byzantine Attacker (marked differently)
+\node[clientbox, draw=red, fill=red!10] (malicious) at (-8, 1.2) {};
+\node[font=\tiny, red] at (-8, 0.5) {Byzantine};
+
+% Performance Box
+\node[componentbox, minimum width=3.5cm, minimum height=1.5cm] (perf) at (5.5, 6) {\footnotesize \textbf{Performance:}\\87.1\% with 40\% Byzantine\\87.6\% zero-shot F1\\$(\epsilon=0.85, \delta=10^{-5})$};
+
+% Arrows - Server to Clients (broadcast)
+\draw[arrow, primaryblue] (dp) -- ++(-3,0) |- (c1);
+\draw[arrow, primaryblue] (dp) -- ++(-2,0) |- (c2);
+\draw[arrow, primaryblue] (dp) -- ++(-1,0) |- (c3);
+\draw[arrow, primaryblue] (dp) -- ++(0.5,0) |- (cn);
+
+% Arrows - Clients to Local Updates
+\draw[arrow, secondaryblue] (c1) -- (local1);
+\draw[arrow, secondaryblue] (c2) -- (local2);
+\draw[arrow, secondaryblue] (c3) -- (local3);
+\draw[arrow, secondaryblue] (cn) -- (localn);
+
+% Arrows - Local Updates to Aggregation (feedback)
+\draw[arrow, accentorange] (local1) -- ++(0,1) -| (byzantine);
+\draw[arrow, accentorange] (local2) -- ++(0,0.8) -| (byzantine);
+\draw[arrow, accentorange] (local3) -- ++(0,0.6) -| (byzantine);
+\draw[arrow, accentorange] (localn) -- ++(0,0.4) -| (byzantine);
+
+% Arrows - Server components
+\draw[arrow, primaryblue] (server) -- (byzantine);
+\draw[arrow, primaryblue] (byzantine) -- (ot);
+\draw[arrow, primaryblue] (ot) -- (dp);
+
+% LLM Integration
+\draw[darrow, darkgreen] (llm) -- (c3);
+\node[font=\footnotesize, darkgreen] at (4, 1.8) {Zero-Shot\\Prompting};
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (5.5, -1) {
+    \textbf{Key Features:}\\
+    $\bullet$ Byzantine-robust aggregation\\
+    $\bullet$ Optimal transport alignment\\
+    $\bullet$ Differential privacy guarantees\\
+    $\bullet$ LLM-enhanced zero-shot detection
+};
+
+% Round annotation
+\draw[darrow, primaryblue] (dp.east) -- ++(1,0) |- (server.east);
+\node[font=\footnotesize, primaryblue] at (2.5, 7.5) {Federated\\Rounds};
+
+\end{tikzpicture}
+\caption{FedLLM-API architecture integrating Byzantine-robust federated learning with optimal transport-based domain adaptation and LLM-enhanced zero-shot detection. The system maintains 87.1\% accuracy under 40\% Byzantine participants while preserving $(\epsilon=0.85, \delta=10^{-5})$-differential privacy through Gaussian mechanism for secure multi-organization threat intelligence sharing.}
+\label{fig:fedllm_api_arch}
+\end{figure>

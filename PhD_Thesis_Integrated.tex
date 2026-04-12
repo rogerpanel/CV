@@ -1,10 +1,10 @@
 % ============================================================================
-% PhD Dissertation: Advanced Machine Learning Approaches for
-% Network Intrusion Detection Systems
+% PhD Dissertation: Development of Adversarial Resilient Artificial
+% Intelligence based Models in Hybrid Intrusion Detection and Prevention Systems
 % ============================================================================
 % Author: Roger Nick Anaedevha
 % Institution: National Research Nuclear University MEPhI
-% Date: November 2025
+% Date: December 2025
 % ============================================================================
 
 \documentclass[12pt,a4paper,twoside,openright]{book}
@@ -36,6 +36,10 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{adjustbox}      % For scaling tables that overflow
+\usepackage{caption}         % Better caption control
+\usepackage{threeparttable}  % Tables with notes
+\usepackage{makecell}        % Line breaks in table cells
 
 % Page Layout and Formatting
 \usepackage[top=2.5cm,bottom=2.5cm,left=3.5cm,right=2.5cm]{geometry}
@@ -43,6 +47,51 @@
 \onehalfspacing
 \usepackage{fancyhdr}
 \usepackage{emptypage}
+
+% ============================================================================
+% MARGIN AND OVERFLOW CONTROL SETTINGS
+% ============================================================================
+% Prevent overfull hboxes
+\sloppy
+\emergencystretch=1em
+\tolerance=2000
+\hbadness=10000
+\vbadness=10000
+
+% Better line breaking
+\pretolerance=10000
+\hyphenpenalty=1000
+\exhyphenpenalty=1000
+
+% Table settings - prevent overflow
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.2}
+
+% Algorithm settings - prevent overflow
+\makeatletter
+\renewcommand{\ALG@beginalgorithmic}{\small}
+\makeatother
+
+% Caption settings
+\captionsetup{
+    font=small,
+    labelfont=bf,
+    format=hang,
+    justification=justified,
+    singlelinecheck=false,
+    width=0.95\textwidth
+}
+
+% Longtable settings
+\setlength\LTleft{0pt}
+\setlength\LTright{0pt}
+
+% Prevent widow and orphan lines
+\widowpenalty=10000
+\clubpenalty=10000
+
+% Equation breaking
+\allowdisplaybreaks[1]
 
 % Citations and References
 \usepackage{cite}
@@ -156,9 +205,9 @@
 % ============================================================================
 % TITLE PAGE INFORMATION
 % ============================================================================
-\title{Advanced Machine Learning Approaches for Network Intrusion Detection Systems}
+\title{Development of Adversarial Resilient Artificial Intelligence based Models in Hybrid Intrusion Detection and Prevention Systems}
 \author{Roger Nick Anaedevha}
-\date{November 2025}
+\date{December 2025}
 
 % ============================================================================
 % DOCUMENT BEGIN

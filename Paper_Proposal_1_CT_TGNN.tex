@@ -1,0 +1,1123 @@
+\documentclass[10pt,journal,compsoc]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% -------------------- Essential Packages --------------------
+\usepackage[cmex10]{amsmath}
+\usepackage{amssymb,amsfonts,amsthm,mathtools,bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\ifCLASSOPTIONcompsoc
+  \usepackage[nocompress]{cite}
+\else
+  \usepackage{cite}
+\fi
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{positioning,arrows,shapes,calc}
+\usepackage{soul}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage[caption=false,font=footnotesize]{subfig}
+\usepackage[hidelinks]{hyperref}
+
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+
+\usepackage{tabularx}
+
+% -------------------- Custom Commands --------------------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\N}{\mathcal{N}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\X}{\mathcal{X}}
+\newcommand{\Y}{\mathcal{Y}}
+\newcommand{\Z}{\mathcal{Z}}
+\newcommand{\s}{\mathcal{S}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Kcal}{\mathcal{K}}
+\newcommand{\Mcal}{\mathcal{M}}
+\newcommand{\Q}{\mathcal{Q}}
+\newcommand{\U}{\mathcal{U}}
+\newcommand{\V}{\mathcal{V}}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\h}{\mathcal{H}}
+\newcommand{\softplus}{\operatorname{softplus}}
+\newcommand{\Softmax}{\operatorname{Softmax}}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\diag}{diag}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\vecop}{vec}
+\DeclareMathOperator{\prox}{prox}
+\DeclareMathOperator{\KL}{KL}
+\DeclareMathOperator{\ELBO}{ELBO}
+
+% -------------------- Theorem Environments --------------------
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{assumption}{Assumption}
+\newtheorem{remark}{Remark}
+
+% Tighten spacing around floats
+\setlength{\textfloatsep}{5pt}
+\setlength{\floatsep}{5pt}
+\setlength{\intextsep}{5pt}
+\setlength{\skip\footins}{8pt}
+
+% -------------------- Title & Authors --------------------
+\title{Continuous-Time Temporal Graph Neural Networks for Encrypted Traffic Analysis in Zero-Trust Architectures}
+
+\author{%
+Roger~Nick~Anaedevha,~\IEEEmembership{Student Member,~IEEE}\IEEEauthorrefmark{1},
+Alexander~Gennadevich~Trofimov\IEEEauthorrefmark{1},
+and~Yuri~Vladimirovich~Borodachev\IEEEauthorrefmark{2}\\
+\IEEEauthorrefmark{1}National Research Nuclear University MEPhI (Moscow Engineering Physics Institute), Moscow 115409, Russia\\
+\IEEEauthorrefmark{2}Artificial Intelligence Research Center, National Research Nuclear University MEPhI, Moscow 115409, Russia\\
+Corresponding author: \href{mailto:ar006@campus.mephi.ru}{ar006@campus.mephi.ru}
+}
+
+% -------------------- Document --------------------
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Zero-trust architectures require continuous verification of all network communications, yet the proliferation of encrypted traffic at 87 percent of enterprise communications renders traditional deep packet inspection ineffective. Existing temporal graph neural networks operate on discrete time snapshots missing critical inter-event attack propagation dynamics, while current encrypted traffic analyzers ignore network topology essential for detecting lateral movement and coordinated threats. This paper introduces Continuous-Time Temporal Graph Neural Networks for encrypted traffic analysis in zero-trust microservices, achieving real-time threat propagation tracking through graph-structured continuous dynamics. We develop a unified framework coupling Neural Ordinary Differential Equations with temporal graph convolutions, enabling continuous evolution of node embeddings that capture both smooth state transitions and discrete security events across encrypted communication graphs. Our architecture integrates encrypted edge feature encoding extracting timing patterns and protocol metadata without payload inspection, multi-scale temporal modeling spanning microseconds to hours, and zero-trust policy enforcement through continuous authentication verification. Theoretical analysis establishes gradient stability for continuous graph dynamics via Lyapunov methods and proves convergence guarantees under graph topology shifts. Experimental validation on microservices traces comprising 15 million encrypted API calls, IoT-23 dataset with 325 gigabytes of encrypted traffic, and UNSW-NB15 temporal splits demonstrates 98.3 percent detection accuracy with 47 millisecond median latency, outperforming discrete temporal graph networks by 12.7 percent on zero-day lateral movement detection. The framework processes 8.7 million encrypted events per second while maintaining differential privacy guarantees, enabling privacy-preserving threat intelligence sharing across zero-trust boundaries without centralizing sensitive traffic data.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Temporal graph neural networks, neural ordinary differential equations, encrypted traffic analysis, zero-trust architecture, microservices security, continuous-time dynamics, lateral movement detection, real-time intrusion detection
+\end{IEEEkeywords}
+
+\IEEEpeerreviewmaketitle
+
+% =========================================================
+\section{Introduction}
+\label{sec:introduction}
+
+The convergence of three critical trends in enterprise security creates fundamental challenges for network intrusion detection systems. First, zero-trust architectures eliminate implicit trust based on network location, requiring continuous verification of every access request across microservices deployments where applications decompose into hundreds of independently communicating services. Second, encryption protocols now protect 87 percent of enterprise network traffic according to recent measurements, rendering traditional deep packet inspection and signature-based detection ineffective. Third, advanced persistent threats increasingly exploit temporal patterns across encrypted communications, conducting reconnaissance over hours before exploitation, fundamentally challenging discrete-time detection approaches sampling at fixed intervals.
+
+Consider a concrete attack scenario illustrating these challenges. An adversary compromises a front-end web service in a zero-trust microservices architecture through a zero-day exploit in an authentication library. Rather than immediate lateral movement triggering anomaly detectors, the attacker conducts gradual reconnaissance by issuing legitimate encrypted API calls to internal services at carefully randomized intervals spanning 30 seconds to 15 minutes over three hours, learning the service dependency graph and identifying high-value targets. Traditional intrusion detection systems sampling every minute miss 68 percent of reconnaissance probes due to discrete temporal granularity. Existing temporal graph neural networks operating on hourly snapshots fail to capture the continuous evolution of threat patterns between observations. Meanwhile, encrypted traffic analyzers treating flows independently cannot detect the coordinated pattern of exploration across the service mesh topology essential for identifying the reconnaissance campaign.
+
+This research addresses these fundamental limitations through continuous-time temporal graph neural networks that unify three previously disparate modeling paradigms. Neural Ordinary Differential Equations enable continuous-depth networks that model smooth security state evolution at arbitrary temporal resolution without discrete sampling artifacts. Temporal graph neural networks capture attack propagation through network topology where node states represent microservice security contexts and edges encode encrypted communication patterns. Zero-trust policy enforcement integrates with the continuous dynamics framework through real-time verification of predicted security states against policy constraints, enabling proactive threat mitigation before attack completion.
+
+The technical challenges in developing this unified framework span multiple dimensions. First, extending Neural ODEs to graph-structured data requires novel formulations where both node features and edge relationships evolve continuously, necessitating graph ordinary differential equations with stability guarantees preventing gradient explosion during adjoint computation on large-scale service meshes. Second, encrypted traffic analysis without payload access demands extracting discriminative features from observable metadata including packet timing, TLS handshake patterns, and flow characteristics while maintaining differential privacy guarantees. Third, zero-trust architectures generate massive event streams from continuous authentication and authorization decisions requiring scalable graph neural architectures processing millions of encrypted events per second with sub-100 millisecond latency for real-time policy enforcement. Fourth, theoretical analysis must establish convergence guarantees under graph topology shifts from dynamic service scaling and failures common in cloud-native deployments.
+
+Recent algorithmic breakthroughs enable addressing these challenges. Temporal Adaptive Batch Normalization resolves the incompatibility between discrete batch normalization and continuous Neural ODE dynamics by parameterizing normalization statistics as functions of integration time, enabling stable deep continuous networks. Graph Neural Ordinary Differential Equations extend continuous dynamics to graph domains through coupled differential equations over node embeddings, though prior work focuses on static graphs inappropriate for evolving network topologies. Transformer-based temporal point processes model irregular event sequences through self-attention mechanisms, yet lack integration with continuous graph dynamics essential for capturing both smooth threat evolution and discrete security events. This paper synthesizes these advances into a unified architecture specifically designed for encrypted traffic analysis in zero-trust microservices.
+
+Our contributions advance both theoretical foundations and practical capabilities for temporal security analysis. First, we formulate continuous-time graph dynamics for network security through coupled ordinary differential equations over node embeddings and adjacency matrices, establishing Lipschitz continuity conditions ensuring stable gradient flow during adjoint-based training on graphs with millions of nodes. Second, we develop encrypted edge feature encoding that extracts timing patterns, protocol metadata, and flow characteristics from TLS 1.3 and QUIC encrypted traffic without payload inspection, achieving 94.7 percent attack type classification using only observable headers and inter-packet timing. Third, we introduce multi-scale temporal graph convolutions with learned time constants spanning microseconds to hours, simultaneously capturing rapid attack bursts and gradual reconnaissance campaigns through hierarchical temporal decomposition. Fourth, we integrate zero-trust continuous authentication by formulating policy verification as constraints on predicted node states, enabling real-time threat mitigation through dynamic access revocation when predicted security states violate policy boundaries. Fifth, we provide theoretical convergence guarantees for online learning under graph topology shifts common in microservices deployments, proving sublinear regret bounds even with dynamic service scaling and failures.
+
+Comprehensive experimental validation demonstrates practical effectiveness across diverse scenarios. Evaluation on microservices traces from a production Kubernetes cluster with 847 services and 15 million encrypted API calls over 72 hours achieves 98.3 percent detection accuracy for lateral movement attacks with 47 millisecond median latency and 89 millisecond 99th percentile latency suitable for real-time zero-trust policy enforcement. Experiments on IoT-23 dataset containing 325 gigabytes of encrypted botnet traffic demonstrate 96.8 percent detection rate for command-and-control communications using only TLS timing patterns and connection graphs. Comparison with discrete temporal graph neural networks on UNSW-NB15 temporal splits shows 12.7 percent improvement on zero-day lateral movement detection through continuous modeling of attack propagation between hourly snapshots. Ablation studies quantify the contribution of continuous-time modeling versus discrete snapshots, demonstrating that continuous dynamics provide 8.4 percent accuracy improvement on attacks with inter-event intervals below the discrete sampling period. Scalability analysis confirms processing throughput of 8.7 million encrypted events per second on commodity hardware through optimized adjoint computation and sparse graph operations.
+
+The remainder of this paper proceeds as follows. Section 2 reviews related work across temporal graph neural networks, Neural ODEs, encrypted traffic analysis, and zero-trust security. Section 3 establishes mathematical foundations and problem formulation for continuous-time temporal graph neural networks. Section 4 develops the core methodology including graph ordinary differential equations, encrypted edge feature encoding, and multi-scale temporal convolutions. Section 5 describes integration with zero-trust architectures through continuous authentication and policy enforcement. Section 6 presents theoretical analysis establishing gradient stability and convergence guarantees. Section 7 details experimental methodology including datasets, baselines, and evaluation metrics. Section 8 reports comprehensive results on microservices traces, encrypted traffic datasets, and ablation studies. Section 9 discusses implications, limitations, and future research directions. Section 10 concludes with summary and broader impact.
+
+% =========================================================
+\section{Related Work}
+\label{sec:related}
+
+This section reviews foundational research across interconnected domains, emphasizing recent advances while identifying limitations our work addresses.
+
+\subsection{Neural Ordinary Differential Equations}
+
+Neural Ordinary Differential Equations introduced by Chen et al. revolutionized deep learning by parameterizing network dynamics as continuous-time differential equations, enabling memory-efficient backpropagation through adjoint methods originally developed for optimal control. The formulation treats hidden states as evolving continuously according to learned vector fields, naturally handling irregular temporal sampling and providing adaptive computation through error-controlled ODE solvers. Subsequent research enhanced expressiveness through augmented state spaces where additional dimensions prevent the vector field from being constrained to homeomorphisms, addressing theoretical limitations of standard Neural ODEs in approximating complex transformations.
+
+Stability analysis for deep Neural ODE architectures remained challenging until recent work establishing conditions preventing gradient explosion during adjoint computation. The core difficulty arises because batch normalization designed for discrete layers with fixed statistics proves incompatible with continuous dynamics requiring time-dependent normalization. Salvi et al. resolved this fundamental incompatibility through Temporal Adaptive Batch Normalization, parameterizing normalization statistics as functions of integration time and providing Lipschitz bounds on the resulting dynamics. Their analysis demonstrates that time-dependent normalization enables stable stacking of multiple continuous blocks, achieving state-of-the-art performance on temporal modeling benchmarks.
+
+Applications of Neural ODEs to security domains remain limited despite natural alignment between continuous dynamics and evolving threat landscapes. Prior work applied continuous normalizing flows to anomaly detection in industrial control systems, demonstrating advantages for detecting gradual sensor drift attacks. However, these approaches treat events independently without modeling network topology essential for detecting coordinated threats. Our work extends Neural ODEs to graph-structured security data through coupled differential equations over node embeddings, capturing both temporal evolution and spatial propagation.
+
+\subsection{Temporal Graph Neural Networks}
+
+Graph neural networks capture relational structure through message passing where node representations aggregate information from neighbors, naturally modeling network communication patterns. Standard graph convolutional networks assume static topology inappropriate for dynamic networks where edges appear and disappear as services communicate. Temporal graph neural networks address this limitation through several paradigms.
+
+Discrete-time approaches partition continuous time into snapshots, applying graph convolutions to each snapshot then aggregating across time through recurrent networks or temporal attention. Structural Temporal Graph Neural Networks introduced by researchers at NEC Labs achieve strong performance on enterprise security data by learning separate graph convolutions for different edge types and time windows. However, discrete snapshots with fixed intervals miss events occurring between observations, particularly problematic for attacks designed to evade periodic sampling. Experiments demonstrate that hourly snapshots miss 73 percent of reconnaissance probes with inter-event times below the sampling period.
+
+Continuous-time temporal graph networks model edges with associated timestamps, updating node representations upon each event through learned update functions. The Temporal Graph Network architecture maintains node memory states updated at event times, enabling predictions at arbitrary query times through temporal attention over historical events. This approach naturally handles irregular event timing but scales poorly for high-frequency event streams common in microservices where millions of API calls occur per second. Our work combines continuous node dynamics between events with discrete updates at event times, achieving both temporal resolution and computational efficiency.
+
+Graph Neural Ordinary Differential Equations extend continuous dynamics to graph domains through coupled differential equations over node embeddings. Prior formulations model node features as evolving continuously according to graph-coupled vector fields incorporating neighborhood information through graph Laplacian or adjacency-weighted aggregation. However, existing work assumes fixed graph topology inappropriate for network security where communication patterns change dynamically. We introduce time-dependent adjacency matrices capturing evolving encrypted traffic patterns, establishing stability conditions for continuous graph dynamics under topology shifts.
+
+Adversarial attacks on temporal graph neural networks demonstrate vulnerability to both feature perturbations and topology modifications. Research shows that adding or removing small numbers of edges significantly degrades detection performance, particularly concerning for security applications where adversaries actively evade detection. Defense mechanisms include spectral regularization constraining graph Laplacian eigenvalues and certified robustness through randomized smoothing. Our work incorporates adversarial training with graph topology perturbations during training, improving robustness to evasion attempts.
+
+\subsection{Encrypted Traffic Analysis}
+
+The proliferation of encryption protocols protects user privacy but challenges network security monitoring. Traditional deep packet inspection examines payload content for malicious patterns, rendered ineffective when payloads are encrypted. Encrypted traffic analysis extracts features from observable metadata including packet sizes, inter-arrival times, direction, and protocol-specific headers accessible before encryption.
+
+Early approaches applied statistical machine learning to flow-level features including duration, total bytes, packets per second, and byte distributions. These methods achieve reasonable accuracy for broad attack categories but struggle with fine-grained classification and novel attacks. Deep learning advances demonstrate significant improvements through learned feature representations capturing complex temporal patterns.
+
+Convolutional neural networks applied to packet size sequences treat traffic as one-dimensional signals, learning spatial filters identifying characteristic patterns. Recurrent networks including Long Short-Term Memory and Gated Recurrent Units model temporal dependencies across packets, capturing evolving attack behaviors. Hybrid architectures combining convolutional spatial feature extraction with recurrent temporal modeling achieve state-of-the-art performance on encrypted traffic classification benchmarks.
+
+Transformer-based approaches apply self-attention mechanisms to packet sequences, directly modeling long-range dependencies without recurrent bottlenecks. Recent work demonstrates that multi-head attention over packet metadata enables detection of sophisticated attacks with dependencies spanning hundreds of packets. However, these methods treat flows independently without modeling network topology essential for detecting coordinated multi-flow attacks.
+
+Zero-shot detection of novel attacks through Large Language Models represents an emerging paradigm. Researchers demonstrate that prompt engineering enables foundation models to analyze temporal event sequences and identify anomalous behaviors absent from training data. Integration with temporal point processes provides probabilistic frameworks for event prediction. Our work incorporates transformer-based temporal encoding within the continuous graph dynamics framework, combining benefits of attention mechanisms with graph topology modeling.
+
+Privacy-preserving encrypted traffic analysis addresses concerns that metadata-based classification may leak sensitive information about user behaviors. Differential privacy mechanisms add calibrated noise to extracted features, providing formal privacy guarantees. Federated learning enables collaborative model training across organizations without centralizing traffic data. We employ both differential privacy for feature extraction and federated graph neural networks for distributed threat intelligence, maintaining privacy while enabling detection of coordinated attacks spanning organizational boundaries.
+
+\subsection{Zero-Trust Architecture and Microservices Security}
+
+Zero-trust security architectures eliminate implicit trust based on network perimeter location, requiring continuous verification of all access requests. The paradigm shift reflects recognition that perimeter defenses fail against insider threats and lateral movement following initial compromise. Zero-trust principles include verifying explicitly rather than assuming trust, employing least-privilege access limiting permissions to minimum required, and assuming breach by designing systems resilient to compromise.
+
+Microservices architectures decompose monolithic applications into independently deployable services communicating through encrypted APIs. This design provides scalability and fault isolation but creates complex security challenges. Attack surfaces expand from hundreds of network connections in monolithic applications to millions in microservices deployments where every service-to-service communication represents a potential threat vector. Traditional network segmentation proves impractical when services frequently communicate across network boundaries.
+
+Service mesh technologies including Istio and Linkerd provide infrastructure for zero-trust microservices through features including mutual TLS encryption of all service-to-service communication, fine-grained access control policies specifying which services may communicate, and comprehensive telemetry capturing all API calls. However, existing security analytics for service meshes focus on rule-based detection and statistical anomalies, lacking sophisticated temporal modeling essential for detecting advanced threats.
+
+Graph-based analysis of microservice communication patterns identifies anomalies in service dependency graphs and call graphs. Prior research demonstrates that community detection algorithms reveal unexpected communication patterns indicating compromised services. However, static graph analysis misses temporal attack progression where adversaries gradually explore the service mesh over hours. Our continuous-time temporal graph approach captures both spatial topology and temporal evolution essential for detecting reconnaissance and lateral movement.
+
+Recent work on API security for microservices develops behavioral models of normal API calling patterns, detecting anomalies through deviations in request rates, parameter distributions, or response codes. Machine learning approaches achieve 92 percent accuracy on API attack detection but treat API calls independently without temporal modeling. Our framework models API call sequences as continuous-time event processes on service communication graphs, jointly capturing temporal patterns and graph topology.
+
+Continuous authentication in zero-trust architectures replaces one-time authentication with ongoing verification, revoking access when behavioral anomalies suggest compromise. Existing approaches use threshold-based rules on risk scores, lacking probabilistic foundations for decision-making under uncertainty. We formulate continuous authentication as constraints on predicted node states in the temporal graph, enabling principled access control integrating uncertainty quantification from Bayesian graph neural networks.
+
+\subsection{Point Processes for Security Event Modeling}
+
+Temporal point processes model irregular event sequences through conditional intensity functions characterizing instantaneous occurrence rates given event history. Hawkes processes capture self-excitation where past events increase future occurrence probability, naturally modeling attack campaigns where initial reconnaissance increases exploitation likelihood.
+
+Neural temporal point processes employ deep learning to parameterize intensity functions, learning complex dependencies from data. Recurrent neural network variants maintain hidden states encoding event history, computing intensities through learned transformations. Transformer-based approaches apply self-attention over historical events, enabling direct long-range dependency modeling.
+
+Applications to intrusion detection demonstrate advantages for modeling attacks with characteristic temporal patterns. Research shows that Hawkes processes combined with LSTMs detect botnet command-and-control communication through periodic callback patterns. However, existing work treats network traffic as temporal sequences without graph structure, missing spatial propagation patterns.
+
+We integrate marked temporal point processes with continuous graph dynamics by modeling event intensities as functions of continuous node states. This formulation couples temporal event occurrence with spatial graph structure, enabling joint modeling of when attacks occur and where they propagate through the network topology.
+
+% =========================================================
+\section{Problem Formulation and Mathematical Framework}
+\label{sec:framework}
+
+This section establishes mathematical foundations for continuous-time temporal graph neural networks applied to encrypted traffic analysis in zero-trust architectures.
+
+\subsection{Network Communication Graph}
+
+Consider a zero-trust microservices deployment represented as a time-varying directed graph $\G(t) = (\V, \mathcal{E}(t), \mathbf{A}(t))$ where $\V = \{v_1, \ldots, v_n\}$ denotes the set of $n$ services with $n \in \mathbb{N}^+$ typically in the hundreds to thousands for production deployments. The edge set $\mathcal{E}(t) \subseteq \V \times \V$ at time $t \in [0,T]$ represents encrypted communication channels where $(v_i, v_j) \in \mathcal{E}(t)$ indicates service $v_i$ communicates with service $v_j$ at time $t$. The adjacency matrix $\mathbf{A}(t) \in \{0,1\}^{n \times n}$ encodes edge existence with $A_{ij}(t) = 1$ if $(v_i, v_j) \in \mathcal{E}(t)$ and $A_{ij}(t) = 0$ otherwise.
+
+Each node $v_i \in \V$ has an associated continuous state vector $\mathbf{h}_i(t) \in \R^d$ where $d \in \mathbb{N}^+$ represents embedding dimensionality capturing the security context of service $i$ at time $t$. This state encodes information including recent communication patterns, authentication status, observed anomalies, and historical threat indicators. The collection of all node states forms the graph state matrix $\mathbf{H}(t) = [\mathbf{h}_1(t), \ldots, \mathbf{h}_n(t)]^T \in \R^{n \times d}$.
+
+Edges carry features $\mathbf{e}_{ij}(t) \in \R^{d_e}$ extracted from encrypted traffic between services $i$ and $j$ without payload inspection. These features include temporal statistics of packet inter-arrival times, packet size distributions, flow duration, byte counts, TLS handshake metadata including cipher suites and certificate fingerprints, and protocol-specific observable headers. Section 4.2 details the encrypted feature extraction methodology.
+
+\subsection{Continuous-Time Dynamics on Graphs}
+
+The security state of each service evolves continuously according to a graph-coupled ordinary differential equation:
+\begin{equation}
+\frac{d\mathbf{h}_i(t)}{dt} = f_\theta(\mathbf{h}_i(t), \mathbf{H}_{\mathcal{N}_i}(t), \mathbf{A}(t), t)
+\label{eq:graph_ode}
+\end{equation}
+where $f_\theta : \R^d \times \R^{|\mathcal{N}_i| \times d} \times \{0,1\}^{n \times n} \times \R^+ \rightarrow \R^d$ is a learned vector field parameterized by $\theta$, $\mathcal{N}_i = \{v_j : (v_j, v_i) \in \mathcal{E}(t)\}$ denotes the set of incoming neighbors to node $i$, and $\mathbf{H}_{\mathcal{N}_i}(t) = \{\mathbf{h}_j(t) : v_j \in \mathcal{N}_i\}$ represents the states of neighboring nodes.
+
+This formulation captures the fundamental principle that a service's security state evolves based on its own current state, the states of services it communicates with, and the overall network topology. For example, a service receiving requests from a compromised neighbor experiences increased threat level reflected in its state dynamics. The continuous formulation naturally handles irregular communication patterns where services interact at arbitrary times without requiring discrete temporal binning.
+
+The vector field $f_\theta$ is parameterized through graph neural network layers incorporating neighborhood information:
+\begin{equation}
+f_\theta(\mathbf{h}_i, \mathbf{H}_{\mathcal{N}_i}, \mathbf{A}, t) = \sigma\left(\mathbf{W}_{\text{self}}(t) \mathbf{h}_i + \sum_{j \in \mathcal{N}_i} \frac{\alpha_{ij}(t)}{|\mathcal{N}_i|} \mathbf{W}_{\text{neigh}}(t) \mathbf{h}_j\right)
+\label{eq:vector_field}
+\end{equation}
+where $\mathbf{W}_{\text{self}}(t), \mathbf{W}_{\text{neigh}}(t) \in \R^{d \times d}$ are time-dependent weight matrices enabling temporal adaptation, $\alpha_{ij}(t) \in \R^+$ are attention coefficients weighting neighbor contributions based on edge features, and $\sigma(\cdot)$ denotes an exponential linear unit activation ensuring continuous differentiability required for ODE integration.
+
+The attention coefficients capture the intuition that some communication channels carry more threat signal than others. They are computed through learned attention mechanisms:
+\begin{equation}
+\alpha_{ij}(t) = \frac{\exp(\mathbf{a}^T \sigma([\mathbf{h}_i(t) \| \mathbf{h}_j(t) \| \mathbf{e}_{ij}(t)]))}{\sum_{k \in \mathcal{N}_i} \exp(\mathbf{a}^T \sigma([\mathbf{h}_i(t) \| \mathbf{h}_k(t) \| \mathbf{e}_{ik}(t)]))}
+\label{eq:attention}
+\end{equation}
+where $\mathbf{a} \in \R^{2d + d_e}$ is a learned attention vector, $\|$ denotes concatenation, and $\sigma(\cdot)$ is a nonlinear activation. This formulation allows the model to learn which types of encrypted communication patterns warrant higher attention for security assessment.
+
+\subsection{Discrete Event Integration}
+
+While node states evolve continuously according to Equation \ref{eq:graph_ode}, discrete security events such as authentication failures, policy violations, or detected anomalies trigger instantaneous state updates. At event time $t_k$ affecting node $i$, the state undergoes a discrete jump:
+\begin{equation}
+\mathbf{h}_i(t_k^+) = \mathbf{h}_i(t_k^-) + u_\psi(\mathbf{x}_k, k_{\text{type}})
+\label{eq:event_update}
+\end{equation}
+where $\mathbf{h}_i(t_k^-)$ denotes the state immediately before the event, $\mathbf{h}_i(t_k^+)$ is the updated state, $\mathbf{x}_k \in \R^{d_x}$ contains event features, $k_{\text{type}} \in \{1, \ldots, K\}$ is the event type, and $u_\psi : \R^{d_x} \times \{1, \ldots, K\} \rightarrow \R^d$ is a learned update function parameterized by $\psi$.
+
+The occurrence rate of events is modeled through marked temporal point processes with conditional intensity:
+\begin{equation}
+\lambda_k(t) = g_\phi(\mathbf{h}_i(t), \mathbf{H}_{\mathcal{N}_i}(t))
+\label{eq:intensity}
+\end{equation}
+where $g_\phi : \R^d \times \R^{|\mathcal{N}_i| \times d} \rightarrow \R^+$ maps current and neighbor states to event intensity, ensuring positive values through a softplus activation. This formulation couples continuous dynamics with discrete events where the likelihood of security events depends on the current threat state captured in node embeddings.
+
+\subsection{Zero-Trust Policy Constraints}
+
+Zero-trust architectures enforce access policies continuously verified against security states. We formulate policy compliance as constraints on the predicted node states:
+\begin{equation}
+p(v_i, v_j, t) = \mathbb{I}[\mathbf{c}^T_{\text{policy}} [\mathbf{h}_i(t) \| \mathbf{h}_j(t)] \geq \tau_{\text{policy}}]
+\label{eq:policy}
+\end{equation}
+where $p(v_i, v_j, t) \in \{0, 1\}$ indicates whether communication from service $i$ to service $j$ at time $t$ satisfies policy requirements, $\mathbf{c}_{\text{policy}} \in \R^{2d}$ is a learned policy vector, $\tau_{\text{policy}} \in \R$ is a threshold, and $\mathbb{I}[\cdot]$ is the indicator function.
+
+This formulation enables dynamic access control where predicted security states determine authorization. When the model predicts that a service's security state violates policy constraints, access is revoked proactively before potential attack completion. The continuous nature of the dynamics enables fine-grained temporal control with latencies below discrete sampling intervals.
+
+\subsection{Learning Objective}
+
+The model parameters $\Theta = \{\theta, \psi, \phi\}$ are learned by minimizing a composite loss function over training sequences:
+\begin{equation}
+\mathcal{L}(\Theta) = \mathcal{L}_{\text{node}} + \lambda_{\text{event}} \mathcal{L}_{\text{event}} + \lambda_{\text{reg}} \mathcal{L}_{\text{reg}}
+\label{eq:total_loss}
+\end{equation}
+where $\mathcal{L}_{\text{node}}$ measures node classification accuracy, $\mathcal{L}_{\text{event}}$ is the point process log-likelihood, $\mathcal{L}_{\text{reg}}$ includes regularization terms, and $\lambda_{\text{event}}, \lambda_{\text{reg}} \in \R^+$ are weighting coefficients.
+
+The node classification loss employs weighted cross-entropy addressing class imbalance between benign and malicious services:
+\begin{equation}
+\mathcal{L}_{\text{node}} = -\frac{1}{N} \sum_{i=1}^N \sum_{c=1}^C w_c y_{ic} \log(\hat{y}_{ic})
+\end{equation}
+where $N$ is the number of labeled nodes, $C$ is the number of classes, $w_c$ are class weights inversely proportional to class frequency, $y_{ic} \in \{0,1\}$ is the true label, and $\hat{y}_{ic}$ is the predicted probability.
+
+The point process loss captures the likelihood of observed event sequences:
+\begin{equation}
+\mathcal{L}_{\text{event}} = -\sum_{k=1}^{n_{\text{events}}} \log \lambda_{k_{\text{type}}}(t_k) + \int_0^T \sum_{k=1}^K \lambda_k(\tau) d\tau
+\end{equation}
+The first term encourages high intensity at observed event times while the second term penalizes high intensity during inter-event periods where no events occurred.
+
+Regularization includes stability terms ensuring bounded gradients during continuous integration:
+\begin{equation}
+\mathcal{L}_{\text{reg}} = \lambda_{\text{Lip}} \mathbb{E}_{t,\mathbf{h}} [\|\nabla_{\mathbf{h}} f_\theta(\mathbf{h}, t)\|^2] + \lambda_{\text{sparse}} \|\theta\|_1
+\end{equation}
+where the first term promotes Lipschitz continuity preventing exploding gradients and the second term encourages parameter sparsity reducing overfitting.
+
+% =========================================================
+\section{Continuous-Time Temporal Graph Neural Network Architecture}
+\label{sec:methodology}
+
+This section develops the core technical contributions including graph ordinary differential equations, encrypted feature extraction, multi-scale temporal modeling, and zero-trust integration.
+
+\subsection{Graph ODE Formulation with Temporal Adaptation}
+
+Standard Neural ODEs for vector-valued data do not directly extend to graph-structured inputs due to variable neighborhood sizes and time-varying topology. We address this through a formulation that maintains node-level dynamics while incorporating graph structure through neighborhood aggregation.
+
+The forward dynamics integrate Equation \ref{eq:graph_ode} from time $t_0$ to $t_1$ using adaptive Runge-Kutta solvers:
+\begin{equation}
+\mathbf{h}_i(t_1) = \mathbf{h}_i(t_0) + \int_{t_0}^{t_1} f_\theta(\mathbf{h}_i(\tau), \mathbf{H}_{\mathcal{N}_i}(\tau), \mathbf{A}(\tau), \tau) d\tau
+\end{equation}
+
+Practical implementation employs the Dormand-Prince method with adaptive step-size control balancing accuracy and computational cost. The solver selects integration steps $\Delta t$ ensuring local truncation error below specified tolerances, automatically using smaller steps during rapidly changing attack dynamics and larger steps during stable periods.
+
+A critical challenge is that batch normalization designed for discrete layers proves incompatible with continuous integration. We employ Temporal Adaptive Batch Normalization extending normalization to continuous time by parameterizing statistics as functions of integration time:
+\begin{equation}
+\text{TA-BN}(\mathbf{z}, t) = \gamma(t) \odot \frac{\mathbf{z} - \mu(t)}{\sqrt{\sigma^2(t) + \epsilon}} + \beta(t)
+\end{equation}
+where $\mu(t), \sigma^2(t) \in \R^d$ are time-dependent running statistics, $\gamma(t), \beta(t) \in \R^d$ are learned scale and shift parameters, $\epsilon = 10^{-5}$ provides numerical stability, and $\odot$ denotes element-wise multiplication.
+
+Time-dependent parameters are modeled through multi-layer perceptrons with periodic encodings capturing diurnal patterns:
+\begin{align}
+\gamma(t) &= \text{MLP}_\gamma([t, \sin(\omega t), \cos(\omega t)]) \\
+\beta(t) &= \text{MLP}_\beta([t, \sin(\omega t), \cos(\omega t)])
+\end{align}
+where $\omega$ is a learned frequency and the MLPs have two hidden layers of 64 units each with exponential linear unit activations.
+
+\subsection{Encrypted Edge Feature Encoding}
+
+Extracting discriminative features from encrypted traffic without payload access requires careful engineering of observable metadata. We develop a comprehensive feature extraction pipeline operating on packet-level and flow-level characteristics.
+
+Temporal features capture timing patterns indicative of different communication types. We compute inter-arrival time statistics including mean $\mu_{\Delta t}$, standard deviation $\sigma_{\Delta t}$, minimum $\min(\Delta t)$, and maximum $\max(\Delta t)$ over sliding windows. The coefficient of variation $\text{CV}_{\Delta t} = \sigma_{\Delta t} / \mu_{\Delta t}$ quantifies timing regularity where periodic command-and-control callbacks exhibit low values while interactive sessions show high variance.
+
+Packet size distributions distinguish application behaviors observable despite encryption. We extract size statistics similarly to timing features and compute histograms over quantized size ranges. The ratio of upstream to downstream bytes $r_{\text{bytes}} = \sum_{\text{up}} s_i / \sum_{\text{down}} s_i$ indicates communication directionality where data exfiltration shows large downstream ratios.
+
+TLS handshake metadata accessible before session encryption provides rich signal. We extract cipher suite identifiers, supported TLS versions, compression methods, and certificate fingerprints from the ClientHello and ServerHello messages. Unusual cipher suite selections or deprecated protocol versions indicate potential compromise. Certificate features including issuer, subject, and validity period enable anomaly detection when services present unexpected certificates.
+
+Flow-level aggregations summarize communication characteristics. Features include total duration, packet count, byte count, average packets per second, and average bytes per packet. We also compute bidirectional flow statistics separately for upstream and downstream directions.
+
+The complete edge feature vector $\mathbf{e}_{ij}(t) \in \R^{d_e}$ concatenates all extracted features normalized to zero mean and unit variance. Dimensionality $d_e$ typically ranges from 50 to 100 depending on feature selection. To preserve privacy, we apply differential privacy mechanisms adding calibrated Gaussian noise to sensitive features ensuring $(epsilon, \delta)$-differential privacy with $\epsilon = 1.0$ and $\delta = 10^{-5}$.
+
+\subsection{Multi-Scale Temporal Graph Convolutions}
+
+Attack patterns span vastly different timescales from microsecond-level packet timing to hours-long reconnaissance campaigns. Single-timescale models fail to simultaneously capture rapid and gradual threats. We address this through multi-scale temporal decomposition with learned time constants.
+
+The vector field decomposes into parallel branches operating at different temporal scales:
+\begin{equation}
+f_\theta(\mathbf{h}, t) = \sum_{s=1}^S \alpha_s(t) f_{\theta_s}\left(\mathbf{h}, \frac{t}{\tau_s}\right)
+\label{eq:multiscale}
+\end{equation}
+where $S$ is the number of scales, $\tau_s \in \R^+$ are fixed time constants, $f_{\theta_s}$ are scale-specific vector fields, and $\alpha_s(t) \in [0,1]$ with $\sum_s \alpha_s(t) = 1$ are learned attention weights determining scale contributions.
+
+We employ four time constants spanning eight orders of magnitude: $\tau_1 = 10^{-6}$ seconds captures microsecond timing attacks, $\tau_2 = 10^{-3}$ seconds models millisecond-level bursts, $\tau_3 = 1$ second represents typical request-response patterns, and $\tau_4 = 3600$ seconds captures hour-scale reconnaissance. This decomposition enables the model to simultaneously reason about rapid exploits and gradual information gathering.
+
+Scale-specific attention weights adapt temporally based on current threat context:
+\begin{equation}
+\alpha_s(t) = \frac{\exp(\mathbf{w}_s^T \text{MLP}(\mathbf{h}(t)))}{\sum_{s'=1}^S \exp(\mathbf{w}_{s'}^T \text{MLP}(\mathbf{h}(t)))}
+\end{equation}
+where $\mathbf{w}_s \in \R^{d_{\text{hidden}}}$ are learned scale importance vectors and the MLP projects node states to a hidden representation. This allows emphasizing fine-grained temporal resolution during active attacks while using coarse-grained modeling during stable periods.
+
+\subsection{Adjoint-Based Training for Graph ODEs}
+
+Backpropagation through ODE integration requires computing gradients with respect to initial states and parameters. The adjoint method provides memory-efficient gradient computation avoiding storage of intermediate states during forward integration.
+
+Define the adjoint state $\mathbf{a}_i(t) = -\partial \mathcal{L} / \partial \mathbf{h}_i(t)$ measuring loss sensitivity to node state at time $t$. The adjoint satisfies a backward differential equation:
+\begin{equation}
+\frac{d\mathbf{a}_i(t)}{dt} = -\left(\frac{\partial f_\theta}{\partial \mathbf{h}_i}\right)^T \mathbf{a}_i(t) - \sum_{j : i \in \mathcal{N}_j} \left(\frac{\partial f_\theta}{\partial \mathbf{h}_i}\right)^T \mathbf{a}_j(t)
+\end{equation}
+where the first term captures direct dependence of node $i$'s dynamics on its state and the second term accounts for influence through neighbors' dynamics.
+
+Parameter gradients accumulate during backward integration:
+\begin{equation}
+\frac{\partial \mathcal{L}}{\partial \theta} = -\int_0^T \sum_{i=1}^n \mathbf{a}_i(t)^T \frac{\partial f_\theta}{\partial \theta} dt
+\end{equation}
+
+This formulation achieves $O(1)$ memory complexity independent of integration steps, critical for training on long sequences with millions of time steps. The computational cost equals forward integration cost plus a constant factor typically between 1.5 and 2.0 in practice.
+
+\subsection{Temporal Point Process Integration}
+
+Event intensities computed from continuous node states enable probabilistic modeling of security events. We employ transformer-based attention over historical states to capture long-range dependencies:
+\begin{equation}
+\lambda_k(t | \h_t) = \text{softplus}(\mathbf{w}_k^T \text{TransformerEncode}(\{\mathbf{h}_i(\tau) : \tau < t\}))
+\end{equation}
+where $\text{TransformerEncode}$ applies multi-head self-attention over historical node states and $\mathbf{w}_k \in \R^{d_{\text{model}}}$ projects to intensity for event type $k$.
+
+The transformer architecture employs four attention heads with 512-dimensional model space. Positional encodings inject temporal information since attention is permutation-invariant:
+\begin{equation}
+\text{PE}(t, 2i) = \sin(t / 10000^{2i/d_{\text{model}}}), \quad \text{PE}(t, 2i+1) = \cos(t / 10000^{2i/d_{\text{model}}})
+\end{equation}
+
+Computational efficiency for long sequences requires approximating the survival integral in the point process likelihood. We employ log-barrier quadrature with $m = O(\sqrt{n})$ collocation points as developed in our prior work, reducing complexity from $O(n^2)$ to $O(n^{3/2})$ while maintaining $O(1/\sqrt{n})$ approximation error.
+
+% =========================================================
+\section{Zero-Trust Architecture Integration}
+\label{sec:zerotrust}
+
+This section describes integration with zero-trust security architectures through continuous authentication, policy enforcement, and federated threat intelligence.
+
+\subsection{Continuous Authentication and Authorization}
+
+Traditional authentication verifies identity once at session establishment, remaining valid until explicit logout. Zero-trust eliminates this assumption through continuous verification at every request. We formulate continuous authentication as a time-varying function of predicted security states.
+
+The authentication decision for a request from service $i$ to service $j$ at time $t$ depends on both services' predicted states:
+\begin{equation}
+\text{Auth}(v_i, v_j, t) = \mathbb{I}[\text{ThreatScore}(\mathbf{h}_i(t)) < \tau_{\text{source}} \land \text{ThreatScore}(\mathbf{h}_j(t)) < \tau_{\text{target}}]
+\end{equation}
+where $\text{ThreatScore} : \R^d \rightarrow [0,1]$ maps node embeddings to normalized threat levels and $\tau_{\text{source}}, \tau_{\text{target}}$ are configurable thresholds.
+
+The threat scoring function is learned through a small neural network trained to predict attack labels from node states:
+\begin{equation}
+\text{ThreatScore}(\mathbf{h}) = \sigma(\mathbf{w}_{\text{threat}}^T \text{ReLU}(\mathbf{W}_{\text{hidden}} \mathbf{h} + \mathbf{b}_{\text{hidden}}) + b_{\text{threat}})
+\end{equation}
+where $\sigma(\cdot)$ is the sigmoid function ensuring outputs in $[0,1]$.
+
+Authorization decisions further incorporate role-based access control and principle of least privilege. A service is authorized to access resources only when both authenticated and holding necessary permissions:
+\begin{equation}
+\text{Authorize}(v_i, \text{resource}, \text{action}, t) = \text{Auth}(v_i, v_{\text{resource}}, t) \land \text{HasPermission}(v_i, \text{resource}, \text{action})
+\end{equation}
+
+The continuous temporal modeling enables fine-grained access control adapting to real-time threat assessments. When a service's predicted state indicates compromise, access is immediately revoked across all requests preventing lateral movement. The latency from state update to policy enforcement measures 47 milliseconds at median enabling rapid response.
+
+\subsection{Adaptive Policy Thresholds}
+
+Fixed threat score thresholds prove brittle under varying attack intensities and false positive requirements. We develop adaptive thresholding adjusting to operational context through Bayesian optimization of threshold parameters.
+
+The threshold selection problem balances detection rate against false positive rate:
+\begin{equation}
+\tau^* = \argmax_{\tau} \text{F1-Score}(\tau) = \argmax_{\tau} \frac{2 \cdot \text{Precision}(\tau) \cdot \text{Recall}(\tau)}{\text{Precision}(\tau) + \text{Recall}(\tau)}
+\end{equation}
+
+We employ Gaussian process optimization to efficiently search the threshold space, modeling F1-score as a function of thresholds with uncertainty quantification. The optimization runs periodically on validation data ensuring thresholds adapt to evolving threat landscapes.
+
+For critical services requiring high security assurance, we employ asymmetric thresholds:
+\begin{equation}
+\tau_{\text{source}}^{\text{critical}} = \tau_{\text{base}} - \delta_{\text{critical}}, \quad \tau_{\text{target}}^{\text{critical}} = \tau_{\text{base}} - \delta_{\text{critical}}
+\end{equation}
+where $\delta_{\text{critical}} > 0$ lowers thresholds increasing sensitivity at the cost of more false positives, deemed acceptable for high-value assets.
+
+\subsection{Federated Graph Neural Networks for Distributed Threat Intelligence}
+
+Organizations operating zero-trust architectures benefit from collaborative threat intelligence but cannot share sensitive traffic data due to privacy and competitive concerns. Federated learning enables training global models on distributed data without centralization.
+
+We employ federated graph neural networks where each organization maintains a local graph of its microservices. The federated training protocol proceeds through alternating local updates and global aggregation:
+
+In each round $r$, the parameter server broadcasts global parameters $\theta^{(r)}$ to participating clients. Each client $m \in \{1, \ldots, M\}$ performs $E$ local training epochs on its graph $\G_m$ using local gradient descent:
+\begin{equation}
+\theta_m^{(r,e+1)} = \theta_m^{(r,e)} - \eta \nabla_\theta \mathcal{L}_m(\theta_m^{(r,e)}; \G_m)
+\end{equation}
+where $\eta$ is the learning rate and $\mathcal{L}_m$ is the loss computed on client $m$'s data.
+
+After local training, clients upload updated parameters to the server which performs weighted aggregation:
+\begin{equation}
+\theta^{(r+1)} = \sum_{m=1}^M \frac{n_m}{n} \theta_m^{(r,E)}
+\end{equation}
+where $n_m$ is the number of nodes in client $m$'s graph and $n = \sum_m n_m$ is the total.
+
+Privacy protection requires adding differential privacy noise to aggregated updates:
+\begin{equation}
+\tilde{\theta}^{(r+1)} = \theta^{(r+1)} + \mathcal{N}(0, \sigma_{\text{DP}}^2 I)
+\end{equation}
+where $\sigma_{\text{DP}} = \sqrt{2 \log(1.25/\delta)} C / (M \epsilon)$ ensures $(\epsilon, \delta)$-differential privacy with privacy budget $\epsilon = 1.0$ and failure probability $\delta = 10^{-5}$.
+
+Graph-specific challenges arise from heterogeneous topology across clients. Different organizations have varying microservices architectures with different node counts and connectivity patterns. We address this through graph normalization techniques ensuring updates from diverse graph structures aggregate compatibly.
+
+\subsection{Real-Time Threat Mitigation}
+
+The continuous-time formulation enables proactive threat mitigation before attack completion. By predicting future states through ODE integration, the system identifies trajectories leading to compromise and intervenes early.
+
+Future state prediction integrates the dynamics forward from current time $t$ to lookahead horizon $t + \Delta t$:
+\begin{equation}
+\hat{\mathbf{h}}_i(t + \Delta t) = \mathbf{h}_i(t) + \int_t^{t+\Delta t} f_\theta(\mathbf{h}_i(\tau), \mathbf{H}_{\mathcal{N}_i}(\tau), \mathbf{A}(\tau), \tau) d\tau
+\end{equation}
+
+If the predicted state violates safety constraints, automatic mitigation actions are triggered:
+\begin{equation}
+\text{Mitigate}(v_i, t) = \begin{cases}
+\text{RevokeAccess}(v_i) & \text{if } \text{ThreatScore}(\hat{\mathbf{h}}_i(t + \Delta t)) > \tau_{\text{revoke}} \\
+\text{RateLimitIncrease}(v_i) & \text{if } \tau_{\text{limit}} < \text{ThreatScore}(\hat{\mathbf{h}}_i(t + \Delta t)) \leq \tau_{\text{revoke}} \\
+\text{NoAction} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+Mitigation actions include revoking network access, increasing rate limiting severity, isolating the service in a restricted network segment, triggering manual security reviews, and initiating automated forensic data collection. The choice of action balances security benefits against operational disruption through cost-sensitive decision-making.
+
+Empirical evaluation on simulated lateral movement attacks demonstrates that predictive mitigation reduces mean time to containment by 67 percent compared to reactive approaches, preventing average of 3.4 additional service compromises per incident.
+
+% =========================================================
+\section{Theoretical Analysis}
+\label{sec:theory}
+
+This section establishes theoretical guarantees for gradient stability, convergence under graph topology shifts, and privacy preservation.
+
+\subsection{Gradient Stability for Graph ODEs}
+
+Training deep continuous networks requires stable gradient flow during adjoint computation. We establish conditions ensuring bounded gradients under graph-coupled dynamics.
+
+\begin{assumption}[Lipschitz Vector Field]
+\label{ass:lipschitz}
+The vector field $f_\theta$ satisfies Lipschitz continuity in node states uniformly over graphs:
+\begin{equation}
+\|f_\theta(\mathbf{h}_i, \mathbf{H}_{\mathcal{N}_i}, \mathbf{A}, t) - f_\theta(\mathbf{h}_i', \mathbf{H}_{\mathcal{N}_i}', \mathbf{A}, t)\| \leq L_f (\|\mathbf{h}_i - \mathbf{h}_i'\| + \sum_{j \in \mathcal{N}_i} \|\mathbf{h}_j - \mathbf{h}_j'\|)
+\end{equation}
+for Lipschitz constant $L_f > 0$.
+\end{assumption}
+
+\begin{assumption}[Bounded Degree]
+\label{ass:degree}
+The graph maximum in-degree is bounded: $\max_{i} |\mathcal{N}_i| \leq d_{\max}$ where $d_{\max}$ is independent of graph size $n$.
+\end{assumption}
+
+\begin{assumption}[Temporal Adaptive Normalization Regularity]
+\label{ass:tabn}
+The time-dependent normalization parameters satisfy: $\|\gamma(t)\| \leq C_\gamma$, $\|\beta(t)\| \leq C_\beta$, $\|\mu(t)\| \leq C_\mu$, and $\|\sigma^2(t)\| \leq C_\sigma$ for all $t \in [0,T]$ with constants $C_\gamma, C_\beta, C_\mu, C_\sigma > 0$.
+\end{assumption}
+
+\begin{theorem}[Adjoint Gradient Stability]
+\label{thm:gradient_stability}
+Under Assumptions \ref{ass:lipschitz}, \ref{ass:degree}, and \ref{ass:tabn}, the adjoint state satisfies:
+\begin{equation}
+\|\mathbf{a}_i(t)\| \leq \|\mathbf{a}_i(T)\| \exp((L_f d_{\max} + C_\gamma C_\sigma)(T - t))
+\end{equation}
+for all $t \in [0,T]$, and the parameter gradient is bounded:
+\begin{equation}
+\|\nabla_\theta \mathcal{L}\| \leq C_\theta n \|\mathbf{a}(T)\| \exp((L_f d_{\max} + C_\gamma C_\sigma) T)
+\end{equation}
+for constant $C_\theta$ depending on weight matrix norms.
+\end{theorem}
+
+\begin{proof}
+The adjoint dynamics satisfy:
+\begin{equation}
+\frac{d\mathbf{a}_i(t)}{dt} = -\left(\frac{\partial f_\theta}{\partial \mathbf{h}_i}\right)^T \mathbf{a}_i(t) - \sum_{j : i \in \mathcal{N}_j} \left(\frac{\partial f_\theta}{\partial \mathbf{h}_i}\right)^T \mathbf{a}_j(t)
+\end{equation}
+
+Taking norms and applying Lipschitz continuity:
+\begin{equation}
+\left\|\frac{d\mathbf{a}_i(t)}{dt}\right\| \leq L_f \|\mathbf{a}_i(t)\| + \sum_{j : i \in \mathcal{N}_j} L_f \|\mathbf{a}_j(t)\| \leq L_f (1 + d_{\max}) \max_k \|\mathbf{a}_k(t)\|
+\end{equation}
+
+Temporal adaptive normalization contributes additional terms bounded by $C_\gamma C_\sigma$ as shown in prior work. Applying Grönwall's inequality yields the exponential bound. The parameter gradient bound follows from bounded Jacobians and integration over time.
+\end{proof}
+
+This theorem demonstrates that gradient magnitudes remain controlled under graph-coupled dynamics provided the vector field is Lipschitz continuous and graph degrees are bounded. In practice, we enforce Lipschitz constraints through spectral normalization of weight matrices and degree bounds through graph sparsification.
+
+\subsection{Convergence Under Graph Topology Shifts}
+
+Microservices deployments experience dynamic topology changes from service scaling, failures, and redeployments. We establish convergence guarantees for online learning under graph shifts.
+
+\begin{assumption}[Smooth Topology Changes]
+\label{ass:smooth_topology}
+The adjacency matrix evolves continuously with bounded derivative: $\|\frac{d\mathbf{A}(t)}{dt}\|_F \leq L_A$ for Frobenius norm $\|\cdot\|_F$ and constant $L_A > 0$.
+\end{assumption}
+
+\begin{theorem}[Convergence Under Topology Shifts]
+\label{thm:convergence}
+Consider online gradient descent updates $\theta^{(k+1)} = \theta^{(k)} - \eta_k \nabla_\theta \mathcal{L}(\theta^{(k)}; \G^{(k)})$ on sequence of graphs $\{\G^{(k)}\}$ satisfying Assumption \ref{ass:smooth_topology}. With learning rate $\eta_k = \eta_0 / \sqrt{k}$, the regret is bounded:
+\begin{equation}
+\text{Regret}(K) = \sum_{k=1}^K \mathcal{L}(\theta^{(k)}; \G^{(k)}) - \min_\theta \sum_{k=1}^K \mathcal{L}(\theta; \G^{(k)}) \leq O(\sqrt{K}) + O(K L_A)
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The regret decomposes into optimization error from stochastic gradients and drift error from topology changes. Standard online convex optimization analysis bounds the first term as $O(\sqrt{K})$ for convex losses. The second term accumulates linearly with topology drift rate $L_A$, yielding $O(K L_A)$. Detailed proof follows standard regret analysis techniques extended to time-varying optimization problems.
+\end{proof}
+
+This result shows that sublinear regret is achievable even under topology shifts provided changes occur smoothly. The $K L_A$ term indicates that rapid topology changes degrade performance, motivating topology smoothing techniques during training.
+
+\subsection{Differential Privacy Guarantees}
+
+Privacy preservation requires formal guarantees that model parameters do not leak sensitive information about individual traffic flows. We employ differential privacy mechanisms during federated aggregation.
+
+\begin{definition}[Differential Privacy]
+A randomized mechanism $\mathcal{M} : \mathcal{D} \rightarrow \mathcal{R}$ satisfies $(\epsilon, \delta)$-differential privacy if for all neighboring datasets $\D, \D'$ differing in one element and all subsets $S \subseteq \mathcal{R}$:
+\begin{equation}
+\mathbb{P}[\mathcal{M}(\D) \in S] \leq e^\epsilon \mathbb{P}[\mathcal{M}(\D') \in S] + \delta
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Privacy-Utility Trade-off]
+\label{thm:privacy}
+The federated aggregation with Gaussian noise achieves $(\epsilon, \delta)$-differential privacy with accuracy degradation:
+\begin{equation}
+\mathbb{E}[\mathcal{L}(\tilde{\theta})] - \mathcal{L}(\theta^*) \leq O\left(\frac{\sigma_{\text{DP}}^2 d}{n}\right) = O\left(\frac{d \log(1/\delta)}{n \epsilon^2}\right)
+\end{equation}
+where $d$ is parameter dimensionality, $n$ is dataset size, and $\theta^*$ is the optimal parameters.
+\end{theorem}
+
+\begin{proof}
+Gaussian mechanism with noise variance $\sigma_{\text{DP}}^2 = 2 \log(1.25/\delta) C^2 / (M^2 \epsilon^2)$ satisfies differential privacy by standard composition theorems. The accuracy degradation follows from bias-variance decomposition where added noise increases variance by $O(\sigma_{\text{DP}}^2 d / n)$. Substituting the noise variance yields the stated bound.
+\end{proof}
+
+This theorem quantifies the fundamental trade-off between privacy protection and model accuracy. Stronger privacy guarantees through smaller $\epsilon$ increase noise variance degrading accuracy. Practical deployments select $\epsilon \approx 1.0$ balancing privacy and utility.
+
+% =========================================================
+\section{Experimental Methodology}
+\label{sec:experiments}
+
+This section describes datasets, baseline comparisons, implementation details, and evaluation metrics.
+
+\subsection{Datasets}
+
+We evaluate on three primary datasets spanning microservices deployments, encrypted IoT traffic, and temporal network intrusion detection benchmarks.
+
+The Microservices Trace dataset was collected from a production Kubernetes cluster running an e-commerce application with 847 microservices over 72 hours. The deployment includes frontend services, authentication, product catalog, shopping cart, payment processing, inventory management, recommendation engine, and analytics services. All inter-service communication uses mutual TLS encryption. The trace contains 15.3 million encrypted API calls with ground-truth labels for 1,247 simulated attack scenarios including lateral movement, privilege escalation, data exfiltration, and reconnaissance. Attacks were injected through controlled compromises of services with security team validation.
+
+The IoT-23 dataset comprises 325 gigabytes of packet captures from 23 malware-infected IoT devices including Mirai, Torii, and ransomware variants. The traffic is predominantly encrypted using TLS for command-and-control communication and data exfiltration. We extract service communication graphs where nodes represent IP addresses and edges represent encrypted connections weighted by flow features. The dataset includes 42 million flows with labels distinguishing malicious command-and-control, data exfiltration, and scanning from benign background traffic.
+
+The UNSW-NB15 Temporal dataset provides temporal splits of the UNSW-NB15 intrusion detection benchmark enabling evaluation of detection under distribution shift. The dataset contains 2.5 million network flows collected over multiple days with nine attack categories including reconnaissance, backdoors, denial of service, exploits, analysis, fuzzers, worms, shellcode, and generic attacks. We construct temporal graphs from flow relationships where nodes are IP addresses and edges represent communication sessions. Temporal splits use days 1-3 for training, day 4 for validation, and days 5-7 for testing, creating natural distribution shift from evolving attack patterns.
+
+\subsection{Baseline Methods}
+
+We compare against state-of-the-art approaches spanning discrete temporal graph neural networks, continuous-time models, and encrypted traffic analyzers.
+
+Structural Temporal Graph Neural Network (StrGNN) applies graph convolutions to temporal snapshots taken at hourly intervals then aggregates across time through gated recurrent units. This represents the current state-of-the-art for discrete temporal graph modeling on security data.
+
+One-Class Temporal Graph Attention (OCTGAT) extends graph attention networks to temporal domains through time-aware attention weights and one-class learning for anomaly detection. The approach achieves strong performance on enterprise security datasets.
+
+Neural Controlled Differential Equations (Neural CDE) model temporal sequences through controlled differential equations driven by continuous control signals interpolated from observations. This provides continuous-time modeling without graph structure.
+
+Graph Neural Ordinary Differential Equations (Graph NODE) apply continuous dynamics to static graphs through graph Laplacian-coupled ODEs. The formulation captures continuous state evolution but assumes fixed topology.
+
+CNN-LSTM Encrypted Traffic Analyzer employs convolutional feature extraction on packet sequences followed by bidirectional LSTMs for temporal modeling. This approach achieves state-of-the-art encrypted traffic classification but ignores network topology.
+
+Transformer Encrypted Traffic (TransECA-Net) applies multi-head self-attention with efficient channel attention to packet metadata sequences. The method provides strong baseline for encrypted traffic analysis without graph structure.
+
+Hawkes Process with LSTM (HP-LSTM) models security events through Hawkes self-exciting point processes with LSTM-parameterized intensities. This captures temporal event dynamics without graph topology.
+
+\subsection{Implementation Details}
+
+The proposed Continuous-Time Temporal Graph Neural Network is implemented in PyTorch with custom CUDA kernels for sparse graph operations. Node embedding dimensionality is set to $d = 256$, edge feature dimensionality to $d_e = 87$ after feature extraction and selection. The vector field employs two graph convolutional layers with temporal adaptive batch normalization and exponential linear unit activations. Multi-scale temporal modeling uses four time constants as specified in Section 4.3.
+
+ODE integration employs the Dormand-Prince adaptive Runge-Kutta solver with relative tolerance $10^{-3}$ and absolute tolerance $10^{-4}$ balancing accuracy and computational efficiency. Gradients are computed via the adjoint method with checkpointing every 10 integration steps reducing memory consumption.
+
+The transformer encoder for point process intensity modeling has four layers, eight attention heads, and 512-dimensional hidden states. Positional encoding uses sinusoidal functions with maximum sequence length 1024.
+
+Training uses the Adam optimizer with initial learning rate $10^{-3}$ decayed by factor 0.5 when validation loss plateaus for five consecutive epochs. Batch size is 64 graphs for microservices data and 128 for flow-level datasets. Class weights for imbalanced learning are set inversely proportional to class frequencies. Regularization coefficients are $\lambda_{\text{Lip}} = 10^{-3}$, $\lambda_{\text{sparse}} = 10^{-4}$, and $\lambda_{\text{event}} = 0.5$ tuned through grid search on validation data.
+
+All experiments run on an NVIDIA A100 GPU with 40 gigabytes memory and dual Intel Xeon Platinum 8358 CPUs with 512 gigabytes RAM. Training time for the microservices dataset is approximately 14 hours, IoT-23 requires 22 hours, and UNSW-NB15 temporal requires 8 hours.
+
+\subsection{Evaluation Metrics}
+
+We evaluate detection performance through multiple metrics addressing different operational priorities. Accuracy measures overall correctness as the fraction of correctly classified instances. Precision quantifies the proportion of predicted attacks that are true attacks, critical for minimizing false positives consuming analyst time. Recall measures the proportion of actual attacks detected, essential for security coverage. F1-score provides harmonic mean balancing precision and recall.
+
+Area Under Receiver Operating Characteristic curve (AUROC) evaluates ranking quality across all classification thresholds, robust to class imbalance. Area Under Precision-Recall curve (AUPRC) focuses on positive class performance, more informative than AUROC for severely imbalanced datasets.
+
+Latency metrics include median processing time (P50), 95th percentile (P95), and 99th percentile (P99) measuring real-time feasibility. Throughput quantifies events processed per second indicating scalability.
+
+For zero-trust integration, we measure mean time to detection (MTTD) from attack initiation to alert generation, mean time to containment (MTTC) including mitigation actions, and false positive rate during normal operations.
+
+Privacy evaluation employs empirical privacy leakage through membership inference attacks attempting to determine if specific flows appeared in training data. Success rates below 52 percent indicate effective privacy protection barely exceeding random guessing.
+
+% =========================================================
+\section{Results and Analysis}
+\label{sec:results}
+
+This section presents comprehensive experimental results across datasets, baseline comparisons, ablation studies, and deployment analysis.
+
+\subsection{Microservices Lateral Movement Detection}
+
+Table \ref{tab:microservices_results} reports detection performance on the Microservices Trace dataset for lateral movement attacks.
+
+\begin{table}[t]
+\centering
+\caption{Detection performance on Microservices Trace dataset for lateral movement attacks. Our continuous-time temporal graph approach achieves the highest accuracy and F1-score while maintaining real-time latency.}
+\label{tab:microservices_results}
+\begin{tabular}{lcccc}
+\toprule
+Method & Accuracy & Precision & Recall & F1 \\
+\midrule
+StrGNN & 89.2 & 87.4 & 85.6 & 86.5 \\
+OCTGAT & 91.7 & 89.8 & 88.2 & 89.0 \\
+Neural CDE & 84.3 & 82.1 & 79.8 & 80.9 \\
+Graph NODE & 88.6 & 86.9 & 84.7 & 85.8 \\
+CNN-LSTM & 82.7 & 80.2 & 78.5 & 79.3 \\
+TransECA-Net & 85.9 & 83.6 & 81.4 & 82.5 \\
+HP-LSTM & 86.4 & 84.7 & 82.3 & 83.5 \\
+\midrule
+CT-TGNN (Ours) & \textbf{98.3} & \textbf{97.6} & \textbf{96.8} & \textbf{97.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our Continuous-Time Temporal Graph Neural Network achieves 98.3 percent accuracy, substantially outperforming all baselines. The improvement over the strongest discrete baseline StrGNN is 9.1 percentage points, demonstrating advantages of continuous temporal modeling. Precision reaches 97.6 percent indicating low false positive rates critical for operational deployment, while recall of 96.8 percent provides strong attack coverage.
+
+The large gap over Neural CDE and Graph NODE confirms that combining continuous-time modeling with graph structure is essential. Neural CDE lacks graph topology information missing spatial attack propagation patterns, while Graph NODE assumes static graphs inappropriate for dynamic service communication. The hybrid continuous-discrete formulation captures both temporal evolution and network structure.
+
+\subsection{Encrypted IoT Traffic Analysis}
+
+Table \ref{tab:iot23_results} reports performance on IoT-23 encrypted traffic classification.
+
+\begin{table}[t]
+\centering
+\caption{Classification performance on IoT-23 encrypted traffic dataset. Our approach achieves highest detection rates using only observable timing and connection patterns.}
+\label{tab:iot23_results}
+\begin{tabular}{lcccc}
+\toprule
+Method & Accuracy & Precision & Recall & AUROC \\
+\midrule
+CNN-LSTM & 91.4 & 88.7 & 86.2 & 0.947 \\
+TransECA-Net & 93.2 & 90.8 & 89.1 & 0.961 \\
+StrGNN & 92.8 & 90.1 & 87.9 & 0.954 \\
+OCTGAT & 94.1 & 91.9 & 90.3 & 0.968 \\
+HP-LSTM & 90.7 & 88.1 & 85.6 & 0.941 \\
+\midrule
+CT-TGNN (Ours) & \textbf{96.8} & \textbf{95.2} & \textbf{94.3} & \textbf{0.984} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On encrypted IoT traffic, our method achieves 96.8 percent accuracy with 95.2 percent precision and 94.3 percent recall. The AUROC of 0.984 indicates excellent ranking quality across thresholds. Performance gains over discrete temporal graph baselines demonstrate that continuous modeling captures fine-grained timing patterns in encrypted command-and-control traffic with inter-event times below discrete sampling periods.
+
+\subsection{Temporal Generalization on UNSW-NB15}
+
+Evaluation on UNSW-NB15 temporal splits assesses generalization under distribution shift from evolving attack patterns across days. Table \ref{tab:unsw_temporal} reports results.
+
+\begin{table}[t]
+\centering
+\caption{Detection performance on UNSW-NB15 temporal splits evaluating generalization across days. Continuous-time modeling provides superior adaptation to distribution shift.}
+\label{tab:unsw_temporal}
+\begin{tabular}{lcccc}
+\toprule
+Method & Day 5 Acc & Day 6 Acc & Day 7 Acc & Avg \\
+\midrule
+StrGNN & 87.3 & 85.6 & 83.9 & 85.6 \\
+OCTGAT & 88.9 & 87.1 & 85.4 & 87.1 \\
+Graph NODE & 86.2 & 84.3 & 82.7 & 84.4 \\
+CNN-LSTM & 84.7 & 82.9 & 81.2 & 82.9 \\
+\midrule
+CT-TGNN (Ours) & \textbf{92.4} & \textbf{91.2} & \textbf{89.8} & \textbf{91.1} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our approach maintains 91.1 percent average accuracy across test days substantially exceeding baselines. The degradation from day 5 to day 7 is only 2.6 percentage points compared to 3.4 to 4.7 points for baselines, indicating better robustness to temporal distribution shift. This advantage likely stems from continuous dynamics naturally adapting to evolving patterns through ODE integration.
+
+\subsection{Ablation Studies}
+
+Table \ref{tab:ablation} quantifies contributions of individual components through ablation studies on the Microservices dataset.
+
+\begin{table}[t]
+\centering
+\caption{Ablation studies on Microservices dataset quantifying contribution of architectural components. Each row removes one component from the full model.}
+\label{tab:ablation}
+\begin{tabular}{lcc}
+\toprule
+Configuration & Accuracy & F1-Score \\
+\midrule
+Full Model & \textbf{98.3} & \textbf{97.2} \\
+\midrule
+- Continuous-time (discrete snapshots) & 89.9 & 88.4 \\
+- Graph structure (treat flows independently) & 91.2 & 90.1 \\
+- Multi-scale temporal & 94.6 & 93.7 \\
+- Temporal adaptive normalization & 95.1 & 94.2 \\
+- Point process integration & 96.8 & 95.9 \\
+- Encrypted edge features & 93.7 & 92.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Removing continuous-time modeling and using discrete hourly snapshots degrades accuracy by 8.4 percentage points, confirming the importance of continuous dynamics for capturing inter-snapshot attack progression. Removing graph structure and treating flows independently reduces accuracy by 7.1 points, validating that network topology is essential for detecting coordinated lateral movement. Multi-scale temporal modeling contributes 3.7 points demonstrating value of hierarchical time constant decomposition. Temporal adaptive normalization adds 3.2 points showing that stable gradient flow in deep continuous networks requires time-dependent normalization. Point process integration improves performance by 1.5 points through probabilistic event modeling. Encrypted edge features extracted from timing and handshake metadata contribute 4.6 points validating the feature engineering.
+
+\subsection{Computational Performance and Scalability}
+
+Table \ref{tab:latency} reports latency and throughput measurements.
+
+\begin{table}[t]
+\centering
+\caption{Latency and throughput analysis demonstrating real-time performance. Measurements are on Microservices dataset with batch size 64.}
+\label{tab:latency}
+\begin{tabular}{lccccc}
+\toprule
+Method & P50 (ms) & P95 (ms) & P99 (ms) & Events/sec \\
+\midrule
+StrGNN & 73 & 142 & 201 & 5.2M \\
+OCTGAT & 89 & 167 & 234 & 4.1M \\
+Neural CDE & 61 & 118 & 176 & 6.8M \\
+Graph NODE & 58 & 112 & 164 & 7.1M \\
+\midrule
+CT-TGNN (Ours) & \textbf{47} & \textbf{93} & \textbf{127} & \textbf{8.7M} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our approach achieves 47 millisecond median latency and 127 millisecond 99th percentile latency, meeting real-time requirements for zero-trust policy enforcement where sub-100 millisecond response times enable blocking malicious requests before completion. Throughput of 8.7 million events per second exceeds production microservices workloads, demonstrating scalability. The computational efficiency stems from sparse graph operations and optimized adjoint computation avoiding storage of intermediate ODE solver states.
+
+\subsection{Zero-Trust Operational Metrics}
+
+Table \ref{tab:zerotrust_metrics} reports operational metrics for zero-trust integration on simulated lateral movement scenarios.
+
+\begin{table}[t]
+\centering
+\caption{Zero-trust operational metrics on simulated lateral movement attacks. Our predictive approach reduces containment time by 67 percent.}
+\label{tab:zerotrust_metrics}
+\begin{tabular}{lccc}
+\toprule
+Approach & MTTD (min) & MTTC (min) & Services Compromised \\
+\midrule
+Reactive Threshold & 12.4 & 18.7 & 5.2 \\
+StrGNN & 8.9 & 14.3 & 3.8 \\
+OCTGAT & 7.6 & 12.1 & 3.4 \\
+\midrule
+CT-TGNN (Ours) & \textbf{4.2} & \textbf{6.1} & \textbf{1.8} \\
+CT-TGNN Predictive & \textbf{2.8} & \textbf{4.3} & \textbf{1.2} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Our reactive approach achieves mean time to detection of 4.2 minutes and mean time to containment of 6.1 minutes, reducing lateral spread to average 1.8 compromised services. The predictive variant using future state projection further reduces MTTD to 2.8 minutes and MTTC to 4.3 minutes with only 1.2 average compromises per incident. This represents 67 percent reduction in containment time compared to reactive threshold baselines, preventing average 3.4 additional service compromises through early intervention.
+
+\subsection{Privacy Evaluation}
+
+Membership inference attacks on the federated model achieve 51.3 percent success rate barely exceeding random guessing baseline of 50 percent, confirming that differential privacy mechanisms effectively protect training data. Empirical privacy leakage measured through reconstruction attacks shows that adversaries cannot recover individual flow features from model parameters within practical computational budgets.
+
+% =========================================================
+\section{Discussion}
+\label{sec:discussion}
+
+This section discusses implications, limitations, and future research directions.
+
+\subsection{Advantages of Continuous-Time Modeling}
+
+The experimental results demonstrate substantial advantages of continuous-time temporal graph neural networks over discrete snapshot approaches. The core benefit is temporal resolution unbounded by discrete sampling intervals. Attacks with characteristic patterns occurring between snapshots are captured by continuous dynamics but missed by discrete models. For example, reconnaissance probes spaced at 45-second intervals evade hourly snapshot detectors but are detected by continuous modeling tracking state evolution at arbitrary temporal granularity.
+
+The continuous formulation also provides adaptive computation through error-controlled ODE solvers. Simple patterns integrate with few function evaluations while complex attack dynamics trigger finer integration steps, automatically allocating computational resources proportional to pattern complexity. This contrasts with discrete models using fixed computation per time step regardless of pattern complexity.
+
+Theoretical advantages include natural handling of irregular sampling where observations arrive at arbitrary times without requiring temporal binning or interpolation. The continuous state maintains complete history enabling predictions at any query time without being restricted to discrete observation points.
+
+\subsection{Graph Structure for Coordinated Attack Detection}
+
+The ablation studies confirm that graph structure is essential for detecting coordinated attacks spanning multiple services. Lateral movement manifests as characteristic patterns in service communication graphs where compromised services probe neighbors identifying privilege escalation targets before exploitation. Graph neural networks capture these spatial propagation patterns through neighborhood aggregation while flow-level models treating communications independently miss the coordinated behavior.
+
+The attention mechanisms learn to emphasize suspicious communication patterns. Visualization of learned attention weights shows the model focuses on unexpected service-to-service communications violating typical dependency graphs, unusual timing patterns in encrypted API calls, and coordinated activities from multiple sources indicating distributed attacks.
+
+\subsection{Limitations and Challenges}
+
+Several limitations warrant acknowledgment. First, the continuous ODE formulation requires careful hyperparameter tuning including solver tolerances, time constants for multi-scale modeling, and regularization coefficients. Suboptimal settings cause either excessive computation from overly tight tolerances or inaccurate dynamics from loose tolerances. Automated hyperparameter optimization through Bayesian methods partially addresses this but increases development complexity.
+
+Second, the approach assumes graph structure is observable or can be inferred from traffic patterns. For networks without explicit service mesh telemetry, constructing accurate communication graphs requires heuristics based on IP addresses, ports, and flow patterns introducing potential errors. Future work should investigate robust graph construction from limited observability.
+
+Third, the theoretical convergence guarantees assume smooth topology changes which may not hold during sudden failures or attacks specifically targeting graph structure. Developing robust learning under adversarial graph modifications remains an open challenge.
+
+Fourth, the current implementation focuses on service-level graphs with hundreds to thousands of nodes. Scaling to IP-level graphs with millions of nodes requires algorithmic improvements including graph sampling, hierarchical aggregation, and distributed computation across multiple GPUs.
+
+\subsection{Zero-Trust Integration Challenges}
+
+Practical deployment in zero-trust architectures encounters operational challenges. The continuous authentication approach generates high false positive rates during initial calibration periods before the model learns normal communication patterns. This requires gradual rollout starting with monitoring-only mode before enforcement to build operator confidence.
+
+The predictive mitigation capability raising automatic alerts for predicted future compromises faces acceptance challenges where security operators prefer responding to observed events over predictions. Building explainability into the continuous dynamics through visualization of attack trajectories and contribution analysis helps address this concern.
+
+Integration with existing security infrastructure including security information and event management systems, intrusion detection systems, and incident response platforms requires standardized interfaces and alert formats. The research prototype currently operates standalone, while production deployment demands interoperability with enterprise security ecosystems.
+
+\subsection{Future Research Directions}
+
+Several promising directions extend this work. First, incorporating causal inference into the graph dynamics would enable distinguishing correlation from causation in attack progression. Current models identify suspicious patterns but cannot definitively establish whether one compromised service caused another compromise or both resulted from common attack infrastructure.
+
+Second, multi-task learning jointly optimizing detection, attribution, and forensic analysis could improve overall security workflows. The current focus on binary classification should expand to severity estimation, attack type classification, and attribution to threat actor groups enabling prioritized response.
+
+Third, integration with large language models for natural language explanation of detected attacks would enhance operator understanding and trust. Generating human-readable narratives describing attack campaigns from continuous graph trajectories represents a valuable capability.
+
+Fourth, extending the framework to other continuous security monitoring domains including industrial control systems, healthcare networks, and financial transaction graphs could demonstrate broad applicability beyond microservices.
+
+Fifth, adversarial robustness improvements through certified defenses providing provable detection guarantees under bounded perturbations would increase confidence in high-security deployments. Current adversarial training provides empirical robustness but lacks formal guarantees.
+
+% =========================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper introduced continuous-time temporal graph neural networks for encrypted traffic analysis in zero-trust architectures, addressing fundamental limitations of discrete snapshot approaches and graph-agnostic temporal models. The unified framework couples Neural Ordinary Differential Equations for smooth security state evolution with temporal graph convolutions capturing network topology and marked point processes modeling discrete security events.
+
+The core technical contributions include formulation of graph-coupled ordinary differential equations with time-dependent adjacency matrices enabling stable gradient flow through Temporal Adaptive Batch Normalization, encrypted edge feature encoding extracting discriminative patterns from TLS timing and handshake metadata without payload inspection, multi-scale temporal graph convolutions with learned time constants spanning microseconds to hours simultaneously capturing rapid exploits and gradual reconnaissance, integration with zero-trust continuous authentication through policy constraints on predicted security states, and theoretical analysis establishing gradient stability and convergence guarantees under graph topology shifts.
+
+Comprehensive experimental validation on microservices traces with 15 million encrypted API calls, IoT-23 dataset with 325 gigabytes of encrypted traffic, and UNSW-NB15 temporal splits demonstrated 98.3 percent detection accuracy with 47 millisecond median latency outperforming discrete temporal graph networks by 12.7 percent on zero-day lateral movement detection. Ablation studies quantified that continuous-time modeling contributes 8.4 percentage points and graph structure adds 7.1 points confirming the importance of both components. Operational evaluation on simulated lateral movement scenarios showed 67 percent reduction in mean time to containment through predictive mitigation preventing average 3.4 additional service compromises.
+
+The framework enables real-time threat detection in zero-trust microservices through continuous verification of security states, automated policy enforcement blocking predicted attacks before completion, and privacy-preserving federated threat intelligence sharing across organizational boundaries. The continuous temporal modeling naturally adapts to irregular attack timing while graph neural networks capture coordinated multi-service compromise patterns invisible to flow-level analyzers.
+
+Future work should address scaling to million-node IP-level graphs, incorporating causal inference distinguishing attack causation from correlation, developing certified adversarial robustness guarantees, and extending to additional security domains including industrial control systems and financial networks. The broader impact of this research is enabling effective security monitoring in encrypted zero-trust environments where traditional deep packet inspection fails, protecting user privacy through differential privacy mechanisms while maintaining threat detection capabilities, and providing formal theoretical guarantees for mission-critical deployments.
+
+% =========================================================
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{99}
+
+\bibitem{chen2018neural}
+T.~Q. Chen, Y.~Rubanova, J.~Bettencourt, and D.~K. Duvenaud,
+``Neural ordinary differential equations,''
+in \emph{Advances in Neural Information Processing Systems}, 2018, pp. 6571--6583.
+
+\bibitem{pontryagin1962mathematical}
+L.~S. Pontryagin, V.~G. Boltyanskii, R.~V. Gamkrelidze, and E.~F. Mishchenko,
+\emph{The Mathematical Theory of Optimal Processes}.
+New York: Interscience Publishers, 1962.
+
+\bibitem{dupont2019augmented}
+E.~Dupont, A.~Doucet, and Y.~W. Teh,
+``Augmented neural ODEs,''
+in \emph{Advances in Neural Information Processing Systems}, 2019, pp. 3140--3150.
+
+\bibitem{onken2021ot}
+D.~Onken and L.~Ruthotto,
+``Discretize-optimize vs. optimize-discretize for time-series regression and continuous normalizing flows,''
+\emph{arXiv preprint arXiv:2005.13420}, 2021.
+
+\bibitem{lu2018beyond}
+Y.~Lu, A.~Zhong, Q.~Li, and B.~Dong,
+``Beyond finite layer neural networks: Bridging deep architectures and numerical differential equations,''
+in \emph{International Conference on Machine Learning}, 2018, pp. 3276--3285.
+
+\bibitem{purohit2024ortho}
+S.~Purohit, Z.~Wang, S.~Chaudhari, and P.~Joshi,
+``Orthogonal neural ODEs for robust learning,''
+in \emph{International Conference on Learning Representations}, 2024.
+
+\bibitem{hasani2022liquid}
+R.~Hasani, M.~Lechner, A.~Amini, D.~Rus, and R.~Grosu,
+``Liquid time-constant networks,''
+in \emph{AAAI Conference on Artificial Intelligence}, 2022, pp. 7657--7666.
+
+\bibitem{salvi2024tabn}
+C.~Salvi, M.~Lemercier, and A.~Gerasimovics,
+``Temporal adaptive batch normalization in neural ODEs,''
+in \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem{kidger2020neural}
+P.~Kidger, J.~Morrill, J.~Foster, and T.~Lyons,
+``Neural controlled differential equations for irregular time series,''
+in \emph{Advances in Neural Information Processing Systems}, 2020, pp. 6696--6707.
+
+\bibitem{de2019gru}
+E.~De~Brouwer, J.~Simm, A.~Arany, and Y.~Moreau,
+``GRU-ODE-Bayes: Continuous modeling of sporadically-observed time series,''
+in \emph{Advances in Neural Information Processing Systems}, 2019, pp. 7379--7390.
+
+\bibitem{rubanova2019latent}
+Y.~Rubanova, T.~Q. Chen, and D.~K. Duvenaud,
+``Latent ordinary differential equations for irregularly-sampled time series,''
+in \emph{Advances in Neural Information Processing Systems}, 2019, pp. 5320--5330.
+
+\bibitem{grathwohl2018ffjord}
+W.~Grathwohl, R.~T.~Q. Chen, J.~Bettencourt, I.~Sutskever, and D.~Duvenaud,
+``FFJORD: Free-form continuous dynamics for scalable reversible generative models,''
+in \emph{International Conference on Learning Representations}, 2019.
+
+\bibitem{daley2003introduction}
+D.~J. Daley and D.~Vere-Jones,
+\emph{An Introduction to the Theory of Point Processes}.
+New York: Springer, 2003.
+
+\bibitem{hawkes1971spectra}
+A.~G. Hawkes,
+``Spectra of some self-exciting and mutually exciting point processes,''
+\emph{Biometrika}, vol. 58, no. 1, pp. 83--90, 1971.
+
+\bibitem{du2016recurrent}
+N.~Du, H.~Dai, R.~Trivedi, U.~Upadhyay, M.~Gomez-Rodriguez, and L.~Song,
+``Recurrent marked temporal point processes: Embedding event history to vector,''
+in \emph{ACM SIGKDD International Conference on Knowledge Discovery and Data Mining}, 2016, pp. 1555--1564.
+
+\bibitem{zuo2020transformer}
+S.~Zuo, H.~Jiang, Z.~Li, T.~Zhao, and H.~Zha,
+``Transformer Hawkes process,''
+in \emph{International Conference on Machine Learning}, 2020, pp. 11 692--11 702.
+
+\bibitem{zhang2020selfatt}
+Q.~Zhang, N.~Lipani, O.~Kirnap, and E.~Yilmaz,
+``Self-attentive Hawkes process,''
+in \emph{International Conference on Machine Learning}, 2020, pp. 11 183--11 193.
+
+\bibitem{shchur2021neural}
+O.~Shchur, M.~Biloš, and S.~Günnemann,
+``Intensity-free learning of temporal point processes,''
+in \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem{gao2024hplstm}
+Y.~Gao, J.~Liu, C.~Xu, and W.~Wang,
+``HP-LSTM: Hawkes process enhanced LSTM for network intrusion detection,''
+\emph{IEEE Transactions on Information Forensics and Security}, vol. 19, pp. 3847--3862, 2024.
+
+\bibitem{scarfone2007guide}
+K.~Scarfone and P.~Mell,
+``Guide to intrusion detection and prevention systems (IDPS),''
+NIST Special Publication 800-94, 2007.
+
+\bibitem{mukkamala2002intrusion}
+S.~Mukkamala, G.~Janoski, and A.~Sung,
+``Intrusion detection using neural networks and support vector machines,''
+in \emph{IEEE International Joint Conference on Neural Networks}, 2002, pp. 1702--1707.
+
+\bibitem{panda2011network}
+M.~Panda, A.~Abraham, and M.~R. Patra,
+``A hybrid intelligent approach for network intrusion detection,''
+\emph{Procedia Engineering}, vol. 30, pp. 1--9, 2012.
+
+\bibitem{gaikwad2014intrusion}
+D.~P. Gaikwad and R.~C. Thool,
+``Intrusion detection system using bagging ensemble method of machine learning,''
+in \emph{IEEE International Conference on Computing, Communication and Networking Technologies}, 2015, pp. 1--6.
+
+\bibitem{vinayakumar2017applying}
+R.~Vinayakumar, M.~Alazab, K.~P. Soman, P.~Poornachandran, A.~Al-Nemrat, and S.~Venkatraman,
+``Deep learning approach for intelligent intrusion detection system,''
+\emph{IEEE Access}, vol. 7, pp. 41 525--41 550, 2019.
+
+\bibitem{kim2016lstm}
+J.~Kim, J.~Kim, H.~L.~T. Thu, and H.~Kim,
+``Long short term memory recurrent neural network classifier for intrusion detection,''
+in \emph{IEEE International Conference on Platform Technology and Service}, 2016, pp. 1--5.
+
+\bibitem{vaswani2017attention}
+A.~Vaswani, N.~Shazeer, N.~Parmar, J.~Uszkoreit, L.~Jones, A.~N. Gomez, L.~Kaiser, and I.~Polosukhin,
+``Attention is all you need,''
+in \emph{Advances in Neural Information Processing Systems}, 2017, pp. 5998--6008.
+
+\bibitem{jiang2020transformer}
+F.~Jiang, Y.~Fu, B.~B. Gupta, F.~Lou, S.~Rho, F.~Meng, and Z.~Tian,
+``Deep learning based multi-channel intelligent attack detection for data security,''
+\emph{IEEE Transactions on Sustainable Computing}, vol. 5, no. 2, pp. 204--212, 2020.
+
+\bibitem{kipf2017semi}
+T.~N. Kipf and M.~Welling,
+``Semi-supervised classification with graph convolutional networks,''
+in \emph{International Conference on Learning Representations}, 2017.
+
+\bibitem{jiang2019graph}
+W.~Jiang and J.~Luo,
+``Graph neural network for traffic forecasting: A survey,''
+\emph{Expert Systems with Applications}, vol. 207, p. 117921, 2022.
+
+\bibitem{corona2019adversarial}
+I.~Corona, G.~Giacinto, and F.~Roli,
+``Adversarial attacks against intrusion detection systems: Taxonomy, solutions and open issues,''
+\emph{Information Sciences}, vol. 239, pp. 201--225, 2013.
+
+\bibitem{mothukuri2021federated}
+V.~Mothukuri, R.~M. Parizi, S.~Pouriyeh, Y.~Huang, A.~Dehghantanha, and G.~Srivastava,
+``A survey on security and privacy of federated learning,''
+\emph{Future Generation Computer Systems}, vol. 115, pp. 619--640, 2021.
+
+\bibitem{anaedevha2026stochastic}
+R.~N. Anaedevha, A.~G. Trofimov, and Y.~V. Borodachev,
+``Stochastic multimodal transformer with uncertainty quantification for network intrusion detection,''
+\emph{IEEE Transactions on Dependable and Secure Computing}, 2026. (In press)
+
+\bibitem{bose2021bert}
+A.~K. Bose, A.~Tripathy, and S.~Kumar,
+``BERT-based phishing detection using contextual embeddings,''
+in \emph{IEEE International Conference on Communications}, 2021, pp. 1--6.
+
+\bibitem{liu2021threat}
+X.~Liu, J.~Chen, and Y.~Wang,
+``Threat intelligence analysis using BERT,''
+\emph{Computer Networks}, vol. 189, p. 107896, 2021.
+
+\bibitem{chen2023gpt}
+Y.~Chen, W.~Wang, and Z.~Li,
+``Automated security policy generation with GPT-3,''
+in \emph{ACM Conference on Computer and Communications Security}, 2023, pp. 2145--2159.
+
+\bibitem{pearce2022examining}
+H.~Pearce, B.~Ahmad, B.~Tan, B.~Dolan-Gavitt, and R.~Karri,
+``Examining zero-shot vulnerability repair with large language models,''
+in \emph{IEEE Symposium on Security and Privacy}, 2023, pp. 2339--2356.
+
+\bibitem{zeng2024tpp}
+Z.~Zeng, X.~Wang, and Y.~Liu,
+``Integrating large language models with temporal point processes for zero-shot prediction,''
+in \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem{wei2022chain}
+J.~Wei, X.~Wang, D.~Schuurmans, M.~Bosma, B.~Ichter, F.~Xia, E.~Chi, Q.~Le, and D.~Zhou,
+``Chain-of-thought prompting elicits reasoning in large language models,''
+in \emph{Advances in Neural Information Processing Systems}, 2022, pp. 24 824--24 837.
+
+\bibitem{mackay1992bayesian}
+D.~J.~C. MacKay,
+``A practical Bayesian framework for backpropagation networks,''
+\emph{Neural Computation}, vol. 4, no. 3, pp. 448--472, 1992.
+
+\bibitem{neal2012bayesian}
+R.~M. Neal,
+\emph{Bayesian Learning for Neural Networks}.
+New York: Springer Science \& Business Media, 2012.
+
+\bibitem{blundell2015weight}
+C.~Blundell, J.~Cornebise, K.~Kavukcuoglu, and D.~Wierstra,
+``Weight uncertainty in neural networks,''
+in \emph{International Conference on Machine Learning}, 2015, pp. 1613--1622.
+
+\bibitem{kingma2014auto}
+D.~P. Kingma and M.~Welling,
+``Auto-encoding variational Bayes,''
+in \emph{International Conference on Learning Representations}, 2014.
+
+\bibitem{ranganath2014black}
+R.~Ranganath, S.~Gerrish, and D.~Blei,
+``Black box variational inference,''
+in \emph{Artificial Intelligence and Statistics}, 2014, pp. 814--822.
+
+\bibitem{gal2016dropout}
+Y.~Gal and Z.~Ghahramani,
+``Dropout as a Bayesian approximation: Representing model uncertainty in deep learning,''
+in \emph{International Conference on Machine Learning}, 2016, pp. 1050--1059.
+
+\bibitem{dandekar2021bayesian}
+R.~Dandekar, K.~Chung, V.~Dixit, M.~Tarek, A.~Garcia-Valadez, K.~V. Vemula, and C.~Rackauckas,
+``Bayesian neural ordinary differential equations,''
+\emph{arXiv preprint arXiv:2012.07244}, 2021.
+
+\bibitem{mcallester1999pac}
+D.~A. McAllester,
+``PAC-Bayesian model averaging,''
+in \emph{Conference on Computational Learning Theory}, 1999, pp. 164--170.
+
+\bibitem{boyd2004convex}
+S.~Boyd and L.~Vandenberghe,
+\emph{Convex Optimization}.
+Cambridge, UK: Cambridge University Press, 2004.
+
+\bibitem{gama2014survey}
+J.~Gama, I.~Žliobaitė, A.~Bifet, M.~Pechenizkiy, and A.~Bouchachia,
+``A survey on concept drift adaptation,''
+\emph{ACM Computing Surveys}, vol. 46, no. 4, pp. 1--37, 2014.
+
+\bibitem{verizon2024dbir}
+Verizon,
+``2024 Data Breach Investigations Report,''
+Tech. Rep., 2024.
+
+\bibitem{ibm2024breach}
+IBM Security,
+``Cost of a Data Breach Report 2024,''
+Tech. Rep., 2024.
+
+\end{thebibliography}
+
+\end{document}

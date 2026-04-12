@@ -1,0 +1,119 @@
+% TikZ Diagram: Game-Theoretic Framework Architecture - Strategic Adversarial Modeling
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.88,
+    every node/.style={font=\small},
+    playerbox/.style={rectangle, draw=primaryblue, very thick, fill=primaryblue!10,
+                      rounded corners, minimum width=3cm, minimum height=1.1cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.7cm, minimum height=0.8cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2.5cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10.5) {Game-Theoretic Defense Framework};
+
+% Network State
+\node[databox] (state) at (0, 9) {Network State\\$\mathbf{s}_t$};
+
+% Two Players - Stackelberg Game
+\node[font=\bfseries, primaryblue] at (-4, 7.5) {Defender (Leader)};
+\node[font=\bfseries, red] at (4, 7.5) {Attacker (Follower)};
+
+% Defender Components
+\node[playerbox] (defender) at (-4, 6.2) {\textbf{Defender Strategy}\\$\pi_D: \mathcal{S} \rightarrow \mathcal{A}_D$};
+\node[componentbox] (d1) at (-4, 4.5) {Policy Network\\$\pi_\theta^D$};
+\node[componentbox] (d2) at (-4, 3) {Value Function\\$V^D(\mathbf{s})$};
+\node[componentbox] (d3) at (-4, 1.5) {Multiplicative\\Weights Update};
+
+% Attacker Components
+\node[playerbox, draw=red, fill=red!10] (attacker) at (4, 6.2) {\textbf{Attacker Strategy}\\$\pi_A: \mathcal{S} \rightarrow \mathcal{A}_A$};
+\node[componentbox, draw=red!70] (a1) at (4, 4.5) {Best Response\\$\text{BR}(\pi_D)$};
+\node[componentbox, draw=red!70] (a2) at (4, 3) {Attack Cost\\$c_A(\mathbf{a})$};
+\node[componentbox, draw=red!70] (a3) at (4, 1.5) {Reward\\$R_A(\mathbf{s}, \mathbf{a})$};
+
+% Equilibrium Computation
+\node[componentbox, minimum width=9cm] (equilibrium) at (0, 0) {
+    Nash Equilibrium: $\pi_D^*, \pi_A^* = \argmax_{\pi_D} \min_{\pi_A} \mathbb{E}[R_D - R_A]$
+};
+
+% Online Learning
+\node[componentbox] (online) at (-4, -1.5) {No-Regret\\Learning};
+\node[componentbox] (adapt) at (4, -1.5) {Adaptive\\Attacks};
+
+% Decision Making
+\node[databox] (decision) at (0, -3) {Defense Action\\$\mathbf{a}_t^D$};
+
+% Environment Update
+\node[componentbox] (env) at (0, -4.5) {Environment\\Transition};
+
+% Reward Signal
+\node[databox] (reward) at (0, -6) {Reward Signal\\$R_t$};
+
+% Performance Box
+\node[databox, minimum width=3.5cm, minimum height=1.8cm] (perf) at (8, 5) {\footnotesize \textbf{Performance:}\\94.7\% equilibrium accuracy\\$O(\sqrt{T}\log|\mathcal{A}|)$ regret\\Convergence guaranteed};
+
+% Arrows from state
+\draw[arrow, accentorange] (state) -- ++(-4,-0.8) -- (defender);
+\draw[arrow, accentorange] (state) -- ++(4,-0.8) -- (attacker);
+
+% Defender flow
+\draw[arrow, primaryblue] (defender) -- (d1);
+\draw[arrow, primaryblue] (d1) -- (d2);
+\draw[arrow, primaryblue] (d2) -- (d3);
+
+% Attacker flow
+\draw[arrow, red] (attacker) -- (a1);
+\draw[arrow, red] (a1) -- (a2);
+\draw[arrow, red] (a2) -- (a3);
+
+% To equilibrium
+\draw[arrow, secondaryblue] (d3) -- (equilibrium);
+\draw[arrow, red!70] (a3) -- (equilibrium);
+
+% From equilibrium
+\draw[arrow, primaryblue] (equilibrium) -- (online);
+\draw[arrow, red] (equilibrium) -- (adapt);
+
+% To decision
+\draw[arrow, secondaryblue] (online) -- (decision);
+\draw[arrow, red!70] (adapt) -- (decision);
+
+% Environment loop
+\draw[arrow, primaryblue] (decision) -- (env);
+\draw[arrow, accentorange] (env) -- (reward);
+
+% Feedback loop
+\draw[arrow, darkgreen] (reward) -- ++(5,0) |- (state);
+\node[font=\footnotesize, darkgreen] at (6, 1) {Feedback\\Loop};
+
+% Strategic interaction
+\draw[darrow, darkgreen] (d1.east) -- (a1.west);
+\node[font=\footnotesize, darkgreen] at (0, 4.5) {Strategic\\Interaction};
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-8, -3) {
+    \textbf{Game Components:}\\
+    $\bullet$ Stackelberg equilibrium\\
+    $\bullet$ Best response computation\\
+    $\bullet$ Multiplicative weights\\
+    $\bullet$ No-regret learning\\
+    $\bullet$ Online adaptation
+};
+
+% Mathematical formulation
+\node[font=\footnotesize, align=center] at (0, -7) {
+    Regret Bound: $\text{Regret}_T = \sum_{t=1}^T R_t(\mathbf{a}^*) - R_t(\mathbf{a}_t) = O\left(\sqrt{T \log |\mathcal{A}|}\right)$
+};
+
+% Best response arrow annotation
+\node[font=\tiny, red] at (4, 5.3) {Follower observes\\leader's strategy};
+
+\end{tikzpicture}
+\caption{Game-theoretic defense framework modeling adversarial interactions as Stackelberg games with online learning. The defender acts as leader optimizing defense policy while anticipating attacker best responses, achieving 94.7\% accuracy at Nash equilibrium with $O(\sqrt{T}\log|\mathcal{A}|)$ regret bound through multiplicative weights updates and no-regret learning algorithms.}
+\label{fig:game_theoretic_arch}
+\end{figure}

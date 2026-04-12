@@ -1,0 +1,95 @@
+% TikZ Diagram: TripleE-TGNN Architecture - Triple-Embedding Temporal Graph Neural Networks
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    scale=0.85,
+    every node/.style={font=\small},
+    layerbox/.style={rectangle, draw=primaryblue, thick, fill=primaryblue!10,
+                     rounded corners, minimum width=2.5cm, minimum height=1cm, align=center},
+    componentbox/.style={rectangle, draw=secondaryblue, thick, fill=secondaryblue!5,
+                        rounded corners, minimum width=2.2cm, minimum height=0.8cm, align=center},
+    databox/.style={rectangle, draw=accentorange, thick, fill=accentorange!10,
+                   rounded corners, minimum width=2cm, minimum height=0.6cm, align=center},
+    arrow/.style={->, >=stealth, thick},
+    darrow/.style={<->, >=stealth, thick, dashed}
+]
+
+% Title
+\node[font=\Large\bfseries] at (0, 10.5) {TripleE-TGNN Architecture};
+
+% Input Layer
+\node[databox] (input) at (0, 9) {Microservices\\Telemetry};
+
+% Three Granularity Levels
+\node[font=\bfseries, primaryblue] at (-4.5, 7.5) {Service-Level};
+\node[font=\bfseries, primaryblue] at (0, 7.5) {Trace-Level};
+\node[font=\bfseries, primaryblue] at (4.5, 7.5) {Node-Level};
+
+% Service-Level Branch
+\node[layerbox] (s1) at (-4.5, 6.5) {Service\\Graph $\mathcal{G}_s$};
+\node[componentbox] (s2) at (-4.5, 5) {Heterogeneous\\GAT};
+\node[componentbox] (s3) at (-4.5, 3.5) {Temporal\\Aggregation};
+
+% Trace-Level Branch
+\node[layerbox] (t1) at (0, 6.5) {Trace\\Graph $\mathcal{G}_t$};
+\node[componentbox] (t2) at (0, 5) {Span\\Embeddings};
+\node[componentbox] (t3) at (0, 3.5) {Causal\\Dependencies};
+
+% Node-Level Branch
+\node[layerbox] (n1) at (4.5, 6.5) {Node\\Graph $\mathcal{G}_n$};
+\node[componentbox] (n2) at (4.5, 5) {Resource\\Monitoring};
+\node[componentbox] (n3) at (4.5, 3.5) {Anomaly\\Features};
+
+% Cross-Granularity Attention
+\node[layerbox, minimum width=11cm, minimum height=1.2cm] (cross) at (0, 2) {
+    Cross-Granularity Attention $\mathbf{h}^{(fusion)} = \text{Attention}(\mathbf{h}^{(s)}, \mathbf{h}^{(t)}, \mathbf{h}^{(n)})$
+};
+
+% Classification Layer
+\node[componentbox] (classify) at (0, 0.5) {Multi-Class\\Classification};
+
+% Output
+\node[databox] (output) at (0, -0.8) {Attack Type\\Detection};
+
+% Performance Box
+\node[databox, minimum width=3.5cm] (perf) at (7.5, 3.5) {\footnotesize \textbf{Performance:}\\96.8\% Accuracy\\8.3\% over baselines\\94.7\% under evolution};
+
+% Arrows - Input to three branches
+\draw[arrow, accentorange] (input) -- ++(-4.5,-0.5) -- (s1);
+\draw[arrow, accentorange] (input) -- (t1);
+\draw[arrow, accentorange] (input) -- ++(4.5,-0.5) -- (n1);
+
+% Arrows within branches
+\draw[arrow, secondaryblue] (s1) -- (s2);
+\draw[arrow, secondaryblue] (s2) -- (s3);
+\draw[arrow, secondaryblue] (t1) -- (t2);
+\draw[arrow, secondaryblue] (t2) -- (t3);
+\draw[arrow, secondaryblue] (n1) -- (n2);
+\draw[arrow, secondaryblue] (n2) -- (n3);
+
+% Arrows to cross-attention
+\draw[arrow, primaryblue] (s3) -- (cross);
+\draw[arrow, primaryblue] (t3) -- (cross);
+\draw[arrow, primaryblue] (n3) -- (cross);
+
+% Arrows to output
+\draw[arrow, secondaryblue] (cross) -- (classify);
+\draw[arrow, primaryblue] (classify) -- (output);
+
+% Cross-granularity dependencies
+\draw[darrow, darkgreen] (s2.east) -- (t2.west);
+\draw[darrow, darkgreen] (t2.east) -- (n2.west);
+
+% Legend
+\node[font=\footnotesize, align=left, draw=darkgreen, thick, rounded corners, fill=darkgreen!5] at (-4.5, -2.5) {
+    \textbf{Multi-Granularity Modeling:}\\
+    $\bullet$ Service: Logical dependencies\\
+    $\bullet$ Trace: Request flow paths\\
+    $\bullet$ Node: Infrastructure metrics\\
+    $\bullet$ Cross-attention fusion
+};
+
+\end{tikzpicture}
+\caption{TripleE-TGNN architecture with three parallel embedding streams processing service-level, trace-level, and node-level graph representations. Cross-granularity attention mechanisms fuse information across temporal scales, achieving 96.8\% detection accuracy on microservices intrusions with 8.3\% improvement over single-granularity approaches.}
+\label{fig:triplee_tgnn_arch}
+\end{figure>
