@@ -1,0 +1,206 @@
+# Configuration File for TA-BN-ODE Intrusion Detection System
+# Paper: "Temporal Adaptive Neural Ordinary Differential Equations with
+#         Deep Spatio-Temporal Point Processes for Real-Time Network Intrusion Detection"
+# Authors: Roger Nick Anaedevha, Alexander Gennadevich Trofimov, Yuri Vladimirovich Borodachev
+# Submitted: IEEE Transactions on Neural Networks and Learning Systems, Nov 2025
+
+# ============================================================================
+# Model Architecture
+# ============================================================================
+model:
+  name: "TA-BN-ODE-PP"
+  hidden_dim: 256  # Hidden dimension
+  n_ode_blocks: 2  # Number of ODE blocks
+  ode_layers: 2    # Layers per ODE function
+  solver: "dopri5" # ODE solver (dopri5, euler, rk4)
+  rtol: 1.0e-3     # Relative tolerance
+  atol: 1.0e-4     # Absolute tolerance
+
+  # Multi-scale time constants (8 orders of magnitude)
+  time_constants: [1.0e-6, 1.0e-3, 1.0, 3600.0]  # microseconds to hours
+
+  # Point Process configuration
+  point_process:
+    d_model: 256
+    nhead: 8
+    num_layers: 4
+    n_quadrature: 32  # For logarithmic barrier approximation
+    barrier_strength: 1.0e-6
+
+  # Bayesian inference
+  bayesian:
+    enabled: true
+    rank: 10  # Low-rank covariance approximation
+    prior_std: 1.0
+    n_samples: 10  # Monte Carlo samples
+
+# ============================================================================
+# Training Configuration
+# ============================================================================
+training:
+  # Hyperparameters (from paper supplementary)
+  batch_size: 256
+  num_epochs: 50
+  learning_rate: 1.0e-3
+  lr_min: 1.0e-5
+  lr_scheduler: "cosine"  # Cosine annealing
+
+  # Optimizer
+  optimizer: "AdamW"
+  weight_decay: 1.0e-4
+  beta1: 0.9
+  beta2: 0.999
+
+  # Gradient clipping
+  max_grad_norm: 1.0
+
+  # Early stopping
+  patience: 10
+  min_delta: 1.0e-4
+
+  # Mixed precision
+  use_amp: true
+
+# ============================================================================
+# Online Learning Configuration (Algorithm 2)
+# ============================================================================
+online_learning:
+  enabled: true
+  ema_rate: 0.98  # ρ in paper
+  ewc_weight: 5.0e-3  # η in paper
+  buffer_size: 1000
+  psi_threshold: 0.2  # PSI drift detection threshold
+
+  # Differential Privacy
+  use_dp: false
+  dp_epsilon: 1.0
+  dp_delta: 1.0e-5
+
+# ============================================================================
+# Calibration Configuration
+# ============================================================================
+calibration:
+  enabled: true
+  target_ece: 0.017  # Expected Calibration Error target
+  target_coverage: 0.917  # 91.7% coverage for 95% intervals
+  n_bins: 10
+
+# ============================================================================
+# LLM Integration
+# ============================================================================
+llm:
+  enabled: false  # Set to true if Llama-3.1-8B-Instruct available
+  model_name: "meta-llama/Llama-3.1-8B-Instruct"
+  fusion_dim: 128
+  use_chain_of_thought: true
+
+# ============================================================================
+# Dataset Configuration
+# ============================================================================
+dataset:
+  # Dataset selection
+  name: "Edge-IIoT"  # Options: Container, Edge-IIoT, GUIDE-SOC, CIC-IDS2018, UNSW-NB15, CIC-IoT-2023
+
+  # Data splits
+  test_size: 0.2
+  val_size: 0.1
+  random_state: 42
+
+  # Sampling (for testing)
+  sample_size: null  # Set to integer for smaller dataset (e.g., 100000)
+
+  # Data preprocessing
+  scaler: "standard"  # standard, robust, minmax
+  handle_imbalance: false
+  oversample_minority: false
+
+# ============================================================================
+# Evaluation Configuration
+# ============================================================================
+evaluation:
+  # Metrics to compute
+  compute_detection: true
+  compute_calibration: true
+  compute_throughput: true
+  compute_latency: true
+  compute_per_class: true
+
+  # Performance targets (from paper)
+  targets:
+    accuracy: 0.986  # 98.6% for Edge-IIoT
+    f1_score: 0.98
+    ece: 0.017
+    throughput_million_per_sec: 12.3
+    median_latency_ms: 8.2
+    p99_latency_ms: 22.9
+    parameters_millions: 2.3
+
+  # Latency measurement
+  latency_samples: 1000
+  warmup_batches: 10
+
+# ============================================================================
+# Reproducibility
+# ============================================================================
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false
+
+  # Git tracking
+  track_git_commit: true
+  save_code_snapshot: true
+
+  # Environment
+  save_environment: true
+
+# ============================================================================
+# Checkpointing and Logging
+# ============================================================================
+checkpointing:
+  save_dir: "./checkpoints"
+  save_best: true
+  save_last: true
+  save_frequency: 5  # Save every N epochs
+
+  # What to save
+  save_model: true
+  save_optimizer: true
+  save_scheduler: true
+  save_metrics: true
+
+logging:
+  log_dir: "./logs"
+  log_frequency: 100  # Log every N batches
+
+  # Tensorboard
+  use_tensorboard: true
+  tensorboard_dir: "./runs"
+
+  # Wandb (optional)
+  use_wandb: false
+  wandb_project: "ta-bn-ode-intrusion-detection"
+  wandb_entity: null
+
+# ============================================================================
+# Hardware Configuration
+# ============================================================================
+hardware:
+  device: "cuda"  # cuda, cpu, mps
+  cuda_device: 0
+  num_workers: 4
+  pin_memory: true
+
+  # Multi-GPU
+  distributed: false
+  world_size: 1
+  rank: 0
+
+# ============================================================================
+# Experiment Tracking
+# ============================================================================
+experiment:
+  name: "ta-bn-ode-edge-iiot"
+  version: "v10ca"
+  description: "TA-BN-ODE with Point Process on Edge-IIoT dataset"
+  tags: ["intrusion-detection", "neural-ode", "point-process", "bayesian"]
