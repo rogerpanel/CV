@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ct-explain"
+version = "0.1.0"
+description = "Explainable Continuous-Time Dynamic Graph Neural Networks with Conformal Safety Certification for Human-AI Collaborative Intrusion Detection in SOCs."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.10"
+authors = [{ name = "Roger Nick Anaedevha" }]
+keywords = [
+    "intrusion-detection",
+    "graph-neural-networks",
+    "neural-ode",
+    "conformal-prediction",
+    "explainable-ai",
+    "security-operations-center",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Security",
+]
+dynamic = ["dependencies"]
+
+[tool.setuptools.packages.find]
+include = ["ct_explain*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project.scripts]
+ct-explain-train    = "ct_explain.cli:train_cmd"
+ct-explain-evaluate = "ct_explain.cli:evaluate_cmd"
+ct-explain-explain  = "ct_explain.cli:explain_cmd"
+ct-explain-certify  = "ct_explain.cli:certify_cmd"
