@@ -1,0 +1,60 @@
+# Dataset manifest.
+# Kaggle bundle DOIs referenced in the manuscript.
+
+bundles:
+  general:
+    doi: 10.34740/kaggle/dsv/12483891
+    description: Traditional network flow datasets covering IoT, enterprise, hybrid.
+    datasets:
+      - key: cic-iot-2023
+        display_name: CIC-IoT-2023
+        year: 2023
+        expected_rows: 46600000
+        num_attack_classes: 33
+      - key: cse-cicids-2018
+        display_name: CSE-CICIDS2018
+        year: 2018
+        expected_rows: 16200000
+        num_attack_classes: 14
+      - key: unsw-nb15
+        display_name: UNSW-NB15
+        year: 2015
+        expected_rows: 2500000
+        num_attack_classes: 9
+  cloud-edge:
+    doi: 10.34740/KAGGLE/DSV/12479689
+    description: Cloud-native, container, industrial-edge security telemetry.
+    datasets:
+      - key: ms-guide-2024
+        display_name: MS GUIDE
+        year: 2024
+        expected_rows: 13000000
+        num_attack_classes: 15
+      - key: container-nid
+        display_name: Container-NID
+        year: 2023
+        expected_rows: 4800000
+        num_attack_classes: 8
+      - key: edge-iiot
+        display_name: Edge-IIoT
+        year: 2022
+        expected_rows: 1100000
+        num_attack_classes: 5
+
+split:
+  strategy: chronological
+  ratios: [0.70, 0.15, 0.15]
+
+preprocessing:
+  feature_dim: 83
+  identifier_cols:
+    - src_ip
+    - dst_ip
+    - src_port
+    - dst_port
+    - timestamp
+    - flow_id
+    - label
+    - attack_category
+    - attack
+  standardize: zscore

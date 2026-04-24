@@ -1,0 +1,65 @@
+# CT-Explain default configuration.
+# Every hyperparameter referenced in the manuscript appears here so the
+# experiments can be reproduced with a single config edit.
+
+seed: 20260101
+
+model:
+  backbone: sde_tgnn            # ct_tgnn | sde_tgnn
+  node_feat_dim: 83             # 83 engineered flow features
+  edge_feat_dim: 83
+  hidden_dim: 128               # d_h
+  num_classes: 34               # 33 attack types + benign
+  num_heads: 4
+  time_dim: 32                  # d_φ
+  dropout: 0.1
+  ode_solver: dopri5
+  rtol: 1.0e-3
+  atol: 1.0e-4
+  adjoint: true
+  integration_window: 1.0
+  diffusion_scale: 0.1          # σ_ψ scaling (sde_tgnn only)
+
+training:
+  epochs: 10
+  lr: 3.0e-4
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  loss:
+    use_focal: true
+    focal_gamma: 2.0
+    lambda_faith: 0.0
+    lambda_cost: 0.0
+    lambda_width: 0.0
+  batch_graphs_per_epoch: 8
+  events_per_graph: 2048
+
+conformal:
+  alpha: 0.05                   # target miscoverage
+  k_hops: 2
+  lambda_cascade: 0.5
+  martingale_lr: 0.1
+
+explain:
+  solver_steps: 8
+  counterfactual:
+    max_iters: 200
+    lr: 0.05
+    l2_weight: 1.0
+  game_theory:
+    detection_cost: 0.1         # λ in U_D
+    perturbation_cost: 0.5      # μ in U_A
+
+evaluation:
+  cal_test_splits: 20           # bootstrap splits for CI
+  top_k_ablation: 10            # F-Fidelity top-k
+  num_bins_ece: 15
+
+integration:
+  robustidps:
+    enabled: true
+    registry_key: ct_explain
+
+paths:
+  data_root: ./data
+  runs_root: ./runs
