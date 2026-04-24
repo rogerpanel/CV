@@ -75,11 +75,16 @@ Module map:
 ## 2. Installation
 
 ```bash
-cd ct_explain
+cd CT-Explain
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
+
+Prefer a single-file download? Grab `CT-Explain.zip` (repo root or inside
+the `CT-Explain/` folder) — it contains the whole `CT-Explain/` directory
+so reviewers can reproduce the manuscript without cloning the full CV
+monorepo.
 
 Minimum Python 3.10. GPU is optional; the CT-TGNN backbone works on CPU at
 reduced throughput. Heavy dependencies (`torchdiffeq`, `torch_geometric`,
