@@ -66,3 +66,7 @@ This document maps the manuscript sections to source-code locations.
 | §6.1 IDS datasets | `benchmarks/ids/*.py` |
 | §6.2 Baselines | `baselines/` |
 | §7 Multi-axis achievement profile | `scripts/evaluate.py` (metrics + certificate emission) |
+| Cross-silo Flower runtime | `fedloraguard/federated/runtime_flower.py` |
+| Real-LoRA training | `benchmarks/lorachain_2026/real/` |
+| Figure 3 / 4 / 5 renderers | `fedloraguard/viz/` + `scripts/render_figures.py` |
+| Production observability | `fedloraguard/observability/` (logging + metrics) |

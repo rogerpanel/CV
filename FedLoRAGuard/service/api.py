@@ -29,11 +29,15 @@ from fedloraguard.encoders.spectral import weight_features
 from fedloraguard.encoders.text import TextEncoder
 from fedloraguard.encoders.behavioral import BehavioralEncoder
 from fedloraguard.models.verifier import build_verifier
+from fedloraguard.observability import get_logger, get_metrics
 from fedloraguard.privacy.certified_radius import certified_poisoning_radius
 from fedloraguard.utils import load_config
 
 from .schema import AdapterPayload, CertificateOut, ScanResponse
 from .mitre_mapper import map_to_mitre_attck, map_to_owasp_llm
+
+LOG = get_logger("fedloraguard.service")
+METRICS = get_metrics()
 
 CHECKPOINT_DIR = Path(os.environ.get("FEDLORAGUARD_CHECKPOINTS", "/checkpoints"))
 CONFIG_PATH = Path(
@@ -68,18 +72,40 @@ def _load_checkpoint() -> Dict[str, Any]:
     }
 
 
-app = FastAPI(title="FedLoRAGuard scan service", version="0.1.0")
 _state: Dict[str, Any] = {}
 
 
-@app.on_event("startup")
-def _startup() -> None:
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def _lifespan(app):
     _state.update(_load_checkpoint())
+    LOG.info("service.started", checkpoints=str(CHECKPOINT_DIR), config=str(CONFIG_PATH))
+    yield
+    _state.clear()
+    LOG.info("service.stopped")
+
+
+app = FastAPI(title="FedLoRAGuard scan service", version="0.1.0", lifespan=_lifespan)
 
 
 @app.get("/healthz")
 def healthz() -> JSONResponse:
     return JSONResponse({"status": "ok"})
+
+
+@app.get("/readyz")
+def readyz() -> JSONResponse:
+    if not _state:
+        return JSONResponse({"status": "not_ready"}, status_code=503)
+    return JSONResponse({"status": "ready"})
+
+
+@app.get("/metrics")
+def metrics_endpoint() -> JSONResponse:
+    return JSONResponse(content=METRICS.render(),
+                        media_type="text/plain; version=0.0.4")
 
 
 @app.get("/info")
@@ -157,6 +183,12 @@ def scan_adapter(payload: AdapterPayload) -> ScanResponse:
     latency_ms = (time.perf_counter() - t0) * 1e3
 
     verdict = "malicious" if p_mal >= THRESHOLD else "benign"
+    METRICS.inc_counter("fedloraguard_scans_total", verdict=verdict)
+    METRICS.observe_histogram("fedloraguard_scan_latency_ms", latency_ms)
+    METRICS.observe_histogram("fedloraguard_p_malicious", p_mal)
+    LOG.info("scan.completed",
+             adapter_id=payload.adapter_id, verdict=verdict,
+             p_malicious=p_mal, k_star=k_star, latency_ms=latency_ms)
     return ScanResponse(
         adapter_id=payload.adapter_id,
         p_malicious=p_mal,

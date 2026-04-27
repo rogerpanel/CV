@@ -28,10 +28,16 @@ setup(
         "networkx>=3.1",
     ],
     extras_require={
-        "fed": ["flwr>=1.7.0"],
+        "fed":   ["flwr>=1.7.0"],
         "graph": ["torch-geometric>=2.4.0"],
         "service": ["fastapi>=0.104.0", "uvicorn[standard]>=0.24.0"],
-        "text": ["sentence-transformers>=2.2.2", "transformers>=4.35.0"],
+        "text":  ["sentence-transformers>=2.2.2", "transformers>=4.35.0"],
+        "viz":   ["matplotlib>=3.8.0"],
+        "obs":   ["prometheus_client>=0.18.0"],
+        "real":  [
+            "transformers>=4.35.0", "peft>=0.7.0", "datasets>=2.14.0",
+            "bitsandbytes>=0.41.0", "accelerate>=0.24.0",
+        ],
     },
     license="MIT",
     classifiers=[

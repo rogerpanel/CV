@@ -40,21 +40,26 @@ FedLoRAGuard/
 │   ├── graph/                     # heterogeneous CT-DG schema, builder, neighbor sampler
 │   ├── encoders/                  # multimodal weight / text / behavioral feature encoders
 │   ├── models/                    # DyGFormer, HGT relation-aware attention, DyG-Mamba, verifier
-│   ├── federated/                 # client / server / SecAgg / FLTrust / Flower runtime
+│   ├── federated/                 # client / server / SecAgg / FLTrust / single-process & Flower runtimes
 │   ├── privacy/                   # DP-SGD, RDP & PRV accountants, Theorem 1, Theorem 2
 │   ├── calibration/               # temperature / Platt scaling, ECE / Brier
 │   ├── investigation/             # DQN active-investigation hook (RobustIDPS.ai bridge)
-│   └── utils/                     # seeds, logging, metrics
+│   ├── observability/             # structured JSON logging + Prometheus metrics
+│   ├── viz/                       # Figure 3 / 4 / 5 renderers
+│   └── utils/                     # seeds, config loader, metrics
 ├── benchmarks/
 │   ├── lorachain_2026/            # synthetic 13,500-adapter LoRAchain-2026 generator
+│   │   └── real/                  # opt-in PEFT-based real-LoRA training (Llama / Mistral / Qwen)
 │   └── ids/                       # CIC-IDS2017, Edge-IIoTset, UNSW-NB15, TON_IoT loaders
 ├── baselines/                     # PEFTGuard, ShadowGenes, FedAvg-MLP, DP-FedAvg-MLP,
 │                                  # FedGraphNN-HGT, Krum-DyGFormer
 ├── configs/                       # default / smoke / full / ablation YAMLs
-├── scripts/                       # build_benchmark, train_federated, evaluate, ablation, …
-├── service/                       # FastAPI /scan_adapter endpoint + Dockerfile
-├── tests/                         # unit & smoke tests
-├── docs/                          # ARCHITECTURE, DATASETS, HYPERPARAMETERS, ALGORITHMS, INTEGRATION
+├── scripts/                       # build_benchmark, train_federated, evaluate, ablation,
+│                                  # render_figures, compute_certificate, download_ids_datasets
+├── service/                       # FastAPI scan service + MITRE ATT&CK / OWASP LLM mapper + Dockerfile
+├── tests/                         # unit, service, viz, observability, smoke tests
+├── docs/                          # ARCHITECTURE, DATASETS, HYPERPARAMETERS, ALGORITHMS,
+│                                  # INTEGRATION, PRODUCTION
 ├── requirements.txt
 ├── setup.py
 ├── REPRODUCIBILITY.md
@@ -105,18 +110,66 @@ radius `k* = 8`) within ±0.3 pp on three random seeds (42, 137, 2026).
 
 ## Production deployment as a RobustIDPS.ai LoRA-integrity module
 
-A FastAPI service that exposes `/scan_adapter` and `/healthz` is provided in
-`service/`, and is intended to be plugged into the existing `robustidps_web_app`
-docker-compose stack as a sibling container. See `docs/INTEGRATION.md`.
+A FastAPI service exposing `/scan_adapter`, `/healthz`, `/readyz`, `/info`,
+`/metrics` is provided in `service/` and plugs into the existing
+`robustidps_web_app` docker-compose stack as a sibling container. See
+`docs/INTEGRATION.md` (RobustIDPS.ai shim) and `docs/PRODUCTION.md`
+(industrial deployment shape, hardening checklist, observability).
 
 ```bash
-cd service
-docker build -t fedloraguard-svc .
-docker run -p 8000:8000 -v $(pwd)/../runs/full:/checkpoints fedloraguard-svc
+docker compose up --build fedloraguard-svc
 curl -X POST http://localhost:8000/scan_adapter \
     -H "Content-Type: application/json" \
-    -d @examples/adapter.json
+    -d @docs/examples/adapter.json
+curl http://localhost:8000/metrics      # Prometheus metrics
 ```
+
+## Cross-silo federated training (Flower)
+
+For real federation across LoRA marketplaces, the package ships a Flower
+runtime adapter:
+
+```bash
+pip install 'fedloraguard[fed]'
+
+# Coordinator (consortium server)
+python -m fedloraguard.federated.runtime_flower coordinator \
+    --config configs/full.yaml --address 0.0.0.0:9091
+
+# Each marketplace client
+python -m fedloraguard.federated.runtime_flower client \
+    --config configs/full.yaml --client-id 0 \
+    --data /var/lib/fedloraguard/client_graphs \
+    --coordinator https://coordinator.example.com:9091
+```
+
+## Real-LoRA benchmark training (opt-in)
+
+The synthetic LoRAchain-2026 builder is the default reproducibility path.
+For research-grade validation against actual Llama / Mistral / Qwen LoRAs:
+
+```bash
+pip install 'fedloraguard[real]'
+huggingface-cli login          # gated-model access for Llama-2/3
+python -m benchmarks.lorachain_2026.real.train_real \
+    --config configs/full.yaml --base-models llama2-7b mistral-7b \
+    --num-adapters 200 --out data/lorachain_2026_real
+```
+
+## Regenerating paper figures
+
+```bash
+python scripts/render_figures.py \
+    --runs runs/full \
+    --eps-sweep runs/eps_0.1 runs/eps_0.3 runs/eps_0.5 runs/eps_1.0 \
+    --data data/lorachain_2026 \
+    --out figures/
+```
+
+Outputs `fig3_spectral`, `fig4_pareto`, `fig5_radar` in both PDF and PNG.
+If the requested run dirs are missing, the renderer falls back to the
+manuscript's headline numbers so reviewers can sanity-check the aesthetics
+without re-running training.
 
 ## Datasets
 
