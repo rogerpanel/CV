@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtualenvs / environments
+.venv/
+.env
+
+# Data and runtime artifacts
+data/
+runs/
+checkpoints/
+*.pt
+*.pth
+!**/examples/*.json
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
