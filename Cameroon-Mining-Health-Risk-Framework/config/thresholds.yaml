@@ -1,0 +1,74 @@
+# Classification thresholds for pollution and risk indices.
+# Sources: Müller (1969), Håkanson (1980), USEPA (2011), WHO (2017).
+
+geoaccumulation_index:           # Müller (1969)
+  - {min: -.inf, max: 0.0, class: 0, label: "Unpolluted"}
+  - {min: 0.0,  max: 1.0, class: 1, label: "Unpolluted to moderately polluted"}
+  - {min: 1.0,  max: 2.0, class: 2, label: "Moderately polluted"}
+  - {min: 2.0,  max: 3.0, class: 3, label: "Moderately to strongly polluted"}
+  - {min: 3.0,  max: 4.0, class: 4, label: "Strongly polluted"}
+  - {min: 4.0,  max: 5.0, class: 5, label: "Strongly to extremely polluted"}
+  - {min: 5.0,  max: .inf, class: 6, label: "Extremely polluted"}
+
+contamination_factor:
+  - {min: -.inf, max: 1.0, label: "Low"}
+  - {min: 1.0,   max: 3.0, label: "Moderate"}
+  - {min: 3.0,   max: 6.0, label: "Considerable"}
+  - {min: 6.0,   max: .inf, label: "Very high"}
+
+pollution_load_index:
+  baseline_max: 1.0           # PLI > 1 = progressive deterioration
+
+ecological_risk_index:        # Håkanson (1980)
+  - {min: -.inf, max: 150.0, label: "Low"}
+  - {min: 150.0, max: 300.0, label: "Moderate"}
+  - {min: 300.0, max: 600.0, label: "Considerable"}
+  - {min: 600.0, max: .inf,  label: "Very high"}
+
+individual_ecological_risk:
+  - {min: -.inf, max: 40.0,  label: "Low"}
+  - {min: 40.0,  max: 80.0,  label: "Moderate"}
+  - {min: 80.0,  max: 160.0, label: "Considerable"}
+  - {min: 160.0, max: 320.0, label: "High"}
+  - {min: 320.0, max: .inf,  label: "Very high"}
+
+nemerow_pollution_index:      # Cheng et al. (2007)
+  - {min: -.inf, max: 0.7, label: "Safe"}
+  - {min: 0.7,   max: 1.0, label: "Warning limit"}
+  - {min: 1.0,   max: 2.0, label: "Slight pollution"}
+  - {min: 2.0,   max: 3.0, label: "Moderate pollution"}
+  - {min: 3.0,   max: .inf, label: "Heavy pollution"}
+
+enrichment_factor:            # Sutherland (2000)
+  - {min: -.inf, max: 1.0,  label: "Background"}
+  - {min: 1.0,   max: 3.0,  label: "Minor enrichment"}
+  - {min: 3.0,   max: 5.0,  label: "Moderate enrichment"}
+  - {min: 5.0,   max: 10.0, label: "Moderately severe enrichment"}
+  - {min: 10.0,  max: 25.0, label: "Severe enrichment"}
+  - {min: 25.0,  max: 50.0, label: "Very severe enrichment"}
+  - {min: 50.0,  max: .inf, label: "Extremely severe enrichment"}
+
+water_quality_index:          # WHO / NSF
+  - {min: 0.0,    max: 25.0,  label: "Excellent"}
+  - {min: 25.0,   max: 50.0,  label: "Good"}
+  - {min: 50.0,   max: 75.0,  label: "Poor"}
+  - {min: 75.0,   max: 100.0, label: "Very poor"}
+  - {min: 100.0,  max: .inf,  label: "Unsuitable for drinking"}
+
+heavy_metal_pollution_index:  # Mohan et al. (1996); critical = 100
+  critical_value: 100.0
+
+# Health risk
+hazard_quotient_threshold: 1.0
+hazard_index_threshold: 1.0
+cancer_risk:
+  acceptable: 1.0e-6
+  tolerable_max: 1.0e-4
+
+cohen_kappa:
+  - {min: -.inf, max: 0.0,  label: "No agreement"}
+  - {min: 0.0,   max: 0.20, label: "Slight"}
+  - {min: 0.20,  max: 0.40, label: "Fair"}
+  - {min: 0.40,  max: 0.60, label: "Moderate"}
+  - {min: 0.60,  max: 0.80, label: "Substantial"}
+  - {min: 0.80,  max: 1.01, label: "Almost perfect"}

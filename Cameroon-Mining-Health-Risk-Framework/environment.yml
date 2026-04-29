@@ -1,0 +1,37 @@
+name: cmhr
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - numpy>=1.26
+  - pandas>=2.1
+  - scipy>=1.11
+  - scikit-learn>=1.4
+  - xgboost
+  - lightgbm
+  - shap
+  - statsmodels
+  - matplotlib
+  - seaborn
+  - geopandas
+  - rasterio
+  - fiona
+  - pyproj
+  - rtree
+  - libpysal
+  - esda
+  - splot
+  - mapclassify
+  - pykrige
+  - earthengine-api
+  - geemap
+  - jupyterlab
+  - pytest
+  - pyyaml
+  - tqdm
+  - pip
+  - pip:
+      - SALib>=1.4
+      - catboost
+      - contextily
+      - folium

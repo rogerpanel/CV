@@ -1,0 +1,40 @@
+# Study area configuration for East Cameroon artisanal-mining districts.
+# Coordinates and area as reported in Anaedevha et al. (2026).
+country: Cameroon
+region: East
+total_area_km2: 9914
+crs_geographic: "EPSG:4326"
+crs_projected: "EPSG:32633"   # WGS84 / UTM zone 33N
+
+districts:
+  betare_oya:
+    name: Bétaré-Oya
+    centroid: {lat: 5.60, lon: 14.083}
+    sub_districts: [Pawara, Bindiba]
+    river_basin: Lom
+  batouri:
+    name: Batouri
+    centroid: {lat: 4.433, lon: 14.367}
+    sub_districts: [Kambélé, Pater]
+    river_basin: Kadey
+  ngoura:
+    name: Ngoura
+    centroid: {lat: 5.033, lon: 13.417}
+    sub_districts: []
+    river_basin: Lom
+
+bounding_box:
+  min_lat: 3.5
+  max_lat: 6.5
+  min_lon: 12.0
+  max_lon: 16.0
+
+protected_areas:
+  dja_faunal_reserve:
+    area_ha: 526000
+    buffer_distances_km: [10, 25, 50, 80]
+
+mining_proximity_classes_km:
+  proximate: [0, 10]
+  intermediate: [10, 25]
+  distal: [25, .inf]

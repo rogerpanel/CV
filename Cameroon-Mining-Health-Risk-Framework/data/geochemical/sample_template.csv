@@ -1,0 +1,8 @@
+sample_id,district,sub_district,lat,lon,matrix,depth_cm,year,method,reference,As_mg_kg,Cd_mg_kg,Cr_mg_kg,Cu_mg_kg,Fe_mg_kg,Hg_mg_kg,Mn_mg_kg,Ni_mg_kg,Pb_mg_kg,Zn_mg_kg,As_mg_l,Cd_mg_l,Cr_mg_l,Cu_mg_l,Fe_mg_l,Hg_mg_l,Mn_mg_l,Ni_mg_l,Pb_mg_l,Zn_mg_l,pH,EC_uS_cm,turbidity_NTU,TDS_mg_l,hardness_mg_l
+S001,Bétaré-Oya,Pawara,5.6020,14.0850,sediment,0-15,2018,ICP-MS,Rakotondrabe2018,12.4,1.05,52.0,38.0,42000,0.85,910,40.0,77.0,160,,,,,,,,,,,,,,,
+S002,Bétaré-Oya,Pawara,5.6210,14.0930,sediment,0-15,2018,ICP-MS,Rakotondrabe2018,18.7,1.32,61.0,49.0,46000,1.42,1024,45.0,98.0,180,,,,,,,,,,,,,,,
+S003,Batouri,Kambélé,4.4280,14.3700,water,,2018,AAS,Rakotondrabe2017,,,,,,,,,,,0.058,0.011,0.030,0.012,1.20,0.0008,0.090,0.020,0.038,0.060,6.8,210,8.0,142,128
+S004,Batouri,Kambélé,4.4310,14.3712,water,,2018,AAS,Rakotondrabe2017,,,,,,,,,,,0.041,0.009,0.022,0.014,1.05,0.0006,0.075,0.018,0.029,0.057,6.7,205,7.0,138,124
+S005,Batouri,Pater,4.4480,14.3555,soil,0-20,2022,EDXRF,Fodoue2022,8.2,0.70,80.0,30.0,38500,0.21,820,35.0,45.0,110,,,,,,,,,,,,,,,
+S006,Ngoura,,5.0210,13.4115,sediment,0-15,2023,ICP-MS,EdjengteDoumo2023,5.4,0.45,72.0,22.0,36000,0.13,810,29.0,32.0,98,,,,,,,,,,,,,,,
+S007,Bétaré-Oya,Bindiba,5.5450,14.1200,water,,2024,ICP-MS,NgoaManga2024,,,,,,,,,,,0.021,0.005,0.018,0.009,0.90,0.0003,0.055,0.012,0.018,0.045,7.0,180,6.0,118,108

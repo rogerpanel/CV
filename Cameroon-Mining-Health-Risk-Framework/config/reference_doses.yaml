@@ -1,0 +1,118 @@
+# Reference doses, cancer slope factors, toxic-response factors, and regional
+# geochemical background concentrations used by Anaedevha et al. (2026).
+# All values in mg/kg/day unless noted.
+
+# --------------------------------------------------------------------------
+# Toxic-response factors (Tᵢʳ) for the Håkanson Potential Ecological Risk Index
+# Reference: Håkanson (1980), Pejman et al. (2015)
+# --------------------------------------------------------------------------
+toxic_response_factor:
+  Hg: 40
+  Cd: 30
+  As: 10
+  Cu: 5
+  Pb: 5
+  Ni: 5
+  Cr: 2
+  Zn: 1
+  Mn: 1
+  Fe: 1
+
+# --------------------------------------------------------------------------
+# Reference Doses (RfD) - USEPA IRIS / Exposure Factors Handbook (2011)
+# --------------------------------------------------------------------------
+reference_dose_oral:
+  As: 3.0e-4
+  Cd: 5.0e-4         # cadmium in water
+  Cd_food: 1.0e-3
+  Cr_VI: 3.0e-3
+  Pb: 3.6e-3
+  Hg: 3.0e-4
+  Mn: 2.4e-2
+  Fe: 7.0e-1
+  Zn: 3.0e-1
+  Cu: 4.0e-2
+  Ni: 2.0e-2
+
+reference_dose_dermal:
+  As: 1.23e-4
+  Cd: 1.0e-5
+  Cr_VI: 6.0e-5
+  Pb: 5.25e-4
+  Hg: 2.1e-5
+  Mn: 1.8e-3
+  Zn: 6.0e-2
+  Cu: 1.2e-2
+  Ni: 5.4e-3
+
+reference_dose_inhalation:
+  As: 3.01e-4
+  Cd: 1.0e-3
+  Cr_VI: 2.86e-5
+  Pb: 3.52e-3
+  Hg: 8.57e-5
+  Mn: 1.43e-5
+  Ni: 2.06e-2
+  Zn: 3.0e-1
+
+# --------------------------------------------------------------------------
+# Cancer Slope Factors ((mg/kg/day)⁻¹)
+# Reference: USEPA IRIS
+# --------------------------------------------------------------------------
+cancer_slope_factor_oral:
+  As: 1.5
+  Cd: 0.38
+  Cr_VI: 0.5
+  Pb: 8.5e-3
+  Ni: 1.7
+
+cancer_slope_factor_dermal:
+  As: 3.66
+  Cd: 6.1
+  Cr_VI: 20
+  Pb: 8.5e-3
+
+cancer_slope_factor_inhalation:
+  As: 15.1
+  Cd: 6.3
+  Cr_VI: 42
+  Ni: 0.84
+
+# --------------------------------------------------------------------------
+# Regional geochemical background (Mimba et al. 2018) - East Cameroon
+# Values in mg/kg
+# --------------------------------------------------------------------------
+regional_background:
+  Hg: 0.05
+  As: 5.0
+  Cd: 0.30
+  Pb: 17.0
+  Cr: 90.0
+  Cu: 25.0
+  Zn: 70.0
+  Ni: 47.0
+  Mn: 850.0
+  Fe: 47000.0
+  Co: 11.9
+  Al: 80000.0      # used as the geochemical normaliser for Enrichment Factor
+  Sc: 13.0         # alternative EF normaliser
+
+# --------------------------------------------------------------------------
+# WHO drinking water guidelines (mg/L) - WHO (2017, 2022)
+# Used by water_quality.WaterQualityIndex
+# --------------------------------------------------------------------------
+who_water_standards:
+  As: 0.010
+  Cd: 0.003
+  Cr: 0.050
+  Pb: 0.010
+  Hg: 0.006
+  Mn: 0.400
+  Fe: 0.300
+  Zn: 3.000
+  Cu: 2.000
+  Ni: 0.070
+  pH: {min: 6.5, max: 8.5}
+  TDS: 1000
+  turbidity_NTU: 5
+  hardness: 500

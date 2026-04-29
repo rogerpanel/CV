@@ -1,0 +1,107 @@
+# USEPA-2011 exposure factors with the probabilistic distributions used in
+# Anaedevha et al. (2026), Table 3.  Distributions are sampled by
+# `cmhr.health_risk.MonteCarloRiskAssessment`.
+
+random_seed: 20260429
+n_iterations: 10000
+percentiles_reported: [5, 50, 95]
+
+receptors:
+
+  adults:
+    body_weight_kg:
+      distribution: normal
+      mean: 70
+      std: 10
+      bounds: [40, 110]
+    ingestion_rate_water_l_day:
+      distribution: triangular
+      low: 1.0
+      mode: 2.5
+      high: 3.5
+    ingestion_rate_soil_mg_day:
+      distribution: lognormal
+      mean: 100
+      sigma: 1.5
+    inhalation_rate_m3_day:
+      distribution: normal
+      mean: 20
+      std: 2
+    skin_surface_area_cm2:
+      distribution: normal
+      mean: 5700
+      std: 900
+    skin_adherence_factor_mg_cm2:
+      distribution: lognormal
+      mean: 0.07
+      sigma: 1.3
+    exposure_frequency_days_yr:
+      distribution: uniform
+      low: 300
+      high: 365
+    exposure_duration_yr:
+      distribution: normal
+      mean: 24
+      std: 5
+      bounds: [1, 70]
+    averaging_time_noncarcinogenic_days: ED_x_365
+    averaging_time_carcinogenic_days: 25550   # 70 yr × 365
+
+  children:
+    body_weight_kg:
+      distribution: normal
+      mean: 15
+      std: 3
+      bounds: [5, 30]
+    ingestion_rate_water_l_day:
+      distribution: triangular
+      low: 0.5
+      mode: 0.78
+      high: 1.5
+    ingestion_rate_soil_mg_day:
+      distribution: lognormal
+      mean: 200
+      sigma: 1.8
+    inhalation_rate_m3_day:
+      distribution: normal
+      mean: 7.6
+      std: 1
+    skin_surface_area_cm2:
+      distribution: normal
+      mean: 2800
+      std: 500
+    skin_adherence_factor_mg_cm2:
+      distribution: lognormal
+      mean: 0.20
+      sigma: 1.3
+    exposure_frequency_days_yr:
+      distribution: uniform
+      low: 300
+      high: 365
+    exposure_duration_yr:
+      distribution: deterministic
+      value: 6
+    averaging_time_noncarcinogenic_days: ED_x_365
+    averaging_time_carcinogenic_days: 25550
+
+# Dermal absorption fractions (USEPA RAGS Part E)
+dermal_absorption_fraction:
+  As: 0.03
+  Cd: 0.001
+  Cr_VI: 0.001
+  Pb: 0.0001
+  Hg: 0.001
+  Zn: 0.0006
+  Cu: 0.001
+  Ni: 0.0006
+
+# Inhalation parameters
+particulate_emission_factor_m3_kg: 1.36e9   # USEPA (2011) PEF
+event_frequency_per_day: 1
+event_duration_h: 0.58
+
+# Sobol' sensitivity analysis
+sobol:
+  n_base_samples: 2048           # N
+  bootstrap_resamples: 1000
+  scheme: saltelli

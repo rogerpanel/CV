@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+title: "Cameroon-Mining-Health-Risk-Framework: A reproducible computational framework for environmental quality assessment and health risk modelling in artisanal mining landscapes of East Cameroon"
+message: "If you use this software, please cite both the article and the software itself."
+type: software
+authors:
+  - given-names: Roger Nick
+    family-names: Anaedevha
+    orcid: "https://orcid.org/0009-0000-0000-0000"
+  - given-names: Nora Michele
+    family-names: Delabrousse
+    affiliation: "University of Yaoundé I, Cameroon"
+  - given-names: Daria Olegovna
+    family-names: Kapralova
+    affiliation: "Lomonosov Moscow State University, Russia"
+repository-code: "https://github.com/rogerpanel/CV/tree/main/Cameroon-Mining-Health-Risk-Framework"
+url: "https://github.com/rogerpanel/CV"
+license: MIT
+version: "1.0.0"
+date-released: "2026-04-29"
+keywords:
+  - artisanal mining
+  - environmental health
+  - heavy metals
+  - Monte Carlo
+  - USEPA
+  - MaxEnt
+  - Moran's I
+  - Cameroon
+preferred-citation:
+  type: article
+  title: "Environmental Quality Assessment and Health Risk Modeling in Artisanal Mining Landscapes of East Cameroon: Establishing a Transferable Framework for Gemstone Mining Impact Evaluation"
+  authors:
+    - given-names: Roger Nick
+      family-names: Anaedevha
+    - given-names: Nora Michele
+      family-names: Delabrousse
+    - given-names: Daria Olegovna
+      family-names: Kapralova
+  journal: "Environmental Science and Pollution Research"
+  year: 2026
