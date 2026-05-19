@@ -1,15 +1,71 @@
+# --- Python ------------------------------------------------------------------
 __pycache__/
-*.pyc
-*.pyo
-*.pt
-*.pkl
-*.npy
-*.npz
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+.installed.cfg
+pip-wheel-metadata/
+MANIFEST
+
+# --- Virtual environments ----------------------------------------------------
 .venv/
+venv/
+env/
+ENV/
+
+# --- Test / lint caches ------------------------------------------------------
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache/
+
+# --- Jupyter -----------------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# --- Torch / model artefacts -------------------------------------------------
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.tflite
+*.pkl
+*.joblib
+*.npz
+*.npy
+
+# --- Project outputs ---------------------------------------------------------
 data/
 outputs/
+results/
+checkpoints/
+runs/
+wandb/
+mlruns/
+tb_logs/
+
+# --- Kaggle / credentials ----------------------------------------------------
 .kaggle/
-*.egg-info/
+*.kaggle.json
+secrets.env
+.env
+.env.*
+
+# --- Editor / OS noise -------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

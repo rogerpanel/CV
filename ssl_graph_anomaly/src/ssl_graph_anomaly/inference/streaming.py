@@ -56,16 +56,18 @@ class StreamingInference:
             self.drift.set_calibration(self._calibration_scores)
         self.on_drift = on_drift
 
+        num_classes = int(self.model.cfg["data"]["num_classes"])
         try:
-            self.class_names: list[str] = list(ATTACK_TAXONOMY_34)
+            if isinstance(ATTACK_TAXONOMY_34, dict):
+                self.class_names: dict[int, str] = {int(k): str(v) for k, v in ATTACK_TAXONOMY_34.items()}
+            else:
+                self.class_names = {i: str(v) for i, v in enumerate(ATTACK_TAXONOMY_34)}
         except Exception:
-            self.class_names = [str(i) for i in range(int(self.model.cfg["data"]["num_classes"]))]
+            self.class_names = {i: str(i) for i in range(num_classes)}
         self.benign_class = int(self.model.cfg["data"].get("benign_class_id", 0))
 
     def _class_name(self, idx: int) -> str:
-        if 0 <= idx < len(self.class_names):
-            return str(self.class_names[idx])
-        return str(idx)
+        return self.class_names.get(int(idx), str(int(idx)))
 
     def _to_batch(self, flow_features: np.ndarray | list[float] | torch.Tensor) -> torch.Tensor:
         if isinstance(flow_features, torch.Tensor):
