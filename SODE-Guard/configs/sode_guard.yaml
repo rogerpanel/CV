@@ -1,0 +1,130 @@
+# =====================================================================
+#  Stochastic ODE-Guard — full TNNLS reproduction configuration
+#  Matches Tables 2–4 and Figure 5 of the manuscript.
+# =====================================================================
+
+experiment:
+  name: sode_guard_tnnls_v3
+  output_dir: experiments/sode_guard_tnnls_v3
+  seeds: [42, 137, 271, 1729, 2026]   # five reproducibility seeds
+  amp: true
+  num_workers: 8
+  log_every: 100
+
+data:
+  benchmarks: [ics3d, iis3d, ids_pqc]
+  cache_dir: data/processed
+  feature_dim: 83
+  label_space: 34                     # union over all benchmarks
+  split: {train: 0.70, val: 0.15, test: 0.15}
+  standardize: zscore
+  imputation: median
+  stratified: true
+
+encoder:                              # E-GraphSAGE edge encoder
+  type: egraphsage
+  hidden_dim: 128
+  num_layers: 3
+  aggregator: attention_gated_residual
+  dropout: 0.10
+  edge_features: 83
+  output_dim: 128
+
+sde:
+  drift:
+    hidden_dim: 256
+    num_layers: 3
+    activation: gelu
+    spectral_norm: true
+  diffusion:
+    hidden_dim: 256
+    num_layers: 3
+    activation: gelu
+    spectral_norm: true
+    noise_dim: 16
+    ellipticity_floor: 1.0e-3         # λ_0 — guarantees BEL gradient bound
+  integrator:
+    method: euler_maruyama
+    horizon: 1.0
+    dt: 0.05                          # 20 steps
+    adaptive: false
+    virtual_brownian_tree: true       # variance reduction
+  monte_carlo:
+    train_paths: 1                    # stochastic adjoint, 1 path / step
+    eval_paths: 8                     # N_mc = 8 for inference averaging
+
+classifier:
+  type: linear
+  input_dim: 128
+  num_classes: 34
+
+regularizers:
+  anti_concentration:
+    enabled: true
+    weight: 0.10                      # λ in L = L_CE + λ L_AC
+    chaos_degree: 4                   # d* — captures 1−η_0 mass with η_0=1e-3
+    hermite_samples: 128              # MC samples per example
+    beta_grid: [0.01, 0.025, 0.05, 0.10]
+  spectral_norm: true
+
+optim:
+  optimizer: adam
+  lr: 5.0e-4
+  weight_decay: 1.0e-5
+  betas: [0.9, 0.999]
+  scheduler: cosine_annealing
+  warmup_epochs: 2
+  grad_clip: 1.0
+
+training:
+  epochs: 40
+  batch_size: 128
+  loss: cross_entropy_with_ac
+  label_smoothing: 0.0
+
+evaluation:
+  attacks:
+    pgd40:
+      type: pgd
+      steps: 40
+      step_size: 0.0025
+      norm: linf
+      epsilons: [0.005, 0.01, 0.02, 0.03, 0.05, 0.10]
+      random_start: true
+    fgsm:
+      type: fgsm
+      epsilons: [0.005, 0.01, 0.03, 0.05]
+    cw:
+      type: cw_l2
+      c: 1.0
+      iterations: 100
+    deepfool:
+      type: deepfool
+      iterations: 50
+      overshoot: 0.02
+    gaussian:
+      type: gaussian_noise
+      sigmas: [0.005, 0.01, 0.03]
+    label_poison:
+      type: label_mask
+      rates: [0.01, 0.05, 0.10]
+  metrics:
+    primary: macro_f1
+    secondary: [accuracy, weighted_f1, ece, precision_macro, recall_macro]
+    statistical_tests: [friedman, mcnemar, wilcoxon]
+    bootstrap: {iters: 1000, ci: 0.95}
+  certified_radius:
+    enabled: true
+    margin_threshold: 0.05            # β for certificate evaluation
+    smoothing_paths: 256
+  latency:
+    target: a100
+    profile_batches: 50
+    warmup_batches: 5
+
+deployment:
+  registry_id: sode_guard
+  robustidps_category: temporal
+  served_via: fastapi
+  endpoint: /api/predict/sode_guard
+  fast_mode: false                    # SODE-Guard always runs full MC for AC certificate

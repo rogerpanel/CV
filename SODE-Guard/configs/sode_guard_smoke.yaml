@@ -1,0 +1,24 @@
+# Lightweight smoke-test configuration: NSL-KDD (≈148 K rows), 3 epochs, 1 seed.
+# Used by the CI pipeline and `pytest tests/`.
+defaults: [sode_guard.yaml]
+
+experiment:
+  name: sode_guard_smoke
+  output_dir: experiments/sode_guard_smoke
+  seeds: [42]
+  num_workers: 2
+
+data:
+  benchmarks: [nslkdd]
+  label_space: 5
+
+training:
+  epochs: 3
+  batch_size: 256
+
+evaluation:
+  attacks:
+    pgd40: {epsilons: [0.01, 0.03]}
+  certified_radius:
+    enabled: true
+    smoothing_paths: 64

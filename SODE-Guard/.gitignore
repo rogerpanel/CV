@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.venv/
+venv/
+.env
+.ipynb_checkpoints/
+.mypy_cache/
+.pytest_cache/
+.DS_Store
+
+# Experiment artefacts
+experiments/checkpoints/*
+experiments/logs/*
+experiments/results/*
+!experiments/checkpoints/.gitkeep
+!experiments/logs/.gitkeep
+!experiments/results/.gitkeep
+
+# Raw datasets (downloaded via scripts/download_data.sh)
+data/raw/
+data/processed/
+*.csv
+*.parquet
+*.pcap
+*.pcapng
+
+# MLflow / wandb / tensorboard
+mlruns/
+wandb/
+runs/

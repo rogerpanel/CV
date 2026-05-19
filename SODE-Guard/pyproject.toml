@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sode-guard"
+version = "3.0.0"
+description = "Stochastic ODE-Guard: Neural SDE with Anti-Concentration Bounds for Adversarially Robust Network Intrusion Detection"
+authors = [{name = "Roger Nick Anaedevha"}]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["neural-sde", "intrusion-detection", "adversarial-robustness",
+            "carbery-wright", "anti-concentration", "robustidps"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+]
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = "requirements.txt"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+exclude = ["tests*", "experiments*", "data*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[project.urls]
+"Homepage"     = "https://github.com/rogerpanel/CV/tree/main/SODE-Guard"
+"Manuscript"   = "https://github.com/rogerpanel/SODE-ExtractGuard-Models"
+"RobustIDPS"   = "https://robustidps.ai"
