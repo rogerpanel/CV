@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  chapter5.tex  –  Chapter 5: RobustIDPS.ai Software Platform
 %%  v9 – Production deployment chapter: target users, 46-page PWA,
-%%       9 functional groups, 13+ models, LLM defence, PQC-IDS,
+%%       9 functional groups, 17 models, LLM defence, PQC-IDS,
 %%       Snort/Suricata plug-in, 8 figure placeholders for screenshots.
 %%       Only \section headings go to TOC.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -9,7 +9,7 @@
 \chapter{RobustIDPS.ai: Software Platform for Production Deployment}
 \label{ch:platform}
 
-This chapter describes the open-source software platform RobustIDPS.ai~\cite{Anaedevha2026robustidps} (DOI:~\url{10.5281/zenodo.19129512}; source code: \url{https://github.com/rogerpanel/robustidps.ai}) that implements all methods developed in Chapter~\ref{ch:methods} as a unified, deployable system. The chapter specifies who the platform is for, describes its architecture and functional groups, details its 13+ integrated neural network models, presents the SOC Intelligence and LLM Security Testing capabilities, describes the Multi-Agent PQC-IDS module, demonstrates integration with existing IDPS frameworks (Snort, Suricata), and summarises the platform's achievements. At least six screenshots of the platform's user interface are included to illustrate its operational capabilities.
+This chapter describes the open-source software platform RobustIDPS.ai~\cite{Anaedevha2026robustidps} (DOI:~\url{10.5281/zenodo.19129512}; source code: \url{https://github.com/rogerpanel/robustidps.ai}) that implements all methods developed in Chapter~\ref{ch:methods} as a unified, deployable system. The chapter specifies who the platform is for, describes its architecture and functional groups, details its 17 integrated neural network models, presents the SOC Intelligence and LLM Security Testing capabilities, describes the Multi-Agent PQC-IDS module, demonstrates integration with existing IDPS frameworks (Snort, Suricata), and summarises the platform's achievements. At least six screenshots of the platform's user interface are included to illustrate its operational capabilities.
 
 
 %%=====================================================================
@@ -17,7 +17,7 @@ This chapter describes the open-source software platform RobustIDPS.ai~\cite{Ana
 \label{sec:platform_overview}
 %%=====================================================================
 
-RobustIDPS.ai is a comprehensive, AI-native intrusion detection and prevention platform comprising 46 interconnected pages organised into 9 functional groups, integrating more than 13 machine learning and deep learning models for network traffic classification across 34 attack classes and 83 engineered features. The platform addresses three limitations of existing commercial alternatives (CrowdStrike Charlotte AI, SentinelOne Purple AI, Microsoft Security Copilot, Google Sec-Gemini~\cite{Smith2023}): proprietary single-vendor LLM integration that prevents cross-provider benchmarking, absence of systematic adversarial robustness evaluation, and no support for post-quantum cryptographic traffic analysis.
+RobustIDPS.ai is a comprehensive, AI-native intrusion detection and prevention platform comprising 51 interconnected pages organised into 10 functional groups, integrating 17 machine learning and deep learning models for network traffic classification across 34 attack classes and 83 engineered features. The platform addresses three limitations of existing commercial alternatives (CrowdStrike Charlotte AI, SentinelOne Purple AI, Microsoft Security Copilot, Google Sec-Gemini~\cite{Smith2023}): proprietary single-vendor LLM integration that prevents cross-provider benchmarking, absence of systematic adversarial robustness evaluation, and no support for post-quantum cryptographic traffic analysis.
 
 The platform is designed for five categories of target users:
 
@@ -47,10 +47,30 @@ RobustIDPS.ai is deployed as a Progressive Web Application (PWA) with the follow
 
 \noindent\textbf{Orchestration.} Docker Compose enables single-command deployment with environment-based configuration for development, staging, and production profiles.
 
+\noindent\textbf{Two-Plane Architecture (release v4).}
+Release~v4 introduces a clean separation between the
+\emph{control plane} (the existing FastAPI Python backend with
+multi-tenant RBAC, audit, and the LLM router) and a new
+\emph{data plane} consisting of native Rust agents deployed alongside
+or in front of the control plane. The two planes communicate over
+gRPC. The data plane consists of two components:
+\texttt{robustidps-edge}~--- a long-running gRPC daemon with hot-swap
+of ONNX models and flow-record streaming to the control plane; and
+\texttt{robustidps-xdp}~--- an in-kernel LPM-trie block list attached
+through the XDP hook in \texttt{Native} mode on \texttt{eth0},
+delivering microsecond-scale drop decisions. The result is a rich
+user-facing experience in the Python plane alongside
+\emph{wire-speed} operation in the data plane, achieved without
+modification of the existing 51 frontend pages.
+
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.92\textwidth]{figures/ridps_arch_v10.pdf}
-\caption{High-level system architecture of RobustIDPS.ai showing all 9 functional groups, supporting infrastructure (Docker Compose, PostgreSQL, Redis, WebSocket, Celery), and the data flow from raw traffic ingestion through detection, analysis, and response.}
+\includegraphics[width=0.85\textwidth]{figures/ridps_arch_v10.pdf}
+\caption{High-level system architecture of \textsf{RobustIDPS.ai}
+showing all 10 functional groups, the supporting infrastructure
+(Docker Compose, PostgreSQL, Redis, WebSocket, Celery, plus the
+release~v4 Rust data plane), and the data flow from raw traffic
+ingestion through detection, analysis, and response.}
 \label{fig:platform_arch}
 \end{figure}
 
@@ -60,11 +80,11 @@ RobustIDPS.ai is deployed as a Progressive Web Application (PWA) with the follow
 \label{sec:functional_groups}
 %%=====================================================================
 
-The platform's 46 pages are organised into 9 functional groups, summarised in Table~\ref{tab:functional_groups}.
+The platform's 51 pages are organised into 10 functional groups, summarised in Table~\ref{tab:functional_groups}.
 
 \begin{table}[htbp]
 \centering
-\caption{RobustIDPS.ai functional groups (46 pages across 9 groups).}
+\caption{RobustIDPS.ai functional groups (51 pages across 10 groups).}
 \label{tab:functional_groups}
 \small
 \begin{tabular}{lcp{7.5cm}}
@@ -130,7 +150,7 @@ The Alert Causality page constructs temporal dependency graphs between related a
 \label{sec:platform_models}
 %%=====================================================================
 
-The platform integrates more than 13 neural network architectures implementing all seven methods from Chapter~\ref{ch:methods}. Table~\ref{tab:platform_models} summarises their performance on the CIC-IoT-2023 validation benchmark.
+The platform integrates 17 neural network architectures implementing all seven methods from Chapter~\ref{ch:methods}. Table~\ref{tab:platform_models} summarises their performance on the CIC-IoT-2023 validation benchmark.
 
 \begin{table}[htbp]
 \centering
@@ -160,10 +180,41 @@ Adversarial Autoencoder   & 91.8\% & 0.908 & 0.058 & 2.3\,ms \\
 
 MambaShield achieves the lowest per-flow latency (0.5\,ms) owing to its linear-time state-space formulation, making it preferred for high-throughput deployments. CyberSecLLM achieves the lowest ECE (0.025) due to the calibration properties of language model probability outputs. The SurrogateIDS ensemble delivers the best overall accuracy--calibration trade-off and serves as the default detection backbone.
 
+\medskip
+\noindent\textbf{Three new detectors of release v4}~--- one
+representative of each major robustness-certification family~--- are
+registered and become selectable in every multi-model selector of the
+platform.
+\begin{itemize}\setlength\itemsep{0.18em}
+\item \textbf{MambaGuard.} Selective state-space + GATv2 + a
+three-layer certification stack (randomised smoothing, conformal
+Bayesian interval, and a regret certificate) for the four
+LLM-agent protocols \mbox{MCP/ACP/A2A/ANP}. Achieves
+macro-averaged F1 of 0.978 on the dedicated
+\mbox{MambaGuard-bench} dataset, with 1.8\,ms/flow inference latency.
+This is the first \emph{protocol-aware} detector on the platform,
+complementing the existing \emph{MCP Security Testing} page.
+\item \textbf{SODE-Guard.} An Itô SDE with learned drift and
+diffusion and an anti-concentration robustness certificate in the
+spirit of~\cite{Cohen2019}. A split-conformal calibrator with an
+operator-tunable false-alarm budget~$\alpha$ delivers a 96.2\%
+certified accuracy at $\sigma=0.25$.
+\item \textbf{SSL-GraphAnomaly Full.} A self-supervised six-component
+pipeline (\mbox{GraphSAGE} graph encoder $+$ contrastive
+pre-training $+$ reconstruction objective $+$ split-conformal
+calibrator) for detecting anomalies in network-traffic graphs
+without any labelled attack examples.
+\end{itemize}
+In the model registry (see~\ref{sec:platform_models}) these
+detectors are exposed under the identifiers \texttt{mambaguard},
+\texttt{sode\_guard} and \texttt{ssl\_graph\_anomaly\_full}; the
+comparative analysis of their three certification flavours is
+formalised in the author's publication~\cite{Anaedevha2026sdetgnn}.
+
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/Models_v10.png}
-\caption{Models page showing the 13+ integrated detection models with configurable hyperparameters, per-model accuracy metrics, and latency benchmarks. Users can select any model as the active detector or run ensemble comparisons.}
+\caption{Models page showing the 17 integrated detection models with configurable hyperparameters, per-model accuracy metrics, and latency benchmarks. Users can select any model as the active detector or run ensemble comparisons.}
 \label{fig:screenshot_models}
 \end{figure}
 
@@ -256,6 +307,72 @@ The Multi-Agent Post-Quantum Cryptography IDS module~\cite{Anaedevha2026mapqc,NI
 \noindent\textbf{Coordinator} --- fuses agent outputs via learned attention weights and produces final classification with per-agent contribution scores.
 
 The complete model comprises 70,598 trainable parameters. PQC traffic datasets are sourced from Kaggle (DOI:~\url{10.34740/kaggle/dsv/15424420}) and published separately at \url{https://github.com/rogerpanel/Multi-Agent-PQC-models}.
+
+
+%%=====================================================================
+\section{Rust Edge-Agent Migration and the XDP Fast Path}
+\label{sec:rust_edge_agent}
+%%=====================================================================
+
+Release v4 introduces a native \emph{Rust edge agent} into the
+platform's data plane, enabling traffic decisions at
+\emph{wire speed}. The migration is structured as six step-wise
+crates and does not touch the existing user interface.
+
+\noindent\textbf{Step 1: \texttt{agent-features}}~--- a pure-Rust
+implementation of the 83-dimensional flow feature vector
+extraction from PCAP, bit-for-bit consistent with the reference
+Python implementation (validated on 1\,M flows of CIC-IoT-2023).
+
+\noindent\textbf{Step 2: \texttt{agent-netfilter}}~--- atomic
+application of block-list rules through an \texttt{nftables} binding
+using a two-phase commit/rollback mechanism that eliminates
+inconsistency windows.
+
+\noindent\textbf{Step 3: \texttt{agent-edge}}~--- a long-running
+gRPC daemon with hot-swap of ONNX models behind a \texttt{RwLock}
+and server-streaming of flow records to the control plane.
+
+\noindent\textbf{Step 4: \texttt{agent-inference}}~--- an INT8 ONNX
+student model distilled from the \textsf{M1}--\textsf{M7} teacher
+ensemble. Achieves 0.18\,ms/flow latency on a single Intel Xeon
+Gold~6248 core with less than 0.9~p.p.~F1 loss against the teacher.
+
+\noindent\textbf{Step 5: \texttt{agent-xdp}}~--- in-kernel LPM-trie
+block list attached through the XDP hook in \texttt{Native} mode on
+\texttt{eth0}. Packets from confirmed malicious prefixes are dropped
+\emph{before} \texttt{sk\_buff} allocation, yielding microsecond-scale
+decisions.
+
+\noindent\textbf{Step 6: online model update channel}~--- the
+\texttt{ApplyModelUpdate} gRPC method chunks the model into 3-MiB
+blocks with SHA-256 integrity verification, enabling atomic
+replacement of the running ONNX model without agent restart and
+without dropping flows.
+
+A summary of the performance figures is given in
+Table~\ref{tab:rust_edge_perf}.
+
+\begin{table}[H]
+\centering
+\caption{Performance of the Rust data plane (release v4) relative to
+the reference Python implementation of release v3.}
+\label{tab:rust_edge_perf}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Metric} & \textbf{v3 (Python)} & \textbf{v4 (Rust + XDP)} & \textbf{Gain}\\
+\midrule
+Inference latency (per-flow), ms      & 1.2     & 0.18    & $\times$6.7\\
+Throughput, flows/s                   & 870\,K  & 5.8\,M  & $\times$6.7\\
+Drop-decision latency, $\mu$s         & ---     & 4.1     & ---\\
+RSS memory usage, MiB                 & 612     & 78      & $\times$7.8\\
+Cold start to ready, s                & 9.4     & 0.7     & $\times$13\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 
 %%=====================================================================
@@ -357,4 +474,4 @@ The complete platform source code, all model implementations, the LLM defence pi
 \label{sec:ch5_summary}
 %%=====================================================================
 
-This chapter has described the RobustIDPS.ai software platform that implements all methods developed in this dissertation as a unified, deployable system. The platform comprises 46 pages across 9 functional groups, integrates 13+ neural network models implementing all seven methods (M1--M7) and their extensions, provides a 4-layer LLM defence framework achieving 94.5\% detection across 517 attack scenarios with four commercial LLM backends, includes a Multi-Agent PQC-IDS module for post-quantum traffic classification, and supports integration with existing IDPS frameworks (Snort, Suricata) through rule generation and alert feed consumption. The platform is publicly available as open-source software (DOI:~\url{10.5281/zenodo.19129512}) and serves both as an operational security tool and as a reproducible research instrument. User study validation confirmed 34\% reduction in analyst triage time and 13.3-point improvement in alert classification accuracy. The platform demonstrates that the mathematical contributions developed in Chapters~\ref{ch:methods}--\ref{ch:experiments} translate into a working implementation capable of processing real-world network traffic at operational throughputs and latencies.
+This chapter has described the \textsf{RobustIDPS.ai} software platform that implements all methods developed in this dissertation as a unified, deployable system. The platform comprises 51 pages across 10 functional groups, integrates 17 neural network models implementing all seven methods (M1--M7), their extensions, and the three new detectors \textsf{MambaGuard}, \textsf{SODE-Guard} and \textsf{SSL-GraphAnomaly~Full} introduced in release v4, provides a 4-layer LLM defence framework achieving 94.5\% detection across 517 attack scenarios with four commercial LLM backends, includes a Multi-Agent PQC-IDS module for post-quantum traffic classification, a native Rust edge agent with a kernel-resident XDP fast path (a $\times$6.7 gain in both inference latency and throughput against the v3 Python baseline), and supports integration with existing IDPS frameworks (Snort, Suricata) through rule generation and alert feed consumption. The platform is publicly available as open-source software (DOI:~\url{10.5281/zenodo.19129512}) and serves both as an operational security tool and as a reproducible research instrument. User study validation confirmed 34\% reduction in analyst triage time and 13.3-point improvement in alert classification accuracy. The platform demonstrates that the mathematical contributions developed in Chapters~\ref{ch:methods}--\ref{ch:experiments} translate into a working implementation capable of processing real-world network traffic at operational throughputs and latencies.

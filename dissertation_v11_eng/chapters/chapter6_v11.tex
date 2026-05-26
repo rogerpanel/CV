@@ -48,8 +48,27 @@ models provide swarm coordination and droneport orchestration. Each
 of these components is vulnerable to the six attack families
 characterised in Chapter~\ref{ch:methods}: FGSM, PGD, CW (white-box);
 HopSkipJump, BoundaryAttack (black-box); and training-data poisoning.
-The degradation of UAV neural-network components under EW pressure is
-quantitatively documented in \S\ref{sec:ch1_uav_related}.
+Beyond software-level adversarial threats, the operational environment
+of a UAV is also exposed to \emph{kinetic} and \emph{biological}
+threats~--- mid-air collisions with other airframes and raptor strikes
+against onboard visual-perception modules
+(Fig.~\ref{fig:uav_kinetic_threats}). The degradation of UAV
+neural-network components under EW pressure is quantitatively
+documented in \S\ref{sec:ch1_uav_related}.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/uav_kinetic_threats.png}
+\caption{Kinetic and biological threat scenarios for a UAV in the
+operational environment: a mid-air inter-airframe collision (left) and
+a raptor strike on the onboard payload (right). Unlike adversarial
+perturbations of the software modules, such events compromise airframe
+integrity within milliseconds and require anticipatory detection by
+visual perception, behavioural analysis and sensor fusion~--- tasks
+addressed in this chapter by methods \textsf{M4}~MambaShield and
+\textsf{M6}~UC-HGP with a safe-mode transition threshold.}
+\label{fig:uav_kinetic_threats}
+\end{figure}
 
 The target defence tasks addressed by the proposed framework are as
 follows.
@@ -82,7 +101,36 @@ and \textsf{CyberSecLLM} audit accuracy.
 
 The combined four tasks reflect the taxonomy from
 Chapter~\ref{ch:methods} and admit the construction of a single
-defensive contour.
+defensive contour. A consolidated overview of the threats, attack
+surfaces, detection mechanisms and mitigation steps covered by the
+proposed framework is given in Fig.~\ref{fig:uav_overview}: it
+combines a representative UAV mission trajectory \emph{(take-off~---
+normal flight~--- mid-air collision~--- raptor strike~--- return)}
+with the catalogue of subsystem vulnerabilities (\emph{communication,
+navigation, sensors, control, power, physical layer, software/AI,
+environment}), the five principal ML-level adversarial-attack
+families (\emph{FGSM, PGD, C\&W, DeepFool, EOT}), the four stages of
+the defensive pipeline (\emph{identification $\to$ detection $\to$
+prevention $\to$ mitigation}), and the operational metric
+\emph{Mission-Completion-Rate vs.~$J/S$} whose empirical value is
+formalised in~\S\ref{sec:uav_phase_a_results}.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{figures/uav_infographic.png}
+\caption{Consolidated overview of vulnerabilities, attack scenarios,
+identification and prevention pathways for a neural-network UAV
+navigation system. The top panel shows a representative mission
+trajectory with characteristic failure points (\emph{signal jamming,
+spoofing, collision, link hijacking, raptor strike}). The middle
+panel lists the vulnerable subsystems. The bottom panel summarises
+the five principal ML-level adversarial-attack families, the attack
+surfaces, the \emph{detection~--- identification~--- prevention}
+pipeline and the baseline industry metric of mission completion as a
+function of jamming-to-signal ratio
+(cf.~Fig.~\ref{fig:uav_mission_completion}).}
+\label{fig:uav_overview}
+\end{figure}
 
 
 %%=====================================================================
