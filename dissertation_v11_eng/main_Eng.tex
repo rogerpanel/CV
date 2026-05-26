@@ -1,0 +1,211 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  main_Eng.tex  –  Master file for the dissertation (English version)
+%%  Title : Adversarially Robust Models and Algorithms for Enhancing
+%%          the Robustness and Efficiency of Hybrid Intrusion Detection
+%%          and Prevention Systems in Distributed and Non-Stationary
+%%          Conditions
+%%  Author: Roger Nick Anaedevha
+%%  Compile with: pdflatex -> bibtex -> pdflatex -> pdflatex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[14pt,a4paper,oneside]{extreport}
+
+%% ──────────────── Encoding and Language ────────────────
+\usepackage{cmap}                       % UTF-8 text layer in PDF
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian,english]{babel}     % English is the default
+
+%% ──────────────── Page Geometry (MEPhI standard) ────────────────
+\usepackage[left=30mm,right=15mm,top=25mm,bottom=20mm]{geometry}
+
+%% ──────────────── Typography ────────────────
+\usepackage{csquotes}
+\usepackage[expansion=false,protrusion=true]{microtype}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ──────────────── Mathematics ────────────────
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+%% ──────────────── Theorem environments ────────────────
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{example}[theorem]{Example}
+
+%% ──────────────── Graphics and Figures ────────────────
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage[section]{placeins}   % \FloatBarrier
+\usepackage{pgfplots}             % metric charts
+\pgfplotsset{compat=1.18}
+
+%% ──────────────── TikZ ────────────────
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,shapes,arrows.meta,calc,fit,
+                 decorations.pathreplacing,backgrounds,matrix}
+
+%% ──────────────── Tables ────────────────
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{array}
+
+%% ──────────────── Captions ────────────────
+\usepackage[labelsep=endash]{caption}
+
+%% ──────────────── Algorithms ────────────────
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlgoNoEnd
+\SetKwInput{KwInput}{Input}
+\SetKwInput{KwOutput}{Output}
+
+%% ──────────────── Code listings ────────────────
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  tabsize=4
+}
+
+%% ──────────────── Hyperlinks and Cross-references ────────────────
+\usepackage[colorlinks=true,linkcolor=blue!60!black,
+            citecolor=green!50!black,urlcolor=blue!70!black]{hyperref}
+\usepackage{cleveref}
+
+%% ──────────────── Bibliography ────────────────
+\usepackage[numbers,sort&compress]{natbib}
+
+%% ──────────────── Miscellaneous ────────────────
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{etoolbox}
+
+%% ──────────────── Page style ────────────────
+%% v11: chapter-name page headers removed (matches MEPhI samples).
+\pagestyle{plain}
+
+%% ──────────────── TOC depth ────────────────
+%% Chapters and sections only by default; depth=2 is locally re-enabled
+%% in important regions (Ch4 §4.3 M1-M7 results, Ch6 §6.5 subsystems).
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{3}
+
+%% ──────────────── Float placement parameters ────────────────
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.80}
+\setlength{\floatsep}{14pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{18pt plus 2pt minus 4pt}
+\setlength{\intextsep}{16pt plus 2pt minus 2pt}
+
+%% ──────────────── Custom math commands ────────────────
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathrm{Pr}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calV}{\mathcal{V}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calC}{\mathcal{C}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calK}{\mathcal{K}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bC}{\mathbf{C}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bdelta}{\boldsymbol{\delta}}
+\newcommand{\eps}{\varepsilon}
+\providecommand{\argmax}{\mathop{\mathrm{arg\,max}}}
+\providecommand{\argmin}{\mathop{\mathrm{arg\,min}}}
+\providecommand{\Norm}[1]{\left\lVert#1\right\rVert}
+
+%% ──────────────── TikZ colours ────────────────
+\definecolor{rootbg}{HTML}{2C3E50}
+\definecolor{mastbg}{HTML}{34495E}
+\definecolor{subbg}{HTML}{D5D8DC}
+\definecolor{subtxt}{HTML}{2C3E50}
+\definecolor{methbg}{HTML}{F2F3F4}
+\definecolor{methedge}{HTML}{5D6D7E}
+\definecolor{unifbg}{HTML}{E8DAEF}
+\definecolor{unifedge}{HTML}{7D3C98}
+\definecolor{foundbg}{HTML}{EAECEE}
+\definecolor{arrmain}{HTML}{2C3E50}
+\definecolor{arrcross}{HTML}{5D6D7E}
+\definecolor{arrlight}{HTML}{AEB6BF}
+\definecolor{labgray}{HTML}{7F8C8D}
+\definecolor{lablight}{HTML}{95A5A6}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  DOCUMENT BODY
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ──────────────── Preliminaries (roman numbering) ────────────────
+\pagenumbering{roman}
+\input{chapters/preliminaries_v10}
+
+%% ──────────────── Table of contents, lists ────────────────
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+\input{chapters/abbreviations_v10}
+
+%% ──────────────── Main matter (arabic numbering) ────────────────
+\newpage
+\pagenumbering{arabic}
+
+\input{chapters/Introduction_v10}
+\input{chapters/chapter1_v9}
+\input{chapters/chapter2_v9}
+\input{chapters/chapter3_v9}
+\input{chapters/chapter4_v9}
+\input{chapters/chapter5_v9}
+\input{chapters/chapter6_v11}
+\input{chapters/conclusion_v10}
+
+%% ──────────────── Bibliography ────────────────
+\newpage
+\addcontentsline{toc}{chapter}{Bibliography}
+\nocite{*}
+\bibliographystyle{unsrtnat}
+\bibliography{bibliography_v10}
+
+%% ──────────────── Appendices ────────────────
+\appendix
+\input{appendices/appendixA_v10}
+\input{appendices/appendixB_v10}
+\input{appendices/appendixC_v10}
+
+\end{document}

@@ -1,0 +1,413 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  introduction.tex  –  Introduction (not a numbered chapter)
+%%  v9 – Complete rewrite aligned with final presentation slides (v0).
+%%       5-chapter structure. Scientific novelty with first/original/novel.
+%%       Practical significance rewritten (who/how/where, not results).
+%%       Main Scientific Results scoped to specific developed models.
+%%       Documented GNN failures added as motivation evidence.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter*{INTRODUCTION}
+\addcontentsline{toc}{chapter}{Introduction}
+\markboth{INTRODUCTION}{INTRODUCTION}
+
+%%---------------------------------------------------------------------
+\section*{Relevance of the Research Topic}
+%%---------------------------------------------------------------------
+
+Graph neural networks~\cite{Kipf2017,Velickovic2018,Hamilton2017} have become the principal deep-learning paradigm for extracting predictive representations from relational data. They are widely deployed in healthcare (modelling molecules as atom-bond graphs and patient-interaction graphs for treatment recommendations), finance (analysing transaction graphs between accounts to detect fraud and money laundering), cybersecurity (analysing network traffic as graphs of connected devices to detect intrusions), and industrial systems (sensor-fusion graphs for SCADA and ICS monitoring), among other fields. Yet the very message-passing mechanism that gives these models their expressive power renders them vulnerable to perturbation~\cite{Zuegner2018,Bojchevski2019,Dai2018}.
+
+Existing graph neural network models suffer from four interconnected problems: (1)~being easily fooled by small, deliberate changes to input data or node connections; (2)~inability to handle new or changing patterns without retraining from scratch; (3)~being too slow and computationally expensive for real-time use on large graphs; and (4)~inability to share learning between organisations without leaking private data. These problems are dynamic in nature --- they change over time, yet share a common architectural root.
+
+To understand why this sensitivity arises, it is necessary to recognise the dual-input nature of graph neural networks. Unlike conventional neural networks that receive a single data tensor, a graph neural network receives two inputs simultaneously: numerical \emph{input data} ($\mathbf{X}\in\mathbb{R}^{n\times d}$, the feature matrix encoding entity attributes) and relational \emph{input structure} ($\mathbf{A}$, the adjacency matrix encoding pairwise connectivity). The network produces its output by propagating data along the structure through iterative neighbourhood aggregation. Perturbation of either input --- the data or the structure --- can compromise predictions. This dual-input nature is what distinguishes graph neural networks from conventional neural networks and is the source of the robustness challenges addressed in this dissertation.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.89\textwidth]{figures/fig1a_gnn.pdf}
+\caption{Dual-input nature of graph neural networks. The network receives both numerical data (feature matrix $\mathbf{X}$) and relational structure (adjacency matrix $\mathbf{A}$) as inputs. Perturbation of either input can compromise the learned representation, motivating the robustness framework developed in this dissertation.}
+\label{fig:dual_input}
+\end{figure}
+
+Most graph neural networks operate in discrete time, which deepens these vulnerabilities. Discrete-time models force irregular graph events onto a fixed clock, losing information and robustness guarantees. Continuous-time formulations --- for example, through neural ordinary differential equations~\cite{Chen2018,Chamberlain2021,Rusch2022} --- flow smoothly with event timing, capture multiple time scales in one model, and expose a Lipschitz bound that yields certified robustness, an advantage no discrete model can match. Because representations evolve according to a differential equation with a bounded Lipschitz constant, small perturbations of the input can only cause bounded, smooth changes in the output --- the smoothness of the governing flow mathematically limits how much an adversary can move the prediction. The Gr\"{o}nwall inequality formalises this: the distance between two ODE trajectories grows at most exponentially in $L_g T$, giving a closed-form robustness certificate:
+\begin{equation}
+\|\mathbf{h}_1(T)-\mathbf{h}_2(T)\|\le e^{L_g T}\|\mathbf{x}_1-\mathbf{x}_2\|,
+\label{eq:gronwall}
+\end{equation}
+where $\mathbf{h}_i(T)$ is the hidden state of trajectory $i$ at time $T$, $\mathbf{x}_i$ is the initial input, $L_g$ is the Lipschitz constant of the ODE vector field, and $\|\cdot\|$ denotes the Euclidean norm. Discrete-time graph neural networks have no such continuous handle, so perturbations compound unpredictably through each layer. However, continuous-time models receive limited attention in the literature and in current practice, which is why this dissertation focuses on their development through CT-GNN-based models.
+
+The urgency of these vulnerabilities is also driven by the broader evolution of the cyber-threat landscape from incidental attacks to targeted AI-enabled campaigns, as analysed in particular in the work of I.\,K.\,Sachkov~\cite{Sachkov2022threat}. The urgency is further confirmed by recent peer-reviewed studies documenting severe GNN failures across four safety-critical domains. In healthcare, an edge-sensitivity gradient attack on Graph Isomorphism Networks caused approximately 25\% AUC degradation on MoleculeNet benchmarks (Tox21, ClinTox, SIDER), with toxic compounds misclassified as safe~\cite{EdgeSensitivity2025}. In finance, the MonTi gang-injection attack nearly tripled the misclassification rate of GNN-based fraud detectors (CARE-GNN, PC-GNN, GAGA) from 25.7\% to 68.6\%~\cite{MonTi2025}. In industrial IoT, data poisoning of federated intrusion detectors caused a 64-percentage-point accuracy collapse from 94.2\% to 30.0\% under non-IID conditions~\cite{FerragPoisoning2023}. In cybersecurity, the PROVNINJA attack reduced GNN provenance-IDS detection by up to 59\%, rendering APT attackers invisible~\cite{PROVNINJA2023}. These documented failures confirm that GNN robustness lags predictive accuracy by 25--65 percentage points in every safety-critical domain, and this gap motivates the entire dissertation.
+
+A distributed environment is one in which multiple organisations (e.g.\ hospitals, banks, data centres) each hold a piece of the same graph data and cannot share it, so a shared model must learn from every piece through federated learning~\cite{Blanchard2017} --- without any party seeing another's raw information. Graph neural networks in distributed environments must be more stable, efficient, robust, and accurate, because they are entering safety-critical systems faster than their guarantees can be established: adversaries can fool them with small perturbations; distributions do shift after deployment; privacy laws restrict data sharing~\cite{Dwork2006,Abadi2016}; yet edge devices demand real-time inference. No existing approach addresses all four simultaneously --- this gap motivates the dissertation.
+
+Real graph data drifts after deployment --- topologies evolve, attack patterns change, new protocols emerge --- and static graph neural networks silently lose accuracy without warning. This is unacceptable in safety-critical systems where a stale model is a dangerous model. The objective is to build dynamic graph neural networks that detect distribution shift online, adapt parameters without forgetting previously learned patterns, and quantify uncertainty through Bayesian posterior updates~\cite{Gal2016,Kendall2017} to flag novel inputs for human review.
+
+Existing graph neural network and transformer-based models~\cite{Vaswani2017,Ying2021} scale quadratically ($\mathcal{O}(L^2)$) with sequence length because every node must attend to every other node, making them too slow and memory-hungry for real-time inference on large temporal graphs with millions of events. Literature reveals that structured state-space models~\cite{Gu2022,Gu2024,Dao2024} are more efficient, reducing cost to $\mathcal{O}(L\log L)$ through Fast Fourier Transform convolutions and enabling deployment on edge devices where transformer-scale models are infeasible. Therefore, this dissertation proposes the shift of attention and practices from transformers towards selective state-space models for graph-structured data.
+
+The four problems described above are not independent; they form a logical chain whose links determine the progressive scope of this dissertation. Continuous-time graph dynamics supply the representational foundation; federated algorithms enable distributed deployment; efficient state-space inference allows real-time operation; and online Bayesian adaptation ensures long-term reliability. Each task's output is consumed by the next, and no existing approach jointly addresses all four across the three operating conditions and four requirements identified below.
+
+%%---------------------------------------------------------------------
+%%  Conditions and Requirements
+%%---------------------------------------------------------------------
+
+The three operating conditions and four cross-cutting requirements are independent --- they define the space in which any graph-based AI system must operate reliably. The dissertation proposes methods that fulfil all of them simultaneously.
+
+The three operating conditions are: (1)~the adversarial environment, in which a deliberate opponent perturbs the graph topology, node features, or temporal ordering of events; (2)~the distributed environment, in which graph data is fragmented among organisations that cannot centralise their data and where some participants may be unreliable or adversarial; and (3)~non-stationarity, in which the statistical properties of the graph evolve over time.
+
+The four cross-cutting requirements are: (R1)~robustness --- predictions must remain stable under perturbation; (R2)~accuracy --- high classification performance must be maintained; (R3)~efficiency --- graph events must be processed fast enough for real-time operation; and (R4)~differential privacy --- the training process must not reveal confidential data.
+
+%%---------------------------------------------------------------------
+%%  Tables: Conditions and Requirements with model assignments
+%%---------------------------------------------------------------------
+
+\begin{table}[htbp]
+\centering
+\caption{Three operating conditions and the methods developed to address them.}
+\label{tab:conditions_methods}
+\small
+\begin{tabular}{p{2.8cm} p{3.2cm} p{7.5cm}}
+\toprule
+\textbf{Condition} & \textbf{Methods} & \textbf{Rationale} \\
+\midrule
+\textbf{C1: Adversarial Environment}
+& M1: CT-TGNN\newline M5: Stoch.\ Transformer\newline M7: Certification
+& Continuous-time neural ODEs impose Lipschitz-bounded smoothness on the representation trajectory, providing deterministic robustness certificates that discrete-time alternatives cannot offer. Stochastic adversarial training and game-theoretic equilibrium strategies complement the architectural guarantee with adaptive defence. \\
+\addlinespace
+\textbf{C2: Non-Stationary Conditions}
+& M1: CT-TGNN\newline M3: TripleE-TGNN\newline M4: MambaShield\newline M6: UC-HGP
+& CT-TGNN captures temporal evolution through neural differential equations; TripleE-TGNN prevents catastrophic forgetting through elastic weight consolidation; MambaShield provides near-linear efficiency; and UC-HGP supplies hierarchical Gaussian process uncertainty for drift detection. \\
+\addlinespace
+\textbf{C3: Distributed Network Dynamics}
+& M2: FedLLM-API\newline M7: Certification
+& Optimal transport through Sinkhorn iterations corrects for heterogeneity across graph fragments, while coordinate-wise trimmed-mean aggregation tolerates corrupted participants and calibrated Gaussian noise enforces a formal privacy budget. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Four cross-cutting requirements and the methods that fulfil them.}
+\label{tab:requirements_methods}
+\small
+\begin{tabular}{p{2.3cm} p{3.5cm} p{7.5cm}}
+\toprule
+\textbf{Requirement} & \textbf{Methods} & \textbf{Rationale} \\
+\midrule
+\textbf{R1: Robustness}
+& M1: CT-TGNN\newline M4: MambaShield\newline M7: Certification
+& CT-TGNN provides Lipschitz-bounded continuous dynamics; MambaShield resists training-time poisoning through progressive distillation; the certification framework ties guarantees together through randomised smoothing and interval bound propagation. \\
+\addlinespace
+\textbf{R2: Accuracy}
+& M3: TripleE-TGNN\newline M5: Stoch.\ Transformer\newline M6: UC-HGP
+& Multi-level graph embeddings capture structure at service, trace, and node levels; variational Bayesian attention decomposes uncertainty; hierarchical Gaussian processes provide calibrated confidence intervals. \\
+\addlinespace
+\textbf{R3: Efficiency}
+& M4: MambaShield\newline M2: FedLLM-API\newline M3: TripleE-TGNN
+& MambaShield reduces inference cost from quadratic to near-linear; FedLLM-API reduces communication rounds; TripleE-TGNN achieves savings through structured sparsity and quantisation-aware training. \\
+\addlinespace
+\textbf{R4: Privacy}
+& M2: FedLLM-API\newline M1: CT-TGNN\newline M7: Certification
+& FedLLM-API enforces $(\epsilon,\delta)$-differential privacy; CT-TGNN supports differentially private feature extraction; the certification framework tracks the cumulative privacy budget. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The three conditions are not mutually exclusive: real-world graph systems typically face two or all three simultaneously. Figure~\ref{fig:conditions_venn} illustrates how the seven methods are positioned within the space defined by the intersecting conditions. Methods placed at the intersection of two or three conditions address the coupled challenges that arise when those conditions co-occur, and the requirement triangle on the right shows how the three non-privacy requirements (accuracy, efficiency, robustness) are jointly satisfied by complementary architectural choices.
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.89\columnwidth]{figures/fig2a_t_by_f.pdf}
+\caption{Positioning of the seven methods within the space of operating conditions (left) and requirements (right). The Venn diagram shows that each method addresses one or more conditions, with M4: MambaShield at the intersection of all three owing to its efficiency under adversarial perturbation and non-stationary drift in distributed deployments. M1: CT-TGNN bridges the adversarial and non-stationary conditions through certified continuous-time dynamics. The requirement triangle shows how accuracy, efficiency, and robustness are jointly achieved through complementary architectural choices.}
+\label{fig:conditions_venn}
+\end{figure}
+
+
+%%---------------------------------------------------------------------
+%%  Architectural framework
+%%---------------------------------------------------------------------
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/Main_arch_v1a.pdf}
+\caption{Architectural framework of the research programme. Seven methods cover all 12 intersections of the $3\times4$ condition--requirement matrix. Each is formulated at the level of mathematical operations on graphs --- domain-independent. All models (CT-TGNN, SDE-TGNN, FedLLM-API, TripleE-TGNN, MambaShield, Stochastic Transformer, UC-HGP) are developed by the author and documented in 18~peer-reviewed publications.}
+\label{fig:dissertation_architecture}
+\end{figure}
+
+The framework ensures domain independence. Every method is formulated at the level of mathematical operations on graph structures, without reference to any particular application field. It is only in later chapters that these methods are mapped onto the entities and constraints of specific deployment environments. With the problem space, operating conditions, and architectural framework now established, the next section states the precise research objective and the sequential tasks through which it is realised.
+
+
+%%---------------------------------------------------------------------
+\section*{Research Objective}
+%%---------------------------------------------------------------------
+
+The central objective of this dissertation is to increase the robustness of graph neural networks against adversarial perturbations, their stability under non-stationary conditions, their efficiency and accuracy for real-time use, and their privacy preservation in distributed environments.
+
+Realising this objective requires the completion of seven research tasks arranged in a sequential chain, so that the output of each task supplies an input required by the next.
+
+\noindent 1.\quad Develop continuous-time (CT) models by means of neural ordinary differential equations with multi-scale temporal dynamics and Lipschitz-certified robustness.
+
+\noindent 2.\quad Develop methods that allow the CT-models to operate in distributed environments by means of federated learning with Byzantine-resilient aggregation, differential privacy, and optimal-transport distributional alignment.
+
+\noindent 3.\quad Develop methods that reduce the trade-off cost and increase the efficiency of both monolithic and distributed models by means of multi-level embeddings combined with selective state-space architectures (MambaShield) that lower complexity from quadratic to near-linear.
+
+\noindent 4.\quad Develop methods to estimate and adapt GNNs to non-stationary environments --- that is, distribution drift --- by means of Hierarchical Gaussian Processes for calibrated uncertainty quantification and online Bayesian posterior updates.
+
+\noindent 5.\quad Integrate all methods into a unified framework, validate it on large-scale benchmarks, and prove its quality to make it ready for deployment, by means of consistency regularisation and comprehensive benchmarking.
+
+\noindent 6.\quad Adapt the unified framework to cybersecurity applications, taking into account the specific features of this area of use, by means of domain-specific adapters and threat-model refinement.
+
+\noindent 7.\quad Apply the unified framework and demonstrate its quality and domain-independence in two safety-critical areas~--- hybrid Network Intrusion Detection and Prevention Systems (NIDPS) by means of real-time deployment on the \textsf{RobustIDPS.ai} software platform, and the neural-network navigation subsystem of unmanned aerial vehicles operating under electronic-warfare pressure (Phase~A reference implementation, see Chapter~6).
+
+
+%%---------------------------------------------------------------------
+\section*{Object of Research}
+%%---------------------------------------------------------------------
+
+The object of this investigation is Dynamic Graph Neural Networks (GNNs) functioning in adversarial, non-stationary, and distributed environments. In concrete terms, the investigation covers the class of deep-learning models, training algorithms, and supporting mathematical frameworks whose properties determine whether a graph neural network can operate reliably under adversarial perturbation of graph topology and node features, distributional non-stationarity of the evolving graph, privacy constraints on distributed graph fragments, and limited computational budgets for temporal graph processing. This includes neural ordinary differential equations~\cite{Chen2018,Pontryagin1962} together with adjoint-based training on graph-structured domains, temporal graph neural networks with continuous-time dynamics~\cite{Xu2020tgat,Rossi2020,Chamberlain2021}, optimal-transport formulations for distributional comparison and alignment of heterogeneous graph fragments~\cite{Villani2009,Peyre2019}, structured state-space models for efficient sequential inference on graph event sequences~\cite{Gu2022,Dao2024,Behrouz2024graphmamba}, Bayesian neural networks for decomposing predictive uncertainty on graph-structured data~\cite{Blundell2015,Lakshminarayanan2017}, game-theoretic models of strategic interaction between a graph classifier and an adversary~\cite{Tambe2011,Sinha2018}, and robust optimisation formulations that embed worst-case graph perturbations directly into the training objective~\cite{Madry2018,Zhang2019trades}. The object is defined at the level of mathematical and algorithmic constructs on graph domains, independently of any particular application.
+
+
+%%---------------------------------------------------------------------
+\section*{Subject of Research}
+%%---------------------------------------------------------------------
+
+The subject of research is methods to ensure the robustness, efficiency, differential privacy, and accuracy of Dynamic GNNs functioning in adversarial, non-stationary, and distributed environments. These methods include neural ordinary differential equation architectures for certified continuous-time dynamics, federated optimisation algorithms with Byzantine-resilient aggregation and optimal-transport alignment, multi-level temporal graph embeddings with elastic weight consolidation, selective state-space models for efficient sequential inference, Bayesian posterior update mechanisms for online drift adaptation, and game-theoretic certification frameworks for provable robustness guarantees. The mathematical formulations and algorithmic designs are constructed to be portable to any field in which learned models on graphs confront adversarial or non-stationary conditions, including healthcare, finance, autonomous systems, and precision agriculture. It is only in the application chapters that these methods are instantiated in specific domains.
+
+
+%%---------------------------------------------------------------------
+\section*{Research Methods}
+%%---------------------------------------------------------------------
+
+The methodological programme of this dissertation is organised around eight formal methods, each selected because it addresses a specific and measurable aspect of the graph robustness problem.
+
+Neural ordinary differential equations model the continuous evolution of node representations through a parameterised vector field,
+\begin{equation}
+\frac{d\bh(t)}{dt} = f_\theta\!\bigl(\bh(t),\, t\bigr),
+\label{eq:node}
+\end{equation}
+solved with adaptive-step numerical integrators. Their role is to provide dynamics on graph structures whose output sensitivity, measured by the Lipschitz constant of the learned mapping, can be estimated and reported as a robustness certificate (central to Methods M1: CT-TGNN and M3: TripleE-TGNN).
+
+Graph neural networks extend learned representations to relational data through neighbourhood aggregation,
+\begin{equation}
+\bh_v^{(k+1)}
+= \phi\!\Bigl(\bh_v^{(k)},\;
+  \bigoplus_{u\in\calN(v)}
+    \psi\!\bigl(\bh_u^{(k)},\, \mathbf{e}_{uv}\bigr)\Bigr),
+\label{eq:gnn_mp}
+\end{equation}
+and their coupling with the neural ODE on a time-varying adjacency structure produces temporal graph models that capture both topological and temporal dependencies (used in Methods M1, M3, and M5).
+
+Optimal transport supplies a geometry on probability distributions through the Wasserstein distance,
+\begin{equation}
+W_p(\mu,\nu)
+= \Bigl(\inf_{\gamma\in\Pi(\mu,\nu)}
+    \int c(\bx,\by)\,d\gamma(\bx,\by)
+  \Bigr)^{\!1/p},
+\label{eq:wasserstein}
+\end{equation}
+whose entropic regularisation via Sinkhorn iterations reduces computational cost. In this work the method is applied to align heterogeneous graph-fragment distributions within a federated optimisation loop while preserving a measurable differential privacy budget (central to Method M2: FedLLM-API).
+
+Differential privacy formalises data-record-level confidentiality through the condition
+\begin{equation}
+\Prob\bigl[\calM(\calD)\in S\bigr]
+\;\le\;
+e^{\epsilon}\;\Prob\bigl[\calM(\calD')\in S\bigr] + \delta,
+\label{eq:dp}
+\end{equation}
+and its moments-accountant composition enables precise tracking of the cumulative privacy expenditure $\epsilon$ across training rounds (used in Methods M2 and M7).
+
+State-space models reformulate the sequential processing of graph events as a linear dynamical system,
+\begin{equation}
+\bh_{t+1} = \bA\,\bh_t + \bB\,\bx_t, \qquad
+\by_t = \bC\,\bh_t + \bD\,\bx_t,
+\label{eq:ssm}
+\end{equation}
+whose convolutional kernel is evaluated in near-linear time through the Fast Fourier Transform (central to Methods M4: MambaShield and M5: Stochastic Transformer).
+
+Robust optimisation embeds worst-case graph perturbations directly into parameter estimation through the min-max objective
+\begin{equation}
+\min_\theta\;
+\E_{(\bx,y)\sim\calD}
+\Bigl[
+  \max_{\|\bdelta\|\le\epsilon}
+    \calL\!\bigl(f_\theta(\bx+\bdelta),\,y\bigr)
+\Bigr],
+\label{eq:robust_opt}
+\end{equation}
+whose duality structure links the perturbation budget $\epsilon$ to the output sensitivity of the learned mapping on the graph (used in Methods M1 and M7).
+
+Bayesian inference produces posterior predictive distributions that decompose total predictive uncertainty into epistemic uncertainty (attributable to limited training data) and aleatoric uncertainty (arising from inherent noise). In this work, variational Bayesian attention and hierarchical Gaussian processes provide this decomposition for graph-structured data (central to Methods M5 and M6).
+
+Game-theoretic modelling formalises the adversarial setting as a strategic interaction between a defender (the graph classifier) and an attacker. Stackelberg equilibrium analysis and no-regret online learning algorithms determine optimal defensive strategies under a worst-case perturbation model (central to Method M7).
+
+Byzantine-resilient aggregation employs coordinate-wise trimmed means to filter corrupted gradient updates in federated graph-learning settings (central to Method M2: FedLLM-API).
+
+In addition to these mathematical methods, the research applies standard practices of software engineering, distributed systems design, and high-performance computing to ensure that the resulting implementations can process large-scale temporal graph streams within the latency constraints of real-time operational environments.
+
+
+%%---------------------------------------------------------------------
+\section*{Scientific Novelty}
+%%---------------------------------------------------------------------
+
+The scientific novelty of this work consists of seven contributions, each scoped to a specific model or algorithm developed by the author.
+
+\noindent 1.\quad \textbf{CT-TGNN} --- the \emph{first} continuous-time temporal GNN unifying graph message passing with neural ODE dynamics on evolving topologies, with $O(1)$-memory adjoint training and Lipschitz-certified robustness bounds. No prior work derives certified robustness from the smoothness of the governing differential equation on temporally evolving graph topologies.
+
+\noindent 2.\quad \textbf{FedLLM-API} --- an \emph{original} Byzantine-resilient federated graph optimiser combining trimmed-mean aggregation with $(\varepsilon{=}0.85,\,\delta{=}10^{-5})$ differential privacy and Wasserstein OT alignment, with proven $\mathcal{O}(1/\sqrt{T})$ convergence under 30\% corruption. No prior algorithm jointly guarantees corruption tolerance, privacy protection, and distributional alignment for graph-structured data.
+
+\noindent 3.\quad \textbf{TripleE-TGNN} --- a \emph{novel} multi-level temporal graph embedding learning service/trace/node representations via dual attention with elastic weight consolidation against catastrophic forgetting. No prior architecture learns multi-level temporal graph representations while simultaneously preventing forgetting.
+
+\noindent 4.\quad \textbf{MambaShield} --- a \emph{new} selective state-space architecture reducing complexity from $\mathcal{O}(L^{2})$ to $\mathcal{O}(L\log L)$ via FFT convolutions, with progressive adversarial distillation and PAC-Bayesian certificates. Prior structured state-space models have not been adapted to graph data with formal robustness guarantees.
+
+\noindent 5.\quad \textbf{Stochastic Transformer + UC-HGP} --- the \emph{first} uncertainty-calibrated GNN inference combining variational Bayesian attention with hierarchical Gaussian processes for epistemic--aleatoric decomposition. No prior work integrates these two uncertainty mechanisms for graph-structured online adaptation.
+
+\noindent 6.\quad \textbf{Game-theoretic certification} --- an \emph{original} robustness certification via Stackelberg equilibria with no-regret multiplicative weights ($R(T)\!\leq\!\sqrt{T\log|S|}$), coupling all seven methods through consistency regularisation. No prior unified framework issues provable guarantees against all four perturbation types simultaneously.
+
+\noindent 7.\quad \textbf{CyberSecLLM} --- a \emph{novel} domain-specific foundation model with ODE-augmented state-space blocks, an 11-task benchmark, and million-token graph event sequence processing in 2.3\,s. These contributions are distilled into the following main scientific results submitted for defence.
+
+
+%%---------------------------------------------------------------------
+\section*{Main Scientific Results Submitted for Defence}
+%%---------------------------------------------------------------------
+
+The results submitted for defence are listed in the order that reflects their logical dependencies; each result builds upon the guarantees established by its predecessors.
+
+(1) \textbf{CT-TGNN and SDE-TGNN models for certified graph dynamics} --- original continuous-time architectures in which neural ODEs and stochastic differential equations govern node and edge evolution on dynamic topologies, yielding certified robustness bounds via Lipschitz analysis of the learned vector field.
+
+(2) \textbf{FedLLM-API algorithm for privacy-preserving distributed graph learning} --- convergence-proven federated optimiser combining Byzantine-resilient trimmed-mean aggregation with $(\varepsilon{=}0.85,\,\delta{=}10^{-5})$ differential privacy and Wasserstein optimal-transport alignment for heterogeneous graph fragments.
+
+(3) \textbf{TripleE-TGNN architecture for multi-level temporal graph representation} --- triple-embedding framework learning service-, trace-, and node-level structure via dual attention and elastic weight consolidation, reducing computational cost through structured sparsity while preventing catastrophic forgetting.
+
+(4) \textbf{MambaShield architecture for efficient graph inference} --- selective state-space model reducing inference complexity from $\mathcal{O}(L^{2})$ to $\mathcal{O}(L\log L)$ via FFT convolutions, with progressive adversarial distillation and PAC-Bayesian generalisation certificates.
+
+(5) \textbf{Stochastic Transformer and UC-HGP models for uncertainty-aware drift adaptation} --- variational Bayesian attention with hierarchical Gaussian process inference providing epistemic--aleatoric decomposition, online drift detection, and sub-linear regret guarantees under non-stationary graph distributions.
+
+(6) \textbf{Unified certification framework integrating models (1)--(5)} --- single evaluation methodology coupling all developed models through game-theoretic Stackelberg equilibria and consistency regularisation, validated across 6 benchmark datasets totalling 84.2 million labelled samples.
+
+
+%%---------------------------------------------------------------------
+\section*{Theoretical and Practical Significance}
+%%---------------------------------------------------------------------
+
+\textbf{Theoretical significance.} The work establishes a unified mathematical framework that contributes to the fields of graph-based machine learning, robust optimisation, and distributed AI by integrating five foundational theories: neural ODEs for certified continuous-time dynamics on graphs, optimal transport for privacy-preserving distributional alignment, selective state-space models for efficient temporal inference, Bayesian inference for calibrated uncertainty decomposition, and game-theoretic strategy selection for provable robustness certification. This framework advances the theoretical understanding of how robustness, stability, privacy, and efficiency interact on dynamic graph structures, providing formal convergence, generalisation, and privacy bounds that are applicable beyond any single domain.
+
+\textbf{Practical significance.} The developed methods and algorithms are useful across multiple domains and can be implemented as follows. In healthcare, CT-TGNN and SDE-TGNN can be integrated into clinical decision-support and drug-interaction platforms by biomedical AI teams to provide certified-safe molecular graph predictions. In finance, FedLLM-API enables banks and regulators to collaboratively train fraud-detection models on transaction graphs without sharing customer data, deployable via existing federated infrastructure. In industrial IoT, MambaShield's near-linear complexity allows deployment on edge gateways and SCADA controllers by OT security engineers for real-time anomaly detection on sensor graphs. In autonomous systems, the uncertainty-calibrated methods (UC-HGP) provide safety engineers with epistemic confidence scores for sensor-fusion graph decisions. In cybersecurity, the open-source RobustIDPS.ai platform (DOI: 10.5281/zenodo.19129512) is directly usable by SOC analysts, cybersecurity engineers, MLSecOps researchers, and AI developers --- designed as a plug-in for Snort, Suricata, and similar IDPS frameworks. The public release of the software code base, experimental protocols, hyperparameter tables, and pre-trained checkpoints supports independent reproduction and practical adoption of the results.
+
+
+%%---------------------------------------------------------------------
+\section*{Reliability of Scientific Results}
+%%---------------------------------------------------------------------
+
+Confidence in the reported results is established through multiple independent lines of validation.
+
+Every proposed algorithm is accompanied by formal mathematical analysis: convergence theorems with explicit rate expressions, robustness certificates derived from the output-sensitivity analysis of graph neural dynamics and randomised smoothing adapted to discrete graph structures, privacy guarantees obtained through moments-accountant composition of the Gaussian mechanism, and computational complexity bounds confirmed by both asymptotic argument and empirical profiling. Proofs draw on standard tools from functional analysis, spectral graph theory, optimisation theory, probability, and the theory of ordinary differential equations.
+
+Empirical evaluation spans six benchmark datasets that together supply more than eighty-four million labelled samples across eighty-four perturbation categories. Three general-purpose network datasets are used: CIC-IoT-2023 with 46.6 million records across 33 categories, CSE-CICIDS2018 with 16.2 million records across 7 categories, and UNSW-NB15 with 2.5 million records across 9 categories. Three specialised cloud and edge datasets from the ICS3D collection supplement these: the Microsoft GUIDE corpus with 13.7 million records, the Container Security corpus with 3.2 million records, and the Edge-IIoT corpus with 2.0 million records.
+
+Ablation experiments systematically remove individual components to quantify the marginal contribution of each. Adversarial robustness is assessed under white-box attacks (FGSM, PGD, Carlini--Wagner), black-box transfer attacks, and adaptive attacks. All experiments are documented with hyperparameter tables, random-seed specifications, and hardware descriptions sufficient for independent replication. Source code and pre-trained weights are publicly available.
+
+
+%%---------------------------------------------------------------------
+\section*{Approbation of the Work}
+%%---------------------------------------------------------------------
+
+The principal results of this research have been presented and peer-reviewed at international and national scientific venues.
+
+At the IEEE Conference of Young Researchers in Electrical and Electronic Engineering (ElCon), held at ETU-LETI in Saint Petersburg in 2024 and 2025, contributions on graph-based device identification and reinforcement-learning-based poisoning detection received constructive feedback and recognition.
+
+At the NEUROINFORMATICS International Conference in Moscow in 2024 and 2025, work on stochastic graph transformers with uncertainty quantification was discussed with specialists in computational intelligence.
+
+A submission associated with the IEEE 27th International Conference of Young Professionals in Electron Devices and Materials (EDM) extends the graph-robustness framework to industrial control settings and is scheduled for 2026.
+
+The developed algorithms have additionally been evaluated through collaborations with industry partners. Implementation acts have been received from four organisations: Rosatom State Corporation, Positive Technologies LLC, Google Cloud Platform, and Suricata Open Source IDPS.
+
+
+%%---------------------------------------------------------------------
+\section*{Publications}
+%%---------------------------------------------------------------------
+
+The findings of this dissertation have been communicated through peer-reviewed publications in international journals and conference proceedings.
+
+\subsection*{Published Journal Articles}
+
+\noindent
+1. Anaedevha, R.\,N., Trofimov, A.\,G., Borodachev, Y.\,V. (2026). MambaShield: Selective State-Space Models for Poisoning-Resilient Sequential Modeling. \textit{Expert Systems with Applications}, Elsevier. DOI: 10.1016/j.eswa.2026.131175
+
+\noindent
+2. Anaedevha, R.N., Trofimov, A.G. and Borodachev, Y.V., 2026. Uncertainty-calibrated hierarchical Gaussian processes for intrusion detection with multi-scale temporal modeling. \textit{Neurocomputing} p.133105, Elsevier. DOI: 10.1016/j.neucom.2026.133105
+
+\noindent
+3. Anaedevha, R.\,N., Trofimov, A.\,G. (2025). Stochastic Multimodal Transformer with Uncertainty Quantification for Robust Network Intrusion Detection. In: \textit{Advances in Neural Computation, Machine Learning, and Cognitive Research~IX. NEUROINFORMATICS~2025}. Studies in Computational Intelligence, vol.\,1241. Springer, Cham. DOI: 10.1007/978-3-032-07690-8\_35
+
+\noindent
+4. Anaedevha, R.\,N., Trofimov, A.\,G. (2024). Improved Robust Adversarial Model against Evasion Attacks on Intrusion Detection Systems. \textit{Optical Memory and Neural Networks (Information Optics)}, 33(Suppl.\,3), S414--S423. Springer. DOI: 10.3103/S1060992X24700681
+
+\noindent
+5. Anaedevha, R.\,N. \textit{et~al.}\ (2026). Temporal Adaptive Neural Ordinary Differential Equations with Deep Spatio-Temporal Point Processes for Real-Time Network Intrusion Detection. \textit{Complex and Intelligent Systems}, Springer. DOI:~10.1007/s40747-026-02291-7
+
+
+\subsection*{Published Conference Proceedings}
+
+\noindent
+6. Anaedevha, R.\,N. \textit{et~al.}\ (2025). Integrated Deep Q-Networks and Actor-Critic Models for Enhanced Poisoning Attack Detection in Network Intrusion Detection Systems. In: \textit{2025 Conf.\ of Young Researchers in Electrical and Electronic Engineering (ElCon)}, ETU-LETI, Saint Petersburg. IEEE Xplore, Vol.\,33, Issue Suppl.\,3, pp.\,556--567.
+
+\noindent
+7. Anaedevha, R.\,N. \textit{et~al.}\ (2024). Application of Machine Learning Models for Device Identification in Wireless Network Traffic. In: \textit{2024 Conf.\ of Young Researchers in Electrical and Electronic Engineering (ElCon)}, Saint Petersburg. IEEE Xplore, pp.\,104--110. DOI: 10.1109/ElCon61730.2024.10468413
+
+\subsection*{Papers Under Peer Review}
+
+\noindent
+9. Anaedevha, R.\,N. \textit{et~al.}\ (2026). TripleE-TGNN: Triple-Embedding Temporal Graph Neural Networks for Multi-Granularity Microservices Security. Submitted to \textit{IEEE Trans.\ Dependable and Secure Computing}. ID: TDSC-2025-12-2593.
+
+\noindent
+10. Anaedevha, R.\,N. \textit{et~al.}\ (2026). PQ-IDPS: Adversarially Robust Intrusion Detection for Post-Quantum Encrypted Traffic with Hybrid Classical-Quantum Machine Learning. Submitted to \textit{IEEE Trans.\ Neural Networks and Learning Systems}. ID: TNNLS-2025-P-45911.
+
+\noindent
+11. Anaedevha, R.\,N. \textit{et~al.}\ (2026). FedLLM-API: Privacy-Preserving Large Language Model Federation for Zero-Day API Threat Detection Across Organizational Boundaries. Submitted to \textit{IEEE Trans.\ Information Forensics and Security}. ID: T-IFS-25044-2025.
+
+\noindent
+12. Anaedevha, R.\,N. \textit{et~al.}\ (2026). CT-TGNN: Continuous-Time Temporal Graph Neural Networks for Real-Time Threat Propagation Analysis in Encrypted Zero-Trust Microservices. Submitted to \textit{IEEE Trans.\ Services Computing}. ID: TSC-2025-12-1636.
+
+\subsection*{Summary of Publications}
+
+The total output comprises 18 papers: 5 published in journals, 2 in conference proceedings, 2 accepted and in press, and 9 under review. Sixteen papers (89\%) are first-authored. Eight appear in Scopus- and Web-of-Science-indexed journals, three in VAK-listed journals, and six are under review at Q1-ranked IEEE Transactions. Preprints are available on TechRxiv and Research Square, with citation records maintained on Google Scholar (h-index:~4) and ORCID (0000-0003-3649-1561).
+
+
+%%---------------------------------------------------------------------
+\section*{Structure and Volume of the Work}
+%%---------------------------------------------------------------------
+
+The dissertation comprises an Introduction, six chapters, a Conclusion, a bibliographic list, and three appendices. The main text is 230~pages. The bibliography contains 204~entries.
+
+The Introduction establishes the relevance of robust and efficient learning on dynamic graph structures as a foundational research challenge, presents documented evidence of GNN failures across four safety-critical domains, states the research objective with seven sequential tasks, defines the object and subject of investigation, describes the research methods with their formal equations, sets out the scientific novelty of seven developed models, specifies the theoretical and practical significance, formulates six main scientific results submitted for defence, confirms the reliability of results, and documents approbation activities and publications.
+
+Chapter~1, ``Analysis of Existing Literature and Gap Identification,'' surveys the literature following the progressive scope of the research: continuous-time dynamics on evolving graphs, distributed federated learning with privacy, computational efficiency for large-scale graphs, and non-stationary adaptation with uncertainty quantification. The chapter is organised so that each section addresses one or more intersections of the three operating conditions and four cross-cutting requirements, building toward a systematic enumeration of seven research gaps. Each section concludes with a bridging statement that connects the identified gap to the solution developed in the following chapter, ensuring that the reader follows the logical chain from open problem to proposed method.
+
+Chapter~2, ``Methods, Algorithms, and Mathematical Frameworks for Robust Dynamic Graph Neural Networks,'' presents the complete mathematical derivations, convergence and robustness proofs, algorithmic pseudocode, architectural schematics, and complexity analyses for all seven methods (M1--M7) and their extensions (SDE-TGNN, CyberSecLLM). The chapter flows according to the gaps enumerated in Chapter~1: Method~M1 (CT-TGNN) addresses Gap~1 with neural ODE dynamics and Lipschitz certification; Method~M2 (FedLLM-API) addresses Gap~2 with Byzantine-resilient federated optimisation; Method~M3 (TripleE-TGNN) addresses Gap~3 with multi-level temporal embeddings; Method~M4 (MambaShield) addresses Gap~4 with selective state-space inference; Methods~M5/M6 (Stochastic Transformer, UC-HGP) address Gap~6 with uncertainty-calibrated adaptation; and Method~M7 addresses Gap~7 with game-theoretic unified certification. Each method is formulated at the level of mathematical operations on graph structures, independently of any application domain, and uniquely derived functions, loss formulations, and training schemes are presented with formal proofs.
+
+Chapter~3, ``Adaptation and Alignment to Network Intrusion Detection and Prevention Systems,'' is the domain-specific chapter in which the mathematical methods of Chapter~2 are mapped onto the entities and constraints of cybersecurity and, invariably, hybrid Network Intrusion Detection and Prevention Systems (NIDPS). The chapter defines the cybersecurity-specific terminologies, describes how raw network traffic (PCAP files and flow-level CSV data) is transformed into graph structures suitable for input into the developed GNN architectures, specifies the hyperparameters and their selection rationale for each model in the security context, defines the classification taxonomy (34 classes across 33 attack types and 1 benign class), presents the optimisation procedures and loss functions as applied to network-security objectives, and describes the feature engineering pipeline (83 engineered features across five categories). Each section demonstrates how a specific method from Chapter~2 is instantiated with domain-specific adapters and threat-model refinements.
+
+Chapter~4, ``Experimental Results and Validation,'' presents the complete experimental programme demonstrating how the published research papers align with the methods of the dissertation. The chapter covers six benchmark datasets totalling 84.2 million labelled samples across 84 attack categories, a twenty-three-metric unified evaluation framework, method-specific results with tables and figures, baseline comparisons against classical ML and recent GNN defences, ablation studies quantifying the marginal contribution of each component, adversarial robustness assessments under six attack families (FGSM, PGD, C\&W, DeepFool, Gaussian noise, label-masking poisoning) at configurable perturbation budgets, cross-domain transfer experiments confirming domain independence, and federated learning experiments under Byzantine corruption. Results are presented with tables, bar charts, line plots, and TikZ-rendered diagrams to ensure reproducibility and visual clarity.
+
+Chapter~5, ``RobustIDPS.ai: Software Platform for Production Deployment,'' describes the open-source software platform (DOI: 10.5281/zenodo.19129512) that implements all developed methods as a unified, deployable system. The chapter specifies the target users (SOC analysts, cybersecurity engineers, MLSecOps researchers, AI developers, and academic researchers), describes the platform's 46-page Progressive Web Application organised into 9 functional groups (AI Command Center, AI Active Defence, SOC Intelligence Suite, LLM Attack Surface Testing, MLSecOps Standards Compliance, AI Security and Governance, AI Novel Methods, AI Data and Models, and System Administration), details the 13+ integrated neural network models and their real-time inference capabilities, presents the 4-layer LLM defence framework achieving 94.5\% detection across 517 attack scenarios with four commercial LLM backends (Claude, GPT-4o, Gemini, DeepSeek), describes the Multi-Agent PQC-IDS module for post-quantum traffic classification, and explains the platform's architecture (React 18 frontend, Flask/Python backend, Docker Compose orchestration, PostgreSQL persistence, Redis caching). The chapter includes at least six figures showing the platform's user interface and operational results, demonstrates how the platform can be deployed as a plug-in for existing IDPS frameworks such as Snort and Suricata, and presents the three purpose-built PCAP validation datasets for reproducible benchmarking. The chapter concludes with a summary of the platform's achievements and its alignment with the research objective.
+
+Chapter~6, ``Application of the Unified Defence Framework to a
+Neural-Network UAV Navigation System,'' demonstrates the domain
+independence of the models and methods developed in
+Chapters~\ref{ch:methods}--\ref{ch:experiments} by transferring them
+to a new safety-critical area~--- counter-EW (electronic warfare) and
+adversarial-ML for the navigation subsystem of unmanned aerial
+vehicles. The chapter describes a three-tier
+\emph{onboard~--- droneport~--- cloud} architecture, the operational
+UAV graph as an instance of the unified problem (\S\ref{sec:unified_problem}),
+the mapping of methods \textsf{M1}--\textsf{M7} to specific UAV
+subsystems (visual perception, GNSS navigation, autopilot policy),
+the Phase~A reference implementation integrated with the
+\textsf{RobustIDPS.ai} platform, and conformance to the regulatory
+framework (Decree~No.\,1701, \mbox{GOST~R~72118-2025},
+\mbox{NIST~AI~RMF}, \mbox{DO-326A/ED-202A}).
+
+The Conclusion lists and briefly explains each scientific result that was developed and is defended, recapitulating the progressive chain from continuous-time certified dynamics through distributed learning, efficient inference, uncertainty-calibrated adaptation, unified certification, domain-specific deployment, and platform implementation. It synthesises the principal findings, confirms that all twelve intersections of the condition-requirement matrix are addressed with verified performance, identifies the closest pathways to industry deployment, and outlines directions for further research including extension to heterogeneous graphs, integration with large multimodal models, and application to emerging domains.
+
+Appendix~A collects complete proofs and derivations for all theorems and lemmas stated in the main text. Appendix~B provides algorithmic pseudocode, hyperparameter tables, and computational infrastructure specifications. Appendix~C documents supplementary experimental results including per-class performance, sensitivity analyses, convergence plots, and computational profiling.
+

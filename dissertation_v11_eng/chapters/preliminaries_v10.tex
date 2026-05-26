@@ -1,0 +1,119 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  preliminaries.tex  –  Title page, Abstract, Acknowledgements
+%%  v11 – Title page rewritten to match the formal MEPhI dissertation
+%%        cover (Grigoriev/Abidova/Romanov samples).  New dissertation
+%%        title aligned with the v11 Russian master.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% ====================== TITLE PAGE ======================================
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{center}
+
+{\small
+MINISTRY OF SCIENCE AND HIGHER EDUCATION\\
+OF THE RUSSIAN FEDERATION\\
+FEDERAL STATE AUTONOMOUS EDUCATIONAL INSTITUTION\\
+OF HIGHER EDUCATION\\[2pt]
+\textbf{``National Research Nuclear University \textit{MEPhI}''}\\
+\textbf{(NRNU MEPhI)}
+}
+
+\end{center}
+
+\hfill
+\begin{minipage}{0.45\textwidth}
+\flushright
+\itshape As a manuscript
+\end{minipage}
+
+\vspace{1.2cm}
+
+\begin{center}
+
+{\large\textbf{Roger Nick Anaedevha}}
+
+\vspace{1.1cm}
+
+{\large\textbf{Adversarially Robust Models and Algorithms for
+Enhancing the Robustness and Efficiency of Hybrid Intrusion
+Detection and Prevention Systems in Distributed and
+Non-Stationary Conditions}}
+
+\vspace{1.3cm}
+
+{\small
+Scientific specialty: 2.3.1.~--- ``System Analysis,\\
+Management and Information Processing, Statistics''\\
+(Technical Sciences)
+}
+
+\vspace{1.0cm}
+
+\textbf{DISSERTATION}\\[2pt]
+submitted for the degree of\\
+Candidate of Technical Sciences
+
+\end{center}
+
+\vspace{1.4cm}
+
+\hfill
+\begin{minipage}{0.55\textwidth}
+\small
+Scientific Supervisor:\\
+Doctor of Physical and Mathematical Sciences,\\
+Professor\\
+\textbf{Alexander Gennadievich Trofimov}
+\end{minipage}
+
+\vfill
+
+\begin{center}
+Moscow~--- 2026
+\end{center}
+\end{titlepage}
+
+
+%% ====================== ABSTRACT ========================================
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+This dissertation is devoted to the development of adversarially robust models and algorithms for enhancing the robustness and efficiency of hybrid intrusion detection and prevention systems (IDPS) in distributed and non-stationary conditions. Graph neural networks have become the principal deep-learning paradigm for extracting predictive representations from relational data, yet their message-passing mechanism renders them sensitive to perturbations of the underlying graph topology, node features, and temporal ordering of events. The robustness of learned representations on dynamic graph structures is investigated as a foundational challenge in applied mathematics and artificial intelligence; seven novel methods are developed to address the problem under three operating conditions~--- the adversarial environment, non-stationary conditions, and distributed network dynamics~--- while satisfying four cross-cutting requirements: robustness, accuracy, efficiency, and privacy.
+
+The first contribution (Method M1: CT-TGNN) introduces continuous-time temporal graph neural networks grounded in neural ordinary differential equations, where the evolution of node representations is governed by parameterised differential operators acting on evolving graph topologies. Through adjoint sensitivity analysis and temporal adaptive batch normalisation the architecture achieves memory-efficient training and provable Lipschitz-bounded dynamics, yielding certified robustness through intrinsic smoothness regularisation. Multi-scale temporal dynamics with learned time constants spanning several orders of magnitude resolve both fast transient events and slow structural trends within a single architecture. A stochastic extension (SDE-TGNN) replaces the deterministic dynamics with It\^{o} stochastic differential equations and derives analytical moment propagation from the Fokker-Planck equation, achieving 99.0\% average weighted F1 across three benchmarks totalling over 52 million samples, expected calibration error of 0.042, certified adversarial robustness of 76.2\% at perturbation radius 0.25, and cross-domain transfer at 90.5\% F1 without fine-tuning.
+
+The second contribution (Method M2: FedLLM-API) formulates a federated optimisation algorithm for distributed graph learning that integrates corruption-tolerant aggregation, differential privacy through calibrated Gaussian noise, and optimal-transport-based distributional alignment of heterogeneous graph fragments. Convergence is proved at a rate of $\calO(1/\sqrt{T})$ even when a significant fraction of participants submit adversarially corrupted updates, while the Wasserstein-distance alignment is maintained within a formal $(\epsilon,\delta)$-differential privacy budget. Large language model integration enables 87.6\% F1 on zero-shot detection of novel anomalous categories.
+
+The third contribution (Method M3: TripleE-TGNN) develops multi-level temporal graph embeddings that capture structure at service, trace, and node levels through dual temporal-spatial attention and elastic weight consolidation, achieving 96.8\% accuracy while reducing computational cost through structured sparsity and preventing catastrophic forgetting as the graph topology evolves.
+
+The fourth contribution (Method M4: MambaShield) designs efficient sequential inference through selective state-space layers with progressive adversarial robustness distillation, reducing computational cost from $\calO(L^{2})$ to $\calO(L\log L)$ through Fast Fourier Transform convolutions while sustaining 91.4\% accuracy under twenty-five percent training-time poisoning, accompanied by PAC-Bayesian generalisation certificates.
+
+The fifth and sixth contributions (Methods M5: Stochastic Transformer and M6: UC-HGP) integrate variational Bayesian attention with hierarchical Gaussian process uncertainty quantification, decomposing predictive uncertainty into epistemic and aleatoric components with expected calibration error of 0.078, enabling principled detection of out-of-distribution graph inputs and uncertainty-guided decision-making.
+
+The seventh contribution (Method M7: Certification) constructs a unified robustness certification framework comprising game-theoretic strategy selection through Stackelberg equilibria with no-regret online learning, interval bound propagation, Lipschitz estimation on graph operators, and randomised smoothing adapted to discrete graph structures. The framework couples all seven methods through consistency regularisation with a proven convergence rate.
+
+A domain-specific foundation model (CyberSecLLM) employing ODE-augmented selective state space blocks achieves 89.1\% average zero-shot accuracy across an eleven-task evaluation benchmark, a 20.5-point improvement over GPT-4, while processing million-token graph event sequences in 2.3 seconds. The complete framework is implemented as a production-grade deployed system (RobustIDPS.ai, DOI:~\url{10.5281/zenodo.19129512}) integrating eight neural network models, a four-layer LLM defence framework achieving 94.5\% macro-averaged detection across 517 attack scenarios with four commercial LLM backends, and a multi-agent architecture for forward-compatible detection under post-quantum protocol regime transitions.
+
+Comprehensive experimental validation spans six benchmark datasets comprising over eighty-four million labelled samples, a unified twenty-three-metric evaluation framework, systematic ablation studies, adversarial robustness assessments under gradient-based and adaptive perturbations, and cross-domain transfer experiments on speech event detection and clinical monitoring. All methods are formulated at the level of mathematical operations on graph structures independently of any application domain, and are validated through application to hybrid intrusion detection and prevention on network-traffic graphs as a representative adversarial deployment environment, and~--- as a confirmation of domain-independence~--- to the neural-network navigation subsystem of unmanned aerial vehicles operating under electronic-warfare and adversarial-ML pressure (Chapter~6). All twelve intersections of the condition-requirement matrix are addressed with empirically verified performance. Letters of implementation have been obtained from Positive Technologies, Google Cloud Platform and the Suricata Open Source IDPS project.
+
+The dissertation consists of an introduction, six chapters, a conclusion, a bibliography of 204 references and three appendices. The main text is 230~pages.
+
+
+%% ====================== ACKNOWLEDGEMENTS ================================
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+
+I wish to express my sincere gratitude to my scientific supervisor, Professor Alexander Gennadievich Trofimov, whose guidance, intellectual rigour, and generous encouragement have shaped every stage of this research. His deep expertise in mathematical modelling and systems analysis provided the foundation upon which the theoretical contributions of this dissertation were built.
+
+I am thankful to the faculty and fellow researchers of the Institute of Cyber Intelligent Systems and Department of Cybernetics at the National Research Nuclear University MEPhI for creating a stimulating academic environment. The discussions, seminars, and collaborative spirit within the department enriched this work considerably.
+
+I gratefully acknowledge the support of the MEPhI postgraduate programme, the grant for research centres in Artificial Intelligence from the Ministry of Economic Development of the Russian Federation (identifier 000000C313925P3Q0002), and the computational resources made available for the experimental work described herein. The scale of the empirical validation would not have been possible without access to adequate infrastructure.
+
+Finally, I owe an immeasurable debt to my family and friends, whose patience, support, and belief in this endeavour sustained me throughout the years of study and research. Thank you everyone.
+
+\hfill Roger Nick Anaedevha
+
+\hfill Moscow, 2026
+
+

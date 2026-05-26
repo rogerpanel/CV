@@ -1,0 +1,283 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  appendixB.tex  –  Implementation Details and Hyperparameters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Implementation Details and Hyperparameters}
+\label{app:implementation}
+
+This appendix documents the software framework, hyperparameter configurations for all seven methods, data preprocessing procedures, computational infrastructure, and evaluation protocols employed throughout the experimental work of Chapter~\ref{ch:experiments} (Experimental Results and Validation). The consolidated hyperparameter summary appears in Table~3.3 of Chapter~\ref{ch:adaptation}; this appendix provides the complete per-layer specifications.
+
+
+%%=====================================================================
+\section{Software Framework and Dependencies}
+\label{app:software}
+%%=====================================================================
+
+The entire experimental pipeline is implemented in Python~3.10 with PyTorch~2.1 as the primary deep learning framework. ODE integration uses the \texttt{torchdiffeq} library (version~0.2.3) providing adaptive-step Runge-Kutta solvers with adjoint sensitivity support. Graph neural network components build on PyTorch Geometric (version~2.4.0) for message passing, graph batching, and neighbourhood sampling. Federated learning simulation uses Flower (version~1.7) for client-server communication and aggregation. Optimal transport computations use the POT library (version~0.9.1) with GPU-accelerated Sinkhorn iterations. Differential privacy accounting uses Opacus (version~1.4) for per-sample gradient clipping and moments accountant tracking. Adversarial attack generation uses Foolbox (version~3.3.3) and the Adversarial Robustness Toolbox (version~1.15). Bayesian inference layers use a custom variational attention module building on the reparameterisation framework of Blundell et al. LLM integration queries the OpenAI API (GPT-3.5-turbo) with structured few-shot prompts. All random seeds are fixed at 42 for reproducibility, and experiments are repeated with five seeds to compute confidence intervals.
+
+
+%%=====================================================================
+\section{Hyperparameter Configurations}
+\label{app:hyperparams}
+%%=====================================================================
+
+\subsection{CT-TGNN Hyperparameters}
+\label{app:hp_cttgnn}
+
+\begin{table}[htbp]
+\centering
+\caption{CT-TGNN hyperparameter configuration.}
+\label{tab:hp_cttgnn}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+Message-passing layers     & 4     & Heterogeneous type-specific \\
+Hidden dimension           & 256   & Per-layer \\
+State dimension            & 64    & ODE state \\
+ODE solver                 & DOPRI5 & Adaptive Runge-Kutta \\
+Relative tolerance         & $10^{-5}$ & Solver precision \\
+Absolute tolerance         & $10^{-7}$ & Solver precision \\
+Time constants $(\tau_1,\tau_2,\tau_3)$ & $(1,60,3600)$\,s & Packet, session, campaign \\
+TABN window size           & 32 steps & Running statistics window \\
+Learning rate              & $2\times10^{-4}$ & AdamW \\
+Weight decay               & $10^{-5}$ & L2 regularisation \\
+Batch size                 & 128 graphs & Per GPU \\
+Gradient clip norm         & 1.0   & Maximum gradient norm \\
+Training epochs            & 200   & With early stopping \\
+Early stopping patience    & 10    & Validation loss \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{TripleE-TGNN Hyperparameters}
+\label{app:hp_triplee}
+
+\begin{table}[htbp]
+\centering
+\caption{TripleE-TGNN hyperparameter configuration.}
+\label{tab:hp_triplee}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+GAT layers per encoder     & 3     & Service, trace, node \\
+Attention heads            & 8     & Multi-head attention \\
+Hidden dimension           & 128   & Per encoder \\
+Temporal attention window  & 16 steps & Historical context \\
+EWC strength $\lambda_{\mathrm{ewc}}$ & 100 & Catastrophic forgetting \\
+Consistency weight $\lambda_{\mathrm{con}}$ & 0.1 & KL divergence \\
+Service loss weight $\lambda_s$ & 0.4 & Multi-task \\
+Trace loss weight $\lambda_r$  & 0.3 & Multi-task \\
+Node loss weight $\lambda_n$   & 0.3 & Multi-task \\
+Fisher samples             & 500   & For EWC diagonal \\
+Learning rate              & $2\times10^{-4}$ & AdamW \\
+Batch size                 & 64 graphs & Per GPU \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{FedLLM-API Hyperparameters}
+\label{app:hp_fedllm}
+
+\begin{table}[htbp]
+\centering
+\caption{FedLLM-API hyperparameter configuration.}
+\label{tab:hp_fedllm}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+Federated clients $K$     & 10    & Simulated SOCs \\
+Communication rounds $T$  & 100   & Server aggregation \\
+Local epochs per round     & 5     & Client training \\
+Trimming fraction          & 20\%  & Top and bottom \\
+DP clipping threshold $C$  & 1.0   & Per-sample gradient \\
+DP noise scale $\sigma$    & 0.8   & Gaussian mechanism \\
+Privacy budget $(\epsilon,\delta)$ & $(0.85,10^{-5})$ & Per round \\
+Sinkhorn regularisation $\lambda$ & 0.1 & Entropic \\
+Sinkhorn iterations        & 50    & Convergence \\
+OT Laplace sensitivity $\Delta_T$ & 0.01 & Transport plan \\
+LLM ensemble weight $\lambda_{\mathrm{LLM}}$ & 0.3 & Validation-tuned \\
+Few-shot examples          & 5     & Per attack category \\
+Learning rate              & $5\times10^{-4}$ & Local AdamW \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Forward-Compatible Detection Hyperparameters}
+\label{app:hp_pqidps}
+
+\begin{table}[htbp]
+\centering
+\caption{Forward-compatible detection hyperparameter configuration.}
+\label{tab:hp_pqidps}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+Encoder MLP layers         & 3     & Per protocol family \\
+Encoder hidden dims        & 256, 128, 64 & Decreasing \\
+Activation                 & ReLU  & All hidden layers \\
+Cross-attention heads      & 8     & Multi-head fusion \\
+Attention dimension        & 64    & Per head \\
+PGD adversarial $\epsilon$ & 0.1   & Feature-space \\
+PGD iterations             & 10    & Training-time \\
+PGD step size              & 0.02  & Per iteration \\
+Timing histogram bins      & 20    & Kyber features \\
+Learning rate              & $1\times10^{-3}$ & AdamW \\
+Batch size                 & 256   & Per GPU \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{MambaShield Hyperparameters}
+\label{app:hp_mamba}
+
+\begin{table}[htbp]
+\centering
+\caption{MambaShield hyperparameter configuration.}
+\label{tab:hp_mamba}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+State dimension            & 64    & SSM hidden state \\
+Convolution kernel size    & 4     & Local context \\
+Expansion factor           & 2     & Inner dimension \\
+Mamba blocks               & 6     & Stacked \\
+Teacher ensemble size $M$  & 5     & Disjoint subsets \\
+Distillation temperature   & 3.0   & Softmax temperature \\
+Initial poison fraction $\rho_0$ & 0.05 & Curriculum start \\
+Poison growth rate $\alpha$ & $5\times10^{-4}$ & Per iteration \\
+Maximum poison $\rho_{\max}$ & 0.40 & Curriculum cap \\
+Initial distill weight $\lambda_0$ & 0.1 & Ramp start \\
+Distill ramp rate $\beta$  & $1\times10^{-3}$ & Per iteration \\
+PAC-Bayes prior $\sigma_P$ & 1.0   & Gaussian prior \\
+PAC-Bayes confidence $\delta$ & 0.05 & Bound confidence \\
+Learning rate              & $2\times10^{-4}$ & AdamW \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Stochastic Transformer Hyperparameters}
+\label{app:hp_stochastic}
+
+\begin{table}[htbp]
+\centering
+\caption{Stochastic transformer hyperparameter configuration.}
+\label{tab:hp_stochastic}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+Encoder layers             & 4     & Transformer blocks \\
+Attention heads            & 8     & Per layer \\
+Hidden dimension           & 256   & Model dimension \\
+FFN dimension              & 1024  & Feed-forward \\
+Dropout                    & 0.1   & Standard and variational \\
+MC forward passes $M$      & 50    & Inference \\
+Prior variance $\sigma_P^2$ & 1.0  & Isotropic Gaussian \\
+Loss weight $\lambda_1$ (task) & 1.0 & Cross-entropy \\
+Loss weight $\lambda_2$ (KL)  & 0.1 & Posterior regularisation \\
+Loss weight $\lambda_3$ (adv) & 0.5 & Adversarial \\
+Loss weight $\lambda_4$ (calib) & 0.2 & ECE penalty \\
+Loss weight $\lambda_5$ (reg)  & 0.01 & L2 weight decay \\
+Perturbation ascent rate $\alpha_\psi$ & $5\times10^{-3}$ & Inner loop \\
+Temperature scaling $T$    & 2.3   & Post-hoc calibration \\
+Calibration bins           & 15    & ECE computation \\
+Learning rate              & $2\times10^{-4}$ & AdamW \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Game-Theoretic Framework Hyperparameters}
+\label{app:hp_game}
+
+\begin{table}[htbp]
+\centering
+\caption{Game-theoretic framework hyperparameter configuration.}
+\label{tab:hp_game}
+\begin{tabular}{lll}
+\toprule
+Parameter & Value & Notes \\
+\midrule
+Detection configurations $|\calC|$ & 20 & Action space \\
+Interaction rounds $T$     & 10{,}000 & Online learning \\
+MW learning rate $\eta$    & $\sqrt{\log 20/10000}\approx0.017$ & Optimal \\
+Uncertainty threshold $\tau$ & 0.3 & Expert referral \\
+Uncertainty penalty $\kappa$ & 0.5 & Utility discount \\
+Nash support enumeration timeout & 60\,s & Per game instance \\
+Payoff normalisation       & $[0,1]$ & Per round \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
+\section{Data Preprocessing Pipeline}
+\label{app:preprocessing}
+%%=====================================================================
+
+\subsection{Feature Engineering}
+\label{app:features}
+
+Raw packet capture files are processed into flow-level records using CICFlowMeter for CIC-IoT-2023 and CSE-CICIDS2018, and Argus for UNSW-NB15. Flow features include duration, byte counts (forward and backward), packet counts, inter-arrival time statistics (mean, standard deviation, minimum, maximum), flag counts (SYN, FIN, RST, PSH, ACK, URG), window size statistics, and protocol type indicators. All numerical features undergo $z$-score normalisation: $\tilde{x}_j = (x_j-\mu_j)/\sigma_j$ where $\mu_j$ and $\sigma_j$ are computed on the training set and applied consistently to validation and test sets.
+
+Categorical features (protocol type, service, state flags) undergo one-hot encoding followed by PCA dimensionality reduction retaining 95\% of explained variance. This reduces the encoded dimension from several hundred binary indicators to 15--30 principal components without significant information loss.
+
+For graph construction, a temporal graph snapshot is created every $\Delta t=10$~seconds. Nodes are identified by IP address, and edges are created for each observed flow within the window. Node features aggregate all flow features incident to the node through mean and maximum pooling.
+
+
+\subsection{Data Augmentation}
+\label{app:augmentation}
+
+Graph data augmentation applies three transformations during training. Random edge dropout removes each edge independently with probability~0.1, encouraging robustness to incomplete network observations. Node feature perturbation adds Gaussian noise with standard deviation~0.05 to normalised feature vectors. Temporal jitter shifts event timestamps by $\calN(0,0.1^2)$ seconds, making the model robust to clock synchronisation imprecision. All augmentations are applied stochastically per mini-batch and disabled during validation and testing.
+
+
+%%=====================================================================
+\section{Computational Infrastructure}
+\label{app:infrastructure}
+%%=====================================================================
+
+\subsection{Training Infrastructure}
+\label{app:training_infra}
+
+Training is conducted on a cluster of four NVIDIA Tesla V100 GPUs with 32\,GB HBM2 memory each, connected via NVLink for multi-GPU data parallelism. The host system provides dual Intel Xeon Gold 6248 CPUs (40 cores total), 384\,GB DDR4 RAM, and 4\,TB NVMe SSD storage. Mixed-precision training with the PyTorch AMP API (FP16 for forward and backward passes, FP32 for parameter updates) reduces memory consumption by approximately forty percent, enabling batch sizes 1.7$\times$ larger than FP32 training. Distributed data parallelism with NCCL backend scales training to four GPUs with 92\% linear scaling efficiency.
+
+
+\subsection{Inference and Deployment Simulation}
+\label{app:inference_opt}
+
+Deployment simulation uses a single NVIDIA Tesla P100 GPU with 16\,GB memory, reflecting realistic edge-deployment constraints. Inference benchmarks use TorchScript-compiled models with batch sizes of 32 for latency measurements and 512 for throughput measurements. All timing results report the median of one hundred independent runs with 95\% confidence intervals computed via bootstrap resampling. Energy consumption is measured using NVIDIA's System Management Interface (\texttt{nvidia-smi}) polling power draw at 100\,ms intervals during sustained inference.
+
+
+%%=====================================================================
+\section{Evaluation Protocols}
+\label{app:eval_protocols}
+%%=====================================================================
+
+\subsection{Cross-Validation Strategy}
+\label{app:cv}
+
+Stratified splitting maintains class proportions across training (70\%), validation (15\%), and test (15\%) partitions. For temporal datasets (CIC-IoT-2023 and CSE-CICIDS2018), splitting respects chronological order: the earliest 70\% of records form the training set, the next 15\% form validation, and the final 15\% form the test set, preventing temporal leakage. For the federated experiments, each simulated client receives a disjoint partition of the training set, and label distribution heterogeneity is introduced via Dirichlet allocation with concentration parameter $\alpha=0.5$.
+
+
+\subsection{Statistical Significance Testing}
+\label{app:significance}
+
+All method comparisons report paired $t$-tests across five random seeds with Bonferroni correction for the number of comparisons. A result is declared statistically significant at the $\alpha=0.05$ level after correction. Effect sizes are reported as Cohen's $d$ to quantify practical significance alongside statistical significance. Confidence intervals for accuracy, F1, and AUC are computed via the Wilson score interval; confidence intervals for latency and throughput are computed via bootstrap percentile intervals with 10{,}000 resamples.
+
+
+%%=====================================================================
+\section{Code and Data Availability}
+\label{app:availability}
+%%=====================================================================
+
+The complete source code, configuration files, and trained model checkpoints for all seven methods are available at the following repository: \texttt{https://github.com/rogerpanel/robustidps.ai} (archived at DOI: 10.5281/zenodo.19129512). The repository includes automated scripts for data download and preprocessing, training and evaluation pipelines for each method, hyperparameter configuration files in YAML format, and Jupyter notebooks for reproducing all figures and tables in Chapters~\ref{ch:experiments} and~\ref{ch:platform}. The CIC-IoT-2023 and CSE-CICIDS2018 datasets are publicly available from the Canadian Institute for Cybersecurity. The UNSW-NB15 dataset is available from the University of New South Wales. The ICS3D collection datasets are available from their respective maintainers under academic licences.

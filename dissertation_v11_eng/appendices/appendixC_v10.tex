@@ -1,0 +1,482 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  appendixC.tex  –  Additional Experimental Results
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Additional Experimental Results}
+\label{app:extra_results}
+
+This appendix presents supplementary experimental results that complement the analyses in Chapter~\ref{ch:experiments} (Experimental Results and Validation). Section~\ref{app:per_attack} provides per-attack-category performance breakdowns. Section~\ref{app:ablation_detail} documents component-wise ablation details and hyperparameter sensitivity studies. Section~\ref{app:cross_cloud} reports cross-cloud and cross-domain transfer matrices. Section~\ref{app:privacy_utility} analyses the privacy-utility trade-off in detail. Section~\ref{app:comp_perf} presents computational performance benchmarks and scaling characteristics.
+
+
+%%=====================================================================
+\section{Per-Attack Category Performance}
+\label{app:per_attack}
+%%=====================================================================
+
+\subsection{CIC-IoT-2023 Detailed Results}
+\label{app:cicids_iot_detail}
+
+Table~\ref{tab:app_iot_peratk} reports per-attack-category precision, recall, F1 score, and AUC-ROC for CT-TGNN on CIC-IoT-2023. All seven major categories exceed 95\% recall, with DDoS achieving the highest recall at 99.1\% owing to the distinctive volumetric signature, and spoofing attacks showing the lowest recall at 95.2\% because protocol impersonation can closely mimic legitimate authentication patterns.
+
+\begin{table}[htbp]
+\centering
+\caption{CT-TGNN per-attack-category results on CIC-IoT-2023.}
+\label{tab:app_iot_peratk}
+\begin{tabular}{lcccc}
+\toprule
+Attack Category & Precision & Recall & F1 & AUC-ROC \\
+\midrule
+DDoS             & 98.7\% & 99.1\% & 98.9\% & 0.998 \\
+Reconnaissance   & 96.2\% & 96.8\% & 96.5\% & 0.991 \\
+Web Attacks      & 97.1\% & 97.3\% & 97.2\% & 0.993 \\
+Brute Force      & 98.4\% & 98.6\% & 98.5\% & 0.997 \\
+Spoofing         & 94.8\% & 95.2\% & 95.0\% & 0.987 \\
+Malware          & 98.6\% & 98.9\% & 98.7\% & 0.998 \\
+Mirai Variants   & 97.1\% & 97.4\% & 97.2\% & 0.994 \\
+\midrule
+Benign           & 98.9\% & 98.4\% & 98.7\% & 0.997 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{CSE-CICIDS2018 Detailed Results}
+\label{app:cicids2018_detail}
+
+Table~\ref{tab:app_cicids_peratk} reports per-attack-category performance for the unified framework on CSE-CICIDS2018. The unified framework achieves the largest improvements over baselines on infiltration (12.7 percentage points above the best baseline), botnet detection (9.3 points), and heartbleed exploitation (8.9 points), categories that involve multi-stage, temporally extended attack sequences where the continuous-time formulation provides the greatest advantage.
+
+\begin{table}[htbp]
+\centering
+\caption{Unified framework per-attack-category results on CSE-CICIDS2018.}
+\label{tab:app_cicids_peratk}
+\begin{tabular}{lccccc}
+\toprule
+Attack Category & Precision & Recall & F1 & AUC & $\Delta$ vs.\ Baseline \\
+\midrule
+Brute Force (SSH)    & 95.3\% & 96.1\% & 95.7\% & 0.991 & +3.8\% \\
+Brute Force (FTP)    & 96.7\% & 97.3\% & 97.0\% & 0.994 & +4.2\% \\
+DoS Hulk             & 97.8\% & 98.2\% & 98.0\% & 0.997 & +2.1\% \\
+DoS GoldenEye        & 96.4\% & 96.9\% & 96.6\% & 0.993 & +3.4\% \\
+DoS Slowloris        & 95.1\% & 95.7\% & 95.4\% & 0.989 & +5.1\% \\
+Web Attack (XSS)     & 93.8\% & 94.3\% & 94.1\% & 0.984 & +6.7\% \\
+Web Attack (SQL Inj.) & 94.2\% & 94.8\% & 94.5\% & 0.986 & +5.9\% \\
+Infiltration         & 91.7\% & 92.4\% & 92.0\% & 0.978 & +12.7\% \\
+Botnet (Ares)        & 93.1\% & 93.8\% & 93.4\% & 0.982 & +9.3\% \\
+Heartbleed           & 92.3\% & 93.1\% & 92.7\% & 0.979 & +8.9\% \\
+Port Scan            & 97.6\% & 98.1\% & 97.8\% & 0.996 & +2.3\% \\
+DDoS LOIC            & 98.1\% & 98.4\% & 98.2\% & 0.998 & +1.7\% \\
+\midrule
+Benign               & 97.4\% & 96.8\% & 97.1\% & 0.995 & +2.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{UNSW-NB15 Detailed Results}
+\label{app:unsw_detail}
+
+Table~\ref{tab:app_unsw_peratk} reports per-attack-category results on UNSW-NB15. The unified framework achieves the largest improvement on reconnaissance attacks (8.7 percentage points), where the multi-scale temporal modelling captures the slow-and-stealthy scanning patterns that discrete-time baselines systematically miss.
+
+\begin{table}[htbp]
+\centering
+\caption{Unified framework per-attack-category results on UNSW-NB15.}
+\label{tab:app_unsw_peratk}
+\begin{tabular}{lccccc}
+\toprule
+Attack Category & Precision & Recall & F1 & AUC & $\Delta$ vs.\ Baseline \\
+\midrule
+Generic          & 96.8\% & 97.2\% & 97.0\% & 0.995 & +3.2\% \\
+Exploits         & 94.7\% & 96.3\% & 95.5\% & 0.989 & +5.4\% \\
+Fuzzers          & 93.2\% & 94.1\% & 93.6\% & 0.984 & +4.8\% \\
+DoS              & 96.4\% & 97.1\% & 96.7\% & 0.993 & +3.7\% \\
+Reconnaissance   & 92.8\% & 97.9\% & 95.3\% & 0.988 & +8.7\% \\
+Analysis         & 97.1\% & 98.4\% & 97.7\% & 0.996 & +4.1\% \\
+Backdoors        & 91.9\% & 93.7\% & 92.8\% & 0.981 & +6.3\% \\
+Shellcode        & 94.3\% & 95.8\% & 95.0\% & 0.987 & +5.1\% \\
+Worms            & 89.7\% & 91.4\% & 90.5\% & 0.973 & +7.2\% \\
+\midrule
+Normal           & 97.2\% & 96.4\% & 96.8\% & 0.994 & +3.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{TripleE-TGNN Microservices Attack Breakdown}
+\label{app:triplee_detail}
+
+Table~\ref{tab:app_triplee_peratk} reports TripleE-TGNN per-attack-type detection accuracy on the Container Security dataset, broken down by the granularity at which each attack is most effectively detected.
+
+\begin{table}[htbp]
+\centering
+\caption{TripleE-TGNN per-attack detection accuracy and dominant granularity.}
+\label{tab:app_triplee_peratk}
+\begin{tabular}{lccc}
+\toprule
+Attack Type & Accuracy & Dominant Granularity & Single-Gran.\ Acc. \\
+\midrule
+Container Escape     & 98.7\% & Node + Service & 91.2\% \\
+Supply Chain         & 97.3\% & Service + Trace & 89.8\% \\
+Resource Exhaustion  & 96.9\% & Service + Node & 90.3\% \\
+Privilege Escalation & 97.8\% & Node & 93.1\% \\
+API Abuse            & 95.4\% & Service & 91.7\% \\
+Lateral Movement     & 96.1\% & Trace + Node & 88.4\% \\
+Data Exfiltration    & 94.8\% & Trace & 87.6\% \\
+Cryptojacking        & 97.2\% & Node & 92.9\% \\
+\midrule
+Overall              & 96.8\% & Multi-level & 88.5\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
+\section{Ablation Study Details}
+\label{app:ablation_detail}
+%%=====================================================================
+
+\subsection{Component-wise Ablation with Confidence Intervals}
+\label{app:component_ablation}
+
+Table~\ref{tab:app_ablation_ci} extends the ablation results of Table~\ref{tab:ablation} in the main text with 95\% confidence intervals computed from five independent runs with different random seeds. All degradations are statistically significant after Bonferroni correction at the $\alpha=0.05$ level.
+
+\begin{table}[htbp]
+\centering
+\caption{Extended ablation results with 95\% confidence intervals (five seeds).}
+\label{tab:app_ablation_ci}
+\begin{tabular}{lccc}
+\toprule
+Component Removed & Full System & Without & Cohen's $d$ \\
+\midrule
+Cont.-time ODE           & $98.3{\pm}0.2$\% & $91.5{\pm}0.4$\% & 4.82 \\
+Multi-scale modelling     & $98.3{\pm}0.2$\% & $94.4{\pm}0.3$\% & 3.14 \\
+Temporal adaptive BN      & $98.3{\pm}0.2$\% & $93.6{\pm}0.5$\% & 3.67 \\
+Cross-gran.\ attention    & $96.8{\pm}0.3$\% & $94.7{\pm}0.3$\% & 2.41 \\
+Trimmed mean $\to$ FedAvg & $89.7{\pm}0.4$\% & $68.3{\pm}1.2$\% & 7.13 \\
+Diff.\ privacy            & $87.1{\pm}0.3$\% & $90.2{\pm}0.3$\% & $-$3.28 \\
+OT alignment              & $92.7{\pm}0.4$\% & $76.9{\pm}0.8$\% & 5.92 \\
+LLM branch (F1)           & $87.6{\pm}0.5$\% & $34.2{\pm}1.1$\% & 8.47 \\
+Progressive distill.      & $91.4{\pm}0.3$\% & $81.7{\pm}0.6$\% & 4.71 \\
+Variational attn.\ (ECE)  & $0.078{\pm}0.004$ & $0.192{\pm}0.008$ & 5.38 \\
+Game-theoretic equil.     & $94.7{\pm}0.3$\% & $87.6{\pm}0.4$\% & 4.18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Hyperparameter Sensitivity Analysis}
+\label{app:sensitivity}
+
+This section presents sensitivity analyses for the most important hyperparameters of each method, varying one parameter at a time while holding all others at their default values.
+
+\subsubsection{CT-TGNN: ODE Solver Tolerance}
+
+Table~\ref{tab:app_sens_tol} reports the effect of ODE solver tolerance on accuracy, inference latency, and the number of function evaluations (NFE) per forward pass. Tighter tolerances yield marginal accuracy improvements but substantially increase computational cost; the default tolerance of $10^{-5}$ provides the best accuracy-efficiency trade-off.
+
+\begin{table}[htbp]
+\centering
+\caption{CT-TGNN sensitivity to ODE solver relative tolerance.}
+\label{tab:app_sens_tol}
+\begin{tabular}{lccc}
+\toprule
+Rel.\ Tolerance & Accuracy & Latency (ms) & Avg.\ NFE \\
+\midrule
+$10^{-3}$ & 97.6\% & 28 & 14 \\
+$10^{-4}$ & 98.1\% & 36 & 21 \\
+$10^{-5}$ (default) & 98.3\% & 47 & 31 \\
+$10^{-6}$ & 98.4\% & 72 & 48 \\
+$10^{-7}$ & 98.4\% & 118 & 73 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsubsection{FedLLM-API: Privacy Budget and Trimming Fraction}
+
+Table~\ref{tab:app_sens_dp} reports the effect of varying the per-round privacy budget~$\epsilon$ on accuracy, total privacy expenditure over 100~rounds, and membership inference attack success. The default $\epsilon=0.85$ balances strong privacy with acceptable accuracy degradation.
+
+\begin{table}[htbp]
+\centering
+\caption{FedLLM-API sensitivity to differential privacy budget $\epsilon$.}
+\label{tab:app_sens_dp}
+\begin{tabular}{lcccc}
+\toprule
+$\epsilon$ & Accuracy & Total $\epsilon_{100}$ & MI Attack & $\Delta$ Acc.\ vs.\ No-DP \\
+\midrule
+0.5  & 84.2\% & 5.0  & 51.3\% & $-$7.0\% \\
+0.85 (default) & 87.1\% & 8.5  & 52.7\% & $-$3.1\% \\
+1.0  & 88.4\% & 10.0 & 54.1\% & $-$1.8\% \\
+1.5  & 89.7\% & 15.0 & 57.8\% & $-$0.5\% \\
+2.0  & 91.8\% & 20.0 & 62.4\% & +1.6\% \\
+$\infty$ (no DP) & 90.2\% & $\infty$ & 71.3\% & 0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:app_sens_trim} reports accuracy under 30\% Byzantine adversaries as the trimming fraction varies. Trimming fractions below 20\% fail to remove all Byzantine updates, while fractions above 30\% discard too many honest updates.
+
+\begin{table}[htbp]
+\centering
+\caption{FedLLM-API sensitivity to trimming fraction under 30\% Byzantine adversaries.}
+\label{tab:app_sens_trim}
+\begin{tabular}{lcc}
+\toprule
+Trimming Fraction & Accuracy (30\% Byz.) & Convergence Rounds \\
+\midrule
+10\% & 72.4\% & 142 \\
+15\% & 81.3\% & 108 \\
+20\% (default) & 89.7\% & 78 \\
+25\% & 88.9\% & 82 \\
+30\% & 86.1\% & 91 \\
+35\% & 82.7\% & 104 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsubsection{MambaShield: Distillation Temperature and Ensemble Size}
+
+Table~\ref{tab:app_sens_mamba} reports the joint effect of distillation temperature and teacher ensemble size on robust accuracy under 25\% poisoning. Temperature~3.0 with five teachers yields the best performance; lower temperatures produce sharper distributions that amplify label noise, while larger ensembles provide diminishing returns relative to their computational cost.
+
+\begin{table}[htbp]
+\centering
+\caption{MambaShield sensitivity to distillation temperature and ensemble size (25\% poisoning).}
+\label{tab:app_sens_mamba}
+\begin{tabular}{lcccc}
+\toprule
+Temperature & 3 Teachers & 5 Teachers & 7 Teachers & 10 Teachers \\
+\midrule
+$T=1.0$ & 85.3\% & 86.7\% & 87.1\% & 87.3\% \\
+$T=2.0$ & 88.4\% & 89.8\% & 90.1\% & 90.2\% \\
+$T=3.0$ (default) & 89.7\% & 91.4\% & 91.6\% & 91.7\% \\
+$T=5.0$ & 88.1\% & 90.2\% & 90.5\% & 90.6\% \\
+$T=10.0$ & 84.6\% & 87.3\% & 87.7\% & 87.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsubsection{Stochastic Transformer: Monte Carlo Samples}
+
+Table~\ref{tab:app_sens_mc} reports the effect of the number of Monte Carlo forward passes on ECE, epistemic uncertainty correlation with prediction error, and inference latency per batch. Early stopping based on variance convergence reduces the effective number of passes to 18 on average.
+
+\begin{table}[htbp]
+\centering
+\caption{Stochastic transformer sensitivity to number of MC forward passes.}
+\label{tab:app_sens_mc}
+\begin{tabular}{lcccc}
+\toprule
+MC Passes & ECE & Uncertainty Corr. & Latency (ms/batch) & Eff.\ Passes \\
+\midrule
+5   & 0.124 & 0.43 & 78  & 5 \\
+10  & 0.103 & 0.52 & 126 & 10 \\
+20  & 0.089 & 0.61 & 204 & 17 \\
+50 (default) & 0.078 & 0.67 & 340 & 18 \\
+100 & 0.076 & 0.68 & 638 & 19 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
+\section{Cross-Cloud and Cross-Domain Transfer}
+\label{app:cross_cloud}
+%%=====================================================================
+
+\subsection{Cross-Dataset Transfer Matrix}
+\label{app:transfer_matrix}
+
+Table~\ref{tab:app_transfer} reports the accuracy of CT-TGNN when trained on one dataset (rows) and tested on another (columns) without any fine-tuning. The diagonal entries correspond to in-distribution performance. The consistently small off-diagonal degradation, averaging 3.8\% across all pairs, confirms the generalisation properties of the continuous-time temporal graph formulation.
+
+\begin{table}[htbp]
+\centering
+\caption{CT-TGNN cross-dataset transfer accuracy (\%). Rows: training dataset; columns: test dataset.}
+\label{tab:app_transfer}
+\begin{tabular}{lccc}
+\toprule
+Train $\backslash$ Test & CIC-IoT & CICIDS18 & UNSW-NB15 \\
+\midrule
+CIC-IoT-2023   & 98.3 & 92.7 & 91.4 \\
+CSE-CICIDS2018 & 91.8 & 96.7 & 89.3 \\
+UNSW-NB15      & 90.6 & 88.9 & 97.1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Cross-Domain Transfer to Speech and Healthcare}
+\label{app:cross_domain_detail}
+
+Table~\ref{tab:app_cross_domain} reports detailed metrics for the cross-domain transfer experiments described in Section~\ref{sec:transfer} of the main text, including the effect of network security pretraining.
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-domain transfer results with and without network security pretraining.}
+\label{tab:app_cross_domain}
+\begin{tabular}{llcccc}
+\toprule
+Domain & Method & Accuracy & F1 & ECE & Pretrained? \\
+\midrule
+Speech (LibriSpeech) & CT-TGNN & 90.4\% & 90.8\% & 0.091 & No \\
+Speech (LibriSpeech) & CT-TGNN & 94.2\% & 94.2\% & 0.073 & Yes \\
+Speech (LibriSpeech) & LSTM baseline & 86.9\% & 86.7\% & 0.142 & No \\
+\midrule
+Healthcare (MIMIC-III) & Stoch.\ Trans. & 86.1\% & 85.7\% & 0.098 & No \\
+Healthcare (MIMIC-III) & Stoch.\ Trans. & 89.7\% & 89.3\% & 0.082 & Yes \\
+Healthcare (eICU) & Stoch.\ Trans. & 84.8\% & 84.2\% & 0.104 & No \\
+Healthcare (eICU) & Stoch.\ Trans. & 88.4\% & 87.9\% & 0.087 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
+\section{Privacy-Utility Trade-off Analysis}
+\label{app:privacy_utility}
+%%=====================================================================
+
+\subsection{Differential Privacy Impact Across Datasets}
+\label{app:dp_impact}
+
+Table~\ref{tab:app_dp_datasets} reports the accuracy degradation caused by differential privacy at $\epsilon=0.85$ across all three primary datasets. The degradation is consistent across datasets, ranging from 2.8\% to 3.4\%, confirming that the privacy-utility trade-off does not vary substantially with data distribution.
+
+\begin{table}[htbp]
+\centering
+\caption{Differential privacy impact on accuracy across datasets ($\epsilon=0.85$, $\delta=10^{-5}$).}
+\label{tab:app_dp_datasets}
+\begin{tabular}{lccc}
+\toprule
+Dataset & Without DP & With DP & Degradation \\
+\midrule
+CIC-IoT-2023   & 94.7\% & 91.6\% & $-$3.1\% \\
+CSE-CICIDS2018 & 93.9\% & 91.1\% & $-$2.8\% \\
+UNSW-NB15      & 93.8\% & 90.4\% & $-$3.4\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Privacy Accounting Over Communication Rounds}
+\label{app:privacy_accounting}
+
+Table~\ref{tab:app_privacy_rounds} reports the cumulative privacy expenditure as a function of federated communication rounds, computed through the moments accountant with Poisson subsampling amplification. The total budget of $\epsilon_{\mathrm{total}}=8.5$ after 100~rounds remains within the range typically considered acceptable for sensitive applications.
+
+\begin{table}[htbp]
+\centering
+\caption{Cumulative privacy expenditure over federated rounds ($\delta=10^{-5}$).}
+\label{tab:app_privacy_rounds}
+\begin{tabular}{lcccccc}
+\toprule
+Rounds & 10 & 25 & 50 & 75 & 100 & 150 \\
+\midrule
+$\epsilon_{\mathrm{total}}$ & 0.85 & 2.13 & 4.25 & 6.38 & 8.50 & 12.75 \\
+Accuracy & 78.4\% & 84.1\% & 87.8\% & 88.6\% & 87.1\% & 86.3\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
+\section{Computational Performance Metrics}
+\label{app:comp_perf}
+%%=====================================================================
+
+\subsection{Inference Throughput and Latency}
+\label{app:throughput}
+
+Table~\ref{tab:app_throughput} compares inference throughput, per-sample latency, GPU memory consumption, and energy efficiency across all seven methods and baselines. Measurements are taken on a single NVIDIA Tesla P100 GPU with batch size~32 for latency and batch size~512 for throughput, reporting the median of 100~runs with 95\% bootstrap confidence intervals.
+
+\begin{table}[htbp]
+\centering
+\caption{Computational performance comparison across methods (P100 GPU).}
+\label{tab:app_throughput}
+\begin{tabular}{lcccc}
+\toprule
+Method & Throughput (k/s) & Latency (ms) & Memory (GB) & W/1k pred. \\
+\midrule
+CT-TGNN            & 8{,}700 & 47 & 3.8 & 34 \\
+TripleE-TGNN       & 4{,}200 & 73 & 4.7 & 51 \\
+FedLLM-API         & 5{,}100 & 62 & 5.2 & 47 \\
+Fwd-Compat.\ Det.            & 6{,}800 & 38 & 2.1 & 28 \\
+MambaShield        & 12{,}400 & 18 & 2.3 & 19 \\
+Stoch.\ Transformer & 2{,}300 & 340 & 8.2 & 89 \\
+Game-Theoretic     & 7{,}100 & 12 & 0.2 & 8 \\
+\midrule
+LSTM baseline      & 4{,}300 & 38 & 1.8 & 42 \\
+Std.\ Transformer  & 6{,}200 & 55 & 4.1 & 125 \\
+Random Forest      & 14{,}200 & 12 & 0.8 & 14 \\
+XGBoost            & 18{,}700 & 8 & 0.6 & 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Scaling with Input Size}
+\label{app:scaling}
+
+Table~\ref{tab:app_scaling} reports how inference latency scales with input sequence length for CT-TGNN, MambaShield, and the standard transformer baseline. CT-TGNN scales linearly through the fixed number of ODE solver steps per time constant. MambaShield scales linearly through the selective scan mechanism. The standard transformer scales quadratically through self-attention, becoming impractical for sequences beyond approximately 4096~tokens on 16\,GB GPUs.
+
+\begin{table}[htbp]
+\centering
+\caption{Inference latency (ms) as a function of sequence length.}
+\label{tab:app_scaling}
+\begin{tabular}{lccccc}
+\toprule
+Sequence Length & 256 & 512 & 1024 & 2048 & 4096 \\
+\midrule
+CT-TGNN          & 23 & 41 & 74 & 142 & 278 \\
+MambaShield      & 8  & 14 & 26 & 49  & 94  \\
+Std.\ Transformer & 18 & 52 & 178 & 684 & OOM \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Training Time and Convergence}
+\label{app:training_time}
+
+Table~\ref{tab:app_training} reports total training time, number of epochs to convergence, and wall-clock time per epoch for each method on CIC-IoT-2023 using four V100 GPUs with data parallelism.
+
+\begin{table}[htbp]
+\centering
+\caption{Training time comparison (four V100 GPUs, CIC-IoT-2023).}
+\label{tab:app_training}
+\begin{tabular}{lccc}
+\toprule
+Method & Total Time (h) & Epochs & Time/Epoch (min) \\
+\midrule
+CT-TGNN            & 18.2 & 142 & 7.7 \\
+TripleE-TGNN       & 22.7 & 118 & 11.5 \\
+FedLLM-API         & 31.4 & 100 (rounds) & 18.8 \\
+Fwd-Compat.\ Det.            & 8.3  & 87  & 5.7 \\
+MambaShield        & 14.1 & 100 & 8.5 \\
+Stoch.\ Transformer & 24.6 & 96  & 15.4 \\
+Game-Theoretic     & 6.8  & 10{,}000 (rounds) & 0.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Model Size Comparison}
+\label{app:model_size}
+
+Table~\ref{tab:app_params} reports the total trainable parameter count, compressed model size after INT8 quantisation, and the accuracy retained after quantisation.
+
+\begin{table}[htbp]
+\centering
+\caption{Model size and quantisation impact.}
+\label{tab:app_params}
+\begin{tabular}{lcccc}
+\toprule
+Method & Parameters (M) & FP32 Size (MB) & INT8 Size (MB) & INT8 Acc. \\
+\midrule
+CT-TGNN            & 12.3 & 47  & 13 & 97.9\% \\
+TripleE-TGNN       & 18.7 & 71  & 19 & 96.2\% \\
+FedLLM-API         & 24.1 & 92  & 25 & 86.4\% \\
+Fwd-Compat.\ Det.            & 6.8  & 26  & 7  & 95.8\% \\
+MambaShield        & 8.4  & 32  & 9  & 90.9\% \\
+Stoch.\ Transformer & 31.2 & 119 & 31 & 93.4\% \\
+\midrule
+Std.\ Transformer  & 47.8 & 182 & 47 & 90.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}

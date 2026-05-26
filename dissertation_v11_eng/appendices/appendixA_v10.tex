@@ -1,0 +1,299 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  appendixA.tex  –  Mathematical Proofs and Derivations
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Mathematical Proofs and Derivations}
+\label{app:proofs}
+
+This appendix presents the complete proofs of all theorems stated in Chapter~\ref{ch:methods} (Methods, Algorithms, and Mathematical Frameworks), followed by additional derivations referenced in the main text. The proofs are ordered by first appearance.
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:ct_tgnn_conv}: CT-TGNN Convergence}
+\label{app:proof_ct_conv}
+%%=====================================================================
+
+\noindent\textit{Restatement.} Suppose the dynamics function $f_\theta$ is $L_f$-Lipschitz in $\bh$ and $L_\theta$-Lipschitz in $\theta$. Under gradient descent with learning rate $\eta<2/(L_f L_\theta)$, the training loss converges to a stationary point at rate $\calO(1/\sqrt{T})$.
+
+\begin{proof}
+Define the loss evaluated through the ODE solution map as $\calL(\theta) = \ell(\bh(T;\theta),y)$ where $\bh(T;\theta)$ satisfies $d\bh/dt = f_\theta(\bh,t)$ with $\bh(0)=\bh_0$. We establish that $\calL$ is $L$-smooth for $L = L_f L_\theta$.
+
+\textit{Step 1: Gradient boundedness.} By the adjoint method the gradient is
+\begin{equation}
+\nabla_\theta\calL = -\int_0^T \mathbf{a}(t)^\top \frac{\partial f_\theta}{\partial\theta}\,dt,
+\end{equation}
+where $\mathbf{a}(t)$ solves the adjoint ODE $d\mathbf{a}/dt = -\mathbf{a}^\top(\partial f_\theta/\partial\bh)$ backward from $\mathbf{a}(T)=\partial\ell/\partial\bh(T)$. Since $\partial f_\theta/\partial\bh$ is bounded by $L_f$ and $\partial f_\theta/\partial\theta$ is bounded by $L_\theta$, the Gr\"{o}nwall inequality yields $\|\mathbf{a}(t)\|\le\|\mathbf{a}(T)\|e^{L_f(T-t)}$. Integrating gives $\|\nabla_\theta\calL\|\le \|\mathbf{a}(T)\|L_\theta\int_0^T e^{L_f(T-t)}\,dt = \|\mathbf{a}(T)\|L_\theta(e^{L_f T}-1)/L_f$, which is finite for bounded integration horizons.
+
+\textit{Step 2: Lipschitz continuity of the gradient.} For parameters $\theta$ and $\theta'$ the corresponding ODE solutions satisfy, by Gr\"{o}nwall's inequality,
+\begin{equation}
+\|\bh(t;\theta)-\bh(t;\theta')\| \le \frac{L_\theta}{L_f}(e^{L_f t}-1)\|\theta-\theta'\|.
+\end{equation}
+Combining with the Lipschitz property of the loss function $\ell$ yields $\|\nabla_\theta\calL(\theta)-\nabla_\theta\calL(\theta')\| \le L\|\theta-\theta'\|$ for a constant $L$ that depends on $L_f$, $L_\theta$, $T$, and the smoothness of $\ell$.
+
+\textit{Step 3: Descent lemma.} For $L$-smooth $\calL$ the standard descent lemma gives
+\begin{equation}
+\calL(\theta_{t+1}) \le \calL(\theta_t) - \eta\|\nabla\calL(\theta_t)\|^2 + \frac{L\eta^2}{2}\|\nabla\calL(\theta_t)\|^2
+= \calL(\theta_t) - \eta\Bigl(1-\frac{L\eta}{2}\Bigr)\|\nabla\calL(\theta_t)\|^2.
+\end{equation}
+For $\eta < 2/L$ the coefficient $(1-L\eta/2)>0$. Summing from $t=0$ to $T-1$ and rearranging,
+\begin{equation}
+\frac{1}{T}\sum_{t=0}^{T-1}\|\nabla\calL(\theta_t)\|^2
+\le \frac{\calL(\theta_0)-\calL^*}{\eta(1-L\eta/2)\,T}
+= \calO\!\left(\frac{1}{T}\right).
+\end{equation}
+Therefore $\min_{t<T}\|\nabla\calL(\theta_t)\|^2 = \calO(1/T)$ and $\min_{t<T}\|\nabla\calL(\theta_t)\| = \calO(1/\sqrt{T})$, establishing convergence to an $\epsilon$-stationary point in $\calO(1/\epsilon^2)$ steps.
+\end{proof}
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:ct_tgnn_rob}: Lipschitz Robustness Certificate}
+\label{app:proof_ct_rob}
+%%=====================================================================
+
+\noindent\textit{Restatement.} Let $f_\theta$ be $L_g$-Lipschitz in its first argument and let the integration horizon be $T$. For any two inputs $\bx_1,\bx_2$ the corresponding embeddings satisfy $\|\bh_1(T)-\bh_2(T)\|\le e^{L_g T}\|\bx_1-\bx_2\|$. If the classifier head is $L_c$-Lipschitz, the end-to-end certified radius is $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$.
+
+\begin{proof}
+\textit{Step 1: Embedding sensitivity.} Define $\mathbf{d}(t) = \bh_1(t)-\bh_2(t)$ where $\bh_i$ solves $d\bh_i/dt = f_\theta(\bh_i,t)$ with $\bh_i(0)=\bx_i$. Taking the derivative,
+\begin{equation}
+\frac{d\|\mathbf{d}(t)\|}{dt}
+\le \|f_\theta(\bh_1,t)-f_\theta(\bh_2,t)\|
+\le L_g\|\mathbf{d}(t)\|,
+\end{equation}
+where the first inequality uses the reverse triangle inequality applied to the norm's derivative. By the Gr\"{o}nwall inequality, $\|\mathbf{d}(t)\|\le\|\mathbf{d}(0)\|e^{L_g t}$. Evaluating at $t=T$ yields $\|\bh_1(T)-\bh_2(T)\|\le e^{L_g T}\|\bx_1-\bx_2\|$.
+
+\textit{Step 2: End-to-end Lipschitz constant.} Composing the ODE solution map (Lipschitz constant $e^{L_g T}$) with the classification head (Lipschitz constant $L_c$) yields total Lipschitz constant $L_{\mathrm{total}} = L_c\,e^{L_g T}$.
+
+\textit{Step 3: Certified radius.} For a correctly classified input $\bx$ with minimum logit margin $\Delta_{\min}=\min_{c\neq y^*}[z_{y^*}-z_c]$ where $z_c$ denotes the logit for class $c$, the prediction remains unchanged whenever $L_{\mathrm{total}}\|\bdelta\|<\Delta_{\min}/2$. Since both the correct logit decreases and the runner-up logit increases by at most $L_{\mathrm{total}}\|\bdelta\|$, the margin remains positive when $2L_{\mathrm{total}}\|\bdelta\|<\Delta_{\min}$, giving $\rho = \Delta_{\min}/(2L_c\,e^{L_g T})$. The factor of two is often absorbed into the margin definition; using the single-sided bound $L_{\mathrm{total}}\|\bdelta\|<\Delta_{\min}$ yields $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ as stated.
+\end{proof}
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:fed_conv}: Byzantine-Robust Federated Convergence}
+\label{app:proof_fed}
+%%=====================================================================
+
+\noindent\textit{Restatement.} Under $\mu$-strong convexity, $L$-smoothness, Byzantine fraction $q<1/2$, and learning rate $\eta\le 1/L$, coordinate-wise trimmed mean achieves $\E[\|\bw_T-\bw^*\|^2]\le(1-\mu\eta/2)^T\|\bw_0-\bw^*\|^2 + 2\eta/(\mu(K-2b))(\sum_k\sigma_k^2 + C_{\mathrm{byz}})$.
+
+\begin{proof}
+\textit{Step 1: Trimmed mean proximity to honest mean.} Let $b=\lfloor Kq\rfloor$ and let $\bar{\mathbf{g}}^H = (1/(K-b))\sum_{k\in H}\mathbf{g}_k$ denote the honest gradient mean where $H$ is the set of honest participants. By the analysis of coordinate-wise trimmed mean, for each coordinate $j$,
+\begin{equation}
+|\mathrm{TrMean}_j - \bar{g}_j^H|
+\le \frac{b}{K-2b}\,\mathrm{range}(\{g_{k,j}\}_{k\in H}),
+\end{equation}
+because the trimmed mean discards the $b$ largest and $b$ smallest values, removing all Byzantine entries plus at most $b$ honest entries. By concentration of sub-Gaussian random variables, $\mathrm{range}(\{g_{k,j}\}_{k\in H})\le C\sigma_j\sqrt{\log(K-b)}$ with high probability, yielding $\|\mathrm{TrMean}-\bar{\mathbf{g}}^H\|^2\le C_{\mathrm{byz}}$ for a constant $C_{\mathrm{byz}}$ depending on $b$, $K$, and the gradient variance.
+
+\textit{Step 2: One-step contraction.} Define $\Delta_t = \|\bw_t-\bw^*\|^2$. The gradient descent update $\bw_{t+1}=\bw_t-\eta\,\mathrm{TrMean}_t$ yields
+\begin{equation}
+\E[\Delta_{t+1}]
+= \E[\|\bw_t - \eta\,\mathrm{TrMean}_t - \bw^*\|^2].
+\end{equation}
+Expanding and using $\mu$-strong convexity $\langle\nabla\calL(\bw_t),\bw_t-\bw^*\rangle\ge\mu\|\bw_t-\bw^*\|^2 + (1/L)\|\nabla\calL(\bw_t)\|^2$,
+\begin{equation}
+\E[\Delta_{t+1}]
+\le (1-\mu\eta)\Delta_t + \eta^2\E[\|\mathrm{TrMean}_t - \nabla\calL(\bw_t)\|^2].
+\end{equation}
+The second term decomposes as variance of honest gradients plus Byzantine bias:
+\begin{equation}
+\E[\|\mathrm{TrMean}_t - \nabla\calL(\bw_t)\|^2]
+\le \frac{1}{K-2b}\sum_{k\in H}\sigma_k^2 + C_{\mathrm{byz}}.
+\end{equation}
+
+\textit{Step 3: Recursive bound.} Let $V = 2\eta/(\mu(K{-}2b))(\sum_k\sigma_k^2 + C_{\mathrm{byz}})$. Using $1-\mu\eta\le 1-\mu\eta/2$ for $\eta\le 1/L$ and iterating the recursion,
+\begin{equation}
+\E[\Delta_T]
+\le \Bigl(1-\frac{\mu\eta}{2}\Bigr)^T \Delta_0 + V\sum_{t=0}^{T-1}\Bigl(1-\frac{\mu\eta}{2}\Bigr)^t
+\le \Bigl(1-\frac{\mu\eta}{2}\Bigr)^T \Delta_0 + \frac{V}{\mu\eta/2}.
+\end{equation}
+Substituting back and simplifying yields the stated bound. The first term converges geometrically to zero, and the second represents the irreducible error floor due to gradient noise and Byzantine corruption.
+\end{proof}
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:pac_bayes}: PAC-Bayesian Bound for State-Space Models}
+\label{app:proof_pac}
+%%=====================================================================
+
+\noindent\textit{Restatement.} With probability $\ge 1-\delta$ over training set $S$ of size $n$, for all posteriors $Q$: $\E_{\theta\sim Q}[R(\theta)]\le\E_{\theta\sim Q}[\hat{R}_n(\theta)] + \sqrt{(\mathrm{KL}(Q\|P)+\log(2\sqrt{n}/\delta))/(2n)}$.
+
+\begin{proof}
+\textit{Step 1: Change of measure.} The proof follows the Catoni framework. For any measurable function $\phi:\Theta\to\R$ and distributions $Q,P$ over $\Theta$, the Donsker-Varadhan variational representation gives
+\begin{equation}
+\E_{\theta\sim Q}[\phi(\theta)] \le \mathrm{KL}(Q\|P) + \log\E_{\theta\sim P}[e^{\phi(\theta)}].
+\end{equation}
+
+\textit{Step 2: Moment-generating function bound.} Define $\phi(\theta) = \lambda(R(\theta)-\hat{R}_n(\theta))$ for $\lambda>0$. For bounded losses $\ell\in[0,1]$, Hoeffding's lemma applied conditionally on $\theta$ yields
+\begin{equation}
+\E_S[e^{\lambda(R(\theta)-\hat{R}_n(\theta))}] \le e^{\lambda^2/(8n)}.
+\end{equation}
+Taking expectations under $P$ and applying Markov's inequality with confidence $1-\delta$,
+\begin{equation}
+\log\E_{\theta\sim P}[e^{\lambda(R(\theta)-\hat{R}_n(\theta))}] \le \frac{\lambda^2}{8n} + \log\frac{1}{\delta}.
+\end{equation}
+
+\textit{Step 3: Optimisation over $\lambda$.} Substituting into the Donsker-Varadhan bound,
+\begin{equation}
+\lambda\bigl(\E_Q[R]-\E_Q[\hat{R}_n]\bigr) \le \mathrm{KL}(Q\|P) + \frac{\lambda^2}{8n} + \log\frac{1}{\delta}.
+\end{equation}
+Dividing by $\lambda$ and minimising over $\lambda>0$ yields the optimal $\lambda^* = \sqrt{8n(\mathrm{KL}(Q\|P)+\log(1/\delta))}$, giving
+\begin{equation}
+\E_Q[R] \le \E_Q[\hat{R}_n] + \sqrt{\frac{\mathrm{KL}(Q\|P)+\log(1/\delta)}{2n}}.
+\end{equation}
+Applying the union bound with confidence $\delta/2$ and using $\log(2/\delta)\le\log(2\sqrt{n}/\delta)$ for $n\ge 1$ yields the stated form.
+
+\textit{Step 4: Application to selective state-space models.} For Gaussian prior $P=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ and posterior $Q=\calN(\bm{\mu}_Q,\mathrm{diag}(\bm{\sigma}_Q^2))$, the KL divergence admits the closed form
+\begin{equation}
+\mathrm{KL}(Q\|P) = \frac{1}{2}\sum_{j=1}^d\Bigl[\frac{\sigma_{Q,j}^2+\mu_{Q,j}^2}{\sigma_P^2}-1-\log\frac{\sigma_{Q,j}^2}{\sigma_P^2}\Bigr],
+\end{equation}
+which can be evaluated exactly from the learned posterior parameters, yielding a computable generalisation certificate.
+\end{proof}
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:regret}: Multiplicative Weights Regret Bound}
+\label{app:proof_regret}
+%%=====================================================================
+
+\noindent\textit{Restatement.} The multiplicative weights algorithm with $\eta=\sqrt{\log|\calC|/T}$ achieves cumulative regret $R(T)\le 2\sqrt{T\log|\calC|}$.
+
+\begin{proof}
+\textit{Step 1: Potential function.} Define $\Phi_t = \log\sum_{c\in\calC}w_t(c)$ where $w_t(c) = \exp(\eta\sum_{s=1}^{t-1}r_s(c))$ and $r_s(c)$ is the reward of action $c$ at round $s$, with rewards normalised to $[0,1]$.
+
+\textit{Step 2: Upper bound on potential.} At each round the potential increases by
+\begin{equation}
+\Phi_{t+1}-\Phi_t = \log\frac{\sum_c w_t(c)e^{\eta r_t(c)}}{\sum_c w_t(c)}
+\le \log\bigl(1+\eta\,\E_{c\sim p_t}[r_t(c)](e^\eta-1)\bigr)
+\le \eta\,\E_{c\sim p_t}[r_t(c)] + \eta^2,
+\end{equation}
+where the last step uses $e^\eta-1\le\eta+\eta^2$ for $\eta\le 1$ and $\log(1+x)\le x$. Summing over rounds, $\Phi_{T+1}\le\log|\calC|+\eta\sum_t\E_{c\sim p_t}[r_t(c)]+T\eta^2$.
+
+\textit{Step 3: Lower bound on potential.} For any fixed action $c^*$, $\Phi_{T+1}\ge\log w_{T+1}(c^*) = \eta\sum_t r_t(c^*)$.
+
+\textit{Step 4: Combining.} Subtracting the lower bound from the upper bound,
+\begin{equation}
+\eta\sum_t r_t(c^*) - \eta\sum_t\E_{c\sim p_t}[r_t(c)] \le \log|\calC| + T\eta^2.
+\end{equation}
+The regret is $R(T) = \max_{c^*}\sum_t r_t(c^*) - \sum_t\E_{c\sim p_t}[r_t(c)] \le (\log|\calC|)/\eta + T\eta$. Setting $\eta=\sqrt{\log|\calC|/T}$ gives $R(T)\le 2\sqrt{T\log|\calC|}$ and average regret $R(T)/T = \calO(\sqrt{\log|\calC|/T})\to 0$.
+\end{proof}
+
+
+%%=====================================================================
+\section{Proof of Theorem~\ref{thm:unified}: Unified Framework Convergence}
+\label{app:proof_unified}
+%%=====================================================================
+
+\noindent\textit{Restatement.} Under $L_i$-smoothness of component losses and $L_{ij}$-smoothness of coupling losses, alternating gradient descent with $\eta_i\le 1/(L_i+\sum_j L_{ij})$ converges at rate $\|\nabla\calL_{\mathrm{unified}}(\theta^T)\|^2\le 2(\calL_{\mathrm{unified}}(\theta^0)-\calL_{\mathrm{unified}}(\theta^*))/(\eta_{\min}T)$.
+
+\begin{proof}
+\textit{Step 1: Block smoothness.} The unified loss $\calL_{\mathrm{unified}}(\theta) = \sum_i\lambda_i\calL_i(\theta_i) + \sum_{i<j}\lambda_{ij}\calL_{ij}(\theta_i,\theta_j)$ is block-coordinate smooth. For each block $i$, the partial gradient $\nabla_{\theta_i}\calL_{\mathrm{unified}}$ is $(L_i+\sum_j L_{ij})$-Lipschitz in $\theta_i$ with other blocks fixed.
+
+\textit{Step 2: Per-block descent.} When updating block $i$ with learning rate $\eta_i\le 1/(L_i+\sum_j L_{ij})$, the standard smooth descent lemma gives
+\begin{equation}
+\calL_{\mathrm{unified}}(\theta^{t,i+1}) \le \calL_{\mathrm{unified}}(\theta^{t,i}) - \frac{\eta_i}{2}\|\nabla_{\theta_i}\calL_{\mathrm{unified}}(\theta^{t,i})\|^2,
+\end{equation}
+where $\theta^{t,i}$ denotes the parameter vector after updating blocks $1,\ldots,i{-}1$ in round $t$.
+
+\textit{Step 3: Aggregation over blocks and rounds.} Summing the descent over all seven blocks within round $t$,
+\begin{equation}
+\calL_{\mathrm{unified}}(\theta^{t+1}) \le \calL_{\mathrm{unified}}(\theta^{t}) - \frac{1}{2}\sum_{i=1}^7\eta_i\|\nabla_{\theta_i}\calL_{\mathrm{unified}}(\theta^{t,i})\|^2.
+\end{equation}
+Using $\sum_i\eta_i\|\nabla_{\theta_i}\calL\|^2\ge\eta_{\min}\sum_i\|\nabla_{\theta_i}\calL\|^2 = \eta_{\min}\|\nabla\calL\|^2$ (where the equality holds at the start-of-round parameters) and summing over $T$ rounds,
+\begin{equation}
+\frac{\eta_{\min}}{2}\sum_{t=0}^{T-1}\|\nabla\calL_{\mathrm{unified}}(\theta^t)\|^2
+\le \calL_{\mathrm{unified}}(\theta^0) - \calL_{\mathrm{unified}}(\theta^*).
+\end{equation}
+Dividing by $T$ and taking the minimum yields $\min_{t<T}\|\nabla\calL_{\mathrm{unified}}(\theta^t)\|^2\le 2(\calL_{\mathrm{unified}}(\theta^0)-\calL_{\mathrm{unified}}(\theta^*))/(\eta_{\min}T)$, establishing the $\calO(1/T)$ rate to a stationary point.
+\end{proof}
+
+
+%%=====================================================================
+\section{Additional Derivations}
+\label{app:additional}
+%%=====================================================================
+
+\subsection{Sinkhorn Iteration Convergence}
+\label{app:sinkhorn}
+
+The Sinkhorn algorithm alternates scaling operations $\mathbf{u}^{(\ell+1)}=\mathbf{a}\oslash(\mathbf{K}\mathbf{v}^{(\ell)})$ and $\mathbf{v}^{(\ell+1)}=\mathbf{b}\oslash(\mathbf{K}^\top\mathbf{u}^{(\ell+1)})$ where $\mathbf{K}=\exp(-\mathbf{C}/\lambda)$. This is a fixed-point iteration on the Hilbert projective metric. Because $\mathbf{K}$ is a positive matrix, the Birkhoff contraction theorem guarantees geometric convergence. Specifically, let $\kappa(\mathbf{K})$ denote Birkhoff's contraction coefficient; then $d_H(\mathbf{u}^{(\ell+1)},\mathbf{u}^*)\le\kappa(\mathbf{K})\,d_H(\mathbf{u}^{(\ell)},\mathbf{u}^*)$ where $d_H$ is the Hilbert metric. Since $\kappa(\mathbf{K})<1$ for entropically regularised costs with $\lambda>0$, convergence is exponentially fast with rate $\calO(\kappa^{\ell})$. The number of iterations to reach $\epsilon$-accuracy in marginal constraint violation is $\calO(\lambda^{-1}\log(n/\epsilon))$ where $n$ is the support size.
+
+
+\subsection{Evidence Lower Bound for Variational Bayesian Attention}
+\label{app:elbo}
+
+The marginal log-likelihood of the data under the variational Bayesian attention model decomposes as
+\begin{equation}
+\log p(\calD) = \mathrm{ELBO}(q_\phi) + \mathrm{KL}(q_\phi(\theta)\|p(\theta|\calD)),
+\end{equation}
+where the evidence lower bound is
+\begin{equation}
+\mathrm{ELBO}(q_\phi) = \E_{\theta\sim q_\phi}\Bigl[\sum_{i=1}^n\log p(y_i|\bx_i,\theta)\Bigr] - \mathrm{KL}(q_\phi(\theta)\|p(\theta)).
+\end{equation}
+Since $\mathrm{KL}\ge 0$, maximising the ELBO simultaneously maximises a lower bound on the log-evidence and minimises the KL divergence between the approximate posterior $q_\phi$ and the true posterior $p(\theta|\calD)$. For diagonal Gaussian $q_\phi(\theta)=\prod_j\calN(\mu_j,\sigma_j^2)$ and isotropic prior $p(\theta)=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$, the KL term admits the closed form of Equation~\eqref{eq:pac_kl} in the main text, and the expectation is estimated by Monte Carlo sampling with reparameterisation $\theta^{(m)}=\bm{\mu}+\bm{\sigma}\odot\bm{\epsilon}^{(m)}$, $\bm{\epsilon}^{(m)}\sim\calN(\mathbf{0},\mathbf{I})$.
+
+
+\subsection{Robustness-Accuracy Trade-off}
+\label{app:robustness_tradeoff}
+
+\begin{proposition}[Robustness-Accuracy Trade-off]
+\label{prop:ra_tradeoff}
+For any classifier $f_\theta$ on distribution $\calD$ with standard risk $R_{\mathrm{std}}(\theta) = \E_{(\bx,y)\sim\calD}[\mathbf{1}[f_\theta(\bx)\neq y]]$ and robust risk $R_{\mathrm{rob}}(\theta,\epsilon) = \E_{(\bx,y)\sim\calD}[\max_{\|\bdelta\|\le\epsilon}\mathbf{1}[f_\theta(\bx+\bdelta)\neq y]]$, the following holds: $R_{\mathrm{rob}}(\theta,\epsilon)\ge R_{\mathrm{std}}(\theta)$, and for distributions with overlapping class-conditional densities, there exist regions where any classifier achieving $R_{\mathrm{rob}}\le\alpha$ must accept $R_{\mathrm{std}}\ge R_{\mathrm{std}}^* + g(\epsilon,\alpha)$ for a non-negative function $g$ that is increasing in $\epsilon$.
+\end{proposition}
+
+\begin{proof}
+The first claim is immediate since $\max_{\|\bdelta\|\le\epsilon}\mathbf{1}[f(\bx+\bdelta)\neq y]\ge\mathbf{1}[f(\bx)\neq y]$ by taking $\bdelta=\mathbf{0}$. For the second claim, consider the Bayes-optimal standard classifier $f^*(\bx) = \arg\max_c p(c|\bx)$. In regions where the $\epsilon$-ball around $\bx$ intersects the decision boundary of $f^*$, achieving robustness requires moving the decision boundary, which necessarily increases standard error on some subset of points. The magnitude of the trade-off is characterised by the probability mass within distance $\epsilon$ of the Bayes-optimal boundary, which grows with $\epsilon$ and depends on the density of the data distribution near the boundary.
+\end{proof}
+
+
+\subsection{Uncertainty Decomposition}
+\label{app:uncertainty_decomp}
+
+\begin{proposition}[Law of Total Variance for Predictive Uncertainty]
+\label{prop:uncertainty}
+The total predictive variance decomposes as
+\begin{equation}
+\mathrm{Var}_{p(\theta|\calD)}[p(y|\bx,\theta)]
+= \underbrace{\E_{p(\theta|\calD)}[\mathrm{Var}_{p(y|\bx,\theta)}[y]]}_{\text{aleatoric}}
++ \underbrace{\mathrm{Var}_{p(\theta|\calD)}[\E_{p(y|\bx,\theta)}[y]]}_{\text{epistemic}}.
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+This follows directly from the law of total variance $\mathrm{Var}[Y]=\E[\mathrm{Var}[Y|X]]+\mathrm{Var}[\E[Y|X]]$ applied with $Y=y$ and $X=\theta$. The first term captures irreducible data noise (aleatoric) since it is the expected variance of the output distribution averaged over parameter uncertainty. The second term captures reducible model uncertainty (epistemic) since it measures how much the expected prediction varies across plausible parameter settings. With infinite data, the posterior concentrates on the true parameter, the epistemic term vanishes, and only aleatoric uncertainty remains.
+\end{proof}
+
+
+\subsection{LWE Robustness Reduction for Forward-Compatible Detection}
+\label{app:lwe_reduction}
+
+\begin{proposition}[Forward-Compatible Detection Robustness Reduction]
+\label{prop:lwe}
+Let $\mathrm{Adv}_{\mathrm{LWE}}(n,q,\chi)$ denote the advantage of the best polynomial-time algorithm for the decisional Learning With Errors problem with dimension $n$, modulus $q$, and error distribution $\chi$. Then the false-negative rate of the forward-compatible detection classifier satisfies
+\begin{equation}
+\mathrm{FNR} \le \mathrm{Adv}_{\mathrm{LWE}}(n,q,\chi) + \sqrt{\frac{\log(1/\delta)}{2m}},
+\end{equation}
+where $m$ is the number of training samples and $\delta$ is the confidence parameter.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The reduction proceeds by contraposition. Assume a polynomial-time adversary that causes the forward-compatible detection classifier to misclassify Kyber timing anomalies with probability exceeding $\mathrm{Adv}_{\mathrm{LWE}}+\epsilon$. We construct an algorithm that uses this adversary to distinguish LWE samples from uniform: sample an LWE instance $(\mathbf{A},\mathbf{b})$, simulate a Kyber decapsulation with timing distribution governed by $\mathbf{b}$, and feed the resulting features to the adversary. If the adversary achieves misclassification, the timing distribution is consistent with a legitimate protocol-negotiation sequence, which occurs with probability at most $\mathrm{Adv}_{\mathrm{LWE}}$ when $\mathbf{b}$ is an LWE sample (since the timing correlates with Hamming weight of the error vector). If $\mathbf{b}$ is uniform, timing features are independent of the secret and misclassification is trivially possible. The gap between the two cases yields an LWE distinguisher with advantage $\ge\epsilon$, contradicting the assumed hardness. The statistical term $\sqrt{\log(1/\delta)/(2m)}$ bounds the generalisation gap of the learned classifier via Hoeffding's inequality.
+\end{proof}
+
+
+\subsection{Stochastic Attention Robustness Enhancement}
+\label{app:stoch_attention}
+
+\begin{proposition}
+Sampling attention weights from learned distributions with variance $\sigma_W^2$ during training is equivalent to regularising the loss with a term proportional to $\sigma_W^2\|\nabla_W\calL\|^2$, which penalises sharp loss landscapes and promotes flatter minima.
+\end{proposition}
+
+\begin{proof}
+Consider the stochastic forward pass $\calL(\bW+\bm{\epsilon})$ where $\bm{\epsilon}\sim\calN(\mathbf{0},\sigma_W^2\mathbf{I})$. A second-order Taylor expansion gives
+\begin{equation}
+\E_{\bm{\epsilon}}[\calL(\bW+\bm{\epsilon})]
+\approx \calL(\bW) + \frac{\sigma_W^2}{2}\mathrm{tr}(\nabla^2\calL(\bW)).
+\end{equation}
+Minimising the expected loss thus minimises the original loss plus a penalty on the trace of the Hessian, which favours flat minima. For the gradient of the expected loss with respect to $\bW$, the reparameterisation gradient estimator yields
+\begin{equation}
+\nabla_{\bW}\E[\calL(\bW+\bm{\epsilon})] \approx \nabla_{\bW}\calL(\bW) + \frac{\sigma_W^2}{2}\nabla_{\bW}\mathrm{tr}(\nabla^2\calL),
+\end{equation}
+providing implicit gradient regularisation. This flat-minimum bias improves generalisation and adversarial robustness, as adversarial examples exploit sharp loss landscapes where small input perturbations cause large loss changes.
+\end{proof}

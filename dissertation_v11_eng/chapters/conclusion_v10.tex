@@ -1,0 +1,98 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  conclusion.tex  –  Conclusion (not a numbered chapter)
+%%  v9 – Progressive summary of all defended results following the
+%%       sequential chain: CT dynamics → distributed → efficiency →
+%%       adaptation → certification → domain → platform.
+%%       Matches the 5-chapter structure.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter*{CONCLUSION}
+\addcontentsline{toc}{chapter}{Conclusion}
+\markboth{CONCLUSION}{CONCLUSION}
+
+This dissertation addressed the fundamental challenge of ensuring the robustness, stability, efficiency, accuracy, and privacy of dynamic graph neural networks operating under adversarial, distributed, and non-stationary conditions. The research was motivated by documented failures of graph neural networks in healthcare, finance, industrial IoT, and cybersecurity, where robustness was shown to lag predictive accuracy by 25--65 percentage points. A unified problem statement was progressively derived by incorporating adversarial robustness, continuous-time dynamics, distributed privacy, multi-level accuracy, computational efficiency, and non-stationary adaptation, and was decomposed into seven sub-problems addressed by seven novel methods. The following results were obtained.
+
+
+%%---------------------------------------------------------------------
+\section*{Principal Results}
+%%---------------------------------------------------------------------
+
+\noindent\textbf{1. CT-TGNN and SDE-TGNN: Certified Continuous-Time Graph Dynamics (Gap~1).}
+The first continuous-time temporal graph neural network was developed, unifying graph message passing with neural ODE dynamics on evolving topologies. Adjoint sensitivity training achieves $O(1)$ memory; Lipschitz-bounded dynamics yield certified robustness through the Gr\"{o}nwall inequality. The stochastic extension (SDE-TGNN) replaces deterministic dynamics with It\^{o} SDEs and derives analytical moment propagation from the Fokker-Planck equation. Experimental validation on three benchmarks totalling 52 million samples demonstrates 99.0\% average weighted F1, expected calibration error of 0.042, certified adversarial robustness of 76.2\% at perturbation radius $R=0.25$, and cross-domain transfer of 90.5\% F1 without fine-tuning.
+
+\noindent\textbf{2. FedLLM-API: Privacy-Preserving Distributed Graph Learning (Gap~2).}
+An original Byzantine-resilient federated graph optimiser was developed, combining coordinate-wise trimmed-mean aggregation with $(\varepsilon{=}0.85,\,\delta{=}10^{-5})$ differential privacy and Wasserstein optimal-transport alignment. Convergence at $\mathcal{O}(1/\sqrt{T})$ is proven under 30\% corruption. With 40\% Byzantine participants, FedLLM-API achieves 87.1\% accuracy versus 61.4\% for FedAvg. LLM integration enables 87.6\% F1 on zero-shot detection of novel attack categories.
+
+\noindent\textbf{3. TripleE-TGNN: Multi-Level Temporal Graph Representation (Gap~3).}
+A novel triple-embedding temporal graph architecture was developed, learning service-, trace-, and node-level representations via dual attention with elastic weight consolidation against catastrophic forgetting. Overall accuracy of 96.8\% with 40\% computational cost reduction, maintaining 94.7\% accuracy without retraining under continuous topology evolution.
+
+\noindent\textbf{4. MambaShield: Efficient State-Space Inference (Gap~4).}
+A new selective state-space architecture was developed, reducing inference complexity from $\mathcal{O}(L^{2})$ to $\mathcal{O}(L\log L)$ via FFT convolutions with progressive adversarial distillation. Under 25\% training-time poisoning, accuracy is 91.4\% versus 73.8\% for undefended training. PAC-Bayesian generalisation certificates confirm the bound with 2.7\% margin. Inference latency of 0.5\,ms per flow is the lowest of all models.
+
+\noindent\textbf{5. Stochastic Transformer and UC-HGP: Uncertainty-Calibrated Adaptation (Gap~6).}
+The first uncertainty-calibrated GNN inference combining variational Bayesian attention with hierarchical Gaussian processes was developed, achieving epistemic--aleatoric decomposition with ECE of 0.078 (59\% reduction over deterministic attention) and 43\% analyst workload reduction through uncertainty-driven triage.
+
+\noindent\textbf{6. Game-Theoretic Certification: Unified Robustness Framework (Gap~7).}
+An original robustness certification framework was constructed via Stackelberg equilibria with no-regret multiplicative weights achieving $R(T)\leq 2\sqrt{T\log|\mathcal{C}|}$ regret. Consistency regularisation couples all seven methods with proven convergence. Accuracy of 94.7\% against adaptive adversaries versus 87.6\% for non-strategic approaches.
+
+\noindent\textbf{7. CyberSecLLM: Domain-Specific Foundation Model (Gap~5).}
+A novel domain-specific foundation model with ODE-augmented selective state-space blocks was developed, achieving 89.1\% average zero-shot accuracy on the 11-task CyberSecBench evaluation --- a 20.5-point improvement over GPT-4 --- while processing million-token graph event sequences in 2.3 seconds.
+
+\noindent\textbf{8. Domain Adaptation.}
+All methods were instantiated in the cybersecurity domain through a formal data-to-graph transformation pipeline, a unified 34-class attack taxonomy, an 83-feature engineering pipeline, and domain-specific hyperparameter configurations. The adaptation demonstrates the portability of the mathematical framework to a concrete deployment environment.
+
+\noindent\textbf{9. Experimental Validation.}
+Comprehensive experiments across six benchmark datasets totalling 84.2 million labelled samples, 84 attack categories, and 23 evaluation metrics confirm that the unified framework outperforms the best baselines by 2.9--5.6 percentage points. Ablation studies verify that every component contributes measurably. Adversarial robustness is demonstrated under six attack families. Cross-domain transfer to speech and healthcare confirms domain independence.
+
+\noindent\textbf{10. RobustIDPS.ai Platform.}
+The complete framework is implemented as an open-source platform (DOI: 10.5281/zenodo.19129512) comprising 46 pages, 9 functional groups, and 13+ integrated models. The 4-layer LLM defence framework achieves 94.5\% detection across 517 attack scenarios with four commercial LLM backends. The Multi-Agent PQC-IDS module extends detection to post-quantum protocol environments. User study validation confirms 34\% reduction in analyst triage time. The platform operates as a plug-in for Snort, Suricata, and similar IDPS frameworks.
+
+
+%%---------------------------------------------------------------------
+\section*{Confirmation of the Condition--Requirement Matrix}
+%%---------------------------------------------------------------------
+
+The experimental programme confirms that all twelve intersections of the $3\times4$ condition--requirement matrix are addressed with verified performance:
+
+\begin{itemize}
+\item Adversarial $\times$ Robustness: CT-TGNN Lipschitz certificates (98.3\% accuracy)
+\item Adversarial $\times$ Accuracy: Stochastic Transformer calibration (ECE 0.078)
+\item Adversarial $\times$ Efficiency: MambaShield $\mathcal{O}(L\log L)$ inference (0.5\,ms/flow)
+\item Adversarial $\times$ Privacy: Game-theoretic certification with DP composition
+\item Non-stationary $\times$ Robustness: SDE-TGNN certified robustness (76.2\%)
+\item Non-stationary $\times$ Accuracy: TripleE-TGNN multi-level embeddings (96.8\%)
+\item Non-stationary $\times$ Efficiency: MambaShield progressive distillation (91.4\% under poisoning)
+\item Non-stationary $\times$ Privacy: Forward-compatible PQC detection (96.2\%)
+\item Distributed $\times$ Robustness: FedLLM-API Byzantine resilience (87.1\% at 40\% corruption)
+\item Distributed $\times$ Accuracy: FedLLM-API + LLM zero-shot (87.6\% F1)
+\item Distributed $\times$ Efficiency: OT-accelerated convergence (35\% faster)
+\item Distributed $\times$ Privacy: $(\varepsilon{=}0.85,\delta{=}10^{-5})$ differential privacy
+\end{itemize}
+
+
+%%---------------------------------------------------------------------
+\section*{Industry Validation}
+%%---------------------------------------------------------------------
+
+Implementation acts have been received from four organisations confirming the practical applicability of the developed methods: Rosatom State Corporation (nuclear infrastructure protection, 95.7\% detection accuracy), Positive Technologies LLC (federated learning for commercial IDPS), Google Cloud Platform (edge computing security, 96.8\% accuracy, 40\% cost reduction), and Suricata Open Source IDPS (adaptive detection plug-in with concept drift adaptation).
+
+
+%%---------------------------------------------------------------------
+\section*{Directions for Further Research}
+%%---------------------------------------------------------------------
+
+The results of this dissertation open several directions for further investigation.
+
+First, the extension of the continuous-time graph dynamics to heterogeneous temporal hypergraphs would enable modelling of higher-order interactions (e.g., multi-party transactions, group communications) that pairwise edges cannot represent, while preserving the Lipschitz certification framework.
+
+Second, the integration of the developed methods with large multimodal foundation models (vision-language-graph) would enable joint processing of network traffic graphs with system call traces, endpoint telemetry, and DNS query streams for holistic threat detection.
+
+Third, the deployment of quantised Multi-Agent PQC-IDS models on ARM Cortex-M and RISC-V microcontrollers would extend post-quantum traffic classification to resource-constrained IoT edge devices.
+
+Fourth, the application of formal verification techniques (SMT-based or abstract interpretation) to prove bounded safety properties of the LLM defence pipeline would strengthen the certification guarantees beyond empirical evaluation.
+
+Fifth, the extension of the federated learning framework to fully decentralised (peer-to-peer) settings without a trusted aggregation server would eliminate the single point of failure in the current star topology.
+
+Sixth, the adaptation of the complete framework to additional domains --- precision agriculture (spatio-temporal crop-sensor graphs), autonomous driving (dynamic sensor-fusion graphs), and financial market surveillance (temporal transaction hypergraphs) --- would confirm the domain independence claimed in the theoretical analysis.
+
+These directions build naturally on the mathematical foundations, algorithmic infrastructure, and software platform developed in this dissertation, and collectively aim to advance the state of the art in robust, trustworthy AI for dynamic graph-structured data.
