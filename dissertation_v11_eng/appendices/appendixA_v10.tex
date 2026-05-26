@@ -227,7 +227,7 @@ where the evidence lower bound is
 \begin{equation}
 \mathrm{ELBO}(q_\phi) = \E_{\theta\sim q_\phi}\Bigl[\sum_{i=1}^n\log p(y_i|\bx_i,\theta)\Bigr] - \mathrm{KL}(q_\phi(\theta)\|p(\theta)).
 \end{equation}
-Since $\mathrm{KL}\ge 0$, maximising the ELBO simultaneously maximises a lower bound on the log-evidence and minimises the KL divergence between the approximate posterior $q_\phi$ and the true posterior $p(\theta|\calD)$. For diagonal Gaussian $q_\phi(\theta)=\prod_j\calN(\mu_j,\sigma_j^2)$ and isotropic prior $p(\theta)=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$, the KL term admits the closed form of Equation~\eqref{eq:pac_kl} in the main text, and the expectation is estimated by Monte Carlo sampling with reparameterisation $\theta^{(m)}=\bm{\mu}+\bm{\sigma}\odot\bm{\epsilon}^{(m)}$, $\bm{\epsilon}^{(m)}\sim\calN(\mathbf{0},\mathbf{I})$.
+Since $\mathrm{KL}\ge 0$, maximising the ELBO simultaneously maximises a lower bound on the log-evidence and minimises the KL divergence between the approximate posterior $q_\phi$ and the true posterior $p(\theta|\calD)$. For diagonal Gaussian $q_\phi(\theta)=\prod_j\calN(\mu_j,\sigma_j^2)$ and isotropic prior $p(\theta)=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$, the KL term admits the closed form of Equation~\eqref{eq:pac_kl_gauss} in the main text, and the expectation is estimated by Monte Carlo sampling with reparameterisation $\theta^{(m)}=\bm{\mu}+\bm{\sigma}\odot\bm{\epsilon}^{(m)}$, $\bm{\epsilon}^{(m)}\sim\calN(\mathbf{0},\mathbf{I})$.
 
 
 \subsection{Robustness-Accuracy Trade-off}

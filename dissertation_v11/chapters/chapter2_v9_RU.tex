@@ -179,6 +179,11 @@ R(T) = \max_{f^*}\sum_{t=1}^{T}\calL(f_{\theta_t},y_t) - \sum_{t=1}^{T}\calL(f^*
 
 Данный раздел решает Подзадачу~1 путём разработки графовой нейронной сети, представления узлов которой эволюционируют согласно нейронному обыкновенному дифференциальному уравнению, обеспечивая сертифицированную границу робастности из ограничения Липшица уравнения~\eqref{eq:ps_ode}. Метод адресует Пробел~1 (Состязательность $\times$ Робастность; Нестационарность $\times$ Робастность).
 
+Динамика узлов в непрерывном времени описывается уравнением
+\begin{equation}
+\frac{d\bh_v(t)}{dt}
+\;=\; f_\theta\!\Bigl(\bh_v(t),\;\{\bh_u(t)\}_{u\in\calN_v(t)},\;\mathbf{A}(t)\Bigr),
+\label{eq:ct_tgnn_homo}
 \end{equation}
 где $\bh_v(t)\in\R^{d_h}$ --- вложение узла~$v$ в момент~$t$, $\calN_v(t)$ обозначает окрестность~$v$ при текущей топологии, $\mathbf{A}(t)$ кодирует структуру смежности, а $f_\theta$ --- нейронная сеть, параметризованная~$\theta$.
 
@@ -697,17 +702,13 @@ y(t) = \bC\,\bh(t) + \bD\,u(t),
 
 \subsection{Вариационное байесовское внимание}
 
-Для входной последовательности $\mathbf{X}=[\bx_1,\dots,\bx_n]\in\R^{n\times d}$ вариационные распределения~\cite{Blundell2015} размещаются на матрицах проекций запроса, ключа и значения,
-\begin{equation}
-\begin{aligned}
-q_{\phi_Q}(\bW_Q) = \calN(\bm{\mu}_Q,\mathrm{diag}(\bm{\sigma}_Q^2)),
-\quad
-q_{\phi_K}(\bW_K) = \calN(\bm{\mu}_K,\mathrm{diag}(\bm{\sigma}_K^2)), \\
-\quad
-q_{\phi_V}(\bW_V) = \calN(\bm{\mu}_V,\mathrm{diag}(\bm{\sigma}_V^2)).
-\end{aligned}
+Для входной последовательности $\mathbf{X}=[\bx_1,\dots,\bx_n]\in\R^{n\times d}$ вариационные распределения~\cite{Blundell2015} размещаются на матрицах проекций запроса, ключа и значения:
+\begin{align}
+q_{\phi_Q}(\bW_Q) &= \calN\!\bigl(\bm{\mu}_Q,\mathrm{diag}(\bm{\sigma}_Q^2)\bigr), \notag\\
+q_{\phi_K}(\bW_K) &= \calN\!\bigl(\bm{\mu}_K,\mathrm{diag}(\bm{\sigma}_K^2)\bigr), \notag\\
+q_{\phi_V}(\bW_V) &= \calN\!\bigl(\bm{\mu}_V,\mathrm{diag}(\bm{\sigma}_V^2)\bigr).
 \label{eq:stoch_var_attn}
-\end{equation}
+\end{align}
 Выборки производятся через трюк репараметризации, $\bW_Q=\bm{\mu}_Q+\bm{\sigma}_Q\odot\bm{\epsilon}_Q$ с $\bm{\epsilon}_Q\sim\calN(\mathbf{0},\mathbf{I})$, так что коэффициенты внимания $A_{ij}=(\bx_i\bW_Q)^\top(\bx_j\bW_K)/\sqrt{d_k}$ становятся случайными величинами, неопределённость которых распространяется на выход. Оценка Монте-Карло с $M$ выборками аппроксимирует ожидаемое внимание,
 \begin{equation}
 \E_{q_\phi}[\mathrm{Attention}(\mathbf{X})]

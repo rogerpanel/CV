@@ -108,17 +108,48 @@
 \setcounter{secnumdepth}{3}
 
 %% ──────────────── Float placement parameters ────────────────
-\renewcommand{\topfraction}{0.92}
-\renewcommand{\bottomfraction}{0.85}
-\renewcommand{\textfraction}{0.08}
-\renewcommand{\floatpagefraction}{0.80}
-\setlength{\floatsep}{14pt plus 2pt minus 2pt}
-\setlength{\textfloatsep}{18pt plus 2pt minus 4pt}
-\setlength{\intextsep}{16pt plus 2pt minus 2pt}
+%% v11 (compact edition): tightened vertical spacing around floats,
+%% sections and lists to eliminate excessive gaps between text,
+%% figures, tables and algorithms.
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.90}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+
+%% Compact list spacing
+\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=2pt}
+
+%% Compact heading spacing (titlesec)
+%% Chapter title: smaller size and tighter padding to match the
+%% PhD_Dissertation.pdf sample style.
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\Large\chaptertitlename\ \thechapter}
+  {0.8ex}
+  {\LARGE\raggedright}
+\titlespacing*{\chapter}{0pt}{-2ex}{2.2ex}
+\titlespacing*{\section}{0pt}{2.4ex plus 0.6ex minus 0.2ex}{1.6ex plus 0.2ex}
+\titlespacing*{\subsection}{0pt}{2.0ex plus 0.5ex minus 0.2ex}{1.2ex plus 0.2ex}
+\titlespacing*{\subsubsection}{0pt}{1.6ex plus 0.4ex minus 0.2ex}{1.0ex plus 0.2ex}
+
+%% Compact spacing around algorithms and tables
+\setlength{\algotitleheightrule}{0.4pt}
+\SetAlCapSkip{4pt}
+\renewcommand{\arraystretch}{1.05}
+
+%% Allow larger inter-word stretch for paragraphs containing
+%% long \texttt{} paths or unbreakable URLs (prevents right-margin spill).
+\emergencystretch=3em
+\hbadness=10000
 
 %% ──────────────── Custom math commands ────────────────
 \newcommand{\E}{\mathbb{E}}
-\newcommand{\Prob}{\mathrm{Pr}}
+\providecommand{\Prob}{\mathrm{Pr}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\calD}{\mathcal{D}}

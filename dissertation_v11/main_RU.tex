@@ -104,18 +104,48 @@
 \setcounter{secnumdepth}{3}
 
 %% ──────────────── Параметры размещения плавающих объектов ────────────────
-%% Чтобы рисунки не накладывались и не сбивались в конец главы.
-\renewcommand{\topfraction}{0.92}
-\renewcommand{\bottomfraction}{0.85}
-\renewcommand{\textfraction}{0.08}
-\renewcommand{\floatpagefraction}{0.80}
-\setlength{\floatsep}{14pt plus 2pt minus 2pt}
-\setlength{\textfloatsep}{18pt plus 2pt minus 4pt}
-\setlength{\intextsep}{16pt plus 2pt minus 2pt}
+%% v11 (компактная редакция): уменьшены вертикальные интервалы вокруг
+%% плавающих объектов, разделов и списков для устранения избыточных
+%% пробелов между текстом, рисунками, таблицами и алгоритмами.
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.90}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+
+%% Компактные интервалы в списках
+\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=2pt}
+
+%% Компактные интервалы вокруг заголовков (titlesec)
+%% Заголовок главы: уменьшенный размер + сжатые отступы
+%% (соответствует образцу PhD_Dissertation.pdf)
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\Large\chaptertitlename\ \thechapter}
+  {0.8ex}
+  {\LARGE\raggedright}
+\titlespacing*{\chapter}{0pt}{-2ex}{2.2ex}
+\titlespacing*{\section}{0pt}{2.4ex plus 0.6ex minus 0.2ex}{1.6ex plus 0.2ex}
+\titlespacing*{\subsection}{0pt}{2.0ex plus 0.5ex minus 0.2ex}{1.2ex plus 0.2ex}
+\titlespacing*{\subsubsection}{0pt}{1.6ex plus 0.4ex minus 0.2ex}{1.0ex plus 0.2ex}
+
+%% Компактные интервалы вокруг алгоритмов и таблиц
+\setlength{\algotitleheightrule}{0.4pt}
+\SetAlCapSkip{4pt}
+\renewcommand{\arraystretch}{1.05}
+
+%% Разрешить большее растяжение интервалов на проблемных строках
+%% (для путей в \texttt и длинных URL без явных break-точек).
+\emergencystretch=3em
+\hbadness=10000  % suppress underfull \hbox messages
 
 %% ──────────────── Математические команды ────────────────
 \newcommand{\E}{\mathbb{E}}
-\newcommand{\Prob}{\mathrm{Pr}}    % ← Fixed: "Pr" not "ℙ"
+\providecommand{\Prob}{\mathrm{Pr}}    % ← Fixed: "Pr" not "ℙ"
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\calD}{\mathcal{D}}

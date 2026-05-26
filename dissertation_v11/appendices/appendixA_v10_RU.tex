@@ -254,7 +254,7 @@ w_t(c) \;=\; \exp\!\Bigl(\eta\sum_{s=1}^{t-1}r_s(c)\Bigr),
 \begin{equation}
 \mathrm{ELBO}(q_\phi) = \E_{\theta\sim q_\phi}\Bigl[\sum_{i=1}^n\log p(y_i|\bx_i,\theta)\Bigr] - \mathrm{KL}(q_\phi(\theta)\|p(\theta)).
 \end{equation}
-Поскольку $\mathrm{KL}\ge 0$, максимизация ELBO одновременно максимизирует нижнюю границу логарифма свидетельства и минимизирует KL-дивергенцию между приближённым апостериорным $q_\phi$ и истинным апостериорным $p(\theta|\calD)$. Для диагонального гауссовского $q_\phi(\theta)=\prod_j\calN(\mu_j,\sigma_j^2)$ и изотропного априорного $p(\theta)=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ член KL допускает замкнутую форму из уравнения~\eqref{eq:pac_kl} основного текста, а математическое ожидание оценивается выборкой Монте-Карло с репараметризацией $\theta^{(m)}=\bm{\mu}+\bm{\sigma}\odot\bm{\epsilon}^{(m)}$, $\bm{\epsilon}^{(m)}\sim\calN(\mathbf{0},\mathbf{I})$.
+Поскольку $\mathrm{KL}\ge 0$, максимизация ELBO одновременно максимизирует нижнюю границу логарифма свидетельства и минимизирует KL-дивергенцию между приближённым апостериорным $q_\phi$ и истинным апостериорным $p(\theta|\calD)$. Для диагонального гауссовского $q_\phi(\theta)=\prod_j\calN(\mu_j,\sigma_j^2)$ и изотропного априорного $p(\theta)=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ член KL допускает замкнутую форму из уравнения~\eqref{eq:pac_kl_gauss} основного текста, а математическое ожидание оценивается выборкой Монте-Карло с репараметризацией $\theta^{(m)}=\bm{\mu}+\bm{\sigma}\odot\bm{\epsilon}^{(m)}$, $\bm{\epsilon}^{(m)}\sim\calN(\mathbf{0},\mathbf{I})$.
 
 
 \subsection{Компромисс робастность--точность}

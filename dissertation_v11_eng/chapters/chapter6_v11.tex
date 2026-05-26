@@ -308,6 +308,70 @@ multi-scale time constants
 $\tau_{\mathrm{fast}}/\tau_{\mathrm{mid}}/\tau_{\mathrm{slow}}$ from
 Chapter~\ref{ch:methods} absorb the heterogeneity of sensor rates.
 
+A graphical depiction of the six-stage pipeline is given in
+Fig.~\ref{fig:uav_telemetry_pipeline}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=4mm and 4mm,
+  src/.style={draw,rounded corners=2pt,fill=blue!8,minimum width=2.6cm,
+    minimum height=11mm,align=center,thick},
+  proc/.style={draw,rounded corners=2pt,fill=green!10,minimum width=2.6cm,
+    minimum height=11mm,align=center,thick,draw=green!55!black},
+  graph/.style={draw,rounded corners=2pt,fill=purple!10,minimum width=3.0cm,
+    minimum height=14mm,align=center,thick,draw=purple!60!black,
+    font=\footnotesize\bfseries},
+  cons/.style={draw,rounded corners=2pt,fill=orange!15,minimum width=2.8cm,
+    minimum height=11mm,align=center,thick,draw=orange!70!black},
+  arr/.style={-{Stealth[length=2mm]},semithick,gray!70!black},
+  rate/.style={font=\scriptsize\itshape,gray!60!black}]
+% Row 1 - 5 telemetry sources
+\node[src] (mission) {Mission plan\\\scriptsize.plan / JSON-LD};
+\node[src,right=of mission] (state) {UAV\\state\\\scriptsize GOST R 34.10-2012};
+\node[src,right=of state]   (geo)   {Geodata\\\scriptsize terrain,\\no-fly zones};
+\node[src,right=of geo]     (infra) {Ground\\infrastructure};
+\node[src,right=of infra]   (tel)   {Telemetry\\\scriptsize IMU 1\,kHz,\\LiDAR 10--100\,Hz};
+% Row 2 - preprocessing
+\node[proc,below=10mm of mission] (label) {Target\\labels $Y_t$};
+\node[proc,below=10mm of state]   (xfeat) {Node\\features $X_t$};
+\node[proc,below=10mm of geo]     (aedge) {Edge\\weights $A_t$};
+\node[proc,below=10mm of infra]   (route) {Routing\\anchors};
+\node[proc,below=10mm of tel]     (stamp) {Time\\stamps $\Delta t$};
+% Row 3 - graph aggregation
+\node[graph,below=10mm of aedge] (Gt) {\large $\calG_t = (V_t,E_t,X_t,A_t)$};
+% Row 4 - consumers
+\node[cons,below=of Gt] (m1) {\textsf{M1 CT-TGNN}\\\scriptsize \texttt{UAVGraphBatch}};
+\node[cons,left=of m1]  (m4) {\textsf{M4}\\\textsf{MambaShield}};
+\node[cons,right=of m1] (m6) {\textsf{M6 UC-HGP}\\\scriptsize calibration};
+% Arrows row1 -> row2
+\foreach \s/\t in {mission/label,state/xfeat,geo/aedge,infra/route,tel/stamp} {
+  \draw[arr] (\s) -- (\t);}
+% row2 -> graph
+\foreach \s in {label,xfeat,aedge,route,stamp} {
+  \draw[arr] (\s.south) -- (Gt.north);}
+% graph -> consumers
+\foreach \t in {m4,m1,m6} {
+  \draw[arr] (Gt.south) -- (\t.north);}
+% timescale labels
+\node[rate,right=1mm of tel] {$\tau_{\mathrm{fast}}$};
+\node[rate,right=1mm of mission] {$\tau_{\mathrm{slow}}$};
+\end{tikzpicture}
+\caption{Six-stage pipeline that converts UAV telemetry into the
+continuous-time dynamic graph $\calG_t$ and forwards it to the
+defensive-layer methods \textsf{M1}/\textsf{M4}/\textsf{M6}. Five
+heterogeneous sources (blue band) are processed into target labels,
+node features, edge weights, routing anchors and time stamps (green
+band), aggregated into a single graph $\calG_t$ (purple central
+node), and consumed by the defence methods (orange band) through
+the unified \texttt{UAVGraphBatch} interface. The multi-scale time
+constants $\tau_{\mathrm{fast}}$ (IMU/LiDAR) and
+$\tau_{\mathrm{slow}}$ (mission plans) absorb the heterogeneity of
+sensor rates.}
+\label{fig:uav_telemetry_pipeline}
+\end{figure}
+
 
 %%=====================================================================
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
@@ -390,7 +454,7 @@ equation with moment propagation through the Fokker--Planck equation.
 attacker--defender interaction as a Stackelberg game: the defender
 mixes a discrete set of policies (aggressive manoeuvre, conservative
 loiter, return, INS-only) through multiplicative weights; the
-guarantee~\eqref{eq:mwu_regret_bound} provides sub-linear regret
+guarantee~\eqref{eq:game_regret_bound} provides sub-linear regret
 against any adaptive jammer. \textsf{M6~UC-HGP} switches to a
 conservative policy when the calibrated threshold of epistemic
 uncertainty is exceeded.
@@ -398,8 +462,7 @@ uncertainty is exceeded.
 
 %%=====================================================================
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
-\section{Lipschitz--Grönwall and Randomised-Smoothing Certificates
-Applied to UAVs}
+\section{Lipschitz--Grönwall and Randomised-Smoothing Certificates for UAVs}
 \label{sec:uav_certs}
 %%=====================================================================
 

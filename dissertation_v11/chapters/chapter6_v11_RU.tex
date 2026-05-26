@@ -282,8 +282,72 @@ $\calG_t$ построен по аналогии с конвейером Гла�
 непосредственно через интерфейс \texttt{UAVGraphBatch}, без
 каких-либо изменений ядра метода. Многомасштабные временные константы
 $\tau_{\mathrm{fast}}/\tau_{\mathrm{mid}}/\tau_{\mathrm{slow}}$ из
-Главы~\ref{ch:methods} абсорбируют гетерогенность частот
-датчиков.
+Главы~\ref{ch:methods} абсорбируют гетерогенность частот датчиков.
+
+Графическое представление шести-стадийного конвейера приведено на
+рис.~\ref{fig:uav_telemetry_pipeline}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=4mm and 4mm,
+  src/.style={draw,rounded corners=2pt,fill=blue!8,minimum width=2.6cm,
+    minimum height=11mm,align=center,thick},
+  proc/.style={draw,rounded corners=2pt,fill=green!10,minimum width=2.6cm,
+    minimum height=11mm,align=center,thick,draw=green!55!black},
+  graph/.style={draw,rounded corners=2pt,fill=purple!10,minimum width=3.0cm,
+    minimum height=14mm,align=center,thick,draw=purple!60!black,
+    font=\footnotesize\bfseries},
+  cons/.style={draw,rounded corners=2pt,fill=orange!15,minimum width=2.8cm,
+    minimum height=11mm,align=center,thick,draw=orange!70!black},
+  arr/.style={-{Stealth[length=2mm]},semithick,gray!70!black},
+  rate/.style={font=\scriptsize\itshape,gray!60!black}]
+% Row 1 - 5 telemetry sources
+\node[src] (mission) {Полётная\\миссия\\\scriptsize.plan / JSON-LD};
+\node[src,right=of mission] (state) {Состояние\\БПЛА\\\scriptsize ГОСТ Р 34.10-2012};
+\node[src,right=of state]   (geo)   {Геоданные\\\scriptsize рельеф,\\запретные зоны};
+\node[src,right=of geo]     (infra) {Наземная\\инфра-\\структура};
+\node[src,right=of infra]   (tel)   {Телеметрия\\\scriptsize IMU 1\,кГц,\\LiDAR 10--100\,Гц};
+% Row 2 - preprocessing
+\node[proc,below=10mm of mission] (label) {Целевая\\разметка $Y_t$};
+\node[proc,below=10mm of state]   (xfeat) {Признаки\\узлов $X_t$};
+\node[proc,below=10mm of geo]     (aedge) {Веса рёбер\\$A_t$};
+\node[proc,below=10mm of infra]   (route) {Опорные\\маршруты};
+\node[proc,below=10mm of tel]     (stamp) {Временные\\отметки $\Delta t$};
+% Row 3 - graph aggregation
+\node[graph,below=10mm of aedge] (Gt) {\large $\calG_t = (V_t,E_t,X_t,A_t)$};
+% Row 4 - consumers
+\node[cons,below=of Gt] (m1) {\textsf{M1 CT-TGNN}\\\scriptsize \texttt{UAVGraphBatch}};
+\node[cons,left=of m1]  (m4) {\textsf{M4}\\\textsf{MambaShield}};
+\node[cons,right=of m1] (m6) {\textsf{M6 UC-HGP}\\\scriptsize калибровка};
+% Arrows row1 -> row2
+\foreach \s/\t in {mission/label,state/xfeat,geo/aedge,infra/route,tel/stamp} {
+  \draw[arr] (\s) -- (\t);}
+% row2 -> graph
+\foreach \s in {label,xfeat,aedge,route,stamp} {
+  \draw[arr] (\s.south) -- (Gt.north);}
+% graph -> consumers
+\foreach \t in {m4,m1,m6} {
+  \draw[arr] (Gt.south) -- (\t.north);}
+% timescale labels on right
+\node[rate,right=1mm of tel] {$\tau_{\mathrm{fast}}$};
+\node[rate,right=1mm of mission] {$\tau_{\mathrm{slow}}$};
+\end{tikzpicture}
+\caption{Шести-стадийный конвейер преобразования телеметрии БПЛА в
+непрерывно-временной динамический граф $\calG_t$ и его передача
+методам защитного слоя \textsf{M1}/\textsf{M4}/\textsf{M6}. Пять
+гетерогенных источников (синяя полоса) проходят обработку с
+выделением целевой разметки, признаков узлов, весов рёбер, опорных
+маршрутов и временных отметок (зелёная полоса), после чего
+агрегируются в единый граф $\calG_t$ (фиолетовая центральная
+вершина) и потребляются защитными методами (оранжевая полоса)
+через единый интерфейс \texttt{UAVGraphBatch}.
+Многомасштабные временные константы $\tau_{\mathrm{fast}}$
+(IMU/LiDAR) и $\tau_{\mathrm{slow}}$ (планы миссий) абсорбируют
+гетерогенность частот датчиков.}
+\label{fig:uav_telemetry_pipeline}
+\end{figure}
 
 
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}

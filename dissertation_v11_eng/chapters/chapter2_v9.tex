@@ -179,6 +179,11 @@ The remainder of this chapter develops each method in the order of the sub-probl
 
 This section solves Sub-problem~1 by developing a graph neural network whose node representations evolve according to a neural ordinary differential equation, yielding the certified robustness bound from the Lipschitz constraint in Equation~\eqref{eq:ps_ode}. The method addresses Gap~1 (Adversarial $\times$ Robustness; Non-stationary $\times$ Robustness).
 
+The continuous-time node dynamics are governed by
+\begin{equation}
+\frac{d\bh_v(t)}{dt}
+\;=\; f_\theta\!\Bigl(\bh_v(t),\;\{\bh_u(t)\}_{u\in\calN_v(t)},\;\mathbf{A}(t)\Bigr),
+\label{eq:ct_tgnn_homo}
 \end{equation}
 where $\bh_v(t)\in\R^{d_h}$ is the embedding of node~$v$ at time~$t$, $\calN_v(t)$ denotes the neighbourhood of~$v$ under the current topology, $\mathbf{A}(t)$ encodes the adjacency structure, and $f_\theta$ is a neural network parameterised by~$\theta$.
 
@@ -697,15 +702,13 @@ This section solves Sub-problem~6 by developing two complementary methods that a
 
 \subsection{Variational Bayesian Attention}
 
-For an input sequence $\mathbf{X}=[\bx_1,\dots,\bx_n]\in\R^{n\times d}$, variational distributions~\cite{Blundell2015} are placed over the query, key, and value projection matrices,
-\begin{equation}
-q_{\phi_Q}(\bW_Q) = \calN(\bm{\mu}_Q,\mathrm{diag}(\bm{\sigma}_Q^2)),
-\quad
-q_{\phi_K}(\bW_K) = \calN(\bm{\mu}_K,\mathrm{diag}(\bm{\sigma}_K^2)),
-\quad
-q_{\phi_V}(\bW_V) = \calN(\bm{\mu}_V,\mathrm{diag}(\bm{\sigma}_V^2)).
+For an input sequence $\mathbf{X}=[\bx_1,\dots,\bx_n]\in\R^{n\times d}$, variational distributions~\cite{Blundell2015} are placed over the query, key, and value projection matrices:
+\begin{align}
+q_{\phi_Q}(\bW_Q) &= \calN\!\bigl(\bm{\mu}_Q,\mathrm{diag}(\bm{\sigma}_Q^2)\bigr), \notag\\
+q_{\phi_K}(\bW_K) &= \calN\!\bigl(\bm{\mu}_K,\mathrm{diag}(\bm{\sigma}_K^2)\bigr), \notag\\
+q_{\phi_V}(\bW_V) &= \calN\!\bigl(\bm{\mu}_V,\mathrm{diag}(\bm{\sigma}_V^2)\bigr).
 \label{eq:stoch_var_attn}
-\end{equation}
+\end{align}
 Samples are drawn through the reparameterisation trick, $\bW_Q=\bm{\mu}_Q+\bm{\sigma}_Q\odot\bm{\epsilon}_Q$ with $\bm{\epsilon}_Q\sim\calN(\mathbf{0},\mathbf{I})$, so that attention scores $A_{ij}=(\bx_i\bW_Q)^\top(\bx_j\bW_K)/\sqrt{d_k}$ become random variables whose uncertainty propagates to the output. Monte Carlo estimation with $M$ samples approximates the expected attention,
 \begin{equation}
 \E_{q_\phi}[\mathrm{Attention}(\mathbf{X})]

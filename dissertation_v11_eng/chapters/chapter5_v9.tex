@@ -27,7 +27,7 @@ The platform is designed for five categories of target users:
 
 \noindent\textbf{MLSecOps Researchers.} Machine learning security researchers who evaluate the robustness of AI components. The platform provides integrated adversarial testing (6 attack families), LLM attack surface evaluation (5 modules), and MLSecOps compliance dashboards (MITRE ATT\&CK, OWASP LLM Top 10, NIST AI RMF).
 
-\noindent\textbf{AI Developers.} Researchers and engineers building graph-based detection models. The platform provides 13+ pre-trained models with configurable hyperparameters, ablation studio, and reproducible benchmarking datasets.
+\noindent\textbf{AI Developers.} Researchers and engineers building graph-based detection models. The platform provides 17 pre-trained models with configurable hyperparameters, ablation studio, and reproducible benchmarking datasets.
 
 \noindent\textbf{Academic Researchers.} PhD students, postdoctoral fellows, and faculty conducting research in graph neural network robustness. The platform serves as a reproducible research instrument with DOI-archived code and datasets.
 
@@ -74,6 +74,83 @@ ingestion through detection, analysis, and response.}
 \label{fig:platform_arch}
 \end{figure}
 
+A schematic of the release~v4 two-plane architecture and the three
+gRPC streams that bridge the control and data planes is given in
+Fig.~\ref{fig:two_plane_arch}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=3mm and 5mm,
+  pyblock/.style={draw,rounded corners=2pt,fill=blue!8,
+    minimum width=10cm,minimum height=7mm,align=center,thick},
+  rsblock/.style={draw,rounded corners=2pt,fill=orange!12,
+    minimum width=10cm,minimum height=7mm,align=center,thick,
+    draw=orange!75!black},
+  krblock/.style={draw,rounded corners=2pt,fill=gray!15,
+    minimum width=10cm,minimum height=7mm,align=center,thick},
+  planelbl/.style={draw,rounded corners=2pt,fill=gray!8,
+    minimum width=1.7cm,minimum height=9mm,align=center,
+    font=\scriptsize\bfseries},
+  arr/.style={-{Stealth[length=2mm]},semithick,gray!70!black},
+  rpclbl/.style={font=\scriptsize\itshape,blue!55!black,align=center,
+    fill=white,inner sep=1pt}]
+% Control plane
+\node[pyblock] (ui) {Frontend: React~18, 51 pages across 10 groups, PWA};
+\node[pyblock,below=of ui] (api) {Backend: FastAPI, 60+ REST + WebSocket, 17 models};
+\node[pyblock,below=of api] (db)  {Persistence: PostgreSQL\,16 + Redis\,7};
+% Data plane
+\node[rsblock,below=12mm of db] (edge)
+  {\texttt{robustidps-edge} (Rust): gRPC daemon, ONNX hot-swap};
+\node[rsblock,below=of edge] (xdp)
+  {\texttt{robustidps-xdp} (Rust + eBPF): XDP \emph{Native} on \texttt{eth0}};
+\node[krblock,below=of xdp] (kernel)
+  {Linux kernel 6.8 (BPF JIT, BTF, \texttt{CAP\_NET\_ADMIN}, \texttt{CAP\_BPF})};
+% Plane labels
+\node[planelbl,left=1.5mm of api] (pylab)
+  {Control\\plane\\(Python)};
+\node[planelbl,fill=orange!10,left=1.5mm of edge] (rslab)
+  {Data\\plane\\(Rust+XDP)};
+% Frames
+\begin{pgfonlayer}{background}
+  \node[draw=blue!30,rounded corners,thick,
+        fit=(ui)(api)(db)(pylab),inner sep=2pt] {};
+  \node[draw=orange!60!black,rounded corners,thick,dashed,
+        fit=(edge)(xdp)(kernel)(rslab),inner sep=2pt] {};
+\end{pgfonlayer}
+% Arrows (data flow)
+\draw[arr] (ui) -- (api);
+\draw[arr] (api) -- (db);
+\draw[arr] (xdp) -- (kernel);
+\draw[arr] (edge) -- (xdp);
+% gRPC bridges - three vertical arrows spread horizontally between planes,
+% with labels placed to the LEFT/RIGHT of each arrow (no overlap)
+\coordinate (gap) at ($(db.south)!0.5!(edge.north)$);
+\draw[-{Stealth[length=2mm]},semithick,blue!55!black,thick]
+  ([xshift=-3.0cm]edge.north) -- ([xshift=-3.0cm]db.south);
+\node[rpclbl,left=0.5mm] at ([xshift=-3.0cm]gap)
+  {gRPC\\StreamFlows};
+\draw[-{Stealth[length=2mm]},semithick,blue!55!black,thick]
+  (db.south) -- (edge.north);
+\node[rpclbl,right=0.5mm] at (gap)
+  {gRPC\\UpdateConfig};
+\draw[-{Stealth[length=2mm]},semithick,blue!55!black,thick]
+  ([xshift=3.0cm]db.south) -- ([xshift=3.0cm]edge.north);
+\node[rpclbl,right=0.5mm] at ([xshift=3.0cm]gap)
+  {gRPC\\ApplyModelUpdate};
+\end{tikzpicture}
+\caption{Two-plane architecture of \textsf{RobustIDPS.ai}~v4: the
+Python control plane (blue frame, top) and the Rust data plane
+(orange dashed frame, bottom) are separated by a clean boundary and
+bridged by three gRPC primitives. \texttt{StreamFlows}~--- flow
+records streamed from the data plane to the control plane;
+\texttt{UpdateConfig}~--- block-list push in the reverse direction;
+\texttt{ApplyModelUpdate}~--- atomic delivery of the INT8 ONNX
+student model to running agents without service restart.}
+\label{fig:two_plane_arch}
+\end{figure}
+
 
 %%=====================================================================
 \section{Functional Groups and Page Inventory}
@@ -94,14 +171,15 @@ The platform's 51 pages are organised into 10 functional groups, summarised in T
 AI Command Centre      & 5 & Dashboard, Upload \& Analyse, Analytics, Live Monitor, Alert Causality \\
 AI Active Defence      & 5 & Red Team Arena, Threat Response, SOC Copilot, Federated Learning, Attack Chain Predictor \\
 SOC Intelligence       & 6 & Auto-Investigation, Threat Hunt, Incident Reports, Threat Intel, Rule Generator, CVE Mapper \\
-LLM Attack Surfaces    & 5 & Prompt Injection, Jailbreak Taxonomy, RAG Poisoning, Multi-Agent Chain, Data Poisoning \\
+LLM Attack Surfaces    & 6 & Prompt Injection, Jailbreak Taxonomy, RAG Poisoning, Multi-Agent Chain, Data Poisoning, \textbf{MambaGuard} \\
 MLSecOps Standards     & 3 & MITRE ATT\&CK Mapper, Alert Triage, Compliance Hub \\
 AI Security \& Gov     & 4 & PQ Cryptography, Zero-Trust, Supply Chain, Research Hub \\
-AI Novel Methods       & 5 & Continual Learning, RL Response Agent, Adversarial Eval, Explainability, Autoencoder \\
-AI Data \& Models      & 3 & Datasets (6), Models (13+), Ablation Studio \\
+AI Novel Methods       & 7 & Continual Learning, RL Response Agent, Adversarial Eval, Explainability, Autoencoder, \textbf{SODE-Guard}, \textbf{SSL-GraphAnomaly Full} \\
+AI Data \& Models      & 4 & Datasets (6), Models (17), Ablation Studio, Edge Agent Registry \\
+Operations \& Deployment & 6 & Rust agent fleet, systemd/Docker, Distil-and-push, XDP block lists, JSONL logs, Health checks \\
 System                 & 5 & Profile/RobustID, Admin, Architecture, API Docs, About \\
 \midrule
-\textbf{Total}         & \textbf{46} & \\
+\textbf{Total}         & \textbf{51} & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -228,7 +306,7 @@ The SOC Intelligence Suite comprises six purpose-built pages transforming raw de
 
 \subsection{Agentic Auto-Investigation}
 
-The pipeline executes four phases: (1)~Evidence Collection --- retrieves the triggering flow, $\pm$30\,s temporal context, and correlated alerts; (2)~Contextual Enrichment --- queries IP reputation, geo-location, and alert frequency; (3)~LLM Reasoning --- submits enriched evidence to the selected LLM for root-cause analysis and MITRE ATT\MITRE ATT\&CK mappingCK~\cite{Hernandez2015} mapping; (4)~Verdict Synthesis --- aggregates output into a formatted investigation report.
+The pipeline executes four phases: (1)~Evidence Collection --- retrieves the triggering flow, $\pm$30\,s temporal context, and correlated alerts; (2)~Contextual Enrichment --- queries IP reputation, geo-location, and alert frequency; (3)~LLM Reasoning --- submits enriched evidence to the selected LLM for root-cause analysis and MITRE ATT\&CK~\cite{Hernandez2015}; (4)~Verdict Synthesis --- aggregates output into a formatted investigation report.
 
 \subsection{Natural Language Threat Hunt}
 
@@ -241,7 +319,7 @@ Translates detected attacks into deployable Suricata/Snort rules using 21 templa
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/SOC_v10.png}
-\caption{SOC Intelligence Suite showing (left) the Auto-Investigation panel with LLM reasoning output and MITRE ATT\MITRE ATT\&CK mappingCK~\cite{Hernandez2015} mapping, (centre) the Threat Hunt interface with natural language query, and (right) the generated Suricata rule with SID, priority, and CVE references.}
+\caption{SOC Intelligence Suite showing (left) the Auto-Investigation panel with LLM reasoning output and MITRE ATT\&CK~\cite{Hernandez2015}, (centre) the Threat Hunt interface with natural language query, and (right) the generated Suricata rule with SID, priority, and CVE references.}
 \label{fig:screenshot_soc}
 \end{figure}
 
@@ -288,7 +366,7 @@ The five modules cover: Prompt Injection Playground (8 injection categories test
 \label{sec:mlsecops}
 %%=====================================================================
 
-The platform integrates three major security and AI governance frameworks: MITRE ATT\MITRE ATT\&CK mappingCK~\cite{Hernandez2015} mapping (30 detection classes mapped to kill chain techniques with interactive visualisation), OWASP LLM Top~10~\cite{Xiong2020} Scorecard (2025 edition compliance with residual risk ratings), and NIST AI Risk Management Framework Dashboard (Govern, Map, Measure, Manage functions with per-subcategory evidence). An ML-assisted Alert Triage Classifier assigns severity tiers (Critical/High/Medium/Low/Informational) based on attack class, confidence, asset criticality, and historical false-positive rates.
+The platform integrates three major security and AI governance frameworks: MITRE ATT\&CK~\cite{Hernandez2015} (30 detection classes mapped to kill chain techniques with interactive visualisation), OWASP LLM Top~10~\cite{Xiong2020} Scorecard (2025 edition compliance with residual risk ratings), and NIST AI Risk Management Framework Dashboard (Govern, Map, Measure, Manage functions with per-subcategory evidence). An ML-assisted Alert Triage Classifier assigns severity tiers (Critical/High/Medium/Low/Informational) based on attack class, confidence, asset criticality, and historical false-positive rates.
 
 
 %%=====================================================================
@@ -376,6 +454,120 @@ Cold start to ready, s                & 9.4     & 0.7     & $\times$13\\
 
 
 %%=====================================================================
+\section{Operational Deployment Infrastructure}
+\label{sec:operational_deployment}
+%%=====================================================================
+
+Release v4 ships a production-grade operational tooling stack
+organised into three layers: \texttt{systemd} units for direct host
+deployment, a multi-stage \texttt{Dockerfile} for container-based
+smoke tests and portability, and a cron-driven automation orchestrator
+for periodic model distillation and fleet push.
+
+\subsection{systemd units}
+
+Two unit files live under \texttt{deploy/systemd/} alongside an
+idempotent installer script.
+
+\paragraph{\texttt{robustidps-edge.service}.}
+The long-running gRPC daemon. Configuration is read from
+\texttt{/etc/\allowbreak robustidps/\allowbreak edge.toml}. The execution environment is
+\emph{capability-minimised}: live-capture operation needs only
+\texttt{CAP\_NET\_RAW} and \texttt{CAP\_NET\_ADMIN}; both are dropped
+in PCAP-replay deployments via \texttt{systemctl edit}. The unit is
+hardened with \texttt{NoNewPrivileges}, \texttt{ProtectSystem=full},
+\texttt{ProtectHome=read-only}, \texttt{PrivateTmp}, and the standard
+kernel-tunable, namespace and real-time restrictions. The restart
+policy on failure is \emph{burst-limited} (at most three retries
+within a window), preventing a crash-looping daemon from consuming
+host resources.
+
+\paragraph{\texttt{robustidps-xdp.service}.}
+Reads the block list from \texttt{/etc/\allowbreak robustidps/\allowbreak xdp-blocks.txt} at
+startup (one CIDR/IP per line, \texttt{\#}-comments and blank lines
+ignored) and passes it as a comma-separated \texttt{-{}-blocks}
+option in the shell-form \texttt{ExecStart}. The execution
+environment is restricted to \texttt{CAP\_NET\_ADMIN},
+\texttt{CAP\_BPF} and \texttt{CAP\_PERFMON} (the split capabilities
+introduced in kernel $\geq 5.8$). The unit is independent of
+\texttt{robustidps-edge}: a userspace classifier crash cannot bring
+down the kernel-resident block path.
+
+\paragraph{Installer.}
+\texttt{deploy/\allowbreak systemd/\allowbreak install.sh} is idempotent: a re-run after a
+code update refreshes the unit files but leaves the existing
+\texttt{edge.toml} and \texttt{xdp-blocks.txt} untouched.
+
+\subsection{Multi-stage Dockerfile}
+
+\texttt{agent/Dockerfile} implements a two-stage build: the
+\texttt{builder} stage contains every compilation dependency
+(\texttt{clang}, \texttt{LLVM}, \texttt{libbpf-dev}, \texttt{dwarves},
+\texttt{libpcap-dev}, \texttt{protoc}); the slim \texttt{runtime}
+stage ($\sim$120\,MiB) carries only the four binary artefacts and
+their runtime dependencies (\texttt{libpcap0.8}, \texttt{libssl3},
+\texttt{iptables}, \texttt{nftables}, \texttt{tini} and a tarball-
+extracted \texttt{libonnxruntime}\,1.20.1). Both architectures
+(\texttt{amd64} and \texttt{arm64}) are supported through the
+\texttt{TARGETARCH} variable.
+
+The Dockerfile header documents that running XDP inside a container
+requires \texttt{-{}-cap-add=NET\_ADMIN -{}-cap-add=BPF
+-{}-cap-add=PERFMON} and access to \texttt{/sys/fs/bpf}; nevertheless,
+the production configuration is recommended via \texttt{systemd},
+with the Dockerfile primarily intended for CI smoke testing and
+portability checks.
+
+\subsection{Distil-and-push automation}
+
+\texttt{deploy/\allowbreak automation/\allowbreak distill\_\allowbreak and\_\allowbreak push.py} ($\sim$270 LOC) is
+an end-to-end orchestrator suitable for cron scheduling:
+
+\begin{enumerate}\setlength\itemsep{0.18em}
+\item Invokes \texttt{backend/\allowbreak distill\_\allowbreak student.py} to retrain the
+INT8 ONNX student from the current \textsf{SurrogateIDS} teacher
+weights.
+\item Verifies the output artefact and computes its SHA-256.
+\item Loads the agent fleet configuration (from the
+\texttt{-{}-agents} argument or the
+\texttt{ROBUSTIDPS\_\allowbreak FLEET\_\allowbreak AGENTS} environment variable) and
+fans the artefact out via \texttt{EdgeFleet.push\_model()}.
+\item Queries \texttt{gather\_stats} on every agent to confirm that
+the new model is now active.
+\item Appends one JSON line per run to
+\texttt{/var/log/\allowbreak robustidps/\allowbreak distill\_\allowbreak and\_\allowbreak push.\allowbreak jsonl} and writes the
+same line to stdout (for \texttt{MAILTO} cron mailers on non-zero
+exit code).
+\end{enumerate}
+
+The shipped \texttt{crontab.example} runs the orchestrator weekly on
+Sundays at 04:00 UTC. A consolidated comparison of the operational
+characteristics of the three deployment forms is given in
+Table~\ref{tab:deploy_modes}.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of the three deployment forms for the
+\textsf{RobustIDPS.ai}~v4 data plane.}
+\label{tab:deploy_modes}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Characteristic} & \textbf{\texttt{systemd}} & \textbf{Docker} & \textbf{Cron + automation} \\
+\midrule
+Intended purpose              & Production & CI / smoke & Periodic retrain \\
+Capability minimisation       & Full       & Via flags  & N/A \\
+Atomic model hot-swap         & \checkmark & \checkmark & Triggers hot-swap \\
+XDP \emph{Native} support     & \checkmark & Partial (privileged) & --- \\
+Failure recovery              & 3-burst rate limit & Docker restart policy & MAILTO + JSONL log \\
+Footprint                     & 4 binaries & $\sim$120\,MiB image & 270 LOC script \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%%=====================================================================
 \section{Deployment and Integration with Existing IDPS}
 \label{sec:deployment}
 %%=====================================================================
@@ -403,12 +595,12 @@ Docker Compose orchestration enables single-command deployment. A \texttt{fast\_
 \toprule
 \textbf{Capability} & \rotatebox{70}{\textbf{RobustIDPS.ai}} & \rotatebox{70}{\textbf{Suricata}} & \rotatebox{70}{\textbf{Snort 3}} & \rotatebox{70}{\textbf{CrowdStrike}} & \rotatebox{70}{\textbf{MS Copilot}} \\
 \midrule
-ML detection (13+ models)  & \checkmark & ---        & ---        & Partial    & ---        \\
+ML detection (17 models)  & \checkmark & ---        & ---        & Partial    & ---        \\
 Adversarial robustness      & \checkmark & ---        & ---        & ---        & ---        \\
 Continual learning          & \checkmark & ---        & ---        & ---        & ---        \\
 Multi-provider LLM          & \checkmark & ---        & ---        & Proprietary& Proprietary\\
 LLM attack testing          & \checkmark & ---        & ---        & ---        & ---        \\
-MITRE ATT\MITRE ATT\&CK mappingCK~\cite{Hernandez2015} mapping      & \checkmark & Partial    & Partial    & \checkmark & \checkmark \\
+MITRE ATT\&CK~\cite{Hernandez2015}      & \checkmark & Partial    & Partial    & \checkmark & \checkmark \\
 NIST AI RMF dashboard       & \checkmark & ---        & ---        & ---        & ---        \\
 Post-quantum IDS            & \checkmark & ---        & ---        & ---        & ---        \\
 Open-source                 & \checkmark & \checkmark & \checkmark & ---        & ---        \\
@@ -424,7 +616,7 @@ Open-source                 & \checkmark & \checkmark & \checkmark & ---        
 
 \subsection{Model Performance}
 
-All 13+ models are validated on the CIC-IoT-2023 benchmark (Table~\ref{tab:platform_models}). The SurrogateIDS ensemble achieves the highest accuracy (97.8\%) through its seven-branch architecture. MambaShield delivers competitive accuracy (95.9\%) at the lowest latency (0.5\,ms).
+All 17 models are validated on the CIC-IoT-2023 benchmark (Table~\ref{tab:platform_models}). The SurrogateIDS ensemble achieves the highest accuracy (97.8\%) through its seven-branch architecture. MambaShield delivers competitive accuracy (95.9\%) at the lowest latency (0.5\,ms).
 
 \subsection{LLM Defence Pipeline}
 
