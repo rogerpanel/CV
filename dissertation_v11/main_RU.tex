@@ -40,6 +40,9 @@
 \graphicspath{{figures/}}
 \usepackage{subcaption}
 \usepackage{float}
+\usepackage[section]{placeins}   % \FloatBarrier
+\usepackage{pgfplots}             % графики метрик
+\pgfplotsset{compat=1.18}
 
 %% ──────────────── TikZ ────────────────
 \usepackage{tikz}
@@ -90,11 +93,25 @@
 \usepackage{etoolbox}
 
 %% ──────────────── Колонтитулы ────────────────
-\pagestyle{fancy}
-\fancyhf{}
-\fancyhead[L]{\nouppercase{\leftmark}}
-\fancyhead[R]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
+%% v11: убраны заголовки глав в колонтитулах в соответствии с образцами
+%% (Григорьев, Абидова, Романов). Номер страницы снизу по центру.
+\pagestyle{plain}
+
+%% ──────────────── Глубина оглавления ────────────────
+%% Только главы и разделы по умолчанию.  Локально включаем подразделы
+%% в важных главах через \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{3}
+
+%% ──────────────── Параметры размещения плавающих объектов ────────────────
+%% Чтобы рисунки не накладывались и не сбивались в конец главы.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.80}
+\setlength{\floatsep}{14pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{18pt plus 2pt minus 4pt}
+\setlength{\intextsep}{16pt plus 2pt minus 2pt}
 
 %% ──────────────── Математические команды ────────────────
 \newcommand{\E}{\mathbb{E}}
@@ -123,6 +140,10 @@
 \newcommand{\bD}{\mathbf{D}}
 \newcommand{\bW}{\mathbf{W}}
 \newcommand{\bdelta}{\boldsymbol{\delta}}
+\newcommand{\eps}{\varepsilon}
+\providecommand{\argmax}{\mathop{\mathrm{arg\,max}}}
+\providecommand{\argmin}{\mathop{\mathrm{arg\,min}}}
+\providecommand{\Norm}[1]{\left\lVert#1\right\rVert}
 
 %% ──────────────── Цвета TikZ ────────────────
 \definecolor{rootbg}{HTML}{2C3E50}
