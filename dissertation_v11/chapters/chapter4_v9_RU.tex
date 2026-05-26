@@ -83,7 +83,7 @@ Edge-IIoT        & 89,8 & 89,7 & 84,3 & +5,5 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_benchmark_improvement_bars.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_benchmark_improvement_bars.pdf}
 \caption{Улучшение точности на каждом наборе данных (процентные пункты) единой системы над лучшей одиночной базовой линией. Наибольший прирост наблюдается на наборах с высоким топологическим разнообразием (UNSW-NB15: +5,6, Edge-IIoT: +5,5).}
 \label{fig:benchmark_bars}
 \end{figure}
@@ -119,7 +119,7 @@ UNSW-NB15      & 97,1\% & 96,5\% & 1,9\% & 0,069 & 44 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_ct_tgnn_per_category_recall.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_ct_tgnn_per_category_recall.pdf}
 \caption{Покатегорийная полнота CT-TGNN на CIC-IoT-2023 по семи основным семействам атак. DDoS достигает наивысшей полноты (99,1\%), тогда как спуфинг наиболее сложен (95,2\%), что отражает его большую топологическую вариативность.}
 \label{fig:ct_tgnn_recall}
 \end{figure}
@@ -148,7 +148,7 @@ UNSW-NB15      & 98,8 & 0,043 & 75,2\% & 90,3 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_sde_tgnn_robustness_vs_radius.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_sde_tgnn_robustness_vs_radius.pdf}
 \caption{Сертифицированная робастность SDE-TGNN как функция радиуса возмущения $R$. Затенённая полоса показывает сертифицированную точность, полученную рандомизированным сглаживанием; пунктирная линия показывает сертификат Липшица из Теоремы~\ref{thm:ct_tgnn_rob}. При $R=0.25$, 76,2\% тестовых образцов являются доказуемо робастными.}
 \label{fig:sde_robustness}
 \end{figure}
@@ -177,7 +177,7 @@ UNSW-NB15      & 98,8 & 0,043 & 75,2\% & 90,3 \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_fedllm_byzantine_comparison.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_fedllm_byzantine_comparison.pdf}
 \caption{Деградация точности FedLLM-API при увеличении доли византийских участников в сравнении с базовыми линиями FedAvg, FedProx, Krum и Медиана. FedLLM-API плавно деградирует с 94,2\% до 79,8\% при увеличении повреждения с 0\% до 50\%, тогда как FedAvg обрушивается до 52,1\%.}
 \label{fig:fedllm_byzantine}
 \end{figure}
@@ -299,7 +299,7 @@ CNN-LSTM           & 89,8\% & 88,4\% & 0,961 & 3,9\% & 0,882 & 42\,мс \\
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_ablation_waterfall.pdf}
+\includegraphics[width=0.85\textwidth]{figures/fig_ablation_waterfall.pdf}
 \caption{Абляционное исследование: падение производительности при удалении каждого компонента. Горизонтальные полосы показывают величину деградации; ветвь LLM, византийское усечённое среднее и выравнивание ОТ --- три наиболее критичных компонента. Шум ДП --- единственный компонент, удаление которого повышает точность (+3,1\%), отражая компромисс приватность--качество.}
 \label{fig:ablation_waterfall}
 \end{figure}
@@ -334,7 +334,7 @@ CT-TGNN сохраняет 93,1\% при PGD-10 с $\epsilon=0.1$ благода
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_adversarial_robustness_curves.pdf}
+\includegraphics[width=0.85\textwidth]{figures/fig_adversarial_robustness_curves.pdf}
 \caption{Робастная точность как функция бюджета возмущений $\varepsilon$ для FGSM, PGD-20 и сертифицированных (рандомизированное сглаживание) оценок SDE-TGNN. Сертифицированная кривая обеспечивает доказуемую нижнюю границу; FGSM и PGD представляют эмпирические верхние границы при конкретных стратегиях атак.}
 \label{fig:adversarial_curves}
 \end{figure}
@@ -353,7 +353,7 @@ CT-TGNN сохраняет 93,1\% при PGD-10 с $\epsilon=0.1$ благода
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_cross_domain_transfer_bars.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_cross_domain_transfer_bars.pdf}
 \caption{Кросс-доменный перенос F1 (\%) для SDE-TGNN, базовой линии Neural ODE и базовой линии BiLSTM на трёх наборах данных безопасности и двух областях вне безопасности (речь, здравоохранение). SDE-TGNN достигает 90,5\% среднего переноса без дообучения, что на 9,4 п.\,п.\ выше Neural ODE и на 14,1 п.\,п.\ выше BiLSTM.}
 \label{fig:cross_domain}
 \end{figure}
@@ -403,7 +403,7 @@ $\ell_2$-радиус 0,44 при $\sigma=0,25$ и численная оценк
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.96\textwidth]{figures/fig_pqc_migration_robustness.pdf}
+\includegraphics[width=0.82\textwidth]{figures/fig_pqc_migration_robustness.pdf}
 \caption{Точность при атаке C\&W на четырёх этапах миграции PQC (Классический $\to$ Гибридный $\to$ Чистый Kyber $\to$ Полный PQC). MambaShield со структурированной FIM сохраняет точность в пределах 2,5 п.\,п.\ на всех этапах, тогда как наивное дообучение обрушивается на 25,5 п.\,п.\ из-за катастрофического забывания классических паттернов трафика.}
 \label{fig:pqc_migration}
 \end{figure}

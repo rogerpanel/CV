@@ -80,7 +80,17 @@
 |\mathrm{TrMean}_j - \bar{g}_j^H|
 \le \frac{b}{K-2b}\,\mathrm{range}(\{g_{k,j}\}_{k\in H}),
 \end{equation}
-поскольку усечённое среднее отбрасывает $b$ наибольших и $b$ наименьших значений, удаляя все византийские записи плюс не более $b$ честных. По концентрации субгауссовских случайных величин, $\mathrm{range}(\{g_{k,j}\}_{k\in H})\le C\sigma_j\sqrt{\log(K-b)}$ с высокой вероятностью, давая $\|\mathrm{TrMean}-\bar{\mathbf{g}}^H\|^2\le C_{\mathrm{byz}}$ для константы $C_{\mathrm{byz}}$, зависящей от $b$, $K$ и дисперсии градиентов.
+поскольку усечённое среднее отбрасывает $b$ наибольших и $b$
+наименьших значений, удаляя все византийские записи плюс не более
+$b$ честных. По концентрации субгауссовских случайных величин,
+\begin{equation*}
+\mathrm{range}(\{g_{k,j}\}_{k\in H})
+\;\le\; C\sigma_j\sqrt{\log(K-b)}
+\end{equation*}
+с высокой вероятностью, давая
+$\|\mathrm{TrMean}-\bar{\mathbf{g}}^H\|^2\le C_{\mathrm{byz}}$
+для константы $C_{\mathrm{byz}}$, зависящей от $b$, $K$ и дисперсии
+градиентов.
 
 \textit{Шаг 2: Одношаговое сжатие.} Определим $\Delta_t = \|\bw_t-\bw^*\|^2$. Обновление градиентного спуска $\bw_{t+1}=\bw_t-\eta\,\mathrm{TrMean}_t$ даёт
 \begin{equation}
@@ -113,7 +123,13 @@
 \label{app:proof_pac}
 %%=====================================================================
 
-\noindent\textit{Формулировка.} С вероятностью $\ge 1-\delta$ по обучающему множеству $S$ размера $n$, для всех апостериорных $Q$: $\E_{\theta\sim Q}[R(\theta)]\le\E_{\theta\sim Q}[\hat{R}_n(\theta)] + \sqrt{(\mathrm{KL}(Q\|P)+\log(2\sqrt{n}/\delta))/(2n)}$.
+\noindent\textit{Формулировка.} С вероятностью $\ge 1-\delta$ по
+обучающему множеству $S$ размера $n$, для всех апостериорных $Q$
+выполняется
+\begin{equation*}
+\E_{\theta\sim Q}[R(\theta)]\;\le\;\E_{\theta\sim Q}[\hat{R}_n(\theta)]
++ \sqrt{\frac{\mathrm{KL}(Q\|P)+\log(2\sqrt{n}/\delta)}{2n}}.
+\end{equation*}
 
 \begin{proof}
 \textit{Шаг 1: Замена меры.} Доказательство следует схеме Катони. Для любой измеримой функции $\phi:\Theta\to\R$ и распределений $Q,P$ над $\Theta$ вариационное представление Донскера--Варадхана даёт
@@ -134,7 +150,11 @@
 \begin{equation}
 \lambda\bigl(\E_Q[R]-\E_Q[\hat{R}_n]\bigr) \le \mathrm{KL}(Q\|P) + \frac{\lambda^2}{8n} + \log\frac{1}{\delta}.
 \end{equation}
-Деля на $\lambda$ и минимизируя по $\lambda>0$, получаем оптимальное $\lambda^* = \sqrt{8n(\mathrm{KL}(Q\|P)+\log(1/\delta))}$, давая
+Деля на $\lambda$ и минимизируя по $\lambda>0$, получаем оптимальное
+\begin{equation*}
+\lambda^* \;=\; \sqrt{8n\bigl(\mathrm{KL}(Q\|P)+\log(1/\delta)\bigr)},
+\end{equation*}
+давая
 \begin{equation}
 \E_Q[R] \le \E_Q[\hat{R}_n] + \sqrt{\frac{\mathrm{KL}(Q\|P)+\log(1/\delta)}{2n}}.
 \end{equation}
@@ -156,7 +176,14 @@
 \noindent\textit{Формулировка.} Алгоритм мультипликативных весов с $\eta=\sqrt{\log|\calC|/T}$ достигает кумулятивного регрета $R(T)\le 2\sqrt{T\log|\calC|}$.
 
 \begin{proof}
-\textit{Шаг 1: Потенциальная функция.} Определим $\Phi_t = \log\sum_{c\in\calC}w_t(c)$, где $w_t(c) = \exp(\eta\sum_{s=1}^{t-1}r_s(c))$ и $r_s(c)$ --- вознаграждение действия $c$ на раунде $s$, с вознаграждениями, нормализованными в $[0,1]$.
+\textit{Шаг 1: Потенциальная функция.} Определим
+\begin{equation*}
+\Phi_t \;=\; \log\sum_{c\in\calC}w_t(c),
+\qquad
+w_t(c) \;=\; \exp\!\Bigl(\eta\sum_{s=1}^{t-1}r_s(c)\Bigr),
+\end{equation*}
+где $r_s(c)$ --- вознаграждение действия $c$ на раунде $s$, с
+вознаграждениями, нормализованными в $[0,1]$.
 
 \textit{Шаг 2: Верхняя граница потенциала.} На каждом раунде потенциал увеличивается на
 \begin{equation}
