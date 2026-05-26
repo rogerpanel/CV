@@ -1,0 +1,187 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  main_RU.tex  –  Главный файл диссертации (русская версия)
+%%  Компиляция: pdflatex -> bibtex -> pdflatex -> pdflatex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[14pt,a4paper,oneside]{extreport}
+
+%% ──────────────── Кодировка и язык ────────────────
+\usepackage{cmap}                       % UTF-8 text layer in PDF
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+
+%% ──────────────── Геометрия страницы (ГОСТ) ────────────────
+\usepackage[left=30mm,right=15mm,top=25mm,bottom=20mm]{geometry}
+
+%% ──────────────── Типографика ────────────────
+\usepackage{csquotes}
+\usepackage[expansion=false,protrusion=true]{microtype}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ──────────────── Математика ────────────────
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+%% ──────────────── Окружения теорем ────────────────
+\newtheorem{theorem}{Теорема}[chapter]
+\newtheorem{lemma}[theorem]{Лемма}
+\newtheorem{proposition}[theorem]{Утверждение}
+\newtheorem{corollary}[theorem]{Следствие}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Определение}
+\newtheorem{remark}[theorem]{Замечание}
+\newtheorem{example}[theorem]{Пример}
+
+%% ──────────────── Графика и рисунки ────────────────
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{float}
+
+%% ──────────────── TikZ ────────────────
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,shapes,arrows.meta,calc,fit,
+                 decorations.pathreplacing,backgrounds,matrix}
+
+%% ──────────────── Таблицы ────────────────
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{array}
+
+%% ──────────────── Подписи (ГОСТ) ────────────────
+\usepackage[labelsep=endash]{caption}
+
+%% ──────────────── Алгоритмы ────────────────
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlgoNoEnd
+\SetKwInput{KwInput}{Вход}
+\SetKwInput{KwOutput}{Выход}
+
+%% ──────────────── Листинги кода ────────────────
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  tabsize=4
+}
+
+%% ──────────────── Гиперссылки ────────────────
+\usepackage[colorlinks=true,linkcolor=blue!60!black,
+            citecolor=green!50!black,urlcolor=blue!70!black]{hyperref}
+\usepackage{cleveref}
+
+%% ──────────────── Библиография ────────────────
+\usepackage[numbers,sort&compress]{natbib}
+
+%% ──────────────── Разное ────────────────
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{etoolbox}
+
+%% ──────────────── Колонтитулы ────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% ──────────────── Математические команды ────────────────
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathrm{Pr}}    % ← Fixed: "Pr" not "ℙ"
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calV}{\mathcal{V}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calC}{\mathcal{C}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calK}{\mathcal{K}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bC}{\mathbf{C}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bdelta}{\boldsymbol{\delta}}
+
+%% ──────────────── Цвета TikZ ────────────────
+\definecolor{rootbg}{HTML}{2C3E50}
+\definecolor{mastbg}{HTML}{34495E}
+\definecolor{subbg}{HTML}{D5D8DC}
+\definecolor{subtxt}{HTML}{2C3E50}
+\definecolor{methbg}{HTML}{F2F3F4}
+\definecolor{methedge}{HTML}{5D6D7E}
+\definecolor{unifbg}{HTML}{E8DAEF}
+\definecolor{unifedge}{HTML}{7D3C98}
+\definecolor{foundbg}{HTML}{EAECEE}
+\definecolor{arrmain}{HTML}{2C3E50}
+\definecolor{arrcross}{HTML}{5D6D7E}
+\definecolor{arrlight}{HTML}{AEB6BF}
+\definecolor{labgray}{HTML}{7F8C8D}
+\definecolor{lablight}{HTML}{95A5A6}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  ТЕЛО ДОКУМЕНТА
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ──────────────── Предварительные страницы ────────────────
+\pagenumbering{roman}
+\input{chapters/preliminaries_v10a_Rus}
+
+%% ──────────────── Оглавление, списки ────────────────
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+\input{chapters/abbreviations_v10_RU}
+
+%% ──────────────── Основная часть ────────────────
+\newpage
+\pagenumbering{arabic}
+
+\input{chapters/Introduction_v10a_Rus}
+\input{chapters/chapter1_v9_RU}
+\input{chapters/chapter2_v9_RU}
+\input{chapters/chapter3_v9_RU}
+\input{chapters/chapter4_v9_RU}
+\input{chapters/chapter5_v9_RU}
+\input{chapters/chapter6_v11_RU}
+\input{chapters/conclusion_v10_RU}
+
+%% ──────────────── Библиография ────────────────
+\newpage
+\addcontentsline{toc}{chapter}{Список литературы}
+\nocite{*}
+\bibliographystyle{unsrtnat}
+\bibliography{bibliography_v10}
+
+%% ──────────────── Приложения ────────────────
+\appendix
+\input{appendices/appendixA_v10_RU}
+\input{appendices/appendixB_v10_RU}
+\input{appendices/appendixC_v10_RU}
+
+\end{document}
