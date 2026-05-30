@@ -10,7 +10,237 @@
 \chapter{Mathematical Model of Hybrid~IDPS and Proposed Models and Algorithms for Improving Its Robustness and Efficiency}
 \label{ch:methods}
 
-This chapter develops the complete theoretical core of the dissertation. It begins with a unified problem statement that is progressively derived from the fundamental graph classification problem by successively incorporating each of the four requirements (robustness, accuracy, efficiency, privacy) under the three operating conditions (adversarial environment, non-stationarity, distributed dynamics). The unified problem is then formally decomposed into seven sub-problems, each corresponding to one of the gaps identified in Chapter~\ref{ch:literature}. The remainder of the chapter presents the mathematical formulation, convergence and robustness proofs, algorithmic pseudocode, and complexity analyses for each of the seven methods that solve these sub-problems. The chapter concludes with a unified certification framework that couples all methods through consistency regularisation.
+This chapter develops the complete theoretical core of the
+dissertation. The chapter follows the structure set by the
+scientific supervisor's guidance:
+\S\ref{sec:hybrid_idps_math_model} formalises Hybrid IDPS as a
+mathematical model and poses the six cross-cutting properties of the
+system (adversarial resilience, robustness, efficiency, compatibility
+with a distributed environment, the human factor, and non-stationarity)
+as research questions with corresponding invariants;
+\S\ref{sec:unified_problem} formulates the unified problem of
+simultaneous optimisation of these properties, derived from the
+fundamental graph classification problem; the next six sections
+(\ref{sec:ct_tgnn}--\ref{sec:game}) present the seven developed
+models and algorithms M1--M7, each of which is responsible for one
+or more invariants from Table~\ref{tab:six_properties};
+\S\ref{sec:metrics_taxonomy} systematises the twenty-three metrics
+used to evaluate the quality of Hybrid IDPS, grouped by the six
+properties. The chapter concludes with a unified certification
+framework that couples all models through consistency regularisation.
+
+
+%%=====================================================================
+\section{Mathematical Model of Hybrid IDPS}
+\label{sec:hybrid_idps_math_model}
+%%=====================================================================
+
+\subsection{Formal Model of Hybrid IDPS}
+\label{subsec:idps_formal_model}
+
+A Hybrid IDPS as the object of research (see~\S\ref{sec:hybrid_idps_object})
+is formally described by the 7-tuple
+\begin{equation}
+\mathcal{H} \;=\; \bigl(\mathcal{V}_t,\,\mathcal{E}_t,\,X_t,\,A_t,\,
+f_\theta,\,g_\psi,\,\pi\bigr),
+\label{eq:hybrid_idps_tuple}
+\end{equation}
+where the components of the system are interpreted as follows.
+
+\noindent\textbf{$\mathcal{V}_t$}~--- a time-evolving set of
+\emph{observed entities} (graph nodes): network hosts in the NIDS
+sector, onboard sensors and droneports in the UAV sector, accounts
+and payment terminals in the fintech sector, medical devices and
+patients in the medical sector.
+
+\noindent\textbf{$\mathcal{E}_t$}~--- a time-evolving set of
+\emph{interactions} between observed entities: network flows, command-
+and-telemetry channels, transactions, accesses to electronic medical
+records.
+
+\noindent\textbf{$X_t \in \R^{n\times d}$}~--- the matrix of numerical
+\emph{node features} at time~$t$, of $n=|\mathcal{V}_t|$ rows and
+$d$ columns. The dimension~$d$ depends on the sector: $d=83$ for the
+NIDS benchmarks (CIC-IoT-2023, CSE-CICIDS-2018), and adapts to the
+number of onboard sensors and channels in the UAV sector.
+
+\noindent\textbf{$A_t \in \R^{n\times n}$}~--- the adjacency matrix
+encoding weighted \emph{links} between entities.
+
+\noindent\textbf{$f_\theta: (X_t, A_t) \mapsto \hat{y}_t \in \Delta^K$}~---
+the learnable \emph{detector} with parameters~$\theta$ that maps the
+observed graph structure to a distribution over $K$ threat classes.
+In this work $K=34$ for the NIDS instantiation
+(Chapter~\ref{ch:adaptation}), adapted to the threat semantics of
+other sectors.
+
+\noindent\textbf{$g_\psi: \hat{y}_t \mapsto a_t \in \mathcal{A}$}~---
+the \emph{response policy} with parameters~$\psi$ that selects an
+action $a_t$ from a finite set~$\mathcal{A}$ (alert, flow blocking,
+node isolation, transition to a safe-mode, SOAR escalation).
+
+\noindent\textbf{$\pi \in \{\textsc{Passive}, \textsc{Active},
+\textsc{IPS}\}$}~--- the \emph{integration-mode parameter} of the
+defensive stack, determining the extent to which the response
+policy $g_\psi$ is permitted to modify the state of the external
+environment.
+
+The Hybrid IDPS operates at discrete time steps~$t=1,2,\dots,T$
+under three types of \emph{operating conditions}: the adversarial
+environment, formalised by perturbations $(\delta_X, \Delta_A) \in
+\mathcal{S}_\varepsilon$ bounded in norm by the radius~$\varepsilon$;
+non-stationary data distribution $\mathcal{D}_t \neq \mathcal{D}_{t-1}$
+with bounded drift rate; and distributed training, in which the
+parameters~$\theta$ are updated by a federated algorithm over graph
+fragments owned by different organisations, without raw-data
+sharing.
+
+\subsection{The Six Properties of Hybrid IDPS as Research Questions}
+\label{subsec:six_properties}
+
+The substantive work on the model~\eqref{eq:hybrid_idps_tuple} is
+organised around six \emph{cross-cutting properties}, posed as
+research questions in accordance with the scientific supervisor's
+guidance. Each property is formalised as a mathematical condition on
+the components of the tuple, and the solution to each question
+within the dissertation is provided by a corresponding model or
+algorithm from the list M1--M7. The summary of properties is given in
+Table~\ref{tab:six_properties}.
+
+\paragraph{(P1) Adversarial resilience (Adversarially-resilient?).}
+A Hybrid IDPS is considered adversarially resilient if the detector
+$f_\theta$ satisfies a \emph{quantitative sensitivity bound} on
+bounded input perturbations
+\begin{equation}
+\Bigl\|f_\theta\!\bigl(X_t+\delta_X,\,A_t+\Delta_A\bigr)
+\;-\; f_\theta(X_t, A_t)\Bigr\|
+\;\le\; \rho(\varepsilon),
+\qquad \forall\,(\delta_X,\Delta_A)\in\mathcal{S}_\varepsilon,
+\label{eq:adv_resilient_property}
+\end{equation}
+where $\rho(\varepsilon)\to 0$ as $\varepsilon\to 0$. This property
+is covered by Models M1 (Lipschitz certificate via the Grönwall
+inequality, see \S\ref{sec:ct_tgnn}), M4 (PAC-Bayesian certificates,
+\S\ref{sec:mamba}), and M7 (game-theoretic certification,
+\S\ref{sec:game}).
+
+\paragraph{(P2) Robustness (Robustness?).}
+A Hybrid IDPS is considered robust if, for any distribution
+$\mathcal{D}_t$ that satisfies the operating-condition constraint
+and for a test sample $\{(x_i,y_i)\}_{i=1}^{N}\sim\mathcal{D}_t$,
+\begin{equation}
+\Pr_{\substack{(x,y)\sim\mathcal{D}_t \\ \delta\sim\mathcal{N}(0,\sigma^2 I)}}
+\Bigl[\;\arg\max_k f_\theta^{(k)}(x+\delta) = y\;\Bigr]
+\;\ge\; 1-\alpha,
+\label{eq:robustness_property}
+\end{equation}
+where $\alpha$ is the operator-tunable false-alarm budget. This
+property is covered by Models M1, M4, M5--M6, and M7, unified by a
+single certification framework through randomised
+smoothing~\cite{Cohen2019}, interval bound propagation, and
+Stackelberg equilibrium against an adaptive adversary.
+
+\paragraph{(P3) Efficiency (Efficiency?).}
+A Hybrid IDPS is considered efficient if the inference time of
+$f_\theta$ on a single flow does not exceed the prescribed
+budget~$\tau$ with computational complexity
+\begin{equation}
+\mathcal{T}_{\mathrm{inference}}\bigl(f_\theta;\,L\bigr)
+\;=\; \mathcal{O}\bigl(L\log L\bigr)
+\quad\text{and}\quad
+\mathcal{T}_{\mathrm{inference}}\bigl(f_\theta;\,1\bigr) \le \tau,
+\label{eq:efficiency_property}
+\end{equation}
+where $L$ is the length of the analysed event sequence. This
+property is covered by Model M4 (\textsf{MambaShield}: $O(L\log L)$
+via Fast-Fourier-Transform-based convolutions, \S\ref{sec:mamba})
+and the strategic choice of analysis depth in Model M7
+(uncertainty-guided strategy selection).
+
+\paragraph{(P4) Distributed environment (Distributed environment?).}
+A Hybrid IDPS is considered compatible with a distributed
+environment if the federated update algorithm for the
+parameters~$\theta$ simultaneously satisfies an
+$(\varepsilon,\delta)$-differential-privacy guarantee and is
+resilient to a fraction $\beta<1/3$ of Byzantine participants:
+\begin{equation}
+\Pr\bigl[\theta_{\mathrm{fed}}(D)\in S\bigr] \;\le\;
+e^{\varepsilon}\,\Pr\bigl[\theta_{\mathrm{fed}}(D')\in S\bigr]
+\,+\,\delta,
+\quad
+\forall\,D\sim_{1}D',\;\forall S,
+\label{eq:distributed_property}
+\end{equation}
+with simultaneous convergence of the aggregation algorithm to a
+stationary point at the rate $\mathcal{O}(1/\sqrt{T})$. This
+property is covered by Model M2 (\textsf{FedLLM-API},
+\S\ref{sec:fedllm}).
+
+\paragraph{(P5) Human factor (Human factor?).}
+A Hybrid IDPS is considered compatible with the human factor if its
+outputs provide the analyst with a \emph{calibrated measure of
+confidence} of expected calibration error
+\begin{equation}
+\mathrm{ECE}\bigl(f_\theta\bigr)
+\;=\;
+\mathbb{E}_{p\sim\hat{P}}\bigl[\,
+\bigl|\,\Pr[\hat{y}=y\mid f_\theta(x)=p]-p\,\bigr|
+\,\bigr]
+\;\le\; \xi,
+\label{eq:calibration_property}
+\end{equation}
+where $\xi$ is the admissible calibration error (in this work
+$\xi=0.1$). In addition, $\hat{y}$ must admit decomposition into
+epistemic and aleatoric components, allowing the analyst to triage
+alerts by uncertainty. This property is covered by Models M5
+(stochastic transformer) and M6 (UC-HGP, \S\ref{sec:stochastic}).
+
+\paragraph{(P6) Non-stationarity (Non-stationarity?).}
+A Hybrid IDPS is considered non-stationary-adaptive if the online
+update algorithm for the parameters~$\theta_t$ achieves
+\emph{sub-linear regret} relative to the best fixed model on
+historical data:
+\begin{equation}
+R(T) \;=\; \sum_{t=1}^{T} \ell\bigl(f_{\theta_t}(x_t), y_t\bigr)
+\;-\;\min_{\theta^{*}} \sum_{t=1}^{T} \ell\bigl(f_{\theta^{*}}(x_t),
+y_t\bigr) \;=\; \mathcal{O}\bigl(\sqrt{T\log K}\bigr),
+\label{eq:nonstationarity_property}
+\end{equation}
+where $K$ is the size of the update-strategy set. This property is
+covered by Models M1 (multi-scale time constants), M3
+(\textsf{TripleE-TGNN} with elastic weight consolidation), and M7
+(multi-armed bandits with game-theoretic strategy selection).
+
+\begin{table}[H]
+\centering
+\caption{Summary of the six properties of Hybrid IDPS as research
+questions: each property is formalised by an invariant and addressed
+by one or several Models M1--M7.}
+\label{tab:six_properties}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l p{2.6cm} p{5.5cm} p{3.5cm}}
+\toprule
+\textbf{Label} & \textbf{Property} & \textbf{Invariant} & \textbf{Addressed by} \\
+\midrule
+P1 & Adv.\ resilience            & eq.~\eqref{eq:adv_resilient_property}      & M1, M4, M7 \\
+P2 & Robustness                  & eq.~\eqref{eq:robustness_property}        & M1, M4, M5--M6, M7 \\
+P3 & Efficiency                  & eq.~\eqref{eq:efficiency_property}        & M4, M7 \\
+P4 & Distributed environment     & eq.~\eqref{eq:distributed_property}       & M2 \\
+P5 & Human factor                & eq.~\eqref{eq:calibration_property}       & M5--M6 \\
+P6 & Non-stationarity            & eq.~\eqref{eq:nonstationarity_property}   & M1, M3, M7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Together, the six properties P1--P6 cover the twelve intersections
+of the condition--requirement matrix identified in
+Chapter~\ref{ch:literature} (see Table~\ref{tab:models_to_methods}).
+The substantive part of the chapter below formalises the unified
+problem of simultaneous optimisation of these properties
+(\S\ref{sec:unified_problem}) and develops the seven models and
+algorithms M1--M7, each of which is responsible for one or more
+invariants from Table~\ref{tab:six_properties}.
 
 
 %%=====================================================================
@@ -1015,6 +1245,54 @@ Set learning rates $\eta_i = 1/(L_i + \sum_j L_{ij})$ for each component\;
 }
 \Return $\theta^* = \theta^{(T)}$
 \end{algorithm}
+
+
+%%=====================================================================
+\section{Systematisation of Quality Metrics for Hybrid IDPS}
+\label{sec:metrics_taxonomy}
+%%=====================================================================
+
+The evaluation of the quality of the developed Models and algorithms
+M1--M7 relies on a unified framework of twenty-three metrics
+systematised in Table~\ref{tab:metrics_by_property} according to the
+six properties of Hybrid IDPS from \S\ref{subsec:six_properties}.
+Grouping the metrics by property rather than by their mathematical
+origin provides a direct mapping from the experimental validation
+(Chapter~\ref{ch:experiments}) onto the invariants formalised by
+equations~\eqref{eq:adv_resilient_property}--\eqref{eq:nonstationarity_property}.
+
+\begin{table}[H]
+\centering
+\caption{Systematisation of twenty-three quality-evaluation metrics
+for Hybrid IDPS by the six properties from
+\S\ref{subsec:six_properties}.}
+\label{tab:metrics_by_property}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l p{3.0cm} p{9.3cm}}
+\toprule
+\textbf{Property} & \textbf{Metric class} & \textbf{Specific metrics} \\
+\midrule
+P1 Adv.\ resilience       & Certificates       & Certified accuracy, Grönwall radius, upper bound on attack-success rate \\
+\addlinespace
+P2 Robustness             & Classification     & F1 (micro/macro/weighted), balanced accuracy, MCC, Cohen's $\kappa$, AUC-ROC, TPR, TNR, FPR, FNR \\
+\addlinespace
+P3 Efficiency             & Computational      & Inference latency (mean, p95, p99), throughput, FLOPs, parameter count, GPU memory, energy consumption \\
+\addlinespace
+P4 Distributed env.       & Privacy            & $(\varepsilon,\delta)$-DP budget, membership-inference advantage, Byzantine-aggregation accuracy at $\beta=0.3$ \\
+\addlinespace
+P5 Human factor           & Calibration        & ECE, Brier score, mean entropy, epistemic/aleatoric decomposition, analyst alert-triage time \\
+\addlinespace
+P6 Non-stationarity       & Adaptation         & Regret $R(T)$, transfer accuracy under drift, recovery rate after distribution shift \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The complete experimental protocol applying these metrics to six
+benchmark datasets (84.2 million labelled samples across 84 attack
+categories) is presented in Chapter~\ref{ch:experiments}. The
+extended mathematical definitions of each metric are introduced in
+the text of Chapter~\ref{ch:experiments} at first use.
 
 
 %%=====================================================================
