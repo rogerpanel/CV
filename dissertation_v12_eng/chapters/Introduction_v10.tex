@@ -36,6 +36,53 @@ domains~\cite{Zuegner2018,Bojchevski2019,Dai2018}, which makes the
 development of models and algorithms for improving the robustness
 and efficiency of Hybrid~IDPS an \emph{actual} scientific problem.
 
+By a \emph{Hybrid Intrusion Detection and Prevention System}
+(Hybrid~IDPS) in this dissertation we understand a specific class of
+\emph{AI/ML-augmented} defensive contours that combine the three
+canonical types of information-security detection~---
+\emph{signature-based} (deterministic matching against a database of
+known attack patterns), \emph{anomaly-based} (statistical or learned
+deviation from a normal behavioural profile), and \emph{protocol
+analysis-based} (context-aware analysis of the correctness of
+network, application, and industrial protocol states)~--- and that
+are additionally \emph{augmented by artificial-intelligence and
+machine-learning models on each of the three channels}. This class
+is systematically distinct from \emph{conventional} industry IDPS
+products (such as \mbox{Snort\,3}, Suricata, Zeek, Cisco~IPS, Palo
+Alto Networks~Threat~Prevention, McAfee~Network~Security~Platform),
+which either realise one of the three channels in pure form or
+combine all three without a learnable layer on top. Conventional
+IDPS exhibit three systematic inefficiencies:
+\emph{(a)~inability to detect zero-day attacks}~--- the
+signature-based channel is blind to novel attack patterns until the
+corresponding signatures are added to the database, which in
+commercial practice gives a 30--90-day lag between the appearance of
+an attack and its inclusion in the defensive
+contour~\cite{Sachkov2022threat};
+\emph{(b)~high false-positive rate}~--- the anomaly-based channel
+in a purely statistical implementation generates false alerts at
+the rate of $10^{-2}$--$10^{-1}$ per normal flow, leading to
+analyst alert fatigue and, in documented cases, to the missing of
+critical incidents~\cite{FerragPoisoning2023}; and
+\emph{(c)~limited semantic context}~--- the protocol-analysis
+channel in pure form scales as $\mathcal{O}(P\cdot S)$ in the
+number of analysed protocols~$P$ and states~$S$ and requires
+manual rule updates whenever a new protocol version or post-quantum
+protocol regime emerges. Augmentation of all three channels with
+the learnable Models~M1--M7 developed in Chapter~\ref{ch:methods}
+systematically overcomes each of the three inefficiencies
+simultaneously: certified robustness to adversarial perturbations
+is provided by Models~M1, M4, and~M7 (property~P1 of
+\S\ref{subsec:six_properties}); calibrated uncertainty for managing
+the false-alert rate is provided by Models~M5--M6 (property~P5);
+domain-independent adaptation to new protocols without retraining
+the system core is provided by Model~M3 and the
+foundation model~CyberSecLLM (property~P6). The term
+\emph{Hybrid~IDPS} in this work therefore denotes not a conventional
+engineering assembly of three detector classes but a \emph{unified
+AI-native system} in which learnable models are systematically
+integrated into all three detection channels.
+
 A systematic analysis of existing Hybrid~IDPS systems, conducted
 in Chapter~\ref{ch:literature}, identifies four interrelated
 problem groups limiting the reliability of their deployment:

@@ -10,27 +10,47 @@
 \chapter{Unmanned Aerial Vehicle Protection System Based on Hybrid~IDPS}
 \label{ch:uav}
 
-This chapter describes the application of the models and methods
-developed in Chapters~\ref{ch:methods}--\ref{ch:experiments} to a new
-safety-critical area~--- counter-electronic-warfare (EW) and
-adversarial-machine-learning defence of the neural-network navigation
-subsystem of unmanned aerial vehicles (UAVs). The chapter demonstrates
-the domain-independence of the unified framework formulated in
-\S\ref{sec:unified_problem} at the level of mathematical operations on
-graph structures, through its transfer to a fundamentally different
-set of entities, constraints and regulatory requirements. The chapter
-describes a three-tier \emph{onboard~--- droneport~--- cloud}
-defence architecture, formalises the operational UAV graph as an
-instance of the unified problem, presents the mapping of methods
-\textsf{M1}--\textsf{M7} to specific UAV subsystems (visual perception,
-GNSS navigation, autopilot control policy), describes the Phase~A
-reference software implementation based on the \textsf{robustnn-core}
-library with integration into the \textsf{RobustIDPS.ai} platform,
-reports validation results, and shows conformance of the proposed
-solution to the regulatory base. The literature review of the domain
-and the comparative context are placed in \S\ref{sec:ch1_uav_related}
-of Chapter~\ref{ch:literature}; the mathematical foundations are in
-Chapter~\ref{ch:methods}.
+This chapter systematically realises and validates the
+\emph{system} Hybrid~IDPS, formalised in Chapter~\ref{ch:methods},
+for the unmanned-aerial-vehicle (UAV) protection sector
+characterised in \S\ref{subsubsec:sector_uav}. The chapter follows
+the five-part spine set by the scientific supervisor's guidance:
+\emph{(I)~problem statement of UAV system protection} formalises
+the inputs, outputs, and attack surface under electronic warfare
+(EW) and adversarial machine learning
+(\S\ref{sec:uav_overview});
+\emph{(II)~adaptation of the Hybrid~IDPS system to the UAV
+sector} systematically describes the three-tier
+\emph{onboard--droneport--cloud} architecture
+(\S\ref{sec:uav_arch}) and formalises the operational UAV graph
+as an instance of the tuple
+$\mathcal{H}=(\mathcal{V}_t, \mathcal{E}_t, X_t, A_t, f_\theta,
+g_\psi, \pi)$ from \S\ref{sec:hybrid_idps_math_model}
+(\S\ref{sec:uav_graph});
+\emph{(III)~application of the developed Models M1--M7 to UAV
+subsystems} systematically presents the mapping of the methods
+to specific subsystems (visual perception, GNSS navigation,
+autopilot control policy) and the Lipschitz--Grönwall and
+randomised-smoothing certificates applied to UAV tasks
+(\S\ref{sec:uav_pipeline}--\S\ref{sec:uav_certs});
+\emph{(IV)~software implementation of the system for the UAV
+sector} describes the Phase~A reference implementation based on
+the \textsf{robustnn-core} library with its integration into the
+\textsf{RobustIDPS.ai} software platform
+(\S\ref{sec:uav_phase_a}--\S\ref{sec:uav_robustidps_integration});
+and \emph{(V)~approbation of the system} systematically documents
+the Phase~A validation results with the operational metric
+\emph{Mission-Completion-Rate vs.~$J/S$} (the characteristic
+target operating regime $\textsf{MCR}\ge 0.80$ at jamming-to-signal
+ratio $J/S \le 20\,$dB), comparison with existing industrial
+solutions, and conformance to the regulatory base
+(\S\ref{sec:uav_phase_a_results}--\S\ref{sec:uav_regulation}). The
+literature review of the UAV sector and the comparative context
+are placed in \S\ref{sec:ch1_uav_related} of
+Chapter~\ref{ch:literature}; the mathematical foundations are in
+Chapter~\ref{ch:methods}; and the preliminary validation of the
+Hybrid~IDPS system on UAV tasks as a preamble~--- in
+\S\ref{sec:ch3_uav_preview} of Chapter~\ref{ch:adaptation}.
 
 
 %%=====================================================================

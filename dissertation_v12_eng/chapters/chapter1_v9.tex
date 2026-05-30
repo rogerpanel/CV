@@ -45,26 +45,43 @@ algorithms developed in Chapter~\ref{ch:methods}.
 %%=====================================================================
 
 A \emph{Hybrid Intrusion Detection and Prevention System}
-(Hybrid IDPS) is in this dissertation defined as a software-hardware
-defensive complex for information systems that integrates
-signature-based, anomaly-based, statistical, and learning-based
-components in a single defensive contour together with automatic
-response facilities and interfaces to external event-logging and
-response systems (SIEM/SOAR). A Hybrid IDPS differs from classical
-IDS implementations in three properties:
+(Hybrid~IDPS) is in this dissertation defined as an \emph{AI/ML-native}
+software-hardware defensive complex for information systems that
+integrates the three canonical types of information-security
+detection~--- \emph{signature-based} (deterministic matching against a
+database of known attack patterns), \emph{anomaly-based} (statistical
+or learned deviation from a normal behavioural profile), and
+\emph{protocol-analysis-based} (context-aware analysis of the
+correctness of network, application, and industrial protocols and
+their states)~--- augmented by learnable models on each of the three
+channels and supplemented with automatic response facilities and
+interfaces to external event-logging and response systems (SIEM/SOAR).
+Unlike \emph{conventional} industry IDPS products (Snort, Suricata,
+Zeek, Cisco~IPS, Palo Alto~Threat~Prevention), a Hybrid~IDPS in the
+sense of this dissertation differs from classical IDS implementations
+in \emph{four} systematic properties:
 \emph{(i)}~\emph{hybridity} of detection~--- the verdict on the
 presence of an intrusion is produced by the combination of multiple
-independent detectors, statistical features, and learned models
-with different degrees of explainability;
+independent detectors (signature, anomaly, protocol-analysis),
+statistical features, and learned models with different degrees of
+explainability;
 \emph{(ii)}~\emph{adaptability} to the application domain~--- the
 same base architecture can be instantiated for the protection of
 network traffic, UAV systems, banking/fintech infrastructure,
 medical data, industrial Internet-of-Things, and other domains by
 changing the formal representation of input data;
 \emph{(iii)}~\emph{closed-loop response}~--- in addition to detection,
-a Hybrid IDPS can initiate active countermeasures by modifying
+a Hybrid~IDPS can initiate active countermeasures by modifying
 firewall rules, isolating nodes, switching sensor pipelines, or
-relaying events to a SOAR orchestrator.
+relaying events to a SOAR orchestrator;
+\emph{(iv)}~\emph{AI-nativeness}~--- the learnable Models~M1--M7
+developed in Chapter~\ref{ch:methods} are integrated across all three
+detection channels (signature, anomaly, protocol-analysis) so as to
+systematically overcome the three inefficiencies of conventional
+IDPS noted in the Introduction: the 30--90-day signature-database
+lag, the $10^{-2}$--$10^{-1}$ false-alert rate per normal flow, and
+the quadratic cost of protocol analysis in the number of protocols
+and states.
 
 \subsection{Classification of Hybrid IDPS}
 \label{subsec:idps_classification}
@@ -97,6 +114,7 @@ Fig.~\ref{fig:orga_classes_idps}.
   child {node[cat] {Method}
     child {node[leaf] {Sig.}}
     child {node[leaf] {Anom.}}
+    child {node[leaf] {Prot.}}
     child {node[leaf] {Hybr.}}}
   child {node[cat] {Scope}
     child {node[leaf] {HIDS}}
@@ -120,12 +138,15 @@ Fig.~\ref{fig:orga_classes_idps}.
 orthogonal axes. By detection method~--- signature-based
 (deterministic lookup against a database of known patterns),
 anomaly-based (statistical or learned deviation from a normal
-profile), and hybrid (combination of both). By scope~--- host-based
-(HIDS), network-based (NIDS), and distributed (DIDS). By deployment
-topology~--- centralised, distributed, federated. By response
-character~--- passive (alerting only), active (in-line
-intervention), and IPS (full blocking). By stack layer~---
-application, network, and physical.}
+profile), protocol-analysis-based (context-aware analysis of the
+correctness of network, application, and industrial protocols and
+their states), and hybrid (combination of the three preceding,
+augmented with the learnable Models~M1--M7). By scope~---
+host-based (HIDS), network-based (NIDS), and distributed (DIDS).
+By deployment topology~--- centralised, distributed, federated.
+By response character~--- passive (alerting only), active
+(in-line intervention), and IPS (full blocking). By stack
+layer~--- application, network, and physical.}
 \label{fig:orga_classes_idps}
 \end{figure}
 
