@@ -15,16 +15,80 @@
 \section*{Relevance of the Research Topic}
 %%---------------------------------------------------------------------
 
-Graph neural networks~\cite{Kipf2017,Velickovic2018,Hamilton2017} have become the principal deep-learning paradigm for extracting predictive representations from relational data. They are widely deployed in healthcare (modelling molecules as atom-bond graphs and patient-interaction graphs for treatment recommendations), finance (analysing transaction graphs between accounts to detect fraud and money laundering), cybersecurity (analysing network traffic as graphs of connected devices to detect intrusions), and industrial systems (sensor-fusion graphs for SCADA and ICS monitoring), among other fields. Yet the very message-passing mechanism that gives these models their expressive power renders them vulnerable to perturbation~\cite{Zuegner2018,Bojchevski2019,Dai2018}.
+\emph{Hybrid Intrusion Detection and Prevention Systems}
+(hereafter Hybrid~IDPS) constitute the principal defensive contour
+of information systems in safety-critical application domains:
+network traffic analysis, unmanned-aerial-vehicle (UAV) protection,
+banking and fintech infrastructure, medical information systems,
+industrial Internet-of-Things and industrial control systems
+(ICS/SCADA), autonomous vehicles, and cloud and SaaS
+infrastructures. A Hybrid~IDPS integrates signature-based,
+anomaly-based, statistical, and learning-based components in a
+single defensive contour together with automatic-response
+facilities and interfaces to external event-logging and response
+systems (SIEM/SOAR); it is the principal object of research of
+this dissertation. However, the robustness of existing
+IDPS solutions~--- their ability to preserve detection quality
+under adversarial influence, in distributed environments, and in
+non-stationary operating conditions~--- lags detection accuracy by
+25--65~percentage points in every one of the listed
+domains~\cite{Zuegner2018,Bojchevski2019,Dai2018}, which makes the
+development of models and algorithms for improving the robustness
+and efficiency of Hybrid~IDPS an \emph{actual} scientific problem.
 
-Existing graph neural network models suffer from four interconnected problems: (1)~being easily fooled by small, deliberate changes to input data or node connections; (2)~inability to handle new or changing patterns without retraining from scratch; (3)~being too slow and computationally expensive for real-time use on large graphs; and (4)~inability to share learning between organisations without leaking private data. These problems are dynamic in nature --- they change over time, yet share a common architectural root.
+A systematic analysis of existing Hybrid~IDPS systems, conducted
+in Chapter~\ref{ch:literature}, identifies four interrelated
+problem groups limiting the reliability of their deployment:
+\emph{(1)}~vulnerability of the learnable detectors within the
+system to small, deliberate perturbations of input data and graph
+links; \emph{(2)}~inability of the system to handle novel or
+evolving threat patterns without retraining from scratch;
+\emph{(3)}~excessive computational cost of the analytical core,
+ruling out the system's real-time application on large volumes of
+telemetry and network traffic; and \emph{(4)}~the absence of
+formal privacy guarantees in federated training of the system on
+data fragments owned by different organisations. These four
+problems are dynamic in nature and interconnected by an
+architectural root~--- the use of dual-input learnable models
+(numerical features plus relational structure), which in modern
+Hybrid~IDPS are realised by graph neural networks (GNNs),
+state-space models, stochastic-differential models, Bayesian
+networks, and game-theoretic algorithms.
 
-To understand why this sensitivity arises, it is necessary to recognise the dual-input nature of graph neural networks. Unlike conventional neural networks that receive a single data tensor, a graph neural network receives two inputs simultaneously: numerical \emph{input data} ($\mathbf{X}\in\mathbb{R}^{n\times d}$, the feature matrix encoding entity attributes) and relational \emph{input structure} ($\mathbf{A}$, the adjacency matrix encoding pairwise connectivity). The network produces its output by propagating data along the structure through iterative neighbourhood aggregation. Perturbation of either input --- the data or the structure --- can compromise predictions. This dual-input nature is what distinguishes graph neural networks from conventional neural networks and is the source of the robustness challenges addressed in this dissertation.
+Because graph neural networks~\cite{Kipf2017,Velickovic2018,Hamilton2017}
+are one of the most widely used branches of the family of
+learnable models employed in modern Hybrid~IDPS, and the
+problems~(1)--(4) are most visibly exhibited precisely by
+dual-input models, the further relevance analysis in this
+Introduction relies on the documented failures of GNN-based
+detectors within Hybrid~IDPS systems as a representative example
+of the broader problem space. Unlike a conventional neural
+network that receives a single data tensor, a GNN simultaneously
+receives two inputs: numerical \emph{input data}
+($\mathbf{X}\in\mathbb{R}^{n\times d}$, the feature matrix
+encoding entity attributes) and relational \emph{input structure}
+($\mathbf{A}$, the adjacency matrix encoding pairwise
+connectivity). The network produces its output by propagating
+data along the structure through iterative neighbourhood
+aggregation. Perturbation of either input~--- data or
+structure~--- can compromise predictions. This dual-input nature
+distinguishes GNN-based detectors from conventional neural
+networks and constitutes one source of the robustness problems of
+Hybrid~IDPS addressed in this dissertation simultaneously for
+several branches of the learnable-model family (GNNs, state-space
+models, stochastic-differential models).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.89\textwidth]{figures/fig1a_gnn.pdf}
-\caption{Dual-input nature of graph neural networks. The network receives both numerical data (feature matrix $\mathbf{X}$) and relational structure (adjacency matrix $\mathbf{A}$) as inputs. Perturbation of either input can compromise the learned representation, motivating the robustness framework developed in this dissertation.}
+\caption{Dual-input nature of the GNN-based detectors that
+constitute one branch of the learnable models used in Hybrid~IDPS.
+The network receives both numerical data (feature matrix
+$\mathbf{X}$) and relational structure (adjacency matrix
+$\mathbf{A}$) as inputs. Perturbation of either input can
+compromise the learned representation, motivating the framework
+for improving the robustness and efficiency of Hybrid~IDPS
+developed in this dissertation.}
 \label{fig:dual_input}
 \end{figure}
 
@@ -35,11 +99,47 @@ Most graph neural networks operate in discrete time, which deepens these vulnera
 \end{equation}
 where $\mathbf{h}_i(T)$ is the hidden state of trajectory $i$ at time $T$, $\mathbf{x}_i$ is the initial input, $L_g$ is the Lipschitz constant of the ODE vector field, and $\|\cdot\|$ denotes the Euclidean norm. Discrete-time graph neural networks have no such continuous handle, so perturbations compound unpredictably through each layer. However, continuous-time models receive limited attention in the literature and in current practice, which is why this dissertation focuses on their development through CT-GNN-based models.
 
-The urgency of these vulnerabilities is also driven by the broader evolution of the cyber-threat landscape from incidental attacks to targeted AI-enabled campaigns, as analysed in particular in the work of I.\,K.\,Sachkov~\cite{Sachkov2022threat}. The urgency is further confirmed by recent peer-reviewed studies documenting severe GNN failures across four safety-critical domains. In healthcare, an edge-sensitivity gradient attack on Graph Isomorphism Networks caused approximately 25\% AUC degradation on MoleculeNet benchmarks (Tox21, ClinTox, SIDER), with toxic compounds misclassified as safe~\cite{EdgeSensitivity2025}. In finance, the MonTi gang-injection attack nearly tripled the misclassification rate of GNN-based fraud detectors (CARE-GNN, PC-GNN, GAGA) from 25.7\% to 68.6\%~\cite{MonTi2025}. In industrial IoT, data poisoning of federated intrusion detectors caused a 64-percentage-point accuracy collapse from 94.2\% to 30.0\% under non-IID conditions~\cite{FerragPoisoning2023}. In cybersecurity, the PROVNINJA attack reduced GNN provenance-IDS detection by up to 59\%, rendering APT attackers invisible~\cite{PROVNINJA2023}. These documented failures confirm that GNN robustness lags predictive accuracy by 25--65 percentage points in every safety-critical domain, and this gap motivates the entire dissertation.
+The urgency of these vulnerabilities is also driven by the broader
+evolution of the cyber-threat landscape from incidental attacks to
+targeted AI-enabled campaigns, as analysed in particular in the
+work of I.\,K.\,Sachkov~\cite{Sachkov2022threat}. The urgency is
+further confirmed by recent peer-reviewed studies documenting
+systematic failures of existing Hybrid~IDPS systems in four
+safety-critical domains. In \emph{medical information systems}, an
+edge-sensitivity gradient attack on GNN-based detectors caused
+approximately 25\% AUC degradation on MoleculeNet benchmarks
+(Tox21, ClinTox, SIDER), with toxic compounds misclassified as
+safe~\cite{EdgeSensitivity2025}. In \emph{banking and fintech
+infrastructure}, the MonTi gang-injection attack nearly tripled
+the misclassification rate of GNN-based fraud detectors (CARE-GNN,
+PC-GNN, GAGA) from 25.7\% to 68.6\%~\cite{MonTi2025}. In
+\emph{industrial IoT}, data poisoning of federated intrusion
+detectors caused a 64-percentage-point system-accuracy collapse
+from 94.2\% to 30.0\% under non-i.i.d.\
+conditions~\cite{FerragPoisoning2023}. In \emph{network
+cybersecurity}, the PROVNINJA attack reduced provenance-based
+Hybrid~IDPS detection by up to 59\%, rendering APT attackers
+effectively invisible~\cite{PROVNINJA2023}. These documented
+failures systematically confirm that the robustness of existing
+Hybrid~IDPS lags detection accuracy by 25--65~percentage points in
+every safety-critical domain, and this gap motivates the
+development of Models and algorithms M1--M7 that constitute the
+principal result of this dissertation.
 
 A distributed environment is one in which multiple organisations (e.g.\ hospitals, banks, data centres) each hold a piece of the same graph data and cannot share it, so a shared model must learn from every piece through federated learning~\cite{Blanchard2017} --- without any party seeing another's raw information. Graph neural networks in distributed environments must be more stable, efficient, robust, and accurate, because they are entering safety-critical systems faster than their guarantees can be established: adversaries can fool them with small perturbations; distributions do shift after deployment; privacy laws restrict data sharing~\cite{Dwork2006,Abadi2016}; yet edge devices demand real-time inference. No existing approach addresses all four simultaneously --- this gap motivates the dissertation.
 
-Real graph data drifts after deployment --- topologies evolve, attack patterns change, new protocols emerge --- and static graph neural networks silently lose accuracy without warning. This is unacceptable in safety-critical systems where a stale model is a dangerous model. The objective is to build dynamic graph neural networks that detect distribution shift online, adapt parameters without forgetting previously learned patterns, and quantify uncertainty through Bayesian posterior updates~\cite{Gal2016,Kendall2017} to flag novel inputs for human review.
+The data observed by a Hybrid~IDPS drift after
+deployment~--- network topologies evolve, attack patterns change,
+new protocols emerge~--- and the static learnable detectors within
+the system silently lose accuracy without warning. This is
+unacceptable for a safety-critical Hybrid~IDPS, where a stale
+detector is a dangerous detector. The objective in this
+non-stationarity dimension is to build adaptive detectors within
+the Hybrid~IDPS system that detect distribution shift online,
+adapt their parameters without forgetting previously learned
+patterns, and quantify uncertainty through Bayesian posterior
+updates~\cite{Gal2016,Kendall2017} so that novel inputs are
+flagged for analyst review.
 
 Existing graph neural network and transformer-based models~\cite{Vaswani2017,Ying2021} scale quadratically ($\mathcal{O}(L^2)$) with sequence length because every node must attend to every other node, making them too slow and memory-hungry for real-time inference on large temporal graphs with millions of events. Literature reveals that structured state-space models~\cite{Gu2022,Gu2024,Dao2024} are more efficient, reducing cost to $\mathcal{O}(L\log L)$ through Fast Fourier Transform convolutions and enabling deployment on edge devices where transformer-scale models are infeasible. Therefore, this dissertation proposes the shift of attention and practices from transformers towards selective state-space models for graph-structured data.
 
@@ -383,7 +483,7 @@ The Introduction establishes the relevance of robust and efficient learning on d
 
 Chapter~1, ``Analysis of Existing Literature and Gap Identification,'' surveys the literature following the progressive scope of the research: continuous-time dynamics on evolving graphs, distributed federated learning with privacy, computational efficiency for large-scale graphs, and non-stationary adaptation with uncertainty quantification. The chapter is organised so that each section addresses one or more intersections of the three operating conditions and four cross-cutting requirements, building toward a systematic enumeration of seven research gaps. Each section concludes with a bridging statement that connects the identified gap to the solution developed in the following chapter, ensuring that the reader follows the logical chain from open problem to proposed method.
 
-Chapter~2, ``Methods, Algorithms, and Mathematical Frameworks for Robust Dynamic Graph Neural Networks,'' presents the complete mathematical derivations, convergence and robustness proofs, algorithmic pseudocode, architectural schematics, and complexity analyses for all seven methods (M1--M7) and their extensions (SDE-TGNN, CyberSecLLM). The chapter flows according to the gaps enumerated in Chapter~1: Model~M1 (CT-TGNN) addresses Gap~1 with neural ODE dynamics and Lipschitz certification; Model~M2 (FedLLM-API) addresses Gap~2 with Byzantine-resilient federated optimisation; Model~M3 (TripleE-TGNN) addresses Gap~3 with multi-level temporal embeddings; Model~M4 (MambaShield) addresses Gap~4 with selective state-space inference; Methods~M5/M6 (Stochastic Transformer, UC-HGP) address Gap~6 with uncertainty-calibrated adaptation; and Model~M7 addresses Gap~7 with game-theoretic unified certification. Each method is formulated at the level of mathematical operations on graph structures, independently of any application domain, and uniquely derived functions, loss formulations, and training schemes are presented with formal proofs.
+Chapter~2, ``Mathematical Model of Hybrid~IDPS and Proposed Models and Algorithms for Improving Its Robustness and Efficiency,'' presents the complete mathematical derivations, convergence and robustness proofs, algorithmic pseudocode, architectural schematics, and complexity analyses for all seven Models~M1--M7 and their extensions (SDE-TGNN, CyberSecLLM). The chapter flows according to the gaps enumerated in Chapter~1: Model~M1 (CT-TGNN) addresses Gap~1 with neural ODE dynamics and Lipschitz certification; Model~M2 (FedLLM-API) addresses Gap~2 with Byzantine-resilient federated optimisation; Model~M3 (TripleE-TGNN) addresses Gap~3 with multi-level temporal embeddings; Model~M4 (MambaShield) addresses Gap~4 with selective state-space inference; Methods~M5/M6 (Stochastic Transformer, UC-HGP) address Gap~6 with uncertainty-calibrated adaptation; and Model~M7 addresses Gap~7 with game-theoretic unified certification. Each method is formulated at the level of mathematical operations on graph structures, independently of any application domain, and uniquely derived functions, loss formulations, and training schemes are presented with formal proofs.
 
 Chapter~3, ``Adaptation and Alignment to Network Intrusion Detection and Prevention Systems,'' is the domain-specific chapter in which the mathematical methods of Chapter~2 are mapped onto the entities and constraints of cybersecurity and, invariably, hybrid Network Intrusion Detection and Prevention Systems (NIDPS). The chapter defines the cybersecurity-specific terminologies, describes how raw network traffic (PCAP files and flow-level CSV data) is transformed into graph structures suitable for input into the developed GNN architectures, specifies the hyperparameters and their selection rationale for each model in the security context, defines the classification taxonomy (34 classes across 33 attack types and 1 benign class), presents the optimisation procedures and loss functions as applied to network-security objectives, and describes the feature engineering pipeline (83 engineered features across five categories). Each section demonstrates how a specific method from Chapter~2 is instantiated with domain-specific adapters and threat-model refinements.
 

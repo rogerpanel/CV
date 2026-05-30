@@ -9,7 +9,111 @@
 \chapter{Network Traffic Analysis System Based on the RobustIDPS.ai Software Platform}
 \label{ch:platform}
 
-This chapter describes the open-source software platform RobustIDPS.ai~\cite{Anaedevha2026robustidps} (DOI:~\url{10.5281/zenodo.19129512}; source code: \url{https://github.com/rogerpanel/robustidps.ai}) that implements all methods developed in Chapter~\ref{ch:methods} as a unified, deployable system. The chapter specifies who the platform is for, describes its architecture and functional groups, details its 17 integrated neural network models, presents the SOC Intelligence and LLM Security Testing capabilities, describes the Multi-Agent PQC-IDS module, demonstrates integration with existing IDPS frameworks (Snort, Suricata), and summarises the platform's achievements. At least six screenshots of the platform's user interface are included to illustrate its operational capabilities.
+This chapter systematically presents the software \emph{system}
+\textsf{RobustIDPS.ai}~\cite{Anaedevha2026robustidps}
+(DOI:~\url{10.5281/zenodo.19129512}; source code:
+\url{https://github.com/rogerpanel/robustidps.ai}) that realises
+the Hybrid~IDPS tuple of \S\ref{sec:hybrid_idps_math_model} for the
+network-traffic-protection sector. The chapter follows the
+three-part spine set out by the scientific supervisor's guidance:
+\emph{(I)~problem statement}~--- the inputs, outputs, and operating
+mode of the system for this sector are formalised
+(\S\ref{sec:platform_problem_statement});
+\emph{(II)~description of the system / software implementation}~---
+the chapter systematically covers use cases, functionality,
+documentation, frontend and backend implementation, the two-plane
+architecture (Python control plane + Rust data plane, release~v4),
+functional groups (51~pages across 10~groups), 17~integrated
+detection models, the Rust edge-agent migration with the kernel-
+resident XDP fast path, and operational deployment infrastructure
+(\S\ref{sec:platform_overview}--\S\ref{sec:deployment});
+\emph{(III)~approbation of the system}~--- the chapter
+systematically documents the benchmark validation results, the
+comparison with commercial and open-source platforms, the
+open-source contribution, and the letters of implementation from
+the participating organisations
+(\S\ref{sec:platform_comparison}--\S\ref{sec:opensource}). At
+least six screenshots of the system's user interface are included
+to illustrate its operational capabilities.
+
+
+%%=====================================================================
+\section{Problem Statement: Network Traffic Protection by the Hybrid~IDPS System}
+\label{sec:platform_problem_statement}
+%%=====================================================================
+
+The task of network traffic protection is treated in this chapter as
+the concrete instantiated task of the Hybrid~IDPS tuple of
+\S\ref{sec:hybrid_idps_math_model}. Formally, the system receives at
+its input a stream of network packets (PCAP, NetFlow, EVE~JSON) and
+signature-engine alerts (Snort, Suricata) aggregated by the
+data-to-graph pipeline of Chapter~\ref{ch:adaptation}; at its
+output the system produces ranked alerts, deployable Snort/Suricata
+rules, and active-response control actions (flow blocking, node
+isolation, SIEM/SOAR escalation). The high-level schematic is
+shown in Fig.~\ref{fig:platform_problem_box}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\footnotesize,
+  inp/.style={draw,rounded corners=2pt,fill=blue!10,
+    minimum width=3.0cm,minimum height=11mm,align=center,thick},
+  sys/.style={draw,rounded corners=3pt,fill=orange!18,
+    minimum width=5.0cm,minimum height=22mm,align=center,
+    font=\small\bfseries,thick,draw=orange!70!black},
+  outbx/.style={draw,rounded corners=2pt,fill=green!12,
+    minimum width=3.0cm,minimum height=11mm,align=center,thick,
+    draw=green!55!black},
+  arr/.style={-{Stealth[length=2.5mm]},semithick,gray!75!black,thick}]
+\node[inp] (in1) {Network packets\\stream / NetFlow};
+\node[inp,below=4mm of in1] (in2) {Snort/Suricata\\signature alerts};
+\node[sys,right=22mm of $(in1)!0.5!(in2)$] (sys)
+  {Hybrid~IDPS\\system\\\textsf{RobustIDPS.ai}\\\scriptsize 17 Models M1--M7};
+\node[outbx,right=22mm of sys.north east,yshift=0mm,anchor=west] (out1)
+  {Ranked\\alerts};
+\node[outbx,right=22mm of sys.east,anchor=west] (out2)
+  {Snort/Suricata\\rules};
+\node[outbx,right=22mm of sys.south east,anchor=west] (out3)
+  {Active actions\\(SIEM/SOAR)};
+\draw[arr] (in1) -- (sys.north west);
+\draw[arr] (in2) -- (sys.south west);
+\draw[arr] (sys.north east) -- (out1);
+\draw[arr] (sys.east) -- (out2);
+\draw[arr] (sys.south east) -- (out3);
+\end{tikzpicture}
+\caption{Problem statement for network traffic protection by the
+Hybrid~IDPS system in the \textsf{RobustIDPS.ai} implementation.
+Left~--- input streams (network packets, NetFlow, signature-engine
+alerts); centre~--- the system with 17~integrated Models M1--M7;
+right~--- output artefacts (ranked alerts, deployable
+Snort/Suricata rules, control actions for SIEM/SOAR orchestration).}
+\label{fig:platform_problem_box}
+\end{figure}
+
+\noindent\textbf{Target properties of the system in this sector.}
+The solution to the network-traffic-protection task by the
+\textsf{RobustIDPS.ai} system systematically satisfies four of the
+six properties P1--P6 from \S\ref{subsec:six_properties}:
+\emph{P1} (adversarial resilience, eq.~\eqref{eq:adv_resilient_property})
+through the integration of Models~M1, M4, and~M7;
+\emph{P2} (robustness, eq.~\eqref{eq:robustness_property})
+supported by the benchmark results of
+Chapter~\ref{ch:adaptation}~(\S\ref{sec:method_results});
+\emph{P3} (efficiency, eq.~\eqref{eq:efficiency_property})
+provided by the v4 two-plane architecture with the kernel-resident
+XDP fast path (\S\ref{sec:rust_edge_agent}); and
+\emph{P5} (human factor, eq.~\eqref{eq:calibration_property})
+realised through uncertainty-guided alert triage in the SOC
+copilot (\S\ref{sec:soc_intelligence}).
+
+
+%%=====================================================================
+%%   PART II: DESCRIPTION OF THE SYSTEM / SOFTWARE IMPLEMENTATION
+%%   (systematically covered in \S\S5.2--5.12 below: use cases,
+%%    functionality, documentation, frontend/backend, architecture,
+%%    models, deployment)
+%%=====================================================================
+
 
 
 %%=====================================================================
@@ -580,6 +684,34 @@ RobustIDPS.ai is designed for deployment as a plug-in for existing intrusion det
 
 Docker Compose orchestration enables single-command deployment. A \texttt{fast\_mode} toggle reduces inference latency by 60\% (disabling MC dropout and uncertainty quantification), achieving throughput exceeding 12,000 flows/second on a single CPU core --- sufficient for real-time analysis of 10\,Gbps links with appropriate parallelisation.
 
+
+%%=====================================================================
+%%   PART III: APPROBATION OF THE SYSTEM
+%%   (systematically documents the benchmark validation results, the
+%%    comparison with commercial and open-source platforms, the
+%%    open-source contribution, and the letters of implementation
+%%    from the participating organisations)
+%%=====================================================================
+
+\paragraph{Bridge with the above.}
+Sections~\ref{sec:platform_overview}--\ref{sec:deployment} above
+have systematically realised the software \emph{system}
+\textsf{RobustIDPS.ai} as the instantiation of Hybrid~IDPS for the
+network-traffic-protection sector. The following
+sections~\ref{sec:platform_comparison}--\ref{sec:opensource}
+constitute the approbation part of the chapter and systematically
+answer three questions:
+\emph{(a)~how does the \textsf{RobustIDPS.ai} system compare with
+commercial and open-source platforms of the same class
+(CrowdStrike Charlotte AI, SentinelOne Purple AI, Microsoft
+Security Copilot, Google Sec-Gemini, Snort~3, Suricata)};
+\emph{(b)~what are the quantitative results of the systematic
+validation of the system on the benchmark datasets and which
+properties P1--P6 they support}; and
+\emph{(c)~how is the system deployed and used in real industry
+organisations, as evidenced by letters of implementation from
+Positive Technologies, Google Cloud Platform, and Suricata Open
+Source IDPS}.
 
 %%=====================================================================
 \section{Comparison with Commercial and Open-Source Platforms}
