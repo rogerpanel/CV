@@ -10,7 +10,461 @@
 \chapter{Analysis of Hybrid Intrusion Detection and Prevention Systems and Theoretical Foundations for Improving Their Robustness}
 \label{ch:literature}
 
-This chapter surveys the existing literature on dynamic graph neural networks and their robustness challenges, following the progressive scope of the dissertation: from continuous-time dynamics on evolving graphs, through distributed federated learning with privacy, to computational efficiency for large-scale graphs, and finally to non-stationary adaptation with uncertainty quantification. Each section addresses one or more intersections of the three operating conditions (adversarial environment, distributed dynamics, non-stationarity) and the four cross-cutting requirements (robustness, accuracy, efficiency, privacy), building toward a systematic enumeration of seven research gaps that motivate the methods developed in the subsequent chapter.
+This chapter presents a systematic survey of Hybrid Intrusion
+Detection and Prevention Systems (Hybrid IDPS) as the object of
+research: definition and classification of Hybrid IDPS
+(\S\ref{sec:hybrid_idps_object}), systematisation of application
+domains~--- network traffic protection, UAV systems, fintech
+infrastructure, medical data, industrial Internet-of-Things,
+autonomous vehicles, and cloud environments,~--- taxonomy of models
+and algorithms used in Hybrid IDPS
+(\S\ref{sec:idps_models_taxonomy}), and systematisation of problems
+and vulnerabilities of models in Hybrid IDPS
+(\S\ref{sec:idps_problems}). Graph neural networks are treated in
+this work as one branch of the family of models applicable to
+Hybrid IDPS, alongside statistical, classical-ML, hybrid, and
+game-theoretic approaches. Following the domain systematisation,
+Sections~\ref{sec:gnn_vulnerability}--\ref{sec:certification}
+proceed in technical depth to the foundations underlying the
+development of Models M1--M7 according to the progressive scope of
+the dissertation: from continuous-time dynamics on evolving graphs,
+through distributed federated learning with privacy, to
+computational efficiency for large-scale graphs, and finally to
+non-stationary adaptation with uncertainty quantification. Each
+section addresses one or more intersections of the three operating
+conditions (adversarial environment, distributed dynamics, non-
+stationarity) and the four cross-cutting requirements (robustness,
+accuracy, efficiency, privacy), building toward a systematic
+enumeration of seven research gaps that motivate the models and
+algorithms developed in Chapter~\ref{ch:methods}.
+
+
+%%=====================================================================
+\section{Hybrid IDPS as the Object of Research: Definition, Classification, and Application Domains}
+\label{sec:hybrid_idps_object}
+%%=====================================================================
+
+A \emph{Hybrid Intrusion Detection and Prevention System}
+(Hybrid IDPS) is in this dissertation defined as a software-hardware
+defensive complex for information systems that integrates
+signature-based, anomaly-based, statistical, and learning-based
+components in a single defensive contour together with automatic
+response facilities and interfaces to external event-logging and
+response systems (SIEM/SOAR). A Hybrid IDPS differs from classical
+IDS implementations in three properties:
+\emph{(i)}~\emph{hybridity} of detection~--- the verdict on the
+presence of an intrusion is produced by the combination of multiple
+independent detectors, statistical features, and learned models
+with different degrees of explainability;
+\emph{(ii)}~\emph{adaptability} to the application domain~--- the
+same base architecture can be instantiated for the protection of
+network traffic, UAV systems, banking/fintech infrastructure,
+medical data, industrial Internet-of-Things, and other domains by
+changing the formal representation of input data;
+\emph{(iii)}~\emph{closed-loop response}~--- in addition to detection,
+a Hybrid IDPS can initiate active countermeasures by modifying
+firewall rules, isolating nodes, switching sensor pipelines, or
+relaying events to a SOAR orchestrator.
+
+\subsection{Classification of Hybrid IDPS}
+\label{subsec:idps_classification}
+
+IDPS systems known in the literature admit classification along five
+orthogonal axes: by the detection method employed, by the scope of
+the observed environment, by the network topology of deployment, by
+the character of response, and by the protocol-stack layer. The
+structure of the classification is shown in
+Fig.~\ref{fig:orga_classes_idps}.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  level 1/.style={sibling distance=33mm, level distance=11mm},
+  level 2/.style={sibling distance=11mm, level distance=10mm},
+  root/.style={draw,rounded corners=3pt,fill=blue!18,
+    minimum width=3.5cm,minimum height=8mm,align=center,
+    font=\small\bfseries,thick},
+  cat/.style={draw,rounded corners=2pt,fill=blue!8,
+    minimum width=2.4cm,minimum height=7mm,align=center,
+    font=\scriptsize\bfseries,thick},
+  leaf/.style={draw,rounded corners=2pt,fill=gray!10,
+    minimum width=1.0cm,minimum height=6mm,align=center,
+    font=\scriptsize,inner sep=2pt},
+  edge from parent/.style={draw,gray!70!black,thick}]
+\node[root] {Hybrid IDPS}
+  child {node[cat] {Method}
+    child {node[leaf] {Sig.}}
+    child {node[leaf] {Anom.}}
+    child {node[leaf] {Hybr.}}}
+  child {node[cat] {Scope}
+    child {node[leaf] {HIDS}}
+    child {node[leaf] {NIDS}}
+    child {node[leaf] {DIDS}}}
+  child {node[cat] {Topology}
+    child {node[leaf] {Cent.}}
+    child {node[leaf] {Distr.}}
+    child {node[leaf] {Fed.}}}
+  child {node[cat] {Response}
+    child {node[leaf] {Pass.}}
+    child {node[leaf] {Act.}}
+    child {node[leaf] {IPS}}}
+  child {node[cat] {Layer}
+    child {node[leaf] {App}}
+    child {node[leaf] {Net}}
+    child {node[leaf] {Phy}}};
+\end{tikzpicture}%
+}
+\caption{Hierarchical classification of Hybrid IDPS along five
+orthogonal axes. By detection method~--- signature-based
+(deterministic lookup against a database of known patterns),
+anomaly-based (statistical or learned deviation from a normal
+profile), and hybrid (combination of both). By scope~--- host-based
+(HIDS), network-based (NIDS), and distributed (DIDS). By deployment
+topology~--- centralised, distributed, federated. By response
+character~--- passive (alerting only), active (in-line
+intervention), and IPS (full blocking). By stack layer~---
+application, network, and physical.}
+\label{fig:orga_classes_idps}
+\end{figure}
+
+This dissertation focuses primarily on hybrid systems with
+distributed topology operating at the network and application layers
+with active response.
+
+\subsection{Application Domains of Hybrid IDPS}
+\label{subsec:idps_sectors}
+
+A Hybrid IDPS as a universal defensive contour is applicable across
+a wide spectrum of domains. Figure~\ref{fig:orga_apps_idps}
+systematises seven practically significant sectors, each of which is
+treated below with brief problem-statement information on the attack
+surface and the specifics of integrating defensive models. The full
+system-level realisations for the two showcase sectors~--- network
+traffic protection and UAV protection~--- are presented in
+Chapters~\ref{ch:platform} and~\ref{ch:uav} respectively.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  level 1/.style={sibling distance=22mm, level distance=13mm},
+  root/.style={draw,rounded corners=3pt,fill=orange!20,
+    minimum width=4.6cm,minimum height=8mm,align=center,
+    font=\small\bfseries,thick},
+  sec/.style={draw,rounded corners=2pt,fill=orange!10,
+    minimum width=1.8cm,minimum height=11mm,align=center,
+    font=\scriptsize\bfseries,thick,inner sep=2pt},
+  edge from parent/.style={draw,gray!70!black,thick}]
+\node[root] {Hybrid IDPS Applications}
+  child {node[sec,fill=orange!25] {(a)\\NIDS\\\scriptsize Chap.~\ref{ch:platform}}}
+  child {node[sec,fill=orange!25] {(b)\\UAV\\\scriptsize Chap.~\ref{ch:uav}}}
+  child {node[sec] {(c)\\Fintech}}
+  child {node[sec] {(d)\\Medical}}
+  child {node[sec] {(e)\\IIoT/\\SCADA}}
+  child {node[sec] {(f)\\Autonom.\\Vehicles}}
+  child {node[sec] {(g)\\Cloud/\\SaaS}};
+\end{tikzpicture}%
+}
+\caption{Application domains of Hybrid IDPS. Sectors~(a) and~(b)
+are treated in this work as showcase applications and are presented
+in detail in Chapters~\ref{ch:platform} (network traffic analysis)
+and~\ref{ch:uav} (UAV protection). Sectors~(c)--(g) are presented as
+overview material with attack surface and defensive-model
+integration mode for each.}
+\label{fig:orga_apps_idps}
+\end{figure}
+
+\subsubsection{(a) Network Traffic Protection (NIDS)}
+\label{subsubsec:sector_nids}
+
+Network traffic protection is historically the first and most
+extensively studied application area of IDPS. The object of
+observation is a sequence of network packets and flows aggregated
+into multidimensional feature vectors (46- to 83-dimensional vectors
+in the CIC-IoT-2023, CSE-CICIDS-2018, and UNSW-NB15 benchmarks). The
+attack surface includes port scanning, service-vulnerability
+exploitation, denial of service (DoS/DDoS), lateral movement,
+command-and-control (C2) channels, data exfiltration, and post-
+quantum protocol regime transitions. A Hybrid IDPS integrates into
+the protective stack as a complement to classical signature engines
+(Snort, Suricata) and consumes aggregated flow features, event
+graphs of node interactions, and SIEM alert streams. The full
+system-level description of this sector is given in
+Chapter~\ref{ch:platform}.
+
+\subsubsection{(b) Unmanned Aerial Vehicle Protection (UAV)}
+\label{subsubsec:sector_uav}
+
+UAV protection is a showcase extension of Hybrid IDPS beyond the
+traditional network perimeter. The object of observation is a
+heterogeneous stream of onboard-sensor telemetry (INS/GNSS, LiDAR,
+optical flow, engine and payload state) combined with the
+command-and-telemetry channel onboard--droneport--cloud. The attack
+surface includes GNSS spoofing and jamming, electronic warfare (EW),
+adversarial attacks on the onboard neural-network modules for visual
+perception, poisoning of autopilot policies, hijacking of the
+command channel, and also kinetic and biological threats
+(collisions, raptor strikes). A Hybrid IDPS adapts to this
+environment by replacing the network-traffic graph representation
+with a graph representation of the UAV operational environment while
+keeping the mathematical apparatus of M1--M7 unchanged. The full
+system-level description is given in Chapter~\ref{ch:uav}.
+
+\subsubsection{(c) Banking and Fintech Infrastructure Protection}
+\label{subsubsec:sector_fintech}
+
+The protected object is the graph of transactions between accounts,
+payment cards, points of sale, and fast-payment interfaces. The
+attack surface includes carding, money laundering, raid-style
+transactional attacks against fraud detectors (the
+MonTi attack~\cite{MonTi2025} nearly triples the classification
+error of CARE-GNN/PC-GNN/GAGA fraud detectors from 25.7\% to 68.6\%),
+credential spoofing, phishing, and attacks against credit-scoring
+systems. In the fintech sector, Hybrid IDPS operates under
+\emph{severe class imbalance} (the share of fraudulent transactions
+$<\!1\%$) and \emph{regulatory restrictions} on the use of personal
+data, which simultaneously demands Byzantine resilience (Model~M2)
+and certified resilience to adversarial re-arrangements of the
+transactional subgraph (Models~M1, M5--M6).
+
+\subsubsection{(d) Protection of Medical Information Systems}
+\label{subsubsec:sector_medical}
+
+The protected object is the graph of electronic medical records,
+patient--clinician--laboratory interaction graphs, and molecular-
+representation graphs in pharmacology tasks. The attack surface
+includes edge-sensitivity attacks on graph-isomorphism networks
+(AUC drops of up to 25\% on MoleculeNet benchmarks, with toxic
+compounds classified as safe~\cite{EdgeSensitivity2025}), attacks on
+the confidentiality of training data (model inversion, membership
+inference), and poisoning of clinical-trial graphs. In the medical
+sector a Hybrid IDPS must provide strict
+$(\varepsilon,\delta)$-differentially-private training (Model~M2)
+and calibrated epistemic-uncertainty estimation (Model~M6) to
+separate untrustworthy from trustworthy predictions.
+
+\subsubsection{(e) Industrial Internet-of-Things and ICS/SCADA Protection}
+\label{subsubsec:sector_iiot}
+
+The industrial Internet-of-Things and industrial control systems
+(ICS/SCADA) differ technically from traditional NIDS environments
+in three respects that make IIoT/SCADA a separate application
+sector of Hybrid IDPS rather than a special case of sector~(a):
+\emph{(i)}~the protocol stack rests on specialised industrial
+protocols (\texttt{Modbus}, \texttt{DNP3}, \texttt{IEC~61850},
+\texttt{OPC-UA}, \texttt{S7}) with the semantics of control
+registers, absent in the TCP/IP stack;
+\emph{(ii)}~operational constraints require deterministic response
+latency within tens of milliseconds, ruling out heavy inefficient
+models;
+\emph{(iii)}~the threat model includes industry-specific classes~---
+manipulation of programmable-logic-controller (PLC) state, replay
+of sensor signals, and attacks against time-synchronisation
+timestamps. Poisoning of training data of federated intrusion
+detectors in IIoT networks has been documented as the cause of an
+accuracy collapse from 94.2\% to 30.0\% under non-i.i.d.\ training
+conditions~\cite{FerragPoisoning2023}. In the IIoT sector, a
+Hybrid IDPS is realised through Models~M4 (efficient inference
+\textsf{MambaShield}) and~M1 (continuous-time telemetry
+representation).
+
+\subsubsection{(f) Autonomous Vehicle Protection}
+\label{subsubsec:sector_av}
+
+In autonomous vehicles the protected object is the sensor-fusion
+graph (camera, LiDAR, radar, INS), the interaction graph with other
+participants via V2X/V2I channels, and the software-component graph
+of the autopilot. The attack surface includes physical adversarial
+patches on traffic signs, GNSS spoofing, injection of falsified V2X
+messages, and poisoning of the trajectory planner. The sector
+differs from~(b) in that the actors are situated in a terrestrial
+environment with a different legal regime and a different
+information-exchange topology. Hybrid IDPS in this sector uses
+Models~M1, M4, and~M6 for calibrated epistemic-uncertainty
+estimation as a trigger for transition to a safe-mode.
+
+\subsubsection{(g) Cloud and SaaS Infrastructure Protection}
+\label{subsubsec:sector_cloud}
+
+Cloud and SaaS infrastructure protection also differs technically
+from traditional NIDS environments and is not reducible to
+sector~(a) for the following reasons:
+\emph{(i)}~the primary observable stream is not the stream of
+network packets but the stream of application-programming-interface
+(API) calls between microservices (so-called east--west traffic),
+observed via the service mesh infrastructure
+(\texttt{Istio}, \texttt{Linkerd});
+\emph{(ii)}~mandatory \emph{multi-tenant} isolation between cloud
+tenants is required, absent in traditional network environments;
+\emph{(iii)}~the threat model includes cloud-specific classes~---
+container escape, abuse of identity-and-access-management (IAM)
+credentials, supply-chain attacks against software, and container-
+image substitution. The PROVNINJA attack~\cite{PROVNINJA2023}, which
+reduces detection in provenance-based GNN systems to 59\%,
+documents the necessity of protecting this sector. Hybrid IDPS in
+the cloud sector is realised through Models~M3 (multi-level
+service/trace/node representations) and~M7 (game-theoretic
+certification of response-strategy selection).
+
+
+%%=====================================================================
+\section{Models and Algorithms Used in Hybrid IDPS: A Taxonomy}
+\label{sec:idps_models_taxonomy}
+%%=====================================================================
+
+The collection of models and algorithms used in Hybrid IDPS is
+systematised in Fig.~\ref{fig:orga_models_idps} across five families:
+statistical models, classical machine-learning algorithms, deep-
+learning models, hybrid approaches, and game-theoretic algorithms.
+Graph neural networks (GNNs) are treated as one leaf of the deep-
+learning branch~--- alongside convolutional, recurrent, transformer
+models, and state-space models~--- rather than as the central
+paradigm.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  level 1/.style={sibling distance=34mm, level distance=11mm},
+  level 2/.style={sibling distance=10mm, level distance=10mm},
+  root/.style={draw,rounded corners=3pt,fill=green!18,
+    minimum width=4.2cm,minimum height=8mm,align=center,
+    font=\small\bfseries,thick},
+  fam/.style={draw,rounded corners=2pt,fill=green!8,
+    minimum width=2.4cm,minimum height=8mm,align=center,
+    font=\scriptsize\bfseries,thick},
+  leaf/.style={draw,rounded corners=2pt,fill=gray!10,
+    minimum width=0.9cm,minimum height=6mm,align=center,
+    font=\scriptsize,inner sep=2pt},
+  hi/.style={draw=red!70!black,fill=red!12,thick},
+  edge from parent/.style={draw,gray!70!black,thick}]
+\node[root] {Models and Algorithms in Hybrid IDPS}
+  child {node[fam] {Statistical}
+    child {node[leaf] {Bayes}}
+    child {node[leaf] {Markov}}
+    child {node[leaf] {HMM}}}
+  child {node[fam] {Classical ML}
+    child {node[leaf] {SVM}}
+    child {node[leaf] {RF}}
+    child {node[leaf] {kNN}}}
+  child {node[fam] {Deep Learning}
+    child {node[leaf] {CNN}}
+    child {node[leaf] {RNN}}
+    child {node[leaf,hi] {GNN}}
+    child {node[leaf] {SSM}}}
+  child {node[fam] {Hybrid}
+    child {node[leaf] {Stack}}
+    child {node[leaf] {Ens.}}}
+  child {node[fam] {Game-theor.}
+    child {node[leaf] {MAB}}
+    child {node[leaf] {Stack.}}};
+\end{tikzpicture}%
+}
+\caption{Taxonomy of models and algorithms used in Hybrid IDPS.
+Graph neural networks (highlighted in red) are one leaf of the
+deep-learning branch alongside convolutional networks (CNN),
+recurrent networks (RNN), state-space models (SSM) and stochastic
+differential equations (SDE), and not the central paradigm. The
+Models M1--M7 developed in Chapter~\ref{ch:methods} borrow
+constructs from several branches simultaneously
+(see Table~\ref{tab:models_to_methods}).}
+\label{fig:orga_models_idps}
+\end{figure}
+
+Each family of models has characteristic strengths and weaknesses
+that determine its area of applicability in Hybrid IDPS tasks.
+Statistical models and classical machine-learning algorithms are
+efficient on low-dimensional tabular features and provide
+interpretable decision boundaries, but they cannot automatically
+extract abstract representations from raw sensor streams and do
+not scale to million-node graphs. Deep-learning models~--- CNN, RNN,
+transformers, GNN, SSM, SDE~--- provide end-to-end feature learning
+but suffer from sensitivity to adversarial perturbations and demand
+significant computational resources at inference time. Hybrid
+approaches (stacking, ensembles, pipeline architectures) combine
+strengths from different families. Game-theoretic algorithms
+(multi-armed bandits, Stackelberg equilibria, reinforcement learning)
+are used for online selection of response strategies under an
+adaptive adversary. The correspondence of the Models~M1--M7
+developed in the work to the branches of the taxonomy fixes each
+model's area of responsibility and admits direct mapping onto
+direction~item~4 of the specialty~2.3.1 passport.
+
+
+%%=====================================================================
+\section{Problems and Vulnerabilities of Models in Hybrid IDPS}
+\label{sec:idps_problems}
+%%=====================================================================
+
+The set of problems considered in the work as motivating the
+development of Models and algorithms M1--M7 is systematised in
+Fig.~\ref{fig:orga_problems_idps}. The problems are distributed
+across five cross-cutting axes: robustness against adversarial
+influence, accuracy under non-stationarity and class imbalance,
+inference efficiency under limited budgets, differential privacy in
+distributed environments, and non-stationary adaptation under
+distribution shift.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  level 1/.style={sibling distance=36mm, level distance=11mm},
+  level 2/.style={sibling distance=12mm, level distance=11mm},
+  root/.style={draw,rounded corners=3pt,fill=red!18,
+    minimum width=4.6cm,minimum height=8mm,align=center,
+    font=\small\bfseries,thick},
+  ax/.style={draw,rounded corners=2pt,fill=red!8,
+    minimum width=2.4cm,minimum height=8mm,align=center,
+    font=\scriptsize\bfseries,thick},
+  leaf/.style={draw,rounded corners=2pt,fill=gray!10,
+    minimum width=1.2cm,minimum height=7mm,align=center,
+    font=\scriptsize,inner sep=2pt},
+  edge from parent/.style={draw,gray!70!black,thick}]
+\node[root] {Problems and Vulnerabilities of Hybrid IDPS}
+  child {node[ax] {Robust.}
+    child {node[leaf] {Adv.\\examples}}
+    child {node[leaf] {Poison.}}
+    child {node[leaf] {Backdoor}}}
+  child {node[ax] {Accuracy}
+    child {node[leaf] {Drift}}
+    child {node[leaf] {Imbal.}}
+    child {node[leaf] {Few-shot}}}
+  child {node[ax] {Efficiency}
+    child {node[leaf] {Latency}}
+    child {node[leaf] {Memory}}
+    child {node[leaf] {Through-\\put}}}
+  child {node[ax] {Privacy}
+    child {node[leaf] {Inv.}}
+    child {node[leaf] {Memb.\\inf.}}
+    child {node[leaf] {Leakage}}}
+  child {node[ax] {Non-stat.}
+    child {node[leaf] {Distr.\\shift}}
+    child {node[leaf] {Online}}};
+\end{tikzpicture}%
+}
+\caption{Systematisation of problems and vulnerabilities motivating
+the development of Models M1--M7. Each of the five axes is covered
+by one or several developed models (direct mapping is given in
+Table~\ref{tab:models_to_methods} after the analysis of existing
+limitations).}
+\label{fig:orga_problems_idps}
+\end{figure}
+
+The correspondence between the axes of
+Fig.~\ref{fig:orga_problems_idps} and the developed models gives a
+direct mapping of the research directions of the specialty 2.3.1
+passport (items~4 and~5) onto the contributions of the dissertation:
+the \emph{robustness} axis is covered by Models~M1, M4, and~M5--M6;
+the \emph{accuracy} axis~--- by~M1, M3, and~M5--M6;
+the \emph{efficiency} axis~--- by~M4 and~M7;
+the \emph{privacy} axis~--- by~M2;
+the \emph{non-stationarity} axis~--- by~M1, M3, and~M6.
 
 
 %%=====================================================================
@@ -304,7 +758,35 @@ realised in Chapter~6.
 \label{sec:gap_summary}
 %%=====================================================================
 
-The systematic analysis conducted in Sections~\ref{sec:gnn_vulnerability}--\ref{sec:certification} identifies seven research gaps that collectively define the open problem space addressed by this dissertation. Table~\ref{tab:gaps} maps each gap to the operating conditions and requirements it involves, and identifies the method developed in Chapter~2 to address it.
+The systematic analysis conducted in Sections~\ref{sec:gnn_vulnerability}--\ref{sec:certification} identifies seven research gaps that collectively define the open problem space addressed by this dissertation. Table~\ref{tab:gaps} maps each gap to the operating conditions and requirements it involves, and identifies the model/algorithm developed in Chapter~\ref{ch:methods} to address it. The companion table~\ref{tab:models_to_methods} duplicates this mapping in the language of the specialty 2.3.1 passport (item~4: \emph{``development of methods and algorithms for solving problems of systems analysis, optimisation, control, decision-making, information processing, and artificial intelligence''}) and serves as the direct mapping from the problem axes of \S\ref{sec:idps_problems} to the developed Models M1--M7.
+
+\begin{table}[H]
+\centering
+\caption{Mapping of Hybrid IDPS problem axes identified in \S\ref{sec:idps_problems} to the Models and Algorithms M1--M7 developed in Chapter~\ref{ch:methods} (alignment with item~4 of the specialty 2.3.1 passport).}
+\label{tab:models_to_methods}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{3.0cm} p{4.5cm} p{6.5cm}}
+\toprule
+\textbf{Problem axis} & \textbf{Specific vulnerability} & \textbf{Developed Model / algorithm} \\
+\midrule
+Robustness     & Adversarial examples, poisoning, backdoors
+               & M1 (CT-TGNN, Lipschitz certificate), M4 (MambaShield, PAC-Bayes), M5--M6 (stoch.\ transformer + UC-HGP), M7 (game-theoretic certification) \\
+\addlinespace
+Accuracy       & Concept drift, class imbalance, few-shot
+               & M1 (multi-scale time constants), M3 (TripleE-TGNN multi-level representations), M5--M6 (calibrated uncertainty) \\
+\addlinespace
+Efficiency     & Inference latency, memory, throughput
+               & M4 (MambaShield, $O(L\log L)$), M7 (uncertainty-guided strategy selection) \\
+\addlinespace
+Privacy        & Model inversion, membership inference, leakage
+               & M2 (FedLLM-API, $(\varepsilon,\delta)$-DP + Byzantine resilience) \\
+\addlinespace
+Non-stationarity & Distribution shift, online learning
+                 & M1 (CT-TGNN), M3 (elastic weight consolidation), M6 (UC-HGP Bayesian updates) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}[htbp]
 \centering
@@ -313,7 +795,7 @@ The systematic analysis conducted in Sections~\ref{sec:gnn_vulnerability}--\ref{
 \small
 \begin{tabular}{p{0.5cm} p{5.5cm} p{2.5cm} p{2.0cm} p{2.5cm}}
 \toprule
-\textbf{\#} & \textbf{Gap Description} & \textbf{Conditions} & \textbf{Require\-ments} & \textbf{Proposed Method} \\
+\textbf{\#} & \textbf{Gap Description} & \textbf{Conditions} & \textbf{Require\-ments} & \textbf{Proposed Model/Algorithm} \\
 \midrule
 1 & No certified robustness under continuous-time graph dynamics & C1, C2 & R1, R2 & M1: CT-TGNN \\
 \addlinespace
