@@ -277,9 +277,9 @@ credential spoofing, phishing, and attacks against credit-scoring
 systems. In the fintech sector, Hybrid IDPS operates under
 \emph{severe class imbalance} (the share of fraudulent transactions
 $<\!1\%$) and \emph{regulatory restrictions} on the use of personal
-data, which simultaneously demands Byzantine resilience (Model~M2)
+data, which simultaneously demands Byzantine resilience
 and certified resilience to adversarial re-arrangements of the
-transactional subgraph (Models~M1, M5--M6).
+transactional subgraph.
 
 \paragraph{(d) Protection of Medical Information Systems}\label{subsubsec:sector_medical}
 
@@ -292,8 +292,8 @@ compounds classified as safe~\cite{EdgeSensitivity2025}), attacks on
 the confidentiality of training data (model inversion, membership
 inference), and poisoning of clinical-trial graphs. In the medical
 sector a Hybrid IDPS must provide strict
-$(\varepsilon,\delta)$-differentially-private training (Model~M2)
-and calibrated epistemic-uncertainty estimation (Model~M6) to
+$(\varepsilon,\delta)$-differentially-private training
+and calibrated epistemic-uncertainty estimation to
 separate untrustworthy from trustworthy predictions.
 
 \paragraph{(e) Industrial Internet-of-Things and ICS/SCADA Protection}\label{subsubsec:sector_iiot}
@@ -316,9 +316,7 @@ timestamps. Poisoning of training data of federated intrusion
 detectors in IIoT networks has been documented as the cause of an
 accuracy collapse from 94.2\% to 30.0\% under non-i.i.d.\ training
 conditions~\cite{FerragPoisoning2023}. In the IIoT sector, a
-Hybrid IDPS is realised through Models~M4 (efficient inference
-\textsf{MambaShield}) and~M1 (continuous-time telemetry
-representation).
+Hybrid IDPS is realised through the models developed in Chapter~\ref{ch:methods}.
 
 \paragraph{(f) Autonomous Vehicle Protection}\label{subsubsec:sector_av}
 
@@ -330,9 +328,7 @@ patches on traffic signs, GNSS spoofing, injection of falsified V2X
 messages, and poisoning of the trajectory planner. The sector
 differs from~(b) in that the actors are situated in a terrestrial
 environment with a different legal regime and a different
-information-exchange topology. Hybrid IDPS in this sector uses
-Models~M1, M4, and~M6 for calibrated epistemic-uncertainty
-estimation as a trigger for transition to a safe-mode.
+information-exchange topology. Hybrid~IDPS in this sector uses continuous-time representation, efficient inference, and calibrated epistemic-uncertainty estimation as a trigger for transition to a safe-mode~--- this combination of requirements is formalised as system properties P1, P3, and P5 in Chapter~\\ref{ch:methods}.
 
 \paragraph{(g) Cloud and SaaS Infrastructure Protection}\label{subsubsec:sector_cloud}
 
@@ -351,10 +347,7 @@ container escape, abuse of identity-and-access-management (IAM)
 credentials, supply-chain attacks against software, and container-
 image substitution. The PROVNINJA attack~\cite{PROVNINJA2023}, which
 reduces detection in provenance-based GNN systems to 59\%,
-documents the necessity of protecting this sector. Hybrid IDPS in
-the cloud sector is realised through Models~M3 (multi-level
-service/trace/node representations) and~M7 (game-theoretic
-certification of response-strategy selection).
+documents the necessity of protecting this sector. A Hybrid~IDPS in the cloud sector requires multi-level representations at service/trace/node layers and game-theoretic certification of response-strategy selection~--- these requirements are formalised as system properties P6 and P1 in Chapter~\\ref{ch:methods}.
 
 
 %%=====================================================================

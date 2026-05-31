@@ -312,23 +312,63 @@ The framework ensures domain independence. Every method is formulated at the lev
 \section*{Research Objective}
 %%---------------------------------------------------------------------
 
-The central objective of this dissertation is to increase the robustness of graph neural networks against adversarial perturbations, their stability under non-stationary conditions, their efficiency and accuracy for real-time use, and their privacy preservation in distributed environments.
+The central objective of this dissertation is to \emph{increase the
+robustness and efficiency of Hybrid Intrusion Detection and Prevention
+Systems} (Hybrid~IDPS) operating in distributed and non-stationary
+conditions, by developing AI/ML-augmented models and algorithms that
+systematically address the six framing properties of the system
+(P1--P6 of \S\ref{subsec:six_properties}): adversarial resilience,
+robustness, efficiency, distributed-environment compatibility, the
+human factor through calibrated uncertainty, and non-stationary
+adaptation.
 
-Realising this objective requires the completion of seven research tasks arranged in a sequential chain, so that the output of each task supplies an input required by the next.
+Realising this objective requires the completion of seven research
+tasks arranged in a sequential chain, so that the output of each
+task supplies an input required by the next. The mathematical
+constructions of the seven tasks (Models and algorithms M1--M7) are
+developed in Chapter~\ref{ch:methods} and are not introduced in this
+Introduction.
 
-\noindent 1.\quad Develop continuous-time (CT) models by means of neural ordinary differential equations with multi-scale temporal dynamics and Lipschitz-certified robustness.
+\noindent 1.\quad Conduct a systematic survey and classification of
+existing Hybrid~IDPS, identify the limitations of conventional
+industry products in the three canonical detection channels
+(signature-based, anomaly-based, protocol-analysis-based), and
+formulate the open research gaps motivating the AI/ML-augmented
+extension of the system (Chapter~\ref{ch:literature}).
 
-\noindent 2.\quad Develop methods that allow the CT-models to operate in distributed environments by means of federated learning with Byzantine-resilient aggregation, differential privacy, and optimal-transport distributional alignment.
+\noindent 2.\quad Formalise the Hybrid~IDPS system as a unified
+mathematical object and pose its six cross-cutting properties P1--P6
+as research questions with associated quantitative invariants
+(\S\ref{sec:hybrid_idps_math_model}).
 
-\noindent 3.\quad Develop methods that reduce the trade-off cost and increase the efficiency of both monolithic and distributed models by means of multi-level embeddings combined with selective state-space architectures (MambaShield) that lower complexity from quadratic to near-linear.
+\noindent 3.\quad Develop models and algorithms for the learnable
+detectors of the Hybrid~IDPS system that systematically close each
+of the six properties, together with proofs of convergence,
+robustness certificates, and complexity analyses
+(Chapter~\ref{ch:methods}).
 
-\noindent 4.\quad Develop methods to estimate and adapt GNNs to non-stationary environments --- that is, distribution drift --- by means of Hierarchical Gaussian Processes for calibrated uncertainty quantification and online Bayesian posterior updates.
+\noindent 4.\quad Instantiate the Hybrid~IDPS system for the network-
+traffic-protection sector and validate it systematically on six
+benchmark datasets totalling 84{.}2~million labelled samples
+(Chapter~\ref{ch:adaptation}).
 
-\noindent 5.\quad Integrate all methods into a unified framework, validate it on large-scale benchmarks, and prove its quality to make it ready for deployment, by means of consistency regularisation and comprehensive benchmarking.
+\noindent 5.\quad Provide cross-cutting validation of the
+Hybrid~IDPS system at the level of adversarial robustness across
+six attack families, cross-domain transfer to fundamentally
+different application areas, and forward compatibility with
+post-quantum protocol regimes (Chapter~\ref{ch:experiments}).
 
-\noindent 6.\quad Adapt the unified framework to cybersecurity applications, taking into account the specific features of this area of use, by means of domain-specific adapters and threat-model refinement.
+\noindent 6.\quad Implement the network-traffic-protection
+instantiation of the Hybrid~IDPS system as a production-grade
+software platform (\textsf{RobustIDPS.ai}) with two-plane
+architecture and demonstrate its industry deployment
+(Chapter~\ref{ch:platform}).
 
-\noindent 7.\quad Apply the unified framework and demonstrate its quality and domain-independence in two safety-critical areas~--- hybrid Network Intrusion Detection and Prevention Systems (NIDPS) by means of real-time deployment on the \textsf{RobustIDPS.ai} software platform, and the neural-network navigation subsystem of unmanned aerial vehicles operating under electronic-warfare pressure (Phase~A reference implementation, see Chapter~6).
+\noindent 7.\quad Extend the Hybrid~IDPS system to the UAV
+protection sector, demonstrate the domain-independence of the
+developed models, and provide a Phase~A reference implementation
+together with validation under electronic-warfare conditions
+(Chapter~\ref{ch:uav}).
 
 
 %%---------------------------------------------------------------------
@@ -618,7 +658,7 @@ Chapter~3, ``Adaptation and Alignment to Network Intrusion Detection and Prevent
 
 Chapter~4, ``Experimental Results and Validation,'' presents the complete experimental programme demonstrating how the published research papers align with the methods of the dissertation. The chapter covers six benchmark datasets totalling 84.2 million labelled samples across 84 attack categories, a twenty-three-metric unified evaluation framework, method-specific results with tables and figures, baseline comparisons against classical ML and recent GNN defences, ablation studies quantifying the marginal contribution of each component, adversarial robustness assessments under six attack families (FGSM, PGD, C\&W, DeepFool, Gaussian noise, label-masking poisoning) at configurable perturbation budgets, cross-domain transfer experiments confirming domain independence, and federated learning experiments under Byzantine corruption. Results are presented with tables, bar charts, line plots, and TikZ-rendered diagrams to ensure reproducibility and visual clarity.
 
-Chapter~5, ``RobustIDPS.ai: Software Platform for Production Deployment,'' describes the open-source software platform (DOI: 10.5281/zenodo.19129512) that implements all developed methods as a unified, deployable system. The chapter specifies the target users (SOC analysts, cybersecurity engineers, MLSecOps researchers, AI developers, and academic researchers), describes the platform's 46-page Progressive Web Application organised into 9 functional groups (AI Command Center, AI Active Defence, SOC Intelligence Suite, LLM Attack Surface Testing, MLSecOps Standards Compliance, AI Security and Governance, AI Novel Methods, AI Data and Models, and System Administration), details the 13+ integrated neural network models and their real-time inference capabilities, presents the 4-layer LLM defence framework achieving 94.5\% detection across 517 attack scenarios with four commercial LLM backends (Claude, GPT-4o, Gemini, DeepSeek), describes the Multi-Agent PQC-IDS module for post-quantum traffic classification, and explains the platform's architecture (React 18 frontend, Flask/Python backend, Docker Compose orchestration, PostgreSQL persistence, Redis caching). The chapter includes at least six figures showing the platform's user interface and operational results, demonstrates how the platform can be deployed as a plug-in for existing IDPS frameworks such as Snort and Suricata, and presents the three purpose-built PCAP validation datasets for reproducible benchmarking. The chapter concludes with a summary of the platform's achievements and its alignment with the research objective.
+Chapter~5, ``RobustIDPS.ai: Software Platform for Production Deployment,'' describes the open-source software platform (DOI: 10.5281/zenodo.19129512) that implements all developed methods as a unified, deployable system. The chapter specifies the target users (SOC analysts, cybersecurity engineers, MLSecOps researchers, AI developers, and academic researchers), describes the platform's 51-page Progressive Web Application organised into 10 functional groups (AI Command Center, AI Active Defence, SOC Intelligence Suite, LLM Attack Surface Testing, MLSecOps Standards Compliance, AI Security and Governance, AI Novel Methods, AI Data and Models, and System Administration), details the 17 integrated neural network models and their real-time inference capabilities, presents the 4-layer LLM defence framework achieving 94.5\% detection across 517 attack scenarios with four commercial LLM backends (Claude, GPT-4o, Gemini, DeepSeek), describes the Multi-Agent PQC-IDS module for post-quantum traffic classification, and explains the platform's architecture (React 18 frontend, Flask/Python backend, Docker Compose orchestration, PostgreSQL persistence, Redis caching). The chapter includes at least six figures showing the platform's user interface and operational results, demonstrates how the platform can be deployed as a plug-in for existing IDPS frameworks such as Snort and Suricata, and presents the three purpose-built PCAP validation datasets for reproducible benchmarking. The chapter concludes with a summary of the platform's achievements and its alignment with the research objective.
 
 Chapter~6, ``Application of the Unified Defence Framework to a
 Neural-Network UAV Navigation System,'' demonstrates the domain
