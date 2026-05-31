@@ -1,0 +1,19 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.nav
+*.snm
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Built PDFs in avtoreferat/slides/dissertation working dirs are rebuildable
+# from sources; keep figures/*.pdf (assets) tracked, exclude only top-level builds
+avtoreferat_v12/*.pdf
+avtoreferat_v12_eng/*.pdf
+slides_v12/*.pdf
+dissertation_v12/main_RU.pdf
+dissertation_v12_eng/main_Eng.pdf
