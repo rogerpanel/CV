@@ -684,6 +684,40 @@ RobustIDPS.ai is designed for deployment as a plug-in for existing intrusion det
 
 Docker Compose orchestration enables single-command deployment. A \texttt{fast\_mode} toggle reduces inference latency by 60\% (disabling MC dropout and uncertainty quantification), achieving throughput exceeding 12,000 flows/second on a single CPU core --- sufficient for real-time analysis of 10\,Gbps links with appropriate parallelisation.
 
+A minimal programmatic example of integrating the
+\textsf{RobustIDPS.ai} system with Suricata through the REST~API is
+given in Listing~\ref{lst:ridps_api}~--- the full cycle from a PCAP
+file to generated Suricata rules fits into a few lines of client
+code.
+
+\begin{lstlisting}[language=Python,caption={Integration of the \textsf{RobustIDPS.ai} system with Suricata through the REST~API (excerpt from \texttt{robustidps\_client.py}).},
+label={lst:ridps_api},basicstyle=\ttfamily\footnotesize,
+keywordstyle=\bfseries,commentstyle=\itshape\color{gray!60!black},
+breaklines=true,frame=single,numbers=left,numberstyle=\tiny]
+import requests
+
+# 1. Submit a PCAP file to the Hybrid IDPS system for analysis
+files     = {"pcap": open("traffic.pcap", "rb")}
+params    = {"model": "surrogate", "fast_mode": False}
+resp      = requests.post(
+    "https://robustidps.local/api/v1/analyze",
+    files=files, params=params, timeout=60,
+).json()
+
+# 2. Inspect per-flow detections with calibrated uncertainty
+for flow in resp["flows"]:
+    if flow["epistemic_uncertainty"] > 0.30:
+        print(f"[TRIAGE] flow {flow['id']} -> analyst (uncertainty {flow['epistemic_uncertainty']:.2f})")
+    elif flow["attack_class"] != "Benign":
+        print(f"[ALERT] {flow['attack_class']} (conf {flow['confidence']:.2f}, MITRE {flow['mitre_techniques']})")
+
+# 3. Push the generated Suricata rules back into the IPS
+rules = requests.get("https://robustidps.local/api/v1/rules/suricata").text
+with open("/etc/suricata/rules/robustidps.rules", "w") as f:
+    f.write(rules)
+requests.post("https://suricata.local/api/reload")
+\end{lstlisting}
+
 
 %%=====================================================================
 %%   PART III: APPROBATION OF THE SYSTEM

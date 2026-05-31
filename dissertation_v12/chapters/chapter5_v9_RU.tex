@@ -683,6 +683,39 @@ RobustIDPS.ai предназначена для развёртывания ка�
 
 Оркестрация Docker Compose обеспечивает развёртывание одной командой. Переключатель \texttt{fast\_mode} снижает задержку вывода на 60\% (отключая MC-дропаут и оценку неопределённости), достигая пропускной способности свыше 12\,000 потоков/секунду на одном ядре CPU --- достаточно для анализа каналов 10\,Гбит/с в реальном времени при соответствующей параллелизации.
 
+Минимальный программный пример интеграции системы~\textsf{RobustIDPS.ai}
+с Suricata через REST-API приведён в листинге~\ref{lst:ridps_api}~---
+полный цикл обнаружения от PCAP-файла до генерации правил Suricata
+укладывается в несколько строк клиентского кода.
+
+\begin{lstlisting}[language=Python,caption={Интеграция системы~\textsf{RobustIDPS.ai} с Suricata через REST-API (фрагмент клиента \texttt{robustidps\_client.py}).},
+label={lst:ridps_api},basicstyle=\ttfamily\footnotesize,
+keywordstyle=\bfseries,commentstyle=\itshape\color{gray!60!black},
+breaklines=true,frame=single,numbers=left,numberstyle=\tiny]
+import requests
+
+# 1. Submit a PCAP file to the Hybrid IDPS system for analysis
+files     = {"pcap": open("traffic.pcap", "rb")}
+params    = {"model": "surrogate", "fast_mode": False}
+resp      = requests.post(
+    "https://robustidps.local/api/v1/analyze",
+    files=files, params=params, timeout=60,
+).json()
+
+# 2. Inspect per-flow detections with calibrated uncertainty
+for flow in resp["flows"]:
+    if flow["epistemic_uncertainty"] > 0.30:
+        print(f"[TRIAGE] flow {flow['id']} -> analyst (uncertainty {flow['epistemic_uncertainty']:.2f})")
+    elif flow["attack_class"] != "Benign":
+        print(f"[ALERT] {flow['attack_class']} (conf {flow['confidence']:.2f}, MITRE {flow['mitre_techniques']})")
+
+# 3. Push the generated Suricata rules back into the IPS
+rules = requests.get("https://robustidps.local/api/v1/rules/suricata").text
+with open("/etc/suricata/rules/robustidps.rules", "w") as f:
+    f.write(rules)
+requests.post("https://suricata.local/api/reload")
+\end{lstlisting}
+
 
 %%=====================================================================
 %%   ЧАСТЬ III: АПРОБАЦИЯ СИСТЕМЫ

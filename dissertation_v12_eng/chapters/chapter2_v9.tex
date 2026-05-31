@@ -549,6 +549,14 @@ Compute Lipschitz certificate $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ for each t
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M1: CT-TGNN}~--- the continuous-time temporal graph neural network with multi-scale ODE branches and adaptive batch normalisation. The instantiation of the model for the network-traffic-protection task, with concrete time-constant and hyperparameter values, is presented in \S\ref{sec:method_instantiation} of Chapter~\ref{ch:adaptation}.}
+\label{fig:m1_ct_tgnn_arch_methods}
+\end{figure}
+
 \section{Model M2: FedLLM-API --- Federated Graph Optimisation with Privacy}
 \label{sec:fedllm}
 %%=====================================================================
@@ -676,6 +684,14 @@ Initialise global model $\bw_0$; compute noise scale $\sigma = C\sqrt{2\ln(1.25/
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_fedllm_api_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M2: FedLLM-API}~--- the federated optimiser combining Byzantine-resilient aggregation, differential privacy via calibrated noise, and Wasserstein optimal-transport alignment of distributions, integrated with a large language model for zero-shot detection of novel threat categories.}
+\label{fig:m2_fedllm_arch_methods}
+\end{figure}
+
 \section{Model M3: TripleE-TGNN --- Multi-Level Temporal Graph Embeddings}
 \label{sec:triple_e}
 %%=====================================================================
@@ -825,6 +841,14 @@ Initialise all encoder and attention parameters\;
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M3: TripleE-TGNN}~--- triple-embedding multi-level temporal graph representation with dual spatio-temporal attention and elastic weight consolidation to prevent catastrophic forgetting.}
+\label{fig:m3_triplee_arch_methods}
+\end{figure}
+
 \section{Model M4: MambaShield --- State-Space Inference with Poisoning Resilience}
 \label{sec:mamba}
 %%=====================================================================
@@ -924,6 +948,56 @@ Evaluate PAC-Bayes bound: $R \le \hat{R}_n + \sqrt{(\mathrm{KL}(Q\|P)+\log(2\sqr
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_mambashield_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M4: MambaShield}~--- the selective state-space model with $\mathcal{O}(L\log L)$ inference complexity via FFT-based convolutions, augmented with progressive adversarial distillation and PAC-Bayesian generalisation certificates.}
+\label{fig:m4_mambashield_arch_methods}
+\end{figure}
+
+To illustrate the operational semantics of
+Algorithm~\ref{alg:mamba}, the short Python fragment below shows the
+$\mathcal{O}(L\log L)$ selective-convolution kernel of
+Model~\textsf{M4} via Fast Fourier Transform
+(Listing~\ref{lst:mamba_fft}). The full implementation of the model
+within the \textsf{robustnn-core} library is publicly available in
+the \textsf{RobustIDPS.ai} open-source repository
+(\url{https://github.com/rogerpanel/robustidps.ai}).
+
+\begin{lstlisting}[language=Python,caption={$\mathcal{O}(L\log L)$
+selective-convolution kernel of Model~\textsf{M4: MambaShield} via
+FFT (excerpt from the Phase~A reference implementation
+\texttt{robustnn-core/mamba\_kernel.py}).},
+label={lst:mamba_fft},basicstyle=\ttfamily\footnotesize,
+keywordstyle=\bfseries,commentstyle=\itshape\color{gray!60!black},
+breaklines=true,frame=single,numbers=left,numberstyle=\tiny]
+import torch
+import torch.fft as fft
+
+def mamba_selective_fft(x, A, B, C, D, dt):
+    # Selective state-space convolution with O(L log L) complexity
+    # via FFT, for the M4 MambaShield model.
+    # x  : input sequence,                 shape (B, L, d)
+    # A  : state transition matrix,        shape (d_state, d_state)
+    # B  : input projection matrix,        shape (d, d_state)
+    # C  : output projection matrix,       shape (d_state, d)
+    # D  : direct path matrix,             shape (d, d)
+    # dt : input-dependent discretization, shape (B, L)
+    B_size, L, d = x.shape
+    # 1. Input-dependent discretization (selective scan)
+    A_disc = torch.matrix_exp(A.unsqueeze(0) * dt.unsqueeze(-1).unsqueeze(-1))
+    B_disc = B.unsqueeze(0) * dt.unsqueeze(-1).unsqueeze(-1)
+    # 2. Build length-L convolution kernel
+    kernel = compute_ssm_kernel(A_disc, B_disc, C, L)
+    # 3. FFT convolution: O(L log L) instead of O(L^2)
+    x_fft   = fft.rfft(x,      n=2*L, dim=1)
+    k_fft   = fft.rfft(kernel, n=2*L, dim=1)
+    y       = fft.irfft(x_fft * k_fft, n=2*L, dim=1)[:, :L, :]
+    # 4. Direct path D + add
+    return y + D @ x
+\end{lstlisting}
+
 \section{Methods M5 and M6: Uncertainty-Calibrated Inference on Graphs}
 \label{sec:stochastic}
 %%=====================================================================
@@ -1032,6 +1106,14 @@ Initialise perturbation network parameters $\psi$\;
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
+\caption{Architectural diagram of Models \textsf{M5: Stochastic Transformer} and \textsf{M6: UC-HGP}~--- variational Bayesian attention (M5) with hierarchical Gaussian processes (M6) for epistemic/aleatoric uncertainty decomposition and uncertainty-guided alert triage.}
+\label{fig:m5m6_stoch_trans_arch_methods}
+\end{figure}
+
 \section{Forward-Compatible Detection Under Protocol Regime Change}
 \label{sec:pq_idps}
 %%=====================================================================
@@ -1096,6 +1178,14 @@ The robustness guarantee of the detection framework under the new protocol regim
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
+\caption{Architectural diagram of the \emph{Multi-Agent PQC-IDS module}~--- the forward-compatible intrusion-detection architecture for post-quantum protocol regime transitions, with protocol-specific encoders for lattice-, code-, and hash-based protocols and cross-attention fusion.}
+\label{fig:pq_idps_arch_methods}
+\end{figure}
+
 \section{Model M7: Game-Theoretic Certification and Unified Framework}
 \label{sec:game}
 %%=====================================================================
@@ -1257,6 +1347,14 @@ Set learning rates $\eta_i = 1/(L_i + \sum_j L_{ij})$ for each component\;
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_game_theoretical_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M7: Game-Theoretic Certification}~--- the unified framework modelling the defender--adversary interaction as a strategic game with Stackelberg equilibrium, coupling Models M1--M6 through consistency regularisation.}
+\label{fig:m7_game_arch_methods}
+\end{figure}
+
 \section{Systematisation of Quality Metrics for Hybrid IDPS}
 \label{sec:metrics_taxonomy}
 %%=====================================================================

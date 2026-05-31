@@ -545,6 +545,14 @@ R(T) = \max_{f^*}\sum_{t=1}^{T}\calL(f_{\theta_t},y_t) - \sum_{t=1}^{T}\calL(f^*
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
+\caption{Принципиальная архитектура модели~\textsf{М1: CT-TGNN}~--- темпоральной графовой нейронной сети непрерывного времени с мультимасштабными ветвями ОДУ и адаптивной пакетной нормализацией. Применение модели к защите сетевого трафика с конкретными значениями постоянных времени и гиперпараметров рассматривается в \S\ref{sec:method_instantiation} Главы~\ref{ch:adaptation}.}
+\label{fig:m1_ct_tgnn_arch_methods}
+\end{figure}
+
 \section{Модель М2: FedLLM-API --- Федеративная оптимизация графов с приватностью}
 \label{sec:fedllm}
 %%=====================================================================
@@ -672,6 +680,14 @@ p_{\mathrm{final}}
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_fedllm_api_architecture.pdf}
+\caption{Принципиальная архитектура модели~\textsf{М2: FedLLM-API}~--- федеративного оптимизатора с византийско-устойчивой агрегацией, дифференциальной приватностью через калиброванный шум и выравниванием распределений по принципу оптимального транспорта Вассерштейна, интегрированного с большой языковой моделью для zero-shot-обнаружения новых категорий угроз.}
+\label{fig:m2_fedllm_arch_methods}
+\end{figure}
+
 \section{Модель М3: TripleE-TGNN --- Многоуровневые темпоральные вложения графов}
 \label{sec:triple_e}
 %%=====================================================================
@@ -821,6 +837,14 @@ p_{\mathrm{final}}
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
+\caption{Принципиальная архитектура модели~\textsf{М3: TripleE-TGNN}~--- тройного вложения для многоуровневого темпорального представления графов с двойным временно-пространственным вниманием и упругой консолидацией весов для предотвращения катастрофического забывания.}
+\label{fig:m3_triplee_arch_methods}
+\end{figure}
+
 \section{Модель М4: MambaShield --- Вывод на основе пространства состояний с устойчивостью к отравлению}
 \label{sec:mamba}
 %%=====================================================================
@@ -920,6 +944,55 @@ y(t) = \bC\,\bh(t) + \bD\,u(t),
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_mambashield_architecture.pdf}
+\caption{Принципиальная архитектура модели~\textsf{М4: MambaShield}~--- селективной модели пространства состояний со сложностью вывода $\mathcal{O}(L\log L)$ через свёртки на основе быстрого преобразования Фурье, дополненной прогрессивной состязательной дистилляцией и PAC-байесовскими сертификатами обобщения.}
+\label{fig:m4_mambashield_arch_methods}
+\end{figure}
+
+Для иллюстрации операционной семантики Алгоритма~\ref{alg:mamba} ниже
+приведён короткий программный фрагмент на языке Python, реализующий
+ядро селективной свёртки $\mathcal{O}(L\log L)$ модели~\textsf{М4}
+через быстрое преобразование Фурье (листинг~\ref{lst:mamba_fft}).
+Полная реализация модели в составе библиотеки \textsf{robustnn-core}
+доступна в открытом репозитории платформы~\textsf{RobustIDPS.ai}
+(\url{https://github.com/rogerpanel/robustidps.ai}).
+
+\begin{lstlisting}[language=Python,caption={Ядро селективной свёртки
+$\mathcal{O}(L\log L)$ модели~\textsf{М4: MambaShield} через БПФ
+(фрагмент референсной реализации Phase~A
+\texttt{robustnn-core/mamba\_kernel.py}).},
+label={lst:mamba_fft},basicstyle=\ttfamily\footnotesize,
+keywordstyle=\bfseries,commentstyle=\itshape\color{gray!60!black},
+breaklines=true,frame=single,numbers=left,numberstyle=\tiny]
+import torch
+import torch.fft as fft
+
+def mamba_selective_fft(x, A, B, C, D, dt):
+    # Selective state-space convolution with O(L log L) complexity
+    # via FFT, for the M4 MambaShield model.
+    # x  : input sequence,                 shape (B, L, d)
+    # A  : state transition matrix,        shape (d_state, d_state)
+    # B  : input projection matrix,        shape (d, d_state)
+    # C  : output projection matrix,       shape (d_state, d)
+    # D  : direct path matrix,             shape (d, d)
+    # dt : input-dependent discretization, shape (B, L)
+    B_size, L, d = x.shape
+    # 1. Input-dependent discretization (selective scan)
+    A_disc = torch.matrix_exp(A.unsqueeze(0) * dt.unsqueeze(-1).unsqueeze(-1))
+    B_disc = B.unsqueeze(0) * dt.unsqueeze(-1).unsqueeze(-1)
+    # 2. Build length-L convolution kernel
+    kernel = compute_ssm_kernel(A_disc, B_disc, C, L)
+    # 3. FFT convolution: O(L log L) instead of O(L^2)
+    x_fft   = fft.rfft(x,      n=2*L, dim=1)
+    k_fft   = fft.rfft(kernel, n=2*L, dim=1)
+    y       = fft.irfft(x_fft * k_fft, n=2*L, dim=1)[:, :L, :]
+    # 4. Direct path D + add
+    return y + D @ x
+\end{lstlisting}
+
 \section{Методы М5 и М6: Вывод с калиброванной неопределённостью на графах}
 \label{sec:stochastic}
 %%=====================================================================
@@ -1019,6 +1092,14 @@ U_{\mathrm{ale}}
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
+\caption{Принципиальная архитектура моделей~\textsf{М5: Stochastic Transformer} и~\textsf{М6: UC-HGP}~--- вариационного байесовского внимания (М5) с иерархическим гауссовским процессом (М6) для декомпозиции эпистемической и алеаторной неопределённости и сортировки оповещений по уровню эпистемической неопределённости.}
+\label{fig:m5m6_stoch_trans_arch_methods}
+\end{figure}
+
 \section{Прямо совместимое обнаружение при смене протокольного режима}
 \label{sec:pq_idps}
 %%=====================================================================
@@ -1083,6 +1164,14 @@ p(\mathrm{class},\mathrm{protocol})
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
+\caption{Принципиальная архитектура \emph{мультиагентного PQC-IDS-модуля}~--- прямо-совместимой системы обнаружения вторжений при смене протокольного режима, с протокол-специфичными кодировщиками для решёточных, кодовых и хэш-протоколов и слиянием через кросс-внимание.}
+\label{fig:pq_idps_arch_methods}
+\end{figure}
+
 \section{Модель М7: Теоретико-игровая сертификация и единая система}
 \label{sec:game}
 %%=====================================================================
@@ -1244,6 +1333,14 @@ U_d(c,a) - \kappa\,U_{\mathrm{epi}} & \text{если}\;U_{\mathrm{epi}}<\tau,\\
 
 
 %%=====================================================================
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_game_theoretical_architecture.pdf}
+\caption{Принципиальная архитектура модели~\textsf{М7: теоретико-игровой сертификации}~--- единой системы, моделирующей взаимодействие защитника и противника как стратегическую игру с равновесием Штакельберга, объединяющая модели~М1--М6 через регуляризацию согласованности.}
+\label{fig:m7_game_arch_methods}
+\end{figure}
+
 \section{Систематизация метрик оценки качества Hybrid IDPS}
 \label{sec:metrics_taxonomy}
 %%=====================================================================
