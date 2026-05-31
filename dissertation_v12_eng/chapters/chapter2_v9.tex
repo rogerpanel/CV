@@ -995,7 +995,16 @@ The full training loss combines five terms,
 + \lambda_5\calL_{\mathrm{reg}},
 \label{eq:stoch_total_loss}
 \end{equation}
-where $\calL_{\mathrm{task}}=\E_{(\bx,y)}[-\log p_\theta(y|\bx)]$ is the classification loss, $\calL_{\mathrm{KL}}~\cite{Blundell2015}=\mathrm{KL}(q_\phi(\theta)\|p(\theta))$ regularises the variational posterior, $\calL_{\mathrm{adv}}=\E_{(\bx,y)}\E_{\bdelta\sim q_\psi}[-\log p_\theta(y|\bx{+}\bdelta)]$ enforces adversarial robustness, $\calL_{\mathrm{calib}}=\mathrm{ECE}~\cite{Guo2017,Naeini2015}(\{(p_\theta(\hat{y}|\bx_i),\mathbf{1}[\hat{y}=y_i])\}_i)$ penalises miscalibration, and $\calL_{\mathrm{reg}}=\|\theta\|_2^2$ controls weight magnitude.
+where the individual loss components are defined as follows:
+$\calL_{\mathrm{task}}=\E_{(\bx,y)}[-\log p_\theta(y|\bx)]$ is the
+classification loss;
+$\calL_{\mathrm{KL}}~\cite{Blundell2015}=\mathrm{KL}(q_\phi(\theta)\|p(\theta))$
+regularises the variational posterior;
+$\calL_{\mathrm{adv}}=\E_{(\bx,y)}\E_{\bdelta\sim q_\psi}[-\log p_\theta(y|\bx{+}\bdelta)]$
+enforces adversarial robustness;
+$\calL_{\mathrm{calib}}=\mathrm{ECE}~\cite{Guo2017,Naeini2015}(\{(p_\theta(\hat{y}|\bx_i),\mathbf{1}[\hat{y}=y_i])\}_i)$
+penalises miscalibration; and $\calL_{\mathrm{reg}}=\|\theta\|_2^2$
+controls weight magnitude.
 
 \begin{algorithm}[htbp]
 \caption{Stochastic Transformer: Variational Bayesian Training with Adversarial Robustness}\label{alg:stoch_trans}

@@ -396,21 +396,79 @@ In addition to these mathematical methods, the research applies standard practic
 \section*{Scientific Novelty}
 %%---------------------------------------------------------------------
 
-The scientific novelty of this work consists of seven contributions, each scoped to a specific model or algorithm developed by the author.
+The scientific novelty of this work consists of seven contributions
+to the theory and practice of \emph{Hybrid~IDPS systems}, each
+formulated as a principle, concept, or theory established by the
+author and systematically addressing one or more of the
+invariants~P1--P6 from~\S\ref{subsec:six_properties}.
 
-\noindent 1.\quad \textbf{CT-TGNN} --- the \emph{first} continuous-time temporal GNN unifying graph message passing with neural ODE dynamics on evolving topologies, with $O(1)$-memory adjoint training and Lipschitz-certified robustness bounds. No prior work derives certified robustness from the smoothness of the governing differential equation on temporally evolving graph topologies.
+\noindent 1.\quad \textbf{Model M1 (CT-TGNN, SDE-TGNN).}
+\emph{The first} principle of certified robustness for the
+\emph{learnable detector of a Hybrid~IDPS system} based on
+continuous-time models: the dynamics of graph node
+representations, governed by differential equations with bounded
+smoothness, yield provable bounds on output sensitivity to
+perturbations of input data and structure
+(invariant~P1, eq.~\eqref{eq:adv_resilient_property}). No prior
+work derives certified robustness of the system from the
+smoothness of the governing differential equation on temporally
+evolving graph topologies.
 
-\noindent 2.\quad \textbf{FedLLM-API} --- an \emph{original} Byzantine-resilient federated graph optimiser combining trimmed-mean aggregation with $(\varepsilon{=}0.85,\,\delta{=}10^{-5})$ differential privacy and Wasserstein OT alignment, with proven $\mathcal{O}(1/\sqrt{T})$ convergence under 30\% corruption. No prior algorithm jointly guarantees corruption tolerance, privacy protection, and distributional alignment for graph-structured data.
+\noindent 2.\quad \textbf{Model M2 (FedLLM-API).} An \emph{original}
+theory of joint Byzantine resilience, formal privacy, and
+distributional alignment for the training of a \emph{Hybrid~IDPS
+system} on disjoint data fragments owned by different
+organisations without raw-data sharing (invariant~P4). No prior
+algorithm jointly guarantees corruption tolerance of the system,
+privacy protection, and distributional alignment for heterogeneous
+fragments.
 
-\noindent 3.\quad \textbf{TripleE-TGNN} --- a \emph{novel} multi-level temporal graph embedding learning service/trace/node representations via dual attention with elastic weight consolidation against catastrophic forgetting. No prior architecture learns multi-level temporal graph representations while simultaneously preventing forgetting.
+\noindent 3.\quad \textbf{Model M3 (TripleE-TGNN).} A \emph{novel}
+concept of multi-level data representation in a \emph{Hybrid~IDPS
+system}, in which the learnable models simultaneously learn
+structure across several semantic levels (service / trace / node)
+with a mechanism to prevent the loss of previously acquired
+patterns as new data arrive (invariant~P6). No prior architecture
+learns multi-level temporal representations while simultaneously
+preventing forgetting.
 
-\noindent 4.\quad \textbf{MambaShield} --- a \emph{new} selective state-space architecture reducing complexity from $\mathcal{O}(L^{2})$ to $\mathcal{O}(L\log L)$ via FFT convolutions, with progressive adversarial distillation and PAC-Bayesian certificates. Prior structured state-space models have not been adapted to graph data with formal robustness guarantees.
+\noindent 4.\quad \textbf{Model M4 (MambaShield).} A \emph{new}
+approach to efficient inference of the \emph{Hybrid~IDPS detector}
+based on selective state-space models, reducing computational
+complexity from $\mathcal{O}(L^{2})$ to $\mathcal{O}(L\log L)$
+via FFT convolutions while preserving resilience to training-data
+poisoning (invariant~P3, eq.~\eqref{eq:efficiency_property}).
+Prior structured state-space models have not been adapted to the
+graph-structured data of a Hybrid~IDPS with formal robustness
+guarantees.
 
-\noindent 5.\quad \textbf{Stochastic Transformer + UC-HGP} --- the \emph{first} uncertainty-calibrated GNN inference combining variational Bayesian attention with hierarchical Gaussian processes for epistemic--aleatoric decomposition. No prior work integrates these two uncertainty mechanisms for graph-structured online adaptation.
+\noindent 5.\quad \textbf{Models M5--M6 (Stochastic Transformer +
+UC-HGP).} \emph{The first} integrated theory of calibrated
+uncertainty for a \emph{Hybrid~IDPS system}, allowing the
+decomposition of error sources into reducible (epistemic) and
+irreducible (aleatoric) components and the systematic detection of
+the moment when the detector ceases to be reliable
+(invariant~P5, eq.~\eqref{eq:calibration_property}). No prior work
+integrates these two uncertainty mechanisms for online adaptation
+of a Hybrid~IDPS.
 
-\noindent 6.\quad \textbf{Game-theoretic certification} --- an \emph{original} robustness certification via Stackelberg equilibria with no-regret multiplicative weights ($R(T)\!\leq\!\sqrt{T\log|S|}$), coupling all seven methods through consistency regularisation. No prior unified framework issues provable guarantees against all four perturbation types simultaneously.
+\noindent 6.\quad \textbf{Model M7 (Unified Certification).} An
+\emph{original} concept of unified robustness certification of a
+\emph{Hybrid~IDPS system}, in which the defender--adversary
+interaction is modelled as a strategic game with a provably
+optimal selection strategy, coupling all developed
+Models~M1--M6 into an integrated system through consistency
+regularisation. No prior unified Hybrid~IDPS framework issues
+provable guarantees against all four perturbation types
+(P1--P4) simultaneously.
 
-\noindent 7.\quad \textbf{CyberSecLLM} --- a \emph{novel} domain-specific foundation model with ODE-augmented state-space blocks, an 11-task benchmark, and million-token graph event sequence processing in 2.3\,s. These contributions are distilled into the following main scientific results submitted for defence.
+\noindent 7.\quad \textbf{CyberSecLLM foundation model.} A \emph{novel}
+theory of domain-specific foundation modelling on graph
+structures, providing the Hybrid~IDPS system with zero-shot
+recognition of previously unseen threat categories and forward
+compatibility with evolving protocols including post-quantum
+regimes. These contributions are distilled into the following
+main scientific results submitted for defence.
 
 
 %%---------------------------------------------------------------------
