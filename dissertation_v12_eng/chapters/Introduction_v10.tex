@@ -81,7 +81,31 @@ foundation model~CyberSecLLM (property~P6). The term
 \emph{Hybrid~IDPS} in this work therefore denotes not a conventional
 engineering assembly of three detector classes but a \emph{unified
 AI-native system} in which learnable models are systematically
-integrated into all three detection channels.
+integrated into all three detection channels. A conceptual diagram
+of the Hybrid~IDPS system in three aspects~--- (a) the three-channel
+detection core with the AI/ML engine; (b) the protected application
+sectors; and (c) the attack vectors targeting the canonical
+components of the system~--- is shown in
+Fig.~\ref{fig:hybrid_idps_overview}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{figures/fig_nidps_v2.png}
+\caption{Conceptual diagram of the Hybrid~IDPS system in three
+aspects. \textbf{Top}~--- the architectural core (Hybrid~NIDPS
+AI-Native Core) with three-channel detection (signature, anomaly,
+protocol framing), the AI/ML engine as the augmenting layer, the
+decision and response block, and the protected systems.
+\textbf{Middle}~--- the protected application sectors: network
+traffic, UAVs/UAS, healthcare records, autonomous vehicles, and
+banking/fintech.
+\textbf{Bottom}~--- the attack surface against the canonical
+components: attacker → attack vectors (spoofing, jamming,
+injection, malware, data theft, DoS/DDoS) → targets (signature,
+anomaly, protocol framing) → impacts (bypass detection, disrupt
+operations, data compromise).}
+\label{fig:hybrid_idps_overview}
+\end{figure}
 
 A systematic analysis of existing Hybrid~IDPS systems, conducted
 in Chapter~\ref{ch:literature}, identifies four interrelated
