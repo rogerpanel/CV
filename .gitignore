@@ -17,3 +17,6 @@ avtoreferat_v12_eng/*.pdf
 slides_v12/*.pdf
 dissertation_v12/main_RU.pdf
 dissertation_v12_eng/main_Eng.pdf
+
+# Transient Overleaf delivery bundles (rebuildable from .tex + figures/)
+*_overleaf.zip
