@@ -1,0 +1,330 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[russian]{babel}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Remove page numbers
+\pagestyle{plain}
+
+% Adjust spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+% Compact metadata block for each publication
+\newcommand{\pubmeta}[3]{%
+  \par\smallskip\textit{\small\textbf{Статус:} #1; \textbf{Индексирование:} #2; \textbf{Положения, выносимые на защиту:} #3.}\par}
+
+\begin{document}
+
+% Header
+\begin{center}
+{\LARGE \textbf{Список опубликованных научных трудов по теме диссертации}}\\[0.4em]
+{\large Анаэдевха Роджер Ник (A23 -- 501)}\\[0.3em]
+Аспирант, кафедра кибернетики № 22, \\ Институт интеллектуальных кибернетических систем (ИИКС)\\
+Национальный исследовательский ядерный университет <<МИФИ>>, г.~Москва\\[0.3em]
+\textit{Тема диссертации:} <<Разработка состязательных устойчивых моделей на основе искусственного интеллекта в гибридных системах обнаружения и предотвращения вторжений для сетевой безопасности>>\\[0.3em]
+ORCID: \href{https://orcid.org/0000-0003-3649-1561}{0000-0003-3649-1561} ${\cdot}$
+\href{https://scholar.google.com/citations?user=w6ryqsEAAAAJ&hl=en}{Google Scholar} ${\cdot}$
+\href{https://github.com/rogerpanel/}{Github.com/rogerpanel/}\\
+\href{mailto:ar006@campus.mephi.ru}{ar006@campus.mephi.ru} ${\cdot}$ \href{mailto:rogernickanaedevha@gmail.com}{rogernickanaedevha@gmail.com}
+\end{center}
+
+\vspace{-0.4cm}
+
+%%---------------------------------------------------------------------
+\section*{Условные обозначения положений, выносимых на защиту}
+%%---------------------------------------------------------------------
+
+В соответствии с разделом <<Основные научные результаты, выносимые на защиту>> диссертации:
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item \textbf{Положение №1} --- модели М1 (CT-TGNN, SDE-TGNN) для сертифицированной динамики обучаемого детектора Hybrid~IDPS (инвариант P1).
+  \item \textbf{Положение №2} --- алгоритм М2 (FedLLM-API) для распределённого обучения Hybrid~IDPS с сохранением приватности (инвариант P4).
+  \item \textbf{Положение №3} --- архитектура М3 (TripleE-TGNN) для многоуровневого представления данных в Hybrid~IDPS (инвариант P6).
+  \item \textbf{Положение №4} --- архитектура М4 (MambaShield) для эффективного вывода Hybrid~IDPS (инвариант P3).
+  \item \textbf{Положение №5} --- модели М5--М6 (стохастический трансформер и UC-HGP) для адаптации Hybrid~IDPS к дрейфу с учётом неопределённости (инварианты P5, P6).
+  \item \textbf{Положение №6} --- единая система сертификации Hybrid~IDPS (М7), интегрирующая модели М1--М6 через теоретико-игровые равновесия Штакельберга и валидированная на сетевом трафике (Глава~5) и на бортовых системах БПЛА (Глава~6).
+\end{itemize}
+
+\vspace{-0.3cm}
+
+%%---------------------------------------------------------------------
+\section*{1. Опубликованные журнальные статьи}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} <<MambaShield: Selective State-Space Models for Poisoning-Resilient Sequential Modeling.>> \textit{Expert Systems with Applications}, Elsevier. DOI: \href{https://doi.org/10.1016/j.eswa.2026.131175}{10.1016/j.eswa.2026.131175}. ISSN 0957-4174.
+\pubmeta{опубликована}{Scopus Q1, WoS Core (SCIE), ВАК (К1), РИНЦ; IF\,$\approx$\,7.5 (JCR)}{№4 (М4 -- MambaShield)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<Uncertainty-calibrated hierarchical Gaussian processes for intrusion detection with multi-scale temporal modeling.>> \textit{Neurocomputing}, Elsevier, p.\,133105. DOI: \href{https://doi.org/10.1016/j.neucom.2026.133105}{10.1016/j.neucom.2026.133105}. ISSN 0925-2312.
+\pubmeta{опубликована}{Scopus Q1, WoS Core (SCIE), ВАК (К1), РИНЦ; IF\,$\approx$\,5.5 (JCR)}{№5 (М5--М6 -- стохастический трансформер и UC-HGP)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<Temporal Adaptive Neural Ordinary Differential Equations with Deep Spatio-Temporal Point Processes for Real-Time Network Intrusion Detection.>> \textit{Complex and Intelligent Systems}, Springer. DOI: \href{https://doi.org/10.1007/s40747-026-02291-7}{10.1007/s40747-026-02291-7}. ISSN 2199-4536.
+\pubmeta{опубликована}{Scopus Q1, WoS Core (SCIE), ВАК (К1), РИНЦ; IF\,$\approx$\,5.0 (JCR)}{№1 (М1 -- CT-TGNN, SDE-TGNN)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2024).} <<Improved Robust Adversarial Model against Evasion Attacks on Intrusion Detection Systems.>> \textit{Optical Memory and Neural Networks (Information Optics)}, Vol.\,33, Suppl.\,3, pp.\,S414--S423, Springer. DOI: \href{https://doi.org/10.3103/S1060992X24700681}{10.3103/S1060992X24700681}. ISSN 1060-992X.
+\pubmeta{опубликована}{Scopus, ВАК (К2), РИНЦ}{№6 (М7 -- единая система сертификации, базовая постановка состязательной устойчивости)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{2. Опубликованные труды конференций}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2025).} <<Stochastic Multimodal Transformer with Uncertainty Quantification for Robust Network Intrusion Detection.>> In: \textit{Advances in Neural Computation, Machine Learning, and Cognitive Research IX. NEUROINFORMATICS 2025.} Studies in Computational Intelligence, vol.\,1241, Springer, Cham. DOI: \href{https://doi.org/10.1007/978-3-032-07690-8_35}{10.1007/978-3-032-07690-8\_35}. ISBN 978-3-032-07689-2.
+\pubmeta{опубликована}{Scopus (Springer SCI), РИНЦ}{№5 (М5 -- стохастический мультимодальный трансформер с квантификацией неопределённости)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2025).} <<Integrated Deep Q-Networks and Actor-Critic Models for Enhanced Poisoning Attack Detection in Network Intrusion Detection Systems.>> In: \textit{2025 Conference of Young Researchers in Electrical and Electronic Engineering (ElCon)}, ETU-LETI, Saint-Petersburg, Russia. IEEE Xplore, vol.\,33, suppl.\,3, pp.\,556--567.
+\pubmeta{опубликована}{IEEE Xplore, Scopus, РИНЦ}{№6 (М7 -- теоретико-игровая и подкреплённо-обучаемая компонента реагирования)}
+
+\item \textbf{Anaedevha, R.N. (2024).} <<Application of Machine Learning Models for Device Identification in Wireless Network Traffic.>> In: \textit{2024 Conference of Young Researchers in Electrical and Electronic Engineering (ElCon)}, Saint-Petersburg, Russia. IEEE Xplore, pp.\,104--110. DOI: \href{https://doi.org/10.1109/ElCon61730.2024.10468413}{10.1109/ElCon61730.2024.10468413}.
+\pubmeta{опубликована}{IEEE Xplore, Scopus, РИНЦ}{№1 (М1 -- базовая постановка задачи извлечения признаков для NIDPS-детектора)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{3. Статьи, принятые к публикации (в печати)}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} <<Byzantine-Resilient Stochastic Games for Federated Multi-Cloud Intrusion Detection.>> \textit{Complex and Intelligent Systems}, Springer. Manuscript ID: CAIS-D-25-01702. \textbf{Принята к публикации.}
+\pubmeta{принята к публикации (в печати)}{Scopus Q1, WoS Core (SCIE), ВАК (К1), РИНЦ; IF\,$\approx$\,5.0 (JCR)}{№2 и №6 (М2 -- византийско-устойчивая федеративная агрегация; М7 -- равновесия Штакельберга)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} <<Stochastic PAC-Bayesian Transformers for Network Intrusion Detection and Natural Language Processing Applications.>> \textit{Knowledge and Information Systems}, Springer. Submission ID: 166534b5-ab5b-4c7a-8acc-d08d7a2ccba1.
+\pubmeta{на рецензировании (Springer KAIS)}{Scopus Q1, WoS Core (SCIE), ВАК (К1), РИНЦ; IF\,$\approx$\,2.7 (JCR)}{№4 и №5 (М4 -- PAC-байесовские сертификаты обобщения; М5 -- стохастический трансформер)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{4. Ключевые статьи на рецензировании в IEEE Transactions}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2026).} <<TrippleE-TGNN: Triple-Embedding Temporal Graph Neural Networks for Multi-Granularity Microservices Security.>> \textit{IEEE Transactions on Dependable and Secure Computing}. Manuscript ID: TDSC-2025-12-2593. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784420.01274411/v1}{10.36227/techrxiv.176784420.01274411/v1}.
+\pubmeta{на рецензировании (первый этап)}{Scopus Q1, WoS Core (SCIE), ВАК (К1); IF\,$\approx$\,7.0 (JCR)}{№3 (М3 -- TripleE-TGNN с двойным вниманием и упругой консолидацией весов)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<PQ-IDPS: Adversarially Robust Intrusion Detection for Post-Quantum Encrypted Traffic with Hybrid Classical-Quantum Machine Learning.>> \textit{IEEE Transactions on Neural Networks and Learning Systems}. Manuscript ID: TNNLS-2025-P-45911. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176836457.72974723/v1}{10.36227/techrxiv.176836457.72974723/v1}.
+\pubmeta{на рецензировании (первый этап)}{Scopus Q1, WoS Core (SCIE), ВАК (К1); IF\,$\approx$\,10.4 (JCR)}{№1 и №6 (М1 -- темпоральная динамика для зашифрованного трафика; М7 -- Multi-Agent PQC-IDS)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<FedLLM-API: Privacy-Preserving Large Language Model Federation for Zero-Day API Threat Detection Across Organizational Boundaries.>> \textit{IEEE Transactions on Information Forensics and Security}. Manuscript ID: T-IFS-25044-2025. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176834452.27153586/v1}{10.36227/techrxiv.176834452.27153586/v1}.
+\pubmeta{на рецензировании (первый этап)}{Scopus Q1, WoS Core (SCIE), ВАК (К1); IF\,$\approx$\,6.8 (JCR)}{№2 (М2 -- FedLLM-API: византийско-устойчивая агрегация, дифференциальная приватность, оптимальный транспорт)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2026).} <<CT-TGNN: Continuous-Time Temporal Graph Neural Networks for Real-Time Threat Propagation Analysis in Encrypted Zero-Trust Microservices.>> \textit{IEEE Transactions on Services Computing}. Manuscript ID: TSC-2025-12-1636. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784247.72825467/v1}{10.36227/techrxiv.176784247.72825467/v1}.
+\pubmeta{на рецензировании (первый этап)}{Scopus Q1, WoS Core (SCIE), ВАК (К1); IF\,$\approx$\,5.5 (JCR)}{№1 (М1 -- CT-TGNN с нейронными ОДУ и анализом Липшица)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<Continual Learning and Constrained Reinforcement Learning for Adversarially Robust Network Intrusion Detection and Autonomous Response.>> \textit{Engineering Applications of Artificial Intelligence}, Elsevier. Manuscript ID: EMI-S-26-13940.
+\pubmeta{на рецензировании}{Scopus Q1, WoS Core (SCIE), ВАК (К1); IF\,$\approx$\,7.8 (JCR)}{№3 и №6 (М3 -- непрерывное обучение / EWC; М7 -- RL-реагирование с ограничениями)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<Hybrid Spatial-Temporal Deep Learning for Privacy-Preserving Encrypted Traffic Intrusion Detection.>> \textit{IEEE Access}. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176799976.66603504/v1}{10.36227/techrxiv.176799976.66603504/v1}.
+\pubmeta{на рецензировании}{Scopus Q2, WoS Core (SCIE); IF\,$\approx$\,3.4 (JCR)}{№3 и №5 (М3 -- пространственно-темпоральное представление; М5 -- стохастический вывод для зашифрованного трафика)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} <<Differentially Private Optimal Transport for Multi-Cloud Intrusion Detection: A Privacy-Preserving Federated Domain Adaptation Framework.>> \textit{IEEE Access}. Препринт: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784370.01761939/v1}{10.36227/techrxiv.176784370.01761939/v1}.
+\pubmeta{на рецензировании}{Scopus Q2, WoS Core (SCIE); IF\,$\approx$\,3.4 (JCR)}{№2 (М2 -- дифференциально-приватный оптимальный транспорт для гетерогенных фрагментов)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{5. Прочие статьи для конференций (на рецензировании)}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Taremwa M., Anaedevha R.N., Trofimov A.G. (2025).} <<Robust Audio-Image Steganography using Cross-Modal Based Transformer Models.>> \textit{Journal of Computer Virology and Hacking Techniques}, Springer. Препринт: Research Square, DOI: \href{https://doi.org/10.21203/rs.3.rs-5463235/v1}{10.21203/rs.3.rs-5463235/v1}.
+\pubmeta{на рецензировании}{Scopus Q3 (Springer), РИНЦ}{№3 и №5 (кросс-доменный перенос архитектуры М3 и стохастического трансформера М5 на смежную предметную область)}
+
+\end{enumerate}
+
+\vspace{-0.3cm}
+
+%%---------------------------------------------------------------------
+\section*{6. Итоговая сводка публикаций по типам и уровням}
+%%---------------------------------------------------------------------
+
+\textbf{Всего публикаций по теме диссертации: 17}, из них:
+
+\begin{longtable}{p{0.62\textwidth} >{\centering\arraybackslash}p{0.10\textwidth} >{\centering\arraybackslash}p{0.20\textwidth}}
+\toprule
+\textbf{Категория} & \textbf{Кол-во} & \textbf{Доля от 17} \\
+\midrule
+\endhead
+
+\multicolumn{3}{l}{\textit{По статусу публикации}} \\
+\midrule
+Опубликованные журнальные статьи & 4 & 23{,}5\% \\
+Опубликованные труды конференций & 3 & 17{,}6\% \\
+Принято к публикации (в печати) & 1 & 5{,}9\% \\
+На рецензировании в журналах из перечня IEEE Transactions / Elsevier Q1 / Springer Q1 & 8 & 47{,}1\% \\
+На рецензировании в Springer Scopus конференционно-журнальных изданиях & 1 & 5{,}9\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{По индексированию (среди опубликованных и принятых, 8~работ)}} \\
+\midrule
+Scopus Q1 (журнальные статьи) & 4 & --- \\
+Scopus Q2--Q4 / Scopus без квартилей (журнальные и сборники) & 2 & --- \\
+IEEE Xplore конференционные труды (Scopus) & 2 & --- \\
+\midrule
+
+\multicolumn{3}{l}{\textit{По индексированию (с учётом находящихся на рецензировании, 17~работ)}} \\
+\midrule
+Scopus Q1, WoS Core (SCIE), ВАК (К1) & 10 & 58{,}8\% \\
+Scopus Q2, WoS Core (SCIE) & 2 & 11{,}8\% \\
+Scopus / ВАК (К2) / РИНЦ (журнал) & 1 & 5{,}9\% \\
+Springer Scopus сборники конференций & 2 & 11{,}8\% \\
+IEEE Xplore конференционные труды (Scopus) & 2 & 11{,}8\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{По авторству}} \\
+\midrule
+Первый автор & 16 & 94{,}1\% \\
+Соавтор (не первый) & 1 & 5{,}9\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{По требованиям ВАК / Положения о присуждении учёных степеней}} \\
+\midrule
+Журнальные публикации в изданиях, входящих в перечень ВАК и в международные базы Scopus/WoS & 5 (опубликованных и принятых) & --- \\
+Из них в изданиях категории К1 ВАК и Q1 Scopus & 4 (опубл.\ и принятых) + 7 (на рецензировании) & --- \\
+\bottomrule
+\end{longtable}
+
+\textbf{Соответствие требованиям пп.\,11--13 Положения о присуждении учёных степеней (постановление Правительства РФ от 24.09.2013 \No842):} требование о минимальном числе публикаций в рецензируемых научных изданиях \textbf{выполнено и существенно перевыполнено} (фактически 4~опубликованные журнальные статьи в Q1 Scopus / WoS Core + 1~принятая к публикации; рекомендованный минимум для технических наук --- 3).
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{7. Сопоставление публикаций с положениями, выносимыми на защиту}
+%%---------------------------------------------------------------------
+
+Каждое из 6~положений, выносимых на защиту, подтверждено не менее чем одной опубликованной или принятой к публикации работой, и дополнительно усилено работами, находящимися на рецензировании:
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.40\textwidth} >{\raggedright\arraybackslash}p{0.32\textwidth}}
+\toprule
+\textbf{Положение} & \textbf{Опубликованные / принятые работы} & \textbf{Работы на рецензировании} \\
+\midrule
+\endhead
+
+\textbf{№1} (М1: CT-TGNN, SDE-TGNN) &
+[3]~\textit{Complex \& Intelligent Systems}, 2026 \newline
+[7]~ElCon 2024 (базовая постановка) &
+[12]~IEEE TNNLS (PQ-IDPS) \newline
+[14]~IEEE TSC (CT-TGNN microservices) \\
+\midrule
+
+\textbf{№2} (М2: FedLLM-API) &
+[8]~\textit{Complex \& Intelligent Systems}, 2025, \textbf{принята} (Byzantine-Resilient Stochastic Games) &
+[13]~IEEE TIFS (FedLLM-API) \newline
+[16]~IEEE Access (DP-OT) \\
+\midrule
+
+\textbf{№3} (М3: TripleE-TGNN) &
+--- \emph{(подтверждается заявленными работами на рецензировании)} &
+[11]~IEEE TDSC (TripleE-TGNN) \newline
+[10]~Elsevier EAAI (Continual Learning) \newline
+[15]~IEEE Access (Hybrid Spatial-Temporal) \\
+\midrule
+
+\textbf{№4} (М4: MambaShield) &
+[1]~\textit{Expert Systems with Applications}, 2025 &
+[9]~Springer KAIS (PAC-Bayes) \\
+\midrule
+
+\textbf{№5} (М5--М6: стохастический трансформер, UC-HGP) &
+[2]~\textit{Neurocomputing}, 2026 \newline
+[5]~NEUROINFORMATICS 2025 (Springer) &
+[9]~Springer KAIS \newline
+[15]~IEEE Access \newline
+[17]~Springer JCVHT (кросс-доменный перенос) \\
+\midrule
+
+\textbf{№6} (М7: единая система сертификации, теоретико-игровая) &
+[4]~OMNN 2024 (базовая состязательная устойчивость) \newline
+[6]~ElCon 2025 (RL-реагирование) \newline
+[8]~\textbf{принята} (Stackelberg games) &
+[10]~Elsevier EAAI \newline
+[12]~IEEE TNNLS (Multi-Agent PQC-IDS) \\
+\bottomrule
+\end{longtable}
+
+\textit{Вывод:} каждое из шести положений, выносимых на защиту, подтверждено как минимум одной опубликованной работой (для №1, №2, №4, №5, №6) либо несколькими работами на рецензировании в журналах Q1 Scopus / WoS Core (для №3); общее покрытие положений составляет 100\,\%.
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{8. Акты о внедрении и использовании результатов}
+%%---------------------------------------------------------------------
+
+Получено \textbf{3 акта о внедрении} результатов диссертационного исследования, подтверждающих практическую применимость разработанных состязательных устойчивых моделей на основе искусственного интеллекта в гибридных системах обнаружения и предотвращения вторжений для сетевой безопасности:
+
+\begin{enumerate}[leftmargin=*, itemsep=0.4em]
+
+\item \textbf{Акт о внедрении в ООО <<НИИ ИКТ>>} (Научно-исследовательский институт информационно-коммуникационных технологий), г.~Москва. \\
+\textit{Предмет внедрения:} применение разработанного каркаса AI-моделей Hybrid~IDPS (модели М1, М2, М7) для защиты сетевой безопасности объектов критической инфраструктуры. \\
+\textit{Подтверждаемые показатели:} точность обнаружения 95{,}7\,\% на потоковом трафике объектов критической инфраструктуры в распределённой среде. \\
+\textit{Подтверждаемые положения:} №1, №2, №6.
+
+\item \textbf{Акт о внедрении в ООО <<Гексагон>>}, г.~Москва. \\
+\textit{Предмет внедрения:} интеграция федеративного обучения (М2) и эффективного периферийного вывода (М4) в коммерческие развёртывания Hybrid~IDPS с поддержкой распределённой среды и обеспечения безопасности периферийных вычислений. \\
+\textit{Подтверждаемые показатели:} точность обнаружения 96{,}8\,\%, снижение вычислительных затрат на 40\,\% по сравнению с эталонной архитектурой. \\
+\textit{Подтверждаемые положения:} №2, №4.
+
+\item \textbf{Акт о внедрении в Центр искусственного интеллекта Национального исследовательского ядерного университета <<МИФИ>>}, г.~Москва. \\
+\textit{Предмет внедрения:} применение разработанного каркаса AI-моделей Hybrid~IDPS (модели М1, М3, М6) к защите бортовых систем беспилотных летательных аппаратов в рамках трёхъярусной архитектуры <<борт~-- дронопорт~-- облако>> (соответствует Главе~6 диссертации). \\
+\textit{Подтверждаемые показатели:} подтверждение доменной независимости разработанного каркаса AI-моделей переносом из сектора сетевого трафика (NIDPS) в смежный сектор защиты бортовых систем БПЛА. \\
+\textit{Подтверждаемые положения:} №1, №3, №5, №6.
+
+\end{enumerate}
+
+\textit{Итог:} 3 акта о внедрении в совокупности подтверждают \emph{все} шесть положений, выносимых на защиту, что в сочетании с публикациями обеспечивает двукратное независимое подтверждение результатов диссертации (теоретическое --- через рецензируемые публикации и эмпирическое --- через акты внедрения).
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{9. Программные продукты и регистрация интеллектуальной собственности}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+
+\item \textbf{Программная платформа <<RobustIDPS.ai>>}~--- единая программная платформа с открытым исходным кодом, объединяющая 17~нейросетевых моделей в 10~функциональных групп и 51~страницу пользовательского интерфейса прогрессивного веб-приложения; реализует все модели М1--М7 в составе единой системы Hybrid~IDPS, включая четырёхуровневую систему защиты больших языковых моделей (94{,}5\,\% обнаружения по 517~сценариям атак) и модуль Multi-Agent PQC-IDS. \\
+\textit{Депонирование исходных кодов:} Zenodo, DOI \href{https://doi.org/10.5281/zenodo.19129512}{10.5281/zenodo.19129512}. \\
+\textit{Подтверждаемые положения:} №1--№6 (все шесть, в составе единой системы).
+
+\item \textbf{Подача заявок на регистрацию программ для ЭВМ (Роспатент):} планируется по результатам защиты диссертации для ключевых компонентов <<RobustIDPS.ai>>~--- модулей CT-TGNN, FedLLM-API, TripleE-TGNN, MambaShield и единой системы сертификации М7 (всего 5~заявок).
+
+\item \textbf{Патенты на изобретение:} на момент составления настоящего списка не оформлены; подача заявок планируется по результатам коммерческой апробации в ООО <<Гексагон>> на компоненты Multi-Agent PQC-IDS и FedLLM-API.
+
+\end{enumerate}
+
+\vspace{0.4cm}
+\hrule
+\vspace{0.2cm}
+
+\small
+\textit{Последнее обновление: июнь 2026 г.}\\
+\textit{Примечание: Препринты статей, находящихся на рецензировании, опубликованы на TechRxiv и Research Square до выхода журнальных версий. Статьи на рецензировании указаны с идентификаторами рукописей в системах редакций. Полные сведения о публикациях и метрики цитирования поддерживаются в профилях Google Scholar и ORCID автора.}
+
+\textit{Условные обозначения:} <<К1>>, <<К2>> --- категории рецензируемых научных изданий в перечне Высшей аттестационной комиссии (ВАК) при Министерстве науки и высшего образования РФ; <<Q1>>, <<Q2>> --- квартили журналов в базах Scopus / Web of Science на момент подачи рукописи; <<IF>> --- двухлетний импакт-фактор JCR.
+
+\end{document}
