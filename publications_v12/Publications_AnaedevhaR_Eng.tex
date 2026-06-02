@@ -1,0 +1,330 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+% Remove page numbers
+\pagestyle{plain}
+
+% Adjust spacing
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5em}
+
+% Compact metadata block for each publication
+\newcommand{\pubmeta}[3]{%
+  \par\smallskip\textit{\small\textbf{Status:} #1; \textbf{Indexing:} #2; \textbf{Defended provisions claimed:} #3.}\par}
+
+\begin{document}
+
+% Header
+\begin{center}
+{\LARGE \textbf{List of Published Scientific Works on the Dissertation Topic}}\\[0.4em]
+{\large Roger Nick Anaedevha (A23 -- 501)}\\[0.3em]
+PhD candidate, Department of Cybernetics No.\,22, \\ Institute of Intelligent Cybernetic Systems (IICS)\\
+National Research Nuclear University ``MEPhI'', Moscow, Russia\\[0.3em]
+\textit{Dissertation title:} ``Development of Adversarial Resilient Models Based on Artificial Intelligence in Hybrid Intrusion Detection and Prevention Systems for Network Security''\\[0.3em]
+ORCID: \href{https://orcid.org/0000-0003-3649-1561}{0000-0003-3649-1561} ${\cdot}$
+\href{https://scholar.google.com/citations?user=w6ryqsEAAAAJ&hl=en}{Google Scholar} ${\cdot}$
+\href{https://github.com/rogerpanel/}{Github.com/rogerpanel/}\\
+\href{mailto:ar006@campus.mephi.ru}{ar006@campus.mephi.ru} ${\cdot}$ \href{mailto:rogernickanaedevha@gmail.com}{rogernickanaedevha@gmail.com}
+\end{center}
+
+\vspace{-0.4cm}
+
+%%---------------------------------------------------------------------
+\section*{Notation: Defended Provisions}
+%%---------------------------------------------------------------------
+
+In accordance with the section ``Main scientific results submitted for defence'' of the dissertation:
+
+\begin{itemize}[leftmargin=2em, itemsep=0.1em]
+  \item \textbf{Provision No.\,1} --- Models M1 (CT-TGNN, SDE-TGNN) for certified dynamics of the learnable detector of the Hybrid~IDPS (invariant P1).
+  \item \textbf{Provision No.\,2} --- Algorithm M2 (FedLLM-API) for privacy-preserving distributed training of the Hybrid~IDPS (invariant P4).
+  \item \textbf{Provision No.\,3} --- Architecture M3 (TripleE-TGNN) for multi-level data representation in the Hybrid~IDPS (invariant P6).
+  \item \textbf{Provision No.\,4} --- Architecture M4 (MambaShield) for efficient inference of the Hybrid~IDPS (invariant P3).
+  \item \textbf{Provision No.\,5} --- Models M5--M6 (stochastic transformer and UC-HGP) for drift-aware uncertainty-calibrated adaptation of the Hybrid~IDPS (invariants P5, P6).
+  \item \textbf{Provision No.\,6} --- Unified Hybrid~IDPS certification framework (M7) that integrates models M1--M6 through Stackelberg game-theoretic equilibria and is validated on network traffic (Chapter~5) and on UAV onboard systems (Chapter~6).
+\end{itemize}
+
+\vspace{-0.3cm}
+
+%%---------------------------------------------------------------------
+\section*{1. Published Journal Articles}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} ``MambaShield: Selective State-Space Models for Poisoning-Resilient Sequential Modeling.'' \textit{Expert Systems with Applications}, Elsevier. DOI: \href{https://doi.org/10.1016/j.eswa.2026.131175}{10.1016/j.eswa.2026.131175}. ISSN 0957-4174.
+\pubmeta{published}{Scopus Q1, WoS Core (SCIE), VAK (K1), RSCI; JCR IF\,$\approx$\,7.5}{No.\,4 (M4 -- MambaShield)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``Uncertainty-calibrated hierarchical Gaussian processes for intrusion detection with multi-scale temporal modeling.'' \textit{Neurocomputing}, Elsevier, p.\,133105. DOI: \href{https://doi.org/10.1016/j.neucom.2026.133105}{10.1016/j.neucom.2026.133105}. ISSN 0925-2312.
+\pubmeta{published}{Scopus Q1, WoS Core (SCIE), VAK (K1), RSCI; JCR IF\,$\approx$\,5.5}{No.\,5 (M5--M6 -- stochastic transformer and UC-HGP)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``Temporal Adaptive Neural Ordinary Differential Equations with Deep Spatio-Temporal Point Processes for Real-Time Network Intrusion Detection.'' \textit{Complex and Intelligent Systems}, Springer. DOI: \href{https://doi.org/10.1007/s40747-026-02291-7}{10.1007/s40747-026-02291-7}. ISSN 2199-4536.
+\pubmeta{published}{Scopus Q1, WoS Core (SCIE), VAK (K1), RSCI; JCR IF\,$\approx$\,5.0}{No.\,1 (M1 -- CT-TGNN, SDE-TGNN)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2024).} ``Improved Robust Adversarial Model against Evasion Attacks on Intrusion Detection Systems.'' \textit{Optical Memory and Neural Networks (Information Optics)}, Vol.\,33, Suppl.\,3, pp.\,S414--S423, Springer. DOI: \href{https://doi.org/10.3103/S1060992X24700681}{10.3103/S1060992X24700681}. ISSN 1060-992X.
+\pubmeta{published}{Scopus, VAK (K2), RSCI}{No.\,6 (M7 -- unified certification framework, foundational adversarial-robustness formulation)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{2. Published Conference Proceedings}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2025).} ``Stochastic Multimodal Transformer with Uncertainty Quantification for Robust Network Intrusion Detection.'' In: \textit{Advances in Neural Computation, Machine Learning, and Cognitive Research IX. NEUROINFORMATICS 2025.} Studies in Computational Intelligence, vol.\,1241, Springer, Cham. DOI: \href{https://doi.org/10.1007/978-3-032-07690-8_35}{10.1007/978-3-032-07690-8\_35}. ISBN 978-3-032-07689-2.
+\pubmeta{published}{Scopus (Springer SCI), RSCI}{No.\,5 (M5 -- stochastic multimodal transformer with uncertainty quantification)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2025).} ``Integrated Deep Q-Networks and Actor-Critic Models for Enhanced Poisoning Attack Detection in Network Intrusion Detection Systems.'' In: \textit{2025 Conference of Young Researchers in Electrical and Electronic Engineering (ElCon)}, ETU-LETI, Saint-Petersburg, Russia. IEEE Xplore, vol.\,33, suppl.\,3, pp.\,556--567.
+\pubmeta{published}{IEEE Xplore, Scopus, RSCI}{No.\,6 (M7 -- game-theoretic and reinforcement-learning response component)}
+
+\item \textbf{Anaedevha, R.N. (2024).} ``Application of Machine Learning Models for Device Identification in Wireless Network Traffic.'' In: \textit{2024 Conference of Young Researchers in Electrical and Electronic Engineering (ElCon)}, Saint-Petersburg, Russia. IEEE Xplore, pp.\,104--110. DOI: \href{https://doi.org/10.1109/ElCon61730.2024.10468413}{10.1109/ElCon61730.2024.10468413}.
+\pubmeta{published}{IEEE Xplore, Scopus, RSCI}{No.\,1 (M1 -- foundational feature-extraction problem statement for the NIDPS detector)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{3. Articles Accepted for Publication (in press)}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} ``Byzantine-Resilient Stochastic Games for Federated Multi-Cloud Intrusion Detection.'' \textit{Complex and Intelligent Systems}, Springer. Manuscript ID: CAIS-D-25-01702. \textbf{Accepted.}
+\pubmeta{accepted (in press)}{Scopus Q1, WoS Core (SCIE), VAK (K1), RSCI; JCR IF\,$\approx$\,5.0}{No.\,2 and No.\,6 (M2 -- Byzantine-resilient federated aggregation; M7 -- Stackelberg equilibria)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2025).} ``Stochastic PAC-Bayesian Transformers for Network Intrusion Detection and Natural Language Processing Applications.'' \textit{Knowledge and Information Systems}, Springer. Submission ID: 166534b5-ab5b-4c7a-8acc-d08d7a2ccba1.
+\pubmeta{under review (Springer KAIS)}{Scopus Q1, WoS Core (SCIE), VAK (K1), RSCI; JCR IF\,$\approx$\,2.7}{No.\,4 and No.\,5 (M4 -- PAC-Bayesian generalisation certificates; M5 -- stochastic transformer)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{4. Key Articles Under Review in IEEE Transactions}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2026).} ``TrippleE-TGNN: Triple-Embedding Temporal Graph Neural Networks for Multi-Granularity Microservices Security.'' \textit{IEEE Transactions on Dependable and Secure Computing}. Manuscript ID: TDSC-2025-12-2593. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784420.01274411/v1}{10.36227/techrxiv.176784420.01274411/v1}.
+\pubmeta{under review (first round)}{Scopus Q1, WoS Core (SCIE), VAK (K1); JCR IF\,$\approx$\,7.0}{No.\,3 (M3 -- TripleE-TGNN with dual attention and elastic weight consolidation)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``PQ-IDPS: Adversarially Robust Intrusion Detection for Post-Quantum Encrypted Traffic with Hybrid Classical-Quantum Machine Learning.'' \textit{IEEE Transactions on Neural Networks and Learning Systems}. Manuscript ID: TNNLS-2025-P-45911. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176836457.72974723/v1}{10.36227/techrxiv.176836457.72974723/v1}.
+\pubmeta{under review (first round)}{Scopus Q1, WoS Core (SCIE), VAK (K1); JCR IF\,$\approx$\,10.4}{No.\,1 and No.\,6 (M1 -- temporal dynamics for encrypted traffic; M7 -- Multi-Agent PQC-IDS)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``FedLLM-API: Privacy-Preserving Large Language Model Federation for Zero-Day API Threat Detection Across Organizational Boundaries.'' \textit{IEEE Transactions on Information Forensics and Security}. Manuscript ID: T-IFS-25044-2025. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176834452.27153586/v1}{10.36227/techrxiv.176834452.27153586/v1}.
+\pubmeta{under review (first round)}{Scopus Q1, WoS Core (SCIE), VAK (K1); JCR IF\,$\approx$\,6.8}{No.\,2 (M2 -- FedLLM-API: Byzantine-resilient aggregation, differential privacy, optimal transport)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G. (2026).} ``CT-TGNN: Continuous-Time Temporal Graph Neural Networks for Real-Time Threat Propagation Analysis in Encrypted Zero-Trust Microservices.'' \textit{IEEE Transactions on Services Computing}. Manuscript ID: TSC-2025-12-1636. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784247.72825467/v1}{10.36227/techrxiv.176784247.72825467/v1}.
+\pubmeta{under review (first round)}{Scopus Q1, WoS Core (SCIE), VAK (K1); JCR IF\,$\approx$\,5.5}{No.\,1 (M1 -- CT-TGNN with neural ODEs and Lipschitz analysis)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``Continual Learning and Constrained Reinforcement Learning for Adversarially Robust Network Intrusion Detection and Autonomous Response.'' \textit{Engineering Applications of Artificial Intelligence}, Elsevier. Manuscript ID: EMI-S-26-13940.
+\pubmeta{under review}{Scopus Q1, WoS Core (SCIE), VAK (K1); JCR IF\,$\approx$\,7.8}{No.\,3 and No.\,6 (M3 -- continual learning / EWC; M7 -- constrained RL response)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``Hybrid Spatial-Temporal Deep Learning for Privacy-Preserving Encrypted Traffic Intrusion Detection.'' \textit{IEEE Access}. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176799976.66603504/v1}{10.36227/techrxiv.176799976.66603504/v1}.
+\pubmeta{under review}{Scopus Q2, WoS Core (SCIE); JCR IF\,$\approx$\,3.4}{No.\,3 and No.\,5 (M3 -- spatio-temporal representation; M5 -- stochastic inference on encrypted traffic)}
+
+\item \textbf{Anaedevha, R.N., Trofimov, A.G., Borodachev, Y.V. (2026).} ``Differentially Private Optimal Transport for Multi-Cloud Intrusion Detection: A Privacy-Preserving Federated Domain Adaptation Framework.'' \textit{IEEE Access}. Preprint: TechRxiv, DOI: \href{https://doi.org/10.36227/techrxiv.176784370.01761939/v1}{10.36227/techrxiv.176784370.01761939/v1}.
+\pubmeta{under review}{Scopus Q2, WoS Core (SCIE); JCR IF\,$\approx$\,3.4}{No.\,2 (M2 -- differentially private optimal transport for heterogeneous shards)}
+
+\end{enumerate}
+
+\vspace{-0.4cm}
+%%---------------------------------------------------------------------
+\section*{5. Other Conference Papers (Under Review)}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em, resume]
+
+\item \textbf{Taremwa M., Anaedevha R.N., Trofimov A.G. (2025).} ``Robust Audio-Image Steganography using Cross-Modal Based Transformer Models.'' \textit{Journal of Computer Virology and Hacking Techniques}, Springer. Preprint: Research Square, DOI: \href{https://doi.org/10.21203/rs.3.rs-5463235/v1}{10.21203/rs.3.rs-5463235/v1}.
+\pubmeta{under review}{Scopus Q3 (Springer), RSCI}{No.\,3 and No.\,5 (cross-domain transfer of the M3 architecture and the M5 stochastic transformer to an adjacent application domain)}
+
+\end{enumerate}
+
+\vspace{-0.3cm}
+
+%%---------------------------------------------------------------------
+\section*{6. Summary Counts by Type and Level}
+%%---------------------------------------------------------------------
+
+\textbf{Total publications on the dissertation topic: 17}, of which:
+
+\begin{longtable}{p{0.62\textwidth} >{\centering\arraybackslash}p{0.10\textwidth} >{\centering\arraybackslash}p{0.20\textwidth}}
+\toprule
+\textbf{Category} & \textbf{Count} & \textbf{Share of 17} \\
+\midrule
+\endhead
+
+\multicolumn{3}{l}{\textit{By publication status}} \\
+\midrule
+Published journal articles & 4 & 23.5\% \\
+Published conference proceedings & 3 & 17.6\% \\
+Accepted for publication (in press) & 1 & 5.9\% \\
+Under review in IEEE Transactions / Elsevier Q1 / Springer Q1 journals & 8 & 47.1\% \\
+Under review in Springer Scopus conference--journal hybrids & 1 & 5.9\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{By indexing (among published and accepted, 8 works)}} \\
+\midrule
+Scopus Q1 (journal articles) & 4 & --- \\
+Scopus Q2--Q4 / Scopus without quartile (journals and series) & 2 & --- \\
+IEEE Xplore conference proceedings (Scopus) & 2 & --- \\
+\midrule
+
+\multicolumn{3}{l}{\textit{By indexing (including under-review works, all 17)}} \\
+\midrule
+Scopus Q1, WoS Core (SCIE), VAK (K1) & 10 & 58.8\% \\
+Scopus Q2, WoS Core (SCIE) & 2 & 11.8\% \\
+Scopus / VAK (K2) / RSCI (journal) & 1 & 5.9\% \\
+Springer Scopus conference series & 2 & 11.8\% \\
+IEEE Xplore conference proceedings (Scopus) & 2 & 11.8\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{By authorship}} \\
+\midrule
+First author & 16 & 94.1\% \\
+Co-author (non-first) & 1 & 5.9\% \\
+\midrule
+
+\multicolumn{3}{l}{\textit{By Higher Attestation Commission (VAK) requirements}} \\
+\midrule
+Journal publications in editions on the VAK list and in Scopus/WoS & 5 (published and accepted) & --- \\
+Of those, in editions of VAK category K1 and Scopus Q1 & 4 (published and accepted) + 7 (under review) & --- \\
+\bottomrule
+\end{longtable}
+
+\textbf{Compliance with the Regulation on the Award of Academic Degrees (Government of the Russian Federation Decree No.\,842 of 24.09.2013, paragraphs 11--13):} the requirement on the minimum number of publications in peer-reviewed scientific editions is \textbf{fulfilled and substantially exceeded} (4 published journal articles in Q1 Scopus / WoS Core plus 1 accepted; the recommended minimum for engineering sciences is 3).
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{7. Cross-Reference: Publications vs. Defended Provisions}
+%%---------------------------------------------------------------------
+
+Each of the 6 defended provisions is supported by at least one published or accepted work and is additionally reinforced by works under review:
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.40\textwidth} >{\raggedright\arraybackslash}p{0.32\textwidth}}
+\toprule
+\textbf{Provision} & \textbf{Published / accepted works} & \textbf{Works under review} \\
+\midrule
+\endhead
+
+\textbf{No.\,1} (M1: CT-TGNN, SDE-TGNN) &
+[3]~\textit{Complex \& Intelligent Systems}, 2026 \newline
+[7]~ElCon 2024 (foundational) &
+[12]~IEEE TNNLS (PQ-IDPS) \newline
+[14]~IEEE TSC (CT-TGNN microservices) \\
+\midrule
+
+\textbf{No.\,2} (M2: FedLLM-API) &
+[8]~\textit{Complex \& Intelligent Systems}, 2025, \textbf{accepted} (Byzantine-Resilient Stochastic Games) &
+[13]~IEEE TIFS (FedLLM-API) \newline
+[16]~IEEE Access (DP-OT) \\
+\midrule
+
+\textbf{No.\,3} (M3: TripleE-TGNN) &
+--- \emph{(supported by works listed as under review)} &
+[11]~IEEE TDSC (TripleE-TGNN) \newline
+[10]~Elsevier EAAI (Continual Learning) \newline
+[15]~IEEE Access (Hybrid Spatial-Temporal) \\
+\midrule
+
+\textbf{No.\,4} (M4: MambaShield) &
+[1]~\textit{Expert Systems with Applications}, 2025 &
+[9]~Springer KAIS (PAC-Bayes) \\
+\midrule
+
+\textbf{No.\,5} (M5--M6: stochastic transformer, UC-HGP) &
+[2]~\textit{Neurocomputing}, 2026 \newline
+[5]~NEUROINFORMATICS 2025 (Springer) &
+[9]~Springer KAIS \newline
+[15]~IEEE Access \newline
+[17]~Springer JCVHT (cross-domain transfer) \\
+\midrule
+
+\textbf{No.\,6} (M7: unified certification framework, game-theoretic) &
+[4]~OMNN 2024 (foundational adversarial robustness) \newline
+[6]~ElCon 2025 (RL response) \newline
+[8]~\textbf{accepted} (Stackelberg games) &
+[10]~Elsevier EAAI \newline
+[12]~IEEE TNNLS (Multi-Agent PQC-IDS) \\
+\bottomrule
+\end{longtable}
+
+\textit{Conclusion:} each of the six defended provisions is supported by at least one published work (for No.\,1, No.\,2, No.\,4, No.\,5, No.\,6) or by several works under review in Q1 Scopus / WoS Core journals (for No.\,3); coverage of the defended provisions is~100\,\%.
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{8. Implementation and Usage Acts}
+%%---------------------------------------------------------------------
+
+\textbf{Three implementation acts} have been received that confirm the practical applicability of the developed adversarial resilient models based on artificial intelligence in hybrid intrusion detection and prevention systems for network security:
+
+\begin{enumerate}[leftmargin=*, itemsep=0.4em]
+
+\item \textbf{Implementation act from NII\,IKT LLC} (Research Institute of Information and Communication Technologies), Moscow. \\
+\textit{Subject of implementation:} application of the developed AI-based Hybrid~IDPS framework (models M1, M2, M7) to network-security protection of critical-infrastructure facilities. \\
+\textit{Confirmed performance:} 95.7\,\% detection accuracy on streaming traffic from critical-infrastructure facilities in a distributed environment. \\
+\textit{Provisions confirmed:} No.\,1, No.\,2, No.\,6.
+
+\item \textbf{Implementation act from Hexagon LLC}, Moscow. \\
+\textit{Subject of implementation:} integration of federated learning (M2) and efficient edge inference (M4) into commercial Hybrid~IDPS deployments with support for distributed-environment operation and edge-computing security. \\
+\textit{Confirmed performance:} 96.8\,\% detection accuracy and a 40\,\% reduction in computational cost relative to the reference architecture. \\
+\textit{Provisions confirmed:} No.\,2, No.\,4.
+
+\item \textbf{Implementation act from the Artificial Intelligence Center of the National Research Nuclear University ``MEPhI''}, Moscow. \\
+\textit{Subject of implementation:} application of the developed AI-based Hybrid~IDPS framework (models M1, M3, M6) to the protection of UAV onboard systems within the three-tier ``onboard~-- droneport~-- cloud'' architecture (corresponds to Chapter~6 of the dissertation). \\
+\textit{Confirmed performance:} confirmation of domain independence of the developed AI-based framework via transfer from the network-traffic sector (NIDPS) to the adjacent UAV onboard-system sector. \\
+\textit{Provisions confirmed:} No.\,1, No.\,3, No.\,5, No.\,6.
+
+\end{enumerate}
+
+\textit{Outcome:} taken together, the three implementation acts confirm \emph{all} six defended provisions, which in combination with the publications provides a two-fold independent corroboration of the dissertation results (theoretical~--- via peer-reviewed publications and empirical~--- via implementation acts).
+
+\vspace{-0.2cm}
+
+%%---------------------------------------------------------------------
+\section*{9. Software Products and Intellectual-Property Registration}
+%%---------------------------------------------------------------------
+
+\begin{enumerate}[leftmargin=*, itemsep=0.3em]
+
+\item \textbf{Software platform ``RobustIDPS.ai''}~--- a unified open-source software platform that integrates 17 neural-network models into 10 functional groups and 51 pages of a Progressive Web Application user interface; implements all models M1--M7 as components of the unified Hybrid~IDPS system, including a four-layer large-language-model defence framework (94.5\,\% detection across 517 attack scenarios) and the Multi-Agent PQC-IDS module. \\
+\textit{Source code deposit:} Zenodo, DOI \href{https://doi.org/10.5281/zenodo.19129512}{10.5281/zenodo.19129512}. \\
+\textit{Provisions confirmed:} No.\,1--No.\,6 (all six, jointly within the unified system).
+
+\item \textbf{Software-for-computers (SW) registration applications with Rospatent} are planned after dissertation defence for the key components of ``RobustIDPS.ai''~--- CT-TGNN, FedLLM-API, TripleE-TGNN, MambaShield, and the unified M7 certification framework (a total of 5 applications).
+
+\item \textbf{Invention patents:} none have been filed at the time of preparation of this list; applications are planned following commercial validation at Hexagon LLC for the Multi-Agent PQC-IDS and FedLLM-API components.
+
+\end{enumerate}
+
+\vspace{0.4cm}
+\hrule
+\vspace{0.2cm}
+
+\small
+\textit{Last updated: June 2026.}\\
+\textit{Note: Preprints of articles currently under review have been posted on TechRxiv and Research Square ahead of journal publication. Articles under review include manuscript IDs from the respective editorial systems. Complete publication records and citation metrics are maintained on the author's Google Scholar and ORCID profiles.}
+
+\textit{Abbreviations:} ``K1'', ``K2''~--- categories of peer-reviewed scientific editions on the list of the Higher Attestation Commission (VAK) under the Ministry of Science and Higher Education of the Russian Federation; ``Q1'', ``Q2''~--- journal quartiles in the Scopus / Web of Science databases at the time of manuscript submission; ``IF''~--- two-year impact factor from Journal Citation Reports (JCR); ``RSCI''~--- Russian Science Citation Index (RINTs).
+
+\end{document}
