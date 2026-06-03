@@ -434,6 +434,85 @@ developed in the work to the branches of the taxonomy fixes each
 model's area of responsibility and admits direct mapping onto
 direction~item~4 of the specialty~2.3.1 passport.
 
+%%---------------------------------------------------------------------
+\subsection{Modern Commercial AI-Augmented IDPS Products}
+\label{subsec:commercial_ai_idps}
+%%---------------------------------------------------------------------
+
+Since 2023--2025, leading information-security vendors have
+introduced a class of \emph{AI-augmented} commercial detection and
+response platforms layered above classical signature-based and
+behavioural engines. A systematic review of this class is required
+to position the RobustIDPS.ai framework developed in this work
+against the prevailing industrial state of the art.
+
+\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+
+\item \textbf{CrowdStrike Falcon with the Charlotte~AI module}~---
+an EDR/XDR platform with an embedded LLM assistant for accelerated
+alert triage and automated generation of response playbooks; the
+detection core relies on behavioural indicators of attack (IoA)
+and process graphs. The declared advantage is reduction of SOC
+analyst response time; the limitations are a closed rule corpus,
+the absence of formal robustness certificates against adversarial
+influence, and dependence on the CrowdStrike cloud back-end.
+
+\item \textbf{SentinelOne Singularity with Purple~AI}~--- an
+autonomous XDR platform with an agentic AI for natural-language
+incident investigation; implements behavioural detection at the
+endpoint level and automated rollback under ransomware. Limitations
+relevant to the present work: absence of a formal privacy model
+for federated training on data from multiple customers, and the
+absence of certified resilience against poisoning of training data.
+
+\item \textbf{Microsoft Security Copilot}~--- a layer on top of
+the Defender~XDR / Sentinel SIEM family powered by GPT-family
+LLMs; oriented toward augmenting the SOC operator (incident
+summarisation, KQL query generation, response-plan construction).
+The principal limitation is that the LLM decisions are not
+accompanied by quantitative uncertainty estimates and carry no
+formal robustness guarantees under adversarial prompts
+(prompt-injection).
+
+\item \textbf{Google Cloud Threat Intelligence (Mandiant +
+Gemini)}~--- integrates Mandiant indicators of compromise with the
+Gemini LLM assistant for attribution and threat prioritisation;
+the strong side is aggregated threat-intelligence feeds, the weak
+side is the closed-model nature and the absence of guarantees for
+on-premises deployments.
+
+\item \textbf{Cisco AI Endpoint Analytics / Hypershield}~---
+targets network segmentation and workstation-level anomaly
+detection by means of learnable device-identification models;
+constitutes a commercial counterpart of the feature-learning
+models for NIDPS reviewed in Section~1.6.
+
+\item \textbf{IBM QRadar SIEM AI Assistant} and \textbf{Palo~Alto
+Networks Cortex~XSIAM}~--- AI-augmented SIEM/SOAR platforms;
+they provide automated event correlation and analyst
+recommendation systems but neither supply certified guarantees
+of adversarial resilience nor implement federated learning across
+organisations.
+
+\end{enumerate}
+
+\noindent A systematic analysis of the products listed above
+shows that \emph{all} of them are pipeline overlays of LLM/EDR
+on top of classical engines, in which the following are absent:
+(i)~a unified mathematical model of Hybrid~IDPS as an object of
+study with formal robustness guarantees, (ii)~certified resilience
+against adversarial attacks with proofs by Lipschitz continuity or
+randomised smoothing, (iii)~private distributed-training
+algorithms with differential privacy and Byzantine-resilient
+aggregation, (iv)~calibrated decomposition of epistemic and
+aleatoric uncertainty. These four aspects constitute the
+substantive distinction of the Models M1--M7 and the RobustIDPS.ai
+platform developed in the present work from the commercial
+AI-augmented IDPS products reviewed above; the quantitative
+comparison is carried out in Chapter~\ref{ch:platform} (the
+section ``Comparison with commercial and open-source
+platforms'').
+
 
 %%=====================================================================
 \section{Problems and Vulnerabilities of Models in Hybrid IDPS}

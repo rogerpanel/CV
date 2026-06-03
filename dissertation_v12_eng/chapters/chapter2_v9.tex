@@ -29,6 +29,94 @@ used to evaluate the quality of Hybrid IDPS, grouped by the six
 properties. The chapter concludes with a unified certification
 framework that couples all models through consistency regularisation.
 
+%%=====================================================================
+\section*{Notation Conventions}
+\label{sec:notation_conventions}
+\addcontentsline{toc}{section}{Notation Conventions}
+%%=====================================================================
+
+Throughout the dissertation the symbols below are used
+\emph{consistently}; local redefinitions are admitted only with
+explicit indication in the text.
+
+\begin{itemize}[leftmargin=2em, itemsep=0.2em]
+
+\item $f_\theta$~--- the \emph{learnable detector} of the
+Hybrid~IDPS, parameterised by $\theta\in\Theta$, mapping the
+observation at time~$t$ to a probability distribution over threat
+classes: $f_\theta:(X_t,A_t)\mapsto \hat y_t\in\Delta^{K}$. \emph{In
+the certified architectures} (Models M1 and M3) the same
+$f_\theta$ additionally serves as the right-hand side of a neural
+ordinary differential equation describing the evolution of hidden
+representations: $\dot{\bh}_v(t)=f_\theta(\bh_v(t),A(t),t)$; the
+\emph{same} function family is implied throughout, Lipschitz
+constrained with constant~$L_g$. No other function in the text
+is denoted by $f_\theta$.
+
+\item $g_\psi$~--- the \emph{response/policy mapping},
+parameterised by $\psi$, mapping the posterior estimates and the
+context to an action $a\in\calA$: $g_\psi:(\hat y_t,\,c_t)\mapsto
+a_t$. Used in the game-theoretic block M7 and in the RL agents.
+The symbol $g$ without subscript $\psi$ denotes the neural-ODE
+vector field (when one needs to separate it from the detector);
+this is stated locally.
+
+\item $\pi$~--- the action-distribution \emph{policy} (in the
+RL/Stackelberg sense): $\pi(a\mid s)$. Not to be confused with the
+constant $\pi$ in trigonometric contexts, where the usual
+interpretation is retained.
+
+\item $L_g$~--- the \emph{Lipschitz constant} of the neural-ODE
+right-hand side $f_\theta(\cdot,t)$ with respect to the hidden-state
+argument: $\|f_\theta(\bh_1,t)-f_\theta(\bh_2,t)\|\le L_g
+\|\bh_1-\bh_2\|$. $L_g$ is the key parameter of the Gronwall
+robustness certificate: $\|\bh_1(T)-\bh_2(T)\|\le e^{L_g
+T}\|\bh_1(0)-\bh_2(0)\|$. A numerical estimate $\hat L_g$ is
+computed by power iteration (see Chapter~6). \emph{Defence of the
+$L_g$ estimate:} the graph convolution operator is the composition
+of a linear operator (the adjacency matrix), a non-linearity
+(Tanh/GELU with $\mathrm{Lip}\le 1$) and a learnable weight matrix~$W$;
+the upper bound $L_g\le \|W\|_{\mathrm{op}}\cdot \mathrm{Lip}(\sigma)\cdot
+\|A\|_{\mathrm{op}}$ is evaluated in operator norm and tested
+empirically on the validation set.
+
+\item $L_c$~--- the \emph{Lipschitz constant of the classifier
+head} $h\mapsto\mathrm{logits}$. The end-to-end Lipschitz
+constant of the input-to-logits mapping is $L_c\cdot e^{L_g T}$;
+the certified robustness radius in the $\ell_2$ norm is
+$\rho=\Delta_{\min}/(L_c\,e^{L_g T})$, where $\Delta_{\min}$ is
+the margin between the two largest logits.
+
+\item $L_a$~--- the \emph{Lipschitz constant of the attention
+mechanism} (M3, TripleE-TGNN). For softmax attention with
+learnable $Q,K,V\in\R^{d\times d}$: $L_a\le
+\|V\|_{\mathrm{op}}\cdot 4\,d^{1/2}\cdot \|Q\|_{\mathrm{op}}
+\|K\|_{\mathrm{op}}$ (Kim et al., 2021). $L_a$ is required for
+propagating certified robustness bounds through the attention
+blocks: the model's end-to-end constant becomes $L_c\cdot
+L_a\cdot e^{L_g T}$, reinforcing the requirement on the
+spectral norm of the attention weights
+$\|Q\|_{\mathrm{op}}\|K\|_{\mathrm{op}}\le 1$.
+
+\item $\calL_g(\theta;\calG_g)$~--- the \emph{loss at granularity
+level~$g$} (graph-level loss), where $g\in\{s,r,n\}$ denotes the
+service / trace / node level. Here the subscript~$g$ is a
+\emph{level label} and is not to be confused with the Lipschitz
+constant $L_g$ or with the vector field $g$.
+
+\item $\rho$~--- the certified \emph{robustness radius} in the
+$\ell_2$ norm, or the \emph{cardinality of a set}, depending on
+context (with explicit indication).
+
+\item $\delta_X$, $\Delta_A$~--- the admissible \emph{perturbation
+of node features} and the \emph{binary edge perturbation} in the
+$\ell_2$ and $\ell_0$ norms respectively; they are combined in
+the threat set $\Theta_{\mathrm{adv}}$.
+
+\end{itemize}
+
+\noindent All other symbols are introduced locally and retain
+their interpretation within their own subsection.
 
 %%=====================================================================
 \section{Mathematical Model of Hybrid IDPS}
