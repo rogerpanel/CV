@@ -398,40 +398,71 @@ operation in a typical analyst usage scenario.
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
 \begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} \\
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_08_ethical_use.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_09_soc_dashboard.png}} \\
 \scriptsize (a) Authentication &
-\scriptsize (b) Live capture and classification &
-\scriptsize (c) SOC Copilot (LLM assistant) \\[4pt]
+\scriptsize (b) Ethical-use consent &
+\scriptsize (c) SOC Dashboard \\[4pt]
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_10_fed_learning.png}} \\
+\scriptsize (d) Live Monitor &
+\scriptsize (e) SOC Copilot (LLM assistant) &
+\scriptsize (f) Federated Learning Simulator \\
+\end{tabular}
+\caption{Demonstration of practical operation of RobustIDPS.ai
+(part~1)~--- from sign-in to distributed training:
+\textbf{(a)}~Sign-In page with e-mail/password authentication and
+new-user registration; \textbf{(b)}~``Ethical Use Guidance and
+Consent'' page~--- mandatory acknowledgement of permitted
+scenarios (academic research, authorised penetration testing,
+government and defence research, evaluation and benchmarking) and
+prohibited actions, implementing the MLSecOps requirement on
+operator admission; \textbf{(c)}~SOC Dashboard page~--- summary
+over 1{,}000 flows, 347 detected threats, 65.3\,\% benign-traffic
+share, and the current calibration estimate ECE\,=\,0.043, with
+the distribution across five severity levels and the canonical
+attack-distribution and confidence histograms;
+\textbf{(d)}~Live~Monitor page~--- starting a streaming capture
+on the network interface \texttt{eth0} with selection of an
+ensemble of seven detection models (SurrogateIDS, Neural~ODE,
+Optimal~Transport, FedGTD, SDE-TGNN, CyberSecLLM, and others)
+and the capture interval (5--120~s); \textbf{(e)}~SOC Copilot
+page~--- the interactive LLM assistant in local mode answering
+the analyst's query ``Get the Live Monitor results with breakdown
+by threat, severity, and confidence'' against the real capture
+session data; \textbf{(f)}~Federated Learning Simulator page~---
+launching federated training over several datasets simultaneously
+(CSV/PCAP slots Slot~1--3) with selection of the aggregation
+strategy (FedAvg, FedProx, Weighted, FedGTD), IID/Non-IID regime,
+and the differential-privacy option.}
+\label{fig:gui_walkthrough_p1}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} \\
-\scriptsize (d) Adversarial robustness comparison &
-\scriptsize (e) Analytics and evaluation &
-\scriptsize (f) RAG Poisoning Simulator \\
+\scriptsize (g) Adversarial robustness comparison &
+\scriptsize (h) Analytics and evaluation &
+\scriptsize (i) RAG Poisoning Simulator \\
 \end{tabular}
-\caption{Demonstration of practical operation of RobustIDPS.ai in
-a typical SOC-analyst scenario: \textbf{(a)}~operator
-authentication; \textbf{(b)}~Live~Monitor page~--- starting a
-streaming capture on the network interface \texttt{eth0} with
-selection of an ensemble of seven detection models (SurrogateIDS,
-Neural~ODE, Optimal~Transport, FedGTD, SDE-TGNN, CyberSecLLM,
-and others) and the capture interval (5--120~s);
-\textbf{(c)}~SOC~Copilot page~--- the interactive LLM assistant
-in local mode answering the analyst's query ``Get the Live
-Monitor results with breakdown by threat, severity, and
-confidence'' against the real data of the capture session;
-\textbf{(d)}~Adversarial~Eval page~--- multi-dataset comparison
-of models for robustness against six adversarial-attack methods
-(FGSM, PGD, C\&W, DeepFool, Gaussian noise, Label masking);
-\textbf{(e)}~Analytics \& Evaluation page~--- F1 metric
-comparison for seven models across six benchmarks with a heatmap,
-a radar profile, and a cross-dataset consistency table;
-\textbf{(f)}~RAG Poisoning Simulator page~--- simulation of
-attacks on the RAG pipeline of an LLM with four attack vectors
-(document injection, query manipulation, embedding-space
-perturbation, cross-contamination).}
-\label{fig:gui_walkthrough}
+\caption{Demonstration of practical operation of RobustIDPS.ai
+(part~2)~--- adversarial testing, analytics, and LLM attack
+surfaces: \textbf{(g)}~Adversarial~Eval page~--- multi-dataset
+comparison of models for robustness against six adversarial-attack
+methods (FGSM, PGD, C\&W, DeepFool, Gaussian noise, Label masking);
+\textbf{(h)}~Analytics \& Evaluation page~--- F1 metric comparison
+for seven models across six benchmarks with a heatmap, a radar
+profile, and a cross-dataset consistency table;
+\textbf{(i)}~RAG Poisoning Simulator page~--- simulation of attacks
+on the RAG pipeline of an LLM with four attack vectors (document
+injection, query manipulation, embedding-space perturbation,
+cross-contamination).}
+\label{fig:gui_walkthrough_p2}
 \end{figure}
 
 \noindent An additional screenshot of the Analytics page with the

@@ -11,69 +11,121 @@
 \markboth{CONCLUSION}{CONCLUSION}
 
 \section*{Brief Characterisation of the Main Results
-(Eight Statements)}
+(Eight Statements Aligned with the Eight Research Tasks)}
 
 The main scientific results of the dissertation are systematised
-below as eight statements; each statement corresponds unambiguously
-to one developed model or model group and is supported by a
-publication in a peer-reviewed journal from the VAK list or
-indexed in Scopus/WoS (see the list of published works) and/or by
-an implementation act (see below).
+below as eight statements in strict correspondence with the eight
+research tasks set in the Introduction. Each statement records
+how the corresponding task was solved and where the solution is
+presented.
 
 \begin{enumerate}[leftmargin=2em, itemsep=0.3em]
 
-\item A mathematical model and an algorithm for continuous-time
-graph dynamics have been developed (\textbf{M1: CT-TGNN /
-SDE-TGNN}) with a Gronwall-proven certified robustness under a
-Lipschitz bound $L_g$ on the vector field; empirically confirmed
-99.0\,\% F1 on CIC-IoT-2023, certified radius $\rho=0.25$, and
-cross-domain transfer of 90.5\,\% F1 without fine-tuning.
+\item \textit{On the task ``Systematic review of the approaches
+used in modern hybrid intrusion-detection and -prevention systems
+and identification of their disadvantages and vulnerabilities'':}
+Chapter~\ref{ch:literature_review} provides a systematic review
+of approaches used in modern Hybrid~IDPS; documented critical
+model failures in healthcare (AUC drop to 25\,\%), finance
+($25.7\,\%\to 68.6\,\%$ errors), industry ($94.2\,\%\to 30\,\%$
+accuracy) and cybersecurity ($-59\,\%$ detection), as well as a
+robustness gap of 25--65 p.p.\ under adversarial influence.
 
-\item A federated joint-threat-intelligence algorithm has been
-developed (\textbf{M2: FedLLM-API}) with Byzantine-resilient
-aggregation and differential privacy $\varepsilon=0.85$, which
-preserves 87.1\,\% F1 under 40\,\% corrupted clients and possesses
-proven convergence.
+\item \textit{On the task ``Review of methods to improve
+robustness against adversarial attacks and to ensure computational
+efficiency'':} five families of models and algorithms for
+Hybrid~IDPS (statistical, classical ML, deep learning, hybrid,
+game-theoretic; Fig.~\ref{fig:orga_models_idps}) are
+systematised, and a comparative analysis of AI-augmented
+commercial products (CrowdStrike Charlotte~AI, SentinelOne
+Purple~AI, Microsoft Security Copilot, Google Mandiant+Gemini,
+Cisco Hypershield, IBM QRadar AI, Palo~Alto Cortex~XSIAM) is
+carried out, which records the absence of a unified architecture
+simultaneously providing certified robustness, distributed
+privacy, computational efficiency and calibrated accuracy on
+dynamic graph structures.
 
-\item A multi-level temporal architecture has been developed
-(\textbf{M3: TripleE-TGNN}), achieving 96.8\,\% F1 on multi-stage
-attacks and protected against catastrophic forgetting under the
-sequential arrival of tasks.
+\item \textit{On the task ``Formalise the mathematical model of
+the hybrid intrusion-detection-and-prevention system and state the
+problem of improving its robustness and efficiency'':}
+Chapter~\ref{ch:methods} establishes a unified tuple-based
+mathematical model of Hybrid~IDPS, gives a formal definition of
+the six properties P1--P6 and of the twelve-cell
+``condition\,---\,requirement'' matrix, and explicitly poses the
+multi-criterion problem of improving robustness, accuracy,
+efficiency and privacy.
 
-\item A state-space model has been developed for detection
-(\textbf{M4: MambaShield}) with asymptotic complexity
-$\mathcal{O}(L\log L)$, demonstrating 91.4\,\% F1 under 25\,\%
-training-set poisoning and a per-flow inference latency of 0.5~ms.
+\item \textit{On the task ``Develop algorithms and models for
+improving the robustness and efficiency of the hybrid
+intrusion-detection system under distributed and non-stationary
+conditions'':} seven models M1--M7 are developed, providing
+continuous-time graph dynamics with a Lipschitz/Gronwall
+certificate (\textbf{CT-TGNN/SDE-TGNN}; 99.0\,\% F1 on
+CIC-IoT-2023, certified radius $\rho=0.25$), Byzantine-resilient
+federated learning with differential privacy (\textbf{FedLLM-API};
+87.1\,\% F1 under 40\,\% corrupted clients, $\varepsilon=0.85$),
+multi-level temporal representations (\textbf{TripleE-TGNN};
+96.8\,\% F1 on multi-stage attacks), a state-space model with
+poisoning resilience (\textbf{MambaShield}; $\mathcal{O}(L\log L)$,
+91.4\,\% F1 under 25\,\% poisoning, 0.5~ms latency), the
+stochastic transformer with UC-HGP (ECE\,=\,0.078;
+$-43\,\%$ SOC workload), and the unified game-theoretic
+certification framework (\textbf{M7-Certification}; 94.7\,\% F1
+against adaptive adversaries).
 
-\item A stochastic transformer with epistemically aware
-anti-conformal smoothing has been developed
-(\textbf{M5--M6: Stoch.~Transf.~+ UC-HGP}), realising a calibrated
-decomposition of epistemic and aleatoric uncertainty with
-ECE\,=\,0.078 and delivering a 43\,\% reduction in SOC operator
-workload through low-confidence alert filtering.
+\item \textit{On the task ``Develop software implementing the
+proposed models and algorithms (formulating requirements, use
+cases, architecture and program realisation)'':}
+Chapter~\ref{ch:platform} introduces the software platform
+\textbf{RobustIDPS.ai} (DOI~10.5281/zenodo.19129512) realising
+Models M1--M7 within a single system: 17 neural-network models,
+10 functional groups, 51 pages of a Progressive Web Application
+(PWA), a four-level LLM defence (CyberSecLLM, 94.5\,\% detection
+across 517 LLM attack scenarios, 89.1\,\% zero-shot F1 on the
+cybersecurity benchmark, $+20.5$ p.p.\ over GPT-4); functional
+requirements, use cases and system architecture are formulated
+(FastAPI/PyTorch~2.x/PyTorch~Geometric, React~18/PWA,
+PostgreSQL~16/Redis~7, Docker~Compose; four LLM providers and a
+Suricata EVE-JSON plug-in; see Section~\ref{sec:tech_stack_ui}).
 
-\item A unified game-theoretic adversarial-robustness
-certification framework has been developed
-(\textbf{M7: M7-Certification}), maintaining 94.7\,\% F1 against
-adaptive adversaries at the Stackelberg equilibrium and binding
-Models M1--M6 through consistency regularisation.
+\item \textit{On the task ``Conduct experimental research of the
+developed algorithms and models on benchmark datasets'':}
+Chapter~\ref{ch:experiments} carries out a comprehensive
+experimental programme on six network-traffic benchmark datasets
+(CIC-IoT-2023, CSE-CIC-IDS2018, UNSW-NB15, MS-OUEDA, Container
+Security, Edge-IoT), covering 84.2~million labelled samples,
+84 attack types, and 23 metrics of quality, robustness,
+efficiency, privacy and calibration; all 12 cells of the
+``condition\,---\,requirement'' matrix are confirmed with a
+superiority over baseline methods of 2.9--5.6 p.p.
 
-\item A cybersecurity foundation model has been developed
-(\textbf{CyberSecLLM}) with a four-level defence against
-adversarial prompts (Prompt Injection, Jailbreak, RAG Poisoning,
-Multi-Agent Chain), achieving 89.1\,\% zero-shot F1 on the
-cybersecurity benchmark (+20.5 p.p.\ over GPT-4) and 94.5\,\%
-detection across 517 LLM attack scenarios.
+\item \textit{On the task ``Integrate the developed software into
+a real network-traffic-analysis pipeline'':} \textbf{two
+implementation acts} have been received that confirm integration
+of the developed RobustIDPS.ai software into real production
+pipelines for network-traffic analysis and infrastructure
+protection: from NII~IKT~LLC (Novosibirsk, 03~June 2026;
+integration of poisoning-resilient models into the operating
+intrusion-detection system and active use of the RobustIDPS.ai
+platform by in-house cybersecurity specialists) and from
+Ksyrix~LLC (Moscow, 2026; integration into the existing
+network-traffic-analysis and infrastructure-protection software~---
+multi-stage attack detection, identification of previously unknown
+patterns, and adaptation to drift).
 
-\item The M1--M7 ensemble has been integrated into the
-\textbf{RobustIDPS.ai} software platform
-(DOI~10.5281/zenodo.19129512; 17~models in 10~functional groups,
-51-page PWA interface), validated on 84.2~million samples from
-six benchmark datasets across 23~metrics with all 12~cells of the
-``condition\,---\,requirement'' matrix confirmed, and corroborated
-by two received implementation acts (NII~IKT~LLC, Novosibirsk;
-Ksyrix~LLC, Moscow), with a third act in formalisation
-(AI Center of NRNU MEPhI, Moscow).
+\item \textit{On the task ``Demonstrate that the developed
+software admits reproduction in another practical area (on the
+example of UAV attacks)'':} Chapter~\ref{ch:uav} implements the
+three-tier ``onboard\,---\,droneport\,---\,cloud'' architecture
+applying M1--M7 to the protection of computer-vision onboard
+systems of unmanned aerial vehicles: the onboard tier runs the
+MambaShield inference with per-flow latency 0.5~ms, the droneport
+aggregates updates via FedLLM-API, and the cloud tier realises
+the game-theoretic M7 certification. Domain independence of the
+developed mathematical and algorithmic framework is confirmed;
+the third implementation act (AI Center of NRNU MEPhI, Moscow) is
+in the course of formalisation and will document this
+reproducibility.
 
 \end{enumerate}
 
