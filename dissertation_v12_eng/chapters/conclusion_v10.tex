@@ -10,6 +10,78 @@
 \addcontentsline{toc}{chapter}{Conclusion}
 \markboth{CONCLUSION}{CONCLUSION}
 
+\section*{Brief Characterisation of the Main Results
+(Eight Statements)}
+
+The main scientific results of the dissertation are systematised
+below as eight statements; each statement corresponds unambiguously
+to one developed model or model group and is supported by a
+publication in a peer-reviewed journal from the VAK list or
+indexed in Scopus/WoS (see the list of published works) and/or by
+an implementation act (see below).
+
+\begin{enumerate}[leftmargin=2em, itemsep=0.3em]
+
+\item A mathematical model and an algorithm for continuous-time
+graph dynamics have been developed (\textbf{M1: CT-TGNN /
+SDE-TGNN}) with a Gronwall-proven certified robustness under a
+Lipschitz bound $L_g$ on the vector field; empirically confirmed
+99.0\,\% F1 on CIC-IoT-2023, certified radius $\rho=0.25$, and
+cross-domain transfer of 90.5\,\% F1 without fine-tuning.
+
+\item A federated joint-threat-intelligence algorithm has been
+developed (\textbf{M2: FedLLM-API}) with Byzantine-resilient
+aggregation and differential privacy $\varepsilon=0.85$, which
+preserves 87.1\,\% F1 under 40\,\% corrupted clients and possesses
+proven convergence.
+
+\item A multi-level temporal architecture has been developed
+(\textbf{M3: TripleE-TGNN}), achieving 96.8\,\% F1 on multi-stage
+attacks and protected against catastrophic forgetting under the
+sequential arrival of tasks.
+
+\item A state-space model has been developed for detection
+(\textbf{M4: MambaShield}) with asymptotic complexity
+$\mathcal{O}(L\log L)$, demonstrating 91.4\,\% F1 under 25\,\%
+training-set poisoning and a per-flow inference latency of 0.5~ms.
+
+\item A stochastic transformer with epistemically aware
+anti-conformal smoothing has been developed
+(\textbf{M5--M6: Stoch.~Transf.~+ UC-HGP}), realising a calibrated
+decomposition of epistemic and aleatoric uncertainty with
+ECE\,=\,0.078 and delivering a 43\,\% reduction in SOC operator
+workload through low-confidence alert filtering.
+
+\item A unified game-theoretic adversarial-robustness
+certification framework has been developed
+(\textbf{M7: M7-Certification}), maintaining 94.7\,\% F1 against
+adaptive adversaries at the Stackelberg equilibrium and binding
+Models M1--M6 through consistency regularisation.
+
+\item A cybersecurity foundation model has been developed
+(\textbf{CyberSecLLM}) with a four-level defence against
+adversarial prompts (Prompt Injection, Jailbreak, RAG Poisoning,
+Multi-Agent Chain), achieving 89.1\,\% zero-shot F1 on the
+cybersecurity benchmark (+20.5 p.p.\ over GPT-4) and 94.5\,\%
+detection across 517 LLM attack scenarios.
+
+\item The M1--M7 ensemble has been integrated into the
+\textbf{RobustIDPS.ai} software platform
+(DOI~10.5281/zenodo.19129512; 17~models in 10~functional groups,
+51-page PWA interface), validated on 84.2~million samples from
+six benchmark datasets across 23~metrics with all 12~cells of the
+``condition\,---\,requirement'' matrix confirmed, and corroborated
+by two received implementation acts (NII~IKT~LLC, Novosibirsk;
+Ksyrix~LLC, Moscow), with a third act in formalisation
+(AI Center of NRNU MEPhI, Moscow).
+
+\end{enumerate}
+
+\noindent An expanded discussion of the results listed above is
+given in the following sections of this Conclusion.
+
+\bigskip
+
 This dissertation addressed the fundamental challenge of ensuring
 the robustness, efficiency, accuracy, and privacy of \emph{Hybrid
 Intrusion Detection and Prevention Systems} (Hybrid~IDPS)

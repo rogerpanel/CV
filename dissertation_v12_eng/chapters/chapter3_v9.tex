@@ -278,6 +278,191 @@ Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process ti
 
 
 %%=====================================================================
+\section{Technology Stack, Packages, and User Interface of RobustIDPS.ai}
+\label{sec:tech_stack_ui}
+%%=====================================================================
+
+\subsection{Implementation Technology Stack}
+\label{subsec:tech_stack}
+
+The RobustIDPS.ai software platform is a \emph{single Progressive
+Web Application} (PWA) split into a server-side and a client-side
+tier, containerised with Docker~Compose and orchestrated by a unified
+back-end / inference process. The stack has been chosen so as to
+provide simultaneously: (i)~reproducible training and inference of
+the deep graph-neural-network Models M1--M7; (ii)~resilient
+streaming processing of real-time network traffic; (iii)~an
+interactive SOC-analyst user interface; (iv)~integration with
+external large-language-model (LLM) providers through a single
+API-abstract layer.
+
+\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+\item \textbf{Server tier (Python~3.11)}~--- an asynchronous
+HTTP/WebSocket server on FastAPI (60+ REST API endpoints) on top
+of which the model pipeline runs in PyTorch~2.x with PyTorch
+Geometric and DGL extensions for graph operations; batch traffic
+processing relies on NFStream for flow-feature extraction from
+PCAP and on dpkt/Scapy for raw-packet parsing; service queues and
+Pub/Sub are implemented in Redis~7 (cache + queue); persistent
+storage of benchmarks and incident logs is PostgreSQL~16.
+
+\item \textbf{Client tier (TypeScript / React~18)}~--- a
+Progressive Web Application of \textbf{51~user-interface pages}
+organised into ten functional groups (see
+Section~\ref{subsec:ui_walkthrough}). Real-time updates of
+streaming classifications are pushed over WebSocket; graph and
+metric visualisations use Recharts and a bespoke D3.js graph
+visualisation; styling is Tailwind~CSS with a dark theme by
+default.
+
+\item \textbf{LLM integration tier}~--- a single LLM-provider
+abstraction with implementations for four commercial back-ends
+(Anthropic Claude, OpenAI GPT-4o, Google Gemini, DeepSeek) and a
+local-inference back-end; the four-level LLM defence (Prompt
+Injection, Jailbreak, RAG Poisoning, Multi-Agent Chain) is
+implemented as a transparent middleware between UI and providers.
+
+\item \textbf{Deployment tier}~--- Docker containerisation with
+multi-stage builds and Compose orchestration; integration with
+existing information-security tooling is provided by a plug-in
+for the Suricata EVE-JSON format, which allows RobustIDPS.ai to
+be embedded into the operating IDS of an organisation without
+modifying existing signature rules (confirmed by the NII~IKT~LLC
+implementation act, see Chapter~\ref{ch:platform}).
+
+\end{enumerate}
+
+\subsection{Used Packages and Versions}
+\label{subsec:packages_versions}
+
+Table~\ref{tab:packages_versions} lists the key software
+dependencies of the RobustIDPS.ai platform with the versions used
+to produce the experimental results and to sign the implementation
+acts. The complete \texttt{requirements.txt} and
+\texttt{package.json} are deposited with the source code on Zenodo
+(DOI: 10.5281/zenodo.19129512).
+
+\begin{table}[H]
+\centering
+\caption{Software dependencies of the RobustIDPS.ai platform.}
+\label{tab:packages_versions}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Category} & \textbf{Package} & \textbf{Version} \\
+\midrule
+Implementation language & Python & 3.11.x \\
+Web server & FastAPI & 0.110+ \\
+ASGI server & Uvicorn (uvloop) & 0.27+ \\
+Deep learning & PyTorch & 2.2+ \\
+Graph operations & PyTorch~Geometric & 2.5+ \\
+Graph operations (alt.) & DGL & 2.1+ \\
+Neural ODEs & torchdiffeq & 0.2.4 \\
+State-space models & mamba-ssm & 1.2+ \\
+Flow-feature extraction & NFStream & 6.5+ \\
+Raw-packet parsing & dpkt~/~Scapy & 1.9~/~2.5 \\
+Persistent store & PostgreSQL & 16 \\
+Cache and queues & Redis & 7 \\
+Containerisation & Docker & 24+ \\
+Orchestration & Docker Compose & v2 \\
+Client (language) & TypeScript & 5.3+ \\
+Client (framework) & React & 18 \\
+Client build & Vite & 5 \\
+UI library & Tailwind CSS & 3.4 \\
+Chart visualisation & Recharts & 2.10 \\
+Graph visualisation & D3.js & 7 \\
+Real-time updates & WebSocket (RFC~6455) & --- \\
+LLM providers (APIs) & anthropic, openai, google-genai, deepseek & current \\
+Signature plug-in & Suricata EVE-JSON & 7.0 (compat.) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{User Interface and Demonstration of Practical
+Application}
+\label{subsec:ui_walkthrough}
+
+The RobustIDPS.ai user interface is designed as a \emph{single
+entry point} for all cybersecurity roles in an organisation: SOC
+operator, incident-response analyst, ML model engineer, compliance
+auditor. The interface consists of 51~pages grouped into ten
+functional groups: ``AI Command Centre,'' ``AI Data \& Models,''
+``AI Active Defence,'' ``SOC Intelligence,'' ``AI Novel Methods,''
+``LLM Attack Surfaces,'' ``MLSecOps Standards,'' ``AI Security
+\& Gov,'' ``Industry \& Research,'' and ``Notice Board.''
+Fig.~\ref{fig:gui_walkthrough} below illustrates the platform in
+operation in a typical analyst usage scenario.
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} \\
+\scriptsize (a) Authentication &
+\scriptsize (b) Live capture and classification &
+\scriptsize (c) SOC Copilot (LLM assistant) \\[4pt]
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} \\
+\scriptsize (d) Adversarial robustness comparison &
+\scriptsize (e) Analytics and evaluation &
+\scriptsize (f) RAG Poisoning Simulator \\
+\end{tabular}
+\caption{Demonstration of practical operation of RobustIDPS.ai in
+a typical SOC-analyst scenario: \textbf{(a)}~operator
+authentication; \textbf{(b)}~Live~Monitor page~--- starting a
+streaming capture on the network interface \texttt{eth0} with
+selection of an ensemble of seven detection models (SurrogateIDS,
+Neural~ODE, Optimal~Transport, FedGTD, SDE-TGNN, CyberSecLLM,
+and others) and the capture interval (5--120~s);
+\textbf{(c)}~SOC~Copilot page~--- the interactive LLM assistant
+in local mode answering the analyst's query ``Get the Live
+Monitor results with breakdown by threat, severity, and
+confidence'' against the real data of the capture session;
+\textbf{(d)}~Adversarial~Eval page~--- multi-dataset comparison
+of models for robustness against six adversarial-attack methods
+(FGSM, PGD, C\&W, DeepFool, Gaussian noise, Label masking);
+\textbf{(e)}~Analytics \& Evaluation page~--- F1 metric
+comparison for seven models across six benchmarks with a heatmap,
+a radar profile, and a cross-dataset consistency table;
+\textbf{(f)}~RAG Poisoning Simulator page~--- simulation of
+attacks on the RAG pipeline of an LLM with four attack vectors
+(document injection, query manipulation, embedding-space
+perturbation, cross-contamination).}
+\label{fig:gui_walkthrough}
+\end{figure}
+
+\noindent An additional screenshot of the Analytics page with the
+``How to use'' hint open is shown in
+Fig.~\ref{fig:gui_analytics_intro}, illustrating the five built-in
+interactive explanations of the ten model-evaluation tabs
+(Performance, Convergence, Robustness, Privacy, Transfer Learning,
+Calibration, ROC/AUC, Dataset Comparison, Statistical Analysis,
+Cross-Module Intel).
+
+\begin{figure}[H]
+\centering
+\fbox{\includegraphics[width=0.86\textwidth]{figures/gui/gui_06_analytics_intro.png}}
+\caption{The Analytics \& Evaluation page with the ``How to use''
+hint open: interactive explanations of the ten comparative
+model-evaluation tabs, with PNG/PDF export and a PDF presentation
+export.}
+\label{fig:gui_analytics_intro}
+\end{figure}
+
+The screenshots above demonstrate that RobustIDPS.ai implements
+all the theoretical developments M1--M7 as a \emph{practically
+deployed} platform with an interface of industrial quality;
+implementation integrity is confirmed by the implementation acts
+of NII~IKT~LLC (active use of the platform by in-house
+cybersecurity specialists) and Ksyrix~LLC (integration into the
+operating network-traffic analysis and infrastructure-protection
+system).
+
+
+%%=====================================================================
 \section{Hyperparameter Configuration and Optimisation}
 \label{sec:hyperparams}
 %%=====================================================================
