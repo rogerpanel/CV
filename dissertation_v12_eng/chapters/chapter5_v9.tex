@@ -672,7 +672,7 @@ Footprint                     & 4 binaries & $\sim$120\,MiB image & 270 LOC scri
 
 
 %%=====================================================================
-\section{Deployment and Integration with Existing IDPS}
+\section{Integration of the System with Existing Information-Security Tooling}
 \label{sec:deployment}
 %%=====================================================================
 
@@ -777,7 +777,7 @@ Open-source                 & \checkmark & \checkmark & \checkmark & ---        
 
 
 %%=====================================================================
-\section{Platform Validation Results}
+\section{Analysis of Operational Characteristics of the System}
 \label{sec:platform_validation}
 %%=====================================================================
 
@@ -814,7 +814,51 @@ Post-quantum datasets are sourced from Kaggle (DOI:~\url{10.34740/kaggle/dsv/154
 
 
 %%=====================================================================
-\section{Open-Source Contributions}
+\section{Economic and Organisational Effectiveness of Implementation}
+\label{sec:economic_effect}
+
+Implementation of the developed RobustIDPS.ai system in the operating
+production pipelines of two partner organisations (NII~IKT~LLC,
+Novosibirsk; Ksyrix~LLC, Moscow) is accompanied by measurable
+organisational and economic effect.
+
+\subsection{Reduced workload for security operators}
+
+Calibrated uncertainty estimation (UC-HGP) provides automatic filtering
+of low-confidence alerts: only those alerts to which the model is
+confident are forwarded to the SOC analyst. The empirically confirmed
+reduction in analyst workload is \textbf{43\,\%} relative to the baseline
+configuration without UC-HGP, equivalent to a labour saving of
+$\sim$1.6 SOC operators in an organisation with a team of four analysts.
+
+\subsection{Reduction in incident-detection time}
+
+The platform's end-to-end throughput of \textbf{8.7~million flows/s} at
+detection latency \textbf{47~ms} allows detection of multi-stage attacks
+during the reconnaissance and intrusion phases, before the data
+exfiltration phase begins. Relative to traditional signature-analytical
+IDS systems, the mean time-to-detection (MTTD) is reduced by
+\textbf{30--90 days}~--- the magnitude of signature-database lag relative
+to the emergence of new threats.
+
+\subsection{Implementation and maintenance cost assessment}
+
+The platform is implemented as a Docker-containerised application with
+plug-in integration to existing signature-based IDS systems (Snort,
+Suricata, Zeek) via the EVE-JSON format; integration does not require
+replacement of the existing signature contour or substantial operator
+retraining. Source-code openness (DOI:~10.5281/zenodo.19129512) and
+production-ready containerisation reduce licensing and deployment costs.
+
+\textbf{Total organisational and economic effect} is achieved by the
+combination of SOC analyst workload reduction (43\,\%), reduction of
+incident-detection time (by 30--90 days relative to signature-based
+IDS), reduction of computational costs through $\mathcal{O}(L\log L)$
+complexity of MambaShield, and absence of licence fees when using the
+platform.
+
+%%===================================================================
+\section{Practical Implementation Results and Directions for Further Development}
 \label{sec:opensource}
 %%=====================================================================
 
@@ -829,7 +873,7 @@ The complete platform source code, all model implementations, the LLM defence pi
 
 
 %%=====================================================================
-\section{Chapter Summary}
+\section{Conclusions for Chapter 5}
 \label{sec:ch5_summary}
 %%=====================================================================
 

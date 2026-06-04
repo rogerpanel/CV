@@ -119,7 +119,7 @@ the threat set $\Theta_{\mathrm{adv}}$.
 their interpretation within their own subsection.
 
 %%=====================================================================
-\section{Mathematical Model of Hybrid IDPS}
+\section{Formalisation of the Hybrid Intrusion Detection and Prevention System}
 \label{sec:hybrid_idps_math_model}
 %%=====================================================================
 
@@ -645,7 +645,7 @@ Compute Lipschitz certificate $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ for each t
 \label{fig:m1_ct_tgnn_arch_methods}
 \end{figure}
 
-\section{Model M2: FedLLM-API --- Federated Graph Optimisation with Privacy}
+\section{Mathematical Model of Distributed Learning of Graph Representations with Confidentiality Guarantees}
 \label{sec:fedllm}
 %%=====================================================================
 
@@ -937,7 +937,7 @@ Initialise all encoder and attention parameters\;
 \label{fig:m3_triplee_arch_methods}
 \end{figure}
 
-\section{Model M4: MambaShield --- State-Space Inference with Poisoning Resilience}
+\section{Model for Improving Computational Efficiency of Streaming Data Analysis Based on State-Space Models}
 \label{sec:mamba}
 %%=====================================================================
 
@@ -1086,7 +1086,7 @@ def mamba_selective_fft(x, A, B, C, D, dt):
     return y + D @ x
 \end{lstlisting}
 
-\section{Methods M5 and M6: Uncertainty-Calibrated Inference on Graphs}
+\section{Algorithm for Anomaly Detection Based on Calibrated Uncertainty Estimation of Graph Models}
 \label{sec:stochastic}
 %%=====================================================================
 
@@ -1274,7 +1274,38 @@ The robustness guarantee of the detection framework under the new protocol regim
 \label{fig:pq_idps_arch_methods}
 \end{figure}
 
-\section{Model M7: Game-Theoretic Certification and Unified Framework}
+\section{Method of Adaptation to Changes in Statistical Characteristics of Network Traffic}
+\label{sec:drift_adaptation}
+
+Operation of the learnable components of the Hybrid~IDPS in real network
+infrastructure is characterised by gradual and abrupt changes in the
+statistical characteristics of input flows: protocol-stack changes
+(transition from TLS\,1.2 to TLS\,1.3, migration to post-quantum ciphers),
+shifts in application profiles, and emergence of new operating regimes.
+Without adaptation mechanisms, a deployed model gradually loses detection
+accuracy~--- the phenomenon of \emph{concept drift}.
+
+\textbf{Protocol-profile change} is detected via the KL divergence of the
+empirical feature distribution from the reference distribution recorded
+at training time.
+
+\textbf{Distribution drift.} For continuous drift, a sliding window of
+empirical feature covariance is used; exceeding a divergence threshold
+triggers online fine-tuning of Models M1, M3 and M5 with sub-linear
+regret bounds.
+
+\textbf{Detection of new operating regimes.} The epistemic uncertainty of
+UC-HGP serves as a signal that input data has left the training
+distribution; samples with epistemic uncertainty above threshold are
+queued for expert labelling.
+
+\textbf{Adaptive model update.} The update strategy fine-tunes only those
+parameters whose Fisher-information importance exceeds a threshold, which
+prevents catastrophic forgetting of previously learnt regularities and
+preserves 94.7\,\% F1 without full retraining.
+
+%%===================================================================
+\section{Method of Game-Theoretic Certification of Adversarial Robustness of the Hybrid IDPS}
 \label{sec:game}
 %%=====================================================================
 
@@ -1491,7 +1522,7 @@ the text of Chapter~\ref{ch:experiments} at first use.
 
 
 %%=====================================================================
-\section{Chapter Summary}
+\section{Conclusions for Chapter 2}
 \label{sec:ch2_summary}
 %%=====================================================================
 

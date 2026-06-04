@@ -515,7 +515,45 @@ platforms'').
 
 
 %%=====================================================================
-\section{Problems and Vulnerabilities of Models in Hybrid IDPS}
+\section{Methods of Data Representation and Analysis in Intrusion Detection Systems}
+\label{sec:data_representation_methods}
+
+Four main families of data-representation and analysis methods are used in
+modern intrusion-detection systems, each with its own effective range and
+fundamental limitations.
+
+\subsection{Signature-based Methods}
+
+Signature-based methods (Snort, Suricata, Zeek) match network traffic against
+a database of known attack patterns. They provide high precision on known
+threats with low false-positive rates, but they fundamentally cannot detect
+previously unknown (zero-day) attacks and lag the emergence of new threats
+by 30--90~days~\cite{Roesch1999,Paxson1999}.
+
+\subsection{Statistical Methods}
+
+Statistical methods (HMM, GMM, OSSEC) model the normal distribution of
+traffic features and detect deviations. They can detect new attack types
+but scale poorly on high-dimensional flows and generate many false alarms
+under changing environmental statistics.
+
+\subsection{Machine-learning Methods}
+
+Classical machine-learning methods (SVM, Random Forest, kNN) provide a
+trade-off between interpretability and detection accuracy, but require
+manual feature selection and do not automatically extract abstract
+representations from raw data streams~\cite{Buczak2016}.
+
+\subsection{Deep-learning Methods}
+
+Deep-learning methods (convolutional, recurrent, graph neural networks,
+transformers, state-space models) automatically extract features and
+achieve the highest detection accuracy, but they suffer from adversarial
+instability and high computational cost in real-time
+operation~\cite{Ahmad2021,Ferrag2020}.
+
+%%===================================================================
+\section{Problems and Vulnerabilities of Modern Intrusion Detection Models under Adversarial, Distributed, and Non-stationary Conditions}
 \label{sec:idps_problems}
 %%=====================================================================
 
@@ -587,7 +625,28 @@ the \emph{non-stationarity} axis~--- by~M1, M3, and~M6.
 
 
 %%=====================================================================
-\section{Graph Neural Networks: Architecture, Vulnerability, and the Dual-Input Problem}
+\section{Graph-based Representation of Network Traffic as the Basis for Analysing Complex Network Interactions}
+\label{sec:graph_representation}
+
+Classical intrusion-detection models operate on individual packets or
+flows in isolation, whereas real attacks develop within the \emph{structure}
+of network interactions among hosts, services, and users. Graph-based
+representation enables the systematic encoding of these relationships and
+the application of graph-analytical algorithms to them.
+
+\textbf{Network-interaction graphs} represent hosts as vertices and network
+flows between them as directed edges. \textbf{Traffic-flow graphs} unfold
+this structure in time, reflecting the temporal evolution of connections.
+\textbf{Attack-and-threat-propagation graphs} extend the representation to
+multi-stage scenarios reflecting an adversary's lateral movement across
+infrastructure. \textbf{Advantages of graph-based representation} include
+the joint analysis of structural, temporal, and attribute features; natural
+modelling of multi-stage attacks spanning multiple nodes and time
+intervals; and applicability of unified algorithmic approaches regardless
+of the feature dimensionality of an individual flow.
+
+%%===================================================================
+\section{Graph Neural Networks for Network Traffic Analysis}
 \label{sec:gnn_vulnerability}
 %%=====================================================================
 
@@ -664,7 +723,7 @@ Despite the theoretical promise, no existing work derives certified robustness b
 
 
 %%=====================================================================
-\section{Distributed Graph Learning with Privacy Guarantees}
+\section{Distributed Learning of Graph Models under Confidentiality Constraints}
 \label{sec:distributed}
 %%=====================================================================
 
@@ -696,7 +755,7 @@ and the moments-accountant composition~\cite{Abadi2016} enables precise tracking
 
 
 %%=====================================================================
-\section{Computational Efficiency for Large-Scale Temporal Graphs}
+\section{Methods for Improving Computational Efficiency of Large-Scale Temporal Graph Processing}
 \label{sec:efficiency}
 %%=====================================================================
 
@@ -754,7 +813,7 @@ Online convex optimisation provides a framework for sequential decision-making u
 
 
 %%=====================================================================
-\section{Unified Robustness Certification}
+\section{Methods for Ensuring and Certifying Robustness of Machine-Learning Models}
 \label{sec:certification}
 %%=====================================================================
 

@@ -44,7 +44,7 @@ separately in Chapter~\ref{ch:experiments}.
 
 
 %%=====================================================================
-\section{Network Intrusion Detection: Terminologies and Context}
+\section{Problem Statement of Constructing an Adversarially Robust Hybrid IDPS for Network Traffic Analysis}
 \label{sec:nidps_context}
 %%=====================================================================
 
@@ -77,7 +77,7 @@ The following terms are used throughout this chapter and the experimental valida
 
 
 %%=====================================================================
-\section{Data-to-Graph Transformation Pipeline}
+\section{Architecture of the RobustIDPS.ai Software System}
 \label{sec:data_to_graph}
 %%=====================================================================
 
@@ -107,7 +107,7 @@ For the TripleE-TGNN (Model M3) and the SOC Intelligence integration, the networ
 
 
 %%=====================================================================
-\section{Classification Taxonomy}
+\section{Functionality of the RobustIDPS.ai System}
 \label{sec:taxonomy}
 %%=====================================================================
 
@@ -145,7 +145,7 @@ The taxonomy is extensible: new attack classes can be registered through the pla
 
 
 %%=====================================================================
-\section{Feature Engineering Pipeline}
+\section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
 \label{sec:features}
 %%=====================================================================
 
@@ -184,7 +184,7 @@ where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and 
 
 
 %%=====================================================================
-\section{Domain-Specific Instantiation of Methods}
+\section{Domain-Specific Realisation of Methods M1--M7}
 \label{sec:method_instantiation}
 %%=====================================================================
 
@@ -278,7 +278,7 @@ Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process ti
 
 
 %%=====================================================================
-\section{Technology Stack, Packages, and User Interface of RobustIDPS.ai}
+\section{Deployment and Integration Infrastructure of the System}
 \label{sec:tech_stack_ui}
 %%=====================================================================
 
@@ -494,7 +494,7 @@ system).
 
 
 %%=====================================================================
-\section{Hyperparameter Configuration and Optimisation}
+\section{System Performance Optimisation}
 \label{sec:hyperparams}
 %%=====================================================================
 
@@ -547,7 +547,7 @@ All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Tra
 
 
 %%=====================================================================
-\section{Integrated System Architecture}
+\section{Comparative Analysis of Architectural and Functional Capabilities of RobustIDPS.ai versus Existing Intrusion Detection Systems}
 \label{sec:integrated_arch}
 %%=====================================================================
 
@@ -588,7 +588,37 @@ invariants~P2--P6 from \S\ref{subsec:six_properties}.
 %%=====================================================================
 
 %%=====================================================================
-\section{Chapter Summary}
+\section{Ensuring Reproducibility of Results and Distribution of the Software Complex}
+\label{sec:reproducibility}
+
+Reproducibility of the dissertation's results is ensured by complete
+deposition of source code, trained models, and experimental protocols in
+the open Zenodo repository (DOI:~10.5281/zenodo.19129512).
+
+\textbf{Source-code publication.} All RobustIDPS.ai components, including
+17 neural-network models, server-side tier (FastAPI/Python), client-side
+tier (React/TypeScript), and Suricata EVE-JSON plug-in, are released under
+an open licence. The complete \texttt{requirements.txt} (Python) and
+\texttt{package.json} (Node.js) with pinned dependency versions are
+deposited alongside the code.
+
+\textbf{Component descriptions.} Each component is accompanied by a
+technical description of interfaces, input/output data formats, startup
+parameters, and dependencies, structured as \texttt{README.md} and a
+\texttt{docs/} directory split by functional group.
+
+\textbf{Documentation and experiment-reproduction tools.} Scripts and
+Makefile targets enable single-command launch of all key experiments on
+benchmark datasets; hyperparameter configurations, dataset splits, and
+evaluation parameters are pinned in YAML files.
+
+\textbf{Open-source contributions.} Derived results with stand-alone value
+beyond the dissertation (Suricata EVE-JSON plug-in, PyTorch~Geometric
+wrappers for continuously evolving graphs) are submitted to the
+corresponding upstream projects as pull requests.
+
+%%===================================================================
+\section{Conclusions for Chapter 3}
 \label{sec:ch3_summary}
 %%=====================================================================
 
