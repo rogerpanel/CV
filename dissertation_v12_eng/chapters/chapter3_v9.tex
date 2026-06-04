@@ -33,7 +33,7 @@ datasets totalling 84.2 million labelled samples: it presents the
 experimental methodology, the unified benchmark results, the
 per-Model results for each of the seven Models M1--M7, the
 comparison with baselines, and the ablation studies. The chapter
-concludes with \S\ref{sec:ch3_uav_preview}~--- a \emph{preliminary
+concludes with Chapter~\ref{ch:uav}~--- a \emph{preliminary
 extension} of the Hybrid~IDPS system to the UAV sector, which
 demonstrates the system's domain-independence as a preamble to the
 full experimental programme for UAVs in Chapter~\ref{ch:uav}. The
@@ -390,7 +390,7 @@ functional groups: ``AI Command Centre,'' ``AI Data \& Models,''
 ``AI Active Defence,'' ``SOC Intelligence,'' ``AI Novel Methods,''
 ``LLM Attack Surfaces,'' ``MLSecOps Standards,'' ``AI Security
 \& Gov,'' ``Industry \& Research,'' and ``Notice Board.''
-Fig.~\ref{fig:gui_walkthrough} below illustrates the platform in
+Fig.~\ref{fig:gui_walkthrough_p1} below illustrates the platform in
 operation in a typical analyst usage scenario.
 
 \begin{figure}[htbp]
@@ -586,399 +586,53 @@ invariants~P2--P6 from \S\ref{subsec:six_properties}.
 
 
 %%=====================================================================
-\section{Experimental Methodology}
-\label{sec:exp_methodology}
-%%=====================================================================
-
-\subsection{Datasets}
-
-Evaluation employs six benchmark datasets spanning diverse network environments, attack taxonomies, and temporal characteristics.
-
-\begin{table}[htbp]
-\centering
-\caption{Summary of benchmark datasets used in experimental evaluation.}
-\label{tab:datasets}
-\begin{tabular}{lrrrl}
-\toprule
-Dataset & Records & Attack types & Features & Domain \\
-\midrule
-CIC-IoT-2023      & 46.6M & 33 & 46 & IoT Networks \\
-CSE-CICIDS2018     & 16.2M &  7 & 79 & Enterprise \\
-UNSW-NB15          &  2.5M &  9 & 49 & Hybrid \\
-Microsoft GUIDE    & 13.7M & 15 & 51 & Cloud/Enterprise \\
-Container Security &  3.2M &  8 & 93 & Microservices \\
-Edge-IIoT          &  2.0M & 12 & 69 & Edge/Industrial \\
-\midrule
-Total              & 84.2M & 84 &    & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-CIC-IoT-2023~\cite{Neto2023,Ring2019} comprises 46.6~million flow records from 105 IoT devices with 33 attack types. CSE-CICIDS2018~\cite{Sharafaldin2018} contains 16.2~million flows with 7 attack categories. UNSW-NB15~\cite{Moustafa2015,Mirsky2018} provides 2.5~million records with 9 attack classes. The ICS3D collection adds: Microsoft GUIDE (13.7M records, 15 attack types), Container Security (3.2M records, 8 attack patterns), and Edge-IIoT (2.0M records, 12 attack scenarios). All datasets are standardised to the 83-feature vector described in Chapter~\ref{ch:adaptation}.
-
-
-\subsection{Unified Evaluation Framework}
-
-Performance characterisation employs twenty-three metrics spanning five categories: classification (accuracy, balanced accuracy, precision, recall, F1, MCC~\cite{Matthews1975}, Cohen's kappa~\cite{Cohen1960}), ROC analysis (AUC-ROC, TPR, TNR, FPR, FNR), calibration (ECE~\cite{Naeini2015}, Brier score~\cite{Brier1950}), uncertainty (mean entropy, epistemic uncertainty, aleatoric uncertainty), and computational (latency, throughput, parameters, GPU memory, energy consumption, attack success rate, certified accuracy).
-
-
-\subsection{Implementation Details}
-
-All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss. Hardware: NVIDIA Tesla V100 (32\,GB) for training, P100 (16\,GB) for deployment. All timings average 100 independent runs with 95\% confidence intervals. Stratified 70/15/15 splits maintain class distributions with focal loss ($\gamma=2$) for class imbalance~\cite{Lin2017focal}.
-
 
 %%=====================================================================
-\section{Unified Benchmark Results}
-\label{sec:benchmark_results}
-%%=====================================================================
-
-Table~\ref{tab:unified_results} summarises the performance of the unified framework across all six datasets, compared against the best single baseline.
-
-\begin{table}[htbp]
-\centering
-\caption{Unified framework performance across all benchmark datasets.}
-\label{tab:unified_results}
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Dataset} & \textbf{Acc (\%)} & \textbf{F1 (\%)} & \textbf{Best Baseline (\%)} & \textbf{$\Delta$ (p.p.)} \\
-\midrule
-CIC-IoT-2023    & 94.7 & 94.3 & 91.8 & +2.9 \\
-CSE-CICIDS2018   & 93.9 & 93.9 & 89.7 & +4.2 \\
-UNSW-NB15        & 93.8 & 93.8 & 88.2 & +5.6 \\
-MS GUIDE         & 92.1 & 92.0 & 87.5 & +4.6 \\
-Container Sec    & 91.5 & 91.4 & 86.9 & +4.6 \\
-Edge-IIoT        & 89.8 & 89.7 & 84.3 & +5.5 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The unified framework consistently outperforms the best single baseline by 2.9--5.6 percentage points across all datasets, with the largest improvements on the most challenging datasets (UNSW-NB15, Edge-IIoT) where topological diversity and class imbalance are most severe.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_benchmark_improvement_bars.pdf}
-\caption{Per-dataset accuracy improvement (percentage points) of the unified framework over the best single baseline. The largest gains are observed on datasets with high topological diversity (UNSW-NB15: +5.6, Edge-IIoT: +5.5).}
-\label{fig:benchmark_bars}
-\end{figure}
-
-
-%%=====================================================================
-\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
-\section{Method-Specific Results}
-\label{sec:method_results}
-%%=====================================================================
-
-This section presents results for each method individually, demonstrating how each addresses its corresponding gap from Chapter~\ref{ch:literature} and sub-problem from Chapter~\ref{ch:methods}.
-
-
-\subsection{M1: CT-TGNN Results (Gap 1, Sub-problem 1)}
-
-CT-TGNN~\cite{Anaedevha2025cais} employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration. On CIC-IoT-2023 the architecture achieves 98.3\% accuracy with 47\,ms median inference latency and 8.7~million events per second throughput. Per-category recall: DDoS 99.1\%, reconnaissance 96.8\%, web attacks 97.3\%, brute force 98.6\%, spoofing 95.2\%, malware 98.9\%, Mirai 97.4\%.
-
-\begin{table}[htbp]
-\centering
-\caption{CT-TGNN performance across benchmark datasets.}
-\label{tab:ct_tgnn_results}
-\begin{tabular}{lccccc}
-\toprule
-Dataset & Accuracy & Recall & FPR & ECE & Latency (ms) \\
-\midrule
-CIC-IoT-2023   & 98.3\% & 97.9\% & 1.4\% & 0.062 & 47 \\
-CSE-CICIDS2018 & 96.7\% & 96.2\% & 2.1\% & 0.074 & 51 \\
-UNSW-NB15      & 97.1\% & 96.5\% & 1.9\% & 0.069 & 44 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_ct_tgnn_per_category_recall.pdf}
-\caption{CT-TGNN per-category recall on CIC-IoT-2023 across seven major attack families. DDoS achieves the highest recall (99.1\%) while spoofing is most challenging (95.2\%), reflecting the latter's greater topological variability.}
-\label{fig:ct_tgnn_recall}
-\end{figure}
-
-
-\subsection{SDE-TGNN: Stochastic Extension (Gap 1, Sub-problem 1)}
-
-The SDE-TGNN~\cite{Anaedevha2026sdetgnn} extends CT-TGNN with It\^{o} SDEs and Fokker-Planck moment propagation, achieving uncertainty quantification at $\calO(d^2)$ cost without Monte Carlo sampling.
-
-\begin{table}[htbp]
-\centering
-\caption{SDE-TGNN: detection, calibration, certified robustness, and transfer.}
-\label{tab:sde_tgnn_results}
-\begin{tabular}{lcccc}
-\toprule
-Dataset & F1 (\%) & ECE & Certified $R{=}0.25$ & Transfer F1 (\%) \\
-\midrule
-CSE-CICIDS2018 & 99.4 & 0.038 & 78.3\% & 91.5 \\
-CIC-IoT-2023   & 98.9 & 0.044 & 75.1\% & 89.8 \\
-UNSW-NB15      & 98.8 & 0.043 & 75.2\% & 90.3 \\
-\midrule
-Average        & 99.0 & 0.042 & 76.2\% & 90.5 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_sde_tgnn_robustness_vs_radius.pdf}
-\caption{SDE-TGNN certified robustness as a function of perturbation radius $R$. The shaded band shows the certified accuracy derived from randomised smoothing; the dashed line shows the Lipschitz certificate from Theorem~\ref{thm:ct_tgnn_rob}. At $R=0.25$, 76.2\% of test samples are provably robust.}
-\label{fig:sde_robustness}
-\end{figure}
-
-
-\subsection{M2: FedLLM-API Results (Gap 2, Sub-problem 2)}
-
-\begin{table}[htbp]
-\centering
-\caption{FedLLM-API performance under varying Byzantine fractions.}
-\label{tab:fedllm_results}
-\begin{tabular}{lccccc}
-\toprule
-Byzantine \% & FedLLM-API & FedAvg & FedProx & Krum & Median \\
-\midrule
-0\%  & 94.2\% & 93.8\% & 93.5\% & 92.1\% & 91.7\% \\
-10\% & 92.7\% & 84.6\% & 86.3\% & 89.4\% & 88.9\% \\
-20\% & 91.1\% & 76.2\% & 79.8\% & 86.7\% & 85.3\% \\
-30\% & 89.7\% & 68.3\% & 73.9\% & 83.1\% & 82.6\% \\
-40\% & 87.1\% & 61.4\% & 67.2\% & 79.8\% & 78.4\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-With 40\% Byzantine participants, FedLLM-API achieves 87.1\% versus 61.4\% for FedAvg. LLM integration yields 87.6\% F1 on zero-shot novel attack detection versus 34.2\% for supervised baselines. Membership inference success is 52.7\%, barely above the 50\% random baseline.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_fedllm_byzantine_comparison.pdf}
-\caption{FedLLM-API accuracy degradation under increasing Byzantine fractions compared with FedAvg, FedProx, Krum, and Median baselines. FedLLM-API degrades gracefully from 94.2\% to 79.8\% as corruption rises from 0\% to 50\%, while FedAvg collapses to 52.1\%.}
-\label{fig:fedllm_byzantine}
-\end{figure}
-
-
-\subsection{M3: TripleE-TGNN Results (Gap 3, Sub-problem 3)}
-
-Overall accuracy 96.8\%, outperforming single-granularity baselines by 8.3\%. Service-level: 95.7\%, trace-level: 97.2\%, node-level: 96.4\%. Container escape: 98.7\%, supply chain: 97.3\%. Under 12 daily topology changes with EWC~\cite{Kirkpatrick2017}, maintains 94.7\% versus 78.3\% for standard GNNs without retraining. Latency 73\,ms, memory 4.7\,GB.
-
-
-\subsection{M4: MambaShield Results (Gap 4, Sub-problem 4)}
-
-\begin{table}[htbp]
-\centering
-\caption{MambaShield accuracy under increasing poisoning rates.}
-\label{tab:mamba_results}
-\begin{tabular}{lccc}
-\toprule
-Poisoning \% & MambaShield & Standard AT & No Defence \\
-\midrule
-0\%  & 94.8\% & 93.1\% & 94.2\% \\
-10\% & 93.2\% & 89.7\% & 85.4\% \\
-25\% & 91.4\% & 84.6\% & 73.8\% \\
-40\% & 87.2\% & 78.3\% & 52.3\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-PAC-Bayesian bound predicts true risk bounded by 0.089 (91.1\% accuracy); empirical 91.4\% confirms bound with 2.7\% margin. Inference latency 0.5\,ms per flow --- lowest of all models.
-
-
-\subsection{M5/M6: Uncertainty-Calibrated Results (Gap 6, Sub-problem 6)}
-
-ECE of 0.078 versus 0.192 for deterministic attention --- a 59\% reduction. Analyst workload reduced by 43\% through uncertainty-driven triage. Epistemic-aleatoric decomposition enables principled detection of out-of-distribution inputs.
-
-
-\subsection{M7: Game-Theoretic Certification Results (Gap 7, Sub-problem 7)}
-
-Accuracy 94.7\% against adaptive adversaries versus 87.6\% for non-strategic approaches. Multiplicative weights regret converges at the theoretical $\calO(\sqrt{T\log|\calC|})$ rate. Uncertainty-penalised payoffs with $\kappa=0.5$ produce risk-sensitive policies that abstain when model confidence is low.
-
-
-\subsection{CyberSecLLM: Foundation Model Results (Gap 5)}
-
-\begin{table}[htbp]
-\centering
-\caption{CyberSecLLM zero-shot performance on CyberSecBench.}
-\label{tab:cybersecllm_results}
-\begin{tabular}{lccccc}
-\toprule
-Model & Detection & Transfer & OOD & Triage & Avg \\
-\midrule
-GPT-4 (5-shot)    & 69.8\% & 61.2\% & 72.4\% & 68.1\% & 68.6\% \\
-Foundation-Sec-8B & 85.1\% & 72.4\% & 81.3\% & 73.8\% & 73.8\% \\
-CyberSecLLM-7B    & 97.4\% & 86.2\% & 95.3\% & 89.1\% & 89.1\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-CyberSecLLM-7B achieves 89.1\% average zero-shot accuracy, a 20.5-point improvement over GPT-4 and 15.3-point over Foundation-Sec-8B. Processes million-token sequences in 2.3\,s --- a 19$\times$ speedup over transformers.
-
-
-\addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
-%%=====================================================================
-\section{Comparative Analysis with Baselines}
-\label{sec:comparative}
-%%=====================================================================
-
-\begin{table}[htbp]
-\centering
-\caption{Comparative performance against baselines on CIC-IoT-2023.}
-\label{tab:comparative}
-\begin{tabular}{lcccccc}
-\toprule
-Method & Acc. & F1 & AUC & FPR & MCC & Latency \\
-\midrule
-Random Forest      & 87.3\% & 85.9\% & 0.941 & 5.2\% & 0.847 & 12\,ms \\
-XGBoost            & 89.1\% & 87.8\% & 0.957 & 4.3\% & 0.871 & 8\,ms \\
-LSTM               & 88.6\% & 87.2\% & 0.952 & 4.7\% & 0.864 & 38\,ms \\
-CNN-LSTM           & 89.8\% & 88.4\% & 0.961 & 3.9\% & 0.882 & 42\,ms \\
-Standard GNN       & 90.4\% & 89.1\% & 0.968 & 3.5\% & 0.893 & 55\,ms \\
-Multimodal Trans.  & 91.8\% & 90.1\% & 0.974 & 3.7\% & 0.908 & 63\,ms \\
-\textit{Unified (Ours)}   & \textit{94.7\%} & \textit{94.3\%} & \textit{0.991} & \textit{1.4\%} & \textit{0.938} & \textit{47\,ms} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The unified framework achieves the highest accuracy (94.7\%) and lowest FPR (1.4\%) while maintaining competitive latency (47\,ms). CT-TGNN processes 8.7M events/s versus 6.2M for transformers and 4.3M for LSTMs.
-
-
-%%=====================================================================
-\section{Ablation Studies}
-\label{sec:ablation}
-%%=====================================================================
-
-\begin{table}[htbp]
-\centering
-\caption{Ablation study: impact of removing individual components.}
-\label{tab:ablation}
-\begin{tabular}{lcc}
-\toprule
-Ablated Component & Full System & Without \\
-\midrule
-Continuous-time ODE $\to$ discrete RNN & 98.3\% & 91.5\% ($-$6.8) \\
-Multi-scale temporal modelling         & 98.3\% & 94.4\% ($-$3.9) \\
-Temporal adaptive batch norm.          & 98.3\% & 93.6\% ($-$4.7) \\
-Cross-granularity attention            & 96.8\% & 94.7\% ($-$2.1) \\
-Byzantine trimmed mean $\to$ FedAvg    & 89.7\% & 68.3\% ($-$21.4) \\
-Differential privacy noise            & 87.1\% & 90.2\% (+3.1) \\
-Optimal transport alignment            & 92.7\% & 76.9\% ($-$15.8) \\
-LLM zero-shot branch (F1)             & 87.6\% & 34.2\% ($-$53.4) \\
-Progressive distillation               & 91.4\% & 81.7\% ($-$9.7) \\
-Variational attention (ECE)            & 0.078  & 0.192 ($-$0.114) \\
-Game-theoretic equilibrium             & 94.7\% & 87.6\% ($-$7.1) \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Every component contributes measurably. The largest single-component impact is the LLM branch ($-$53.4 F1 points), confirming its critical role in zero-shot generalisation. Byzantine trimmed-mean aggregation ($-$21.4) and OT alignment ($-$15.8) are essential for federated robustness. DP noise degrades accuracy by 3.1\% but is the mandatory cost of formal privacy.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.85\textwidth]{figures/fig_ablation_waterfall.pdf}
-\caption{Ablation study: performance drop when each component is removed. Horizontal bars show the magnitude of degradation; the LLM branch, Byzantine trimmed mean, and OT alignment are the three most critical components. DP noise is the only component whose removal improves accuracy (+3.1\%), reflecting the privacy--utility trade-off.}
-\label{fig:ablation_waterfall}
-\end{figure}
-
-
-%%=====================================================================
-
-%%=====================================================================
-\section{Preliminary Extension of the Hybrid IDPS System to the UAV Sector}
-\label{sec:ch3_uav_preview}
-%%=====================================================================
-
-Beyond the validation on network-traffic benchmarks
-(\S\ref{sec:exp_methodology}--\ref{sec:ablation}), this section
-presents a \emph{preliminary extension} of the Hybrid~IDPS system
-to the unmanned-aerial-vehicle (UAV) sector. The aim of this
-section is to confirm that the same
-tuple~\eqref{eq:hybrid_idps_tuple} with the same Models M1--M7,
-when the graph representation of inputs is switched from
-network-traffic flows to the UAV operational graph (defined in
-\S\ref{subsubsec:sector_uav}), systematically preserves the key
-properties~P1--P6 without retraining the core of the system. The
-full Phase~A implementation for the UAV sector with extended
-validation is presented in Chapter~\ref{ch:uav}.
-
-Table~\ref{tab:ch3_uav_preview} reports the key metrics of the
-Hybrid~IDPS system measured on three UAV-oriented benchmark tasks:
-the robustness of the visual-perception detector to physical
-adversarial patches on the VisDrone benchmark, the accuracy of
-GNSS-spoofing detection on the TEXBAT benchmark, and the
-mission-completion rate of the autopilot under BIM perturbations
-of its policy. For comparability, results are placed alongside the
-system's network-traffic values (CIC-IoT-2023) from
-\S\ref{sec:method_results}.
-
-\begin{table}[H]
-\centering
-\caption{Preliminary extension of the Hybrid~IDPS system to the
-UAV sector: key metrics on three UAV tasks against the
-network-traffic results. The full experimental programme for the
-UAV sector is presented in Chapter~\ref{ch:uav}.}
-\label{tab:ch3_uav_preview}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l c c l}
-\toprule
-\textbf{Task} & \textbf{Property} & \textbf{Metric}
-              & \textbf{System value} \\
-\midrule
-NIDS (CIC-IoT-2023, baseline)            & P2 & macro-F1     & 0.978 \\
-\addlinespace
-UAV: VisDrone + adv.\ patches            & P1, P2 & robust F1@PGD-20 & 0.912 \\
-UAV: TEXBAT spoofing detection           & P2 & AUROC        & 0.946 \\
-UAV: autopilot under BIM perturbations   & P1, P6 & mission-completion rate & 0.904 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The preliminary values above demonstrate that the Hybrid~IDPS
-system developed in this dissertation retains the indicators of
-properties~P1, P2, and~P6 on UAV tasks within 6--7~p.p.\ of the
-values attained on network traffic, systematically supporting the
-hypothesis of domain-independence of the seven Models M1--M7. The
-detailed methodological protocol for extending the system to the
-UAV sector~--- including the three-tier
-\emph{onboard--droneport--cloud} architecture, the
-telemetry-to-graph pipeline, and the Lipschitz--Grönwall
-certificates applied to UAVs~--- is presented in
-Chapter~\ref{ch:uav}.
-
 \section{Chapter Summary}
 \label{sec:ch3_summary}
 %%=====================================================================
 
-This chapter has systematically instantiated and validated the
-\emph{system} Hybrid~IDPS for the network-traffic-protection
-sector. The key contributions of this chapter are: \emph{(1)}~a
-formal pipeline that transforms raw PCAP/CSV traffic into temporal
-graph structures with node features (12~dimensions) and edge
-features (83~dimensions), systematically realising the
-$(\calV_t, \calE_t, X_t, A_t)$ components of the
-tuple~\eqref{eq:hybrid_idps_tuple};
-\emph{(2)}~a unified classification taxonomy of 34 classes across 7
-attack categories, extensible through zero-shot LLM classification
-and systematically specifying the codomain of the detector
-$f_\theta$; \emph{(3)}~a comprehensive engineering pipeline for 83
-features covering flow statistics, inter-arrival distributions,
-flag indicators, payload statistics, and derived ratios;
-\emph{(4)}~NIDS-specific implementations of all seven Models
-M1--M7 with hyperparameters, time constants, and architectural
-configurations adapted to the sector's requirements;
-\emph{(5)}~an integrated detection pipeline demonstrating the
-end-to-end flow from raw traffic to confidence-scored alerts;
-\emph{(6)}~systematic benchmark validation of the instantiated
-Hybrid~IDPS system on six benchmark datasets totalling
-84.2~million labelled samples, outperforming the best baseline
-methods by 2.9--5.6~p.p.\ across all datasets;
-\emph{(7)}~ablation studies systematically isolating the
-contribution of each system component; and
-\emph{(8)}~a preliminary extension of the Hybrid~IDPS system to the
-UAV sector that demonstrates the preservation of properties~P1,
-P2, and~P6 within 6--7~p.p.\ of the NIDS-sector values, as a
-preamble to the full experimental programme for UAVs in
-Chapter~\ref{ch:uav}. The cross-cutting validation of the
-Hybrid~IDPS system~--- adversarial robustness across six attack
-families, cross-domain transfer to fundamentally different
-application areas, and post-quantum compatibility~--- is presented
+This chapter has systematically developed and software-implemented
+the \textbf{RobustIDPS.ai} system as a NIDS-sector instantiation of
+the Hybrid~IDPS mathematical model from
+Chapter~\ref{ch:methods}. The chapter is \emph{strictly software-development
+oriented}: the experimental investigation of the developed system
+and its quantitative validation on benchmark datasets are reported
 in Chapter~\ref{ch:experiments}.
+
+Key software-engineering contributions of this chapter:
+\begin{itemize}\setlength\itemsep{2pt}
+\item \emph{(1)}~A formal pipeline for transforming raw PCAP and
+CSV traffic into temporal graph structures with 12-dimensional
+node features and 83-dimensional edge features, systematically
+implementing the components $(\calV_t, \calE_t, X_t, A_t)$ of the
+Hybrid IDPS tuple~\eqref{eq:hybrid_idps_tuple}.
+\item \emph{(2)}~A unified 34-class classification taxonomy across
+seven attack categories, extensible via LLM zero-shot classification.
+\item \emph{(3)}~A comprehensive 83-feature engineering pipeline
+covering flow statistics, inter-packet-interval distributions, flag
+indicators, payload statistics and derived ratios.
+\item \emph{(4)}~A NIDS-oriented software realisation of all seven
+models M1--M7 with hyperparameters, time constants and architectural
+configurations tailored to the network-traffic protection sector.
+\item \emph{(5)}~A unified integrated system architecture providing
+end-to-end flow from raw traffic to SOC analyst alerts with
+confidence estimation and automated response.
+\item \emph{(6)}~A production-grade technology stack
+(FastAPI/PyTorch~2.x with PyTorch~Geometric and DGL extensions,
+React~18 PWA, PostgreSQL~16, Redis~7, Docker~Compose), including
+integration with four commercial LLM providers and a Suricata
+EVE-JSON plug-in.
+\item \emph{(7)}~A 51-page progressive web application user
+interface aggregating 17 neural-network models into 10 functional
+groups; a representative SOC analyst workflow is demonstrated.
+\end{itemize}
+
+The complete set of implemented components constitutes the
+\textbf{RobustIDPS.ai} platform, deposited in the Zenodo
+repository (DOI: 10.5281/zenodo.19129512) with open source code.
+\emph{The quantitative experimental validation of the developed
+system~--- detection quality assessment, adversarial robustness,
+efficiency, privacy, calibration, ablation studies and cross-domain
+transfer~--- is presented in Chapter~\ref{ch:experiments}.}
 
