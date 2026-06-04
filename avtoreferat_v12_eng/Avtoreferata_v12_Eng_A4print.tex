@@ -1,0 +1,9 @@
+% A4 2-up imposition of the A5 avtoreferat for double-sided printing.
+\documentclass[a4paper,landscape]{article}
+\usepackage[a4paper,landscape,margin=0pt]{geometry}
+\usepackage{pdfpages}
+\begin{document}
+\includepdf[pages=-, nup=2x1, frame=false, scale=0.98,
+            delta=4pt 0pt,
+            openright=false]{Avtoreferata_v12_Eng.pdf}
+\end{document}

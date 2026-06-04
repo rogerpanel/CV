@@ -197,7 +197,7 @@ CT-TGNN~\cite{Anaedevha2025cais} is instantiated as follows. In the network secu
 
 The three parallel ODE branches of Equation~\eqref{eq:ct_tgnn_multi} are assigned time constants $\tau_1=1$\,s (packet-level transients), $\tau_2=60$\,s (flow-level session dynamics), and $\tau_3=3600$\,s (campaign-level trends). This enables simultaneous resolution of sub-second port-scanning bursts and multi-hour advanced persistent threat campaigns. The architecture employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration with tolerances $10^{-5}$ (relative) and $10^{-7}$ (absolute).
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.69\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
 \caption{CT-TGNN architecture instantiated for network traffic dynamics.}
@@ -209,7 +209,7 @@ The three parallel ODE branches of Equation~\eqref{eq:ct_tgnn_multi} are assigne
 
 FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat intelligence. Each federated client corresponds to a security operations centre possessing local traffic datasets. Byzantine-robust aggregation (Algorithm~\ref{alg:fedllm}) protects against compromised participants submitting poisoned gradient updates. Differential privacy through local gradient clipping at threshold $C=1.0$ and Gaussian noise with scale $\sigma=0.8$ achieves an $(\epsilon{=}0.85,\delta{=}10^{-5})$ guarantee over 100 communication rounds. Sinkhorn OT alignment with regularisation $\lambda=0.1$ corrects for distributional heterogeneity across centres. The LLM ensemble weight is $\lambda_{\mathrm{LLM}}=0.3$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\textwidth]{figures/fig_fedllm_api_architecture.pdf}
 \caption{FedLLM-API architecture for collaborative threat intelligence across organisational boundaries.}
@@ -221,7 +221,7 @@ FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat 
 
 The service graph $\calG_s(t)$ has nodes representing microservices and edges representing API calls. The trace graph $\calG_r(t)$ has nodes representing distributed traces. The host graph $\calG_n(t)$ has nodes representing infrastructure hosts. EWC consolidation strength $\lambda_{\mathrm{ewc}}=0.5$ balances plasticity and stability during topology evolution. Multi-task loss weights are $\lambda_s=0.4$, $\lambda_r=0.3$, $\lambda_n=0.3$ with consistency weight $\lambda_{\mathrm{con}}=0.1$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
 \caption{TripleE-TGNN architecture for multi-level security monitoring in cloud-native environments.}
@@ -233,7 +233,7 @@ The service graph $\calG_s(t)$ has nodes representing microservices and edges re
 
 MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detection. Sequential flow records are processed by the selective state-space model whose input-dependent transitions adapt to the current traffic regime. The state dimension is $d_s=64$, discretisation step $\Delta=0.01$, and FFT convolution kernel length $L=1024$. The teacher ensemble comprises $M=5$ models trained on disjoint data subsets. The curriculum schedule starts at $\rho_0=0.05$ poisoning fraction and increases to $\rho_{\max}=0.3$. PAC-Bayesian prior variance $\sigma_P^2=1.0$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig_mambashield_architecture.pdf}
 \caption{MambaShield architecture for drift-adaptive intrusion detection with progressive robustness distillation.}
@@ -245,7 +245,7 @@ MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detecti
 
 The stochastic transformer uses $M=50$ Monte Carlo forward passes at inference to produce epistemic and aleatoric uncertainty estimates. Predictions with epistemic uncertainty exceeding threshold $\tau=0.3$ are routed to human analysts, reducing alert fatigue by 43\%. The UC-HGP module provides hierarchical Gaussian process uncertainty at time scales matching the CT-TGNN branches ($\tau_1$, $\tau_2$, $\tau_3$). Variational learning rate $\alpha_\phi=5\times10^{-4}$; perturbation learning rate $\alpha_\psi=10^{-3}$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
 \caption{Stochastic transformer with uncertainty-driven triage for security operations.}
@@ -257,7 +257,7 @@ The stochastic transformer uses $M=50$ Monte Carlo forward passes at inference t
 
 The defender's action space $\calC$ comprises detection configurations: monitoring coverage, alert thresholds, and response policies. The adversary's action space $\calA$ encompasses target selection, perturbation type, and evasion strategy. The multiplicative weights learning rate $\eta=\sqrt{\log|\calC|/T}$. Uncertainty penalty $\kappa=0.5$; expert-referral threshold $\tau=0.3$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.75\textwidth]{figures/fig_game_theoretical_architecture.pdf}
 \caption{Game-theoretic framework for adaptive graph adversaries in network security.}
@@ -269,7 +269,7 @@ The defender's action space $\calC$ comprises detection configurations: monitori
 
 Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process timing features for lattice-based protocols (Kyber/Dilithium~\cite{Avanzi2022}), structural features for code-based protocols (McEliece/Niederreiter), and hash-based features (SPHINCS+). Cross-attention fusion combines the three representations. Adversarial training budget $\epsilon=0.03$ with PGD-40 perturbations.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
 \caption{Forward-compatible multi-protocol detection architecture for post-quantum traffic.}
@@ -393,7 +393,7 @@ functional groups: ``AI Command Centre,'' ``AI Data \& Models,''
 Fig.~\ref{fig:gui_walkthrough} below illustrates the platform in
 operation in a typical analyst usage scenario.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
 \begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
@@ -439,7 +439,7 @@ and the differential-privacy option.}
 \label{fig:gui_walkthrough_p1}
 \end{figure}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
 \begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
@@ -473,7 +473,7 @@ interactive explanations of the ten model-evaluation tabs
 Calibration, ROC/AUC, Dataset Comparison, Statistical Analysis,
 Cross-Module Intel).
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \fbox{\includegraphics[width=0.86\textwidth]{figures/gui/gui_06_analytics_intro.png}}
 \caption{The Analytics \& Evaluation page with the ``How to use''
@@ -553,7 +553,7 @@ All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Tra
 
 The seven methods (M1--M7) are integrated into a unified detection pipeline whose data flow proceeds as follows. Raw network traffic enters through a data ingestion module that performs protocol parsing, flow extraction, and 83-feature computation. The CT-TGNN module constructs the temporal graph and computes continuous-time node embeddings. The TripleE-TGNN module maintains multi-level embeddings for hierarchical environments. The MambaShield module processes sequential event records for drift-adaptive scoring. The Stochastic Transformer and UC-HGP modules provide calibrated uncertainty estimates. All outputs feed into a decision engine that applies the game-theoretic strategy from the M7 Certification framework, producing alerts classified by severity and confidence. The FedLLM-API module enables periodic model synchronisation across organisational boundaries.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/Main_arch_v1b.pdf}
 \caption{Integrated detection pipeline showing the data flow from raw network traffic through all seven methods to severity-ranked, confidence-scored alerts. The FedLLM-API module synchronises models across boundaries under differential privacy.}

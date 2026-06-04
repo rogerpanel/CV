@@ -1,0 +1,11 @@
+% A4 2-up imposition of the A5 avtoreferat for double-sided printing.
+% Output: 1 A4 sheet = 2 A5 pages per side; both sides used by the print shop.
+% Build with: pdflatex Avtoreferata_v12_Rus_A4print.tex (requires the A5 PDF to exist)
+\documentclass[a4paper,landscape]{article}
+\usepackage[a4paper,landscape,margin=0pt]{geometry}
+\usepackage{pdfpages}
+\begin{document}
+\includepdf[pages=-, nup=2x1, frame=false, scale=0.98,
+            delta=4pt 0pt,
+            openright=false]{Avtoreferata_v12_Rus.pdf}
+\end{document}

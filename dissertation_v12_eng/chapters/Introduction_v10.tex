@@ -97,7 +97,7 @@ sectors; and (c) the attack vectors targeting the canonical
 components of the system~--- is shown in
 Fig.~\ref{fig:hybrid_idps_overview}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/fig_nidps_v2.png}
 \caption{Conceptual diagram of the Hybrid~IDPS system in three
@@ -158,7 +158,7 @@ Hybrid~IDPS addressed in this dissertation simultaneously for
 several branches of the learnable-model family (GNNs, state-space
 models, stochastic-differential models).
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.89\textwidth]{figures/fig1a_gnn.pdf}
 \caption{Dual-input nature of the GNN-based detectors that
@@ -295,7 +295,7 @@ The four cross-cutting requirements are: (R1)~robustness --- predictions must re
 The three conditions are not mutually exclusive: real-world graph systems typically face two or all three simultaneously. Figure~\ref{fig:conditions_venn} illustrates how the seven methods are positioned within the space defined by the intersecting conditions. Methods placed at the intersection of two or three conditions address the coupled challenges that arise when those conditions co-occur, and the requirement triangle on the right shows how the three non-privacy requirements (accuracy, efficiency, robustness) are jointly satisfied by complementary architectural choices.
 
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.89\columnwidth]{figures/fig2a_t_by_f.pdf}
 \caption{Positioning of the seven methods within the space of operating conditions (left) and requirements (right). The Venn diagram shows that each method addresses one or more conditions, with M4: MambaShield at the intersection of all three owing to its efficiency under adversarial perturbation and non-stationary drift in distributed deployments. M1: CT-TGNN bridges the adversarial and non-stationary conditions through certified continuous-time dynamics. The requirement triangle shows how accuracy, efficiency, and robustness are jointly achieved through complementary architectural choices.}

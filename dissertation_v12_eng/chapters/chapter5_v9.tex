@@ -53,7 +53,7 @@ rules, and active-response control actions (flow blocking, node
 isolation, SIEM/SOAR escalation). The high-level schematic is
 shown in Fig.~\ref{fig:platform_problem_box}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[font=\footnotesize,
   inp/.style={draw,rounded corners=2pt,fill=blue!10,
@@ -167,7 +167,7 @@ user-facing experience in the Python plane alongside
 \emph{wire-speed} operation in the data plane, achieved without
 modification of the existing 51 frontend pages.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/ridps_arch_v10.pdf}
 \caption{High-level system architecture of \textsf{RobustIDPS.ai}
@@ -182,7 +182,7 @@ A schematic of the release~v4 two-plane architecture and the three
 gRPC streams that bridge the control and data planes is given in
 Fig.~\ref{fig:two_plane_arch}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
   font=\footnotesize,
@@ -300,7 +300,7 @@ The AI Command Centre is the primary operational interface, comprising five page
 
 The main dashboard displays real-time detection statistics: total flows analysed, attack distribution by category, model accuracy metrics, and alert severity breakdown. Interactive time-series charts show detection trends over configurable windows (1 hour to 30 days).
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/Dashboard_v10.png}
 \caption{RobustIDPS.ai Dashboard showing real-time detection statistics, attack category distribution, and model performance metrics. The left panel displays the active model configuration; the centre shows the detection timeline; the right panel presents alert severity breakdown.}
@@ -311,7 +311,7 @@ The main dashboard displays real-time detection statistics: total flows analysed
 
 Users upload PCAP or CSV files through a drag-and-drop interface. The \texttt{FeatureExtractor} module computes the 83-feature vector from raw packet data, applies z-score standardisation, and routes the features to the selected detection model. Results are presented with per-flow classifications, confidence scores, uncertainty decompositions, and MITRE ATT\&CK technique mappings.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/Dashboard_v11.png}
 \caption{Upload and Analyse interface showing (upward) the file upload panel with model selection dropdown, (centre) the detection results table with per-flow classifications and confidence scores, and (downward) the attack category breakdown with class-level performance metrics.}
@@ -393,7 +393,7 @@ detectors are exposed under the identifiers \texttt{mambaguard},
 comparative analysis of their three certification flavours is
 formalised in the author's publication~\cite{Anaedevha2026sdetgnn}.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/Models_v10.png}
 \caption{Models page showing the 17 integrated detection models with configurable hyperparameters, per-model accuracy metrics, and latency benchmarks. Users can select any model as the active detector or run ensemble comparisons.}
@@ -420,7 +420,7 @@ Analysts issue free-text queries (e.g., ``high-confidence DDoS on port 443 from 
 
 Translates detected attacks into deployable Suricata/Snort rules using 21 templates covering reconnaissance, DoS, exploitation, lateral movement, and exfiltration. Output includes SID, priority, and reference CVEs.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/SOC_v10.png}
 \caption{SOC Intelligence Suite showing (left) the Auto-Investigation panel with LLM reasoning output and MITRE ATT\&CK~\cite{Hernandez2015}, (centre) the Threat Hunt interface with natural language query, and (right) the generated Suricata rule with SID, priority, and CVE references.}
@@ -457,7 +457,7 @@ Data Poisoning          & 4  & 95.6 \\
 
 The five modules cover: Prompt Injection Playground (8 injection categories tested against the live DefensePipeline), Jailbreak Taxonomy (8 techniques including DAN-style override, base64 bypass, token smuggling), RAG Poisoning Simulator (4 vectors: document injection, embedding perturbation, metadata manipulation, chunk boundary exploitation), Multi-Agent Chain Attack Simulator (5 patterns across a 4-agent topology), and Data Poisoning Simulator (4 strategies: label flipping, backdoor injection, gradient-based, clean-label attacks).
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/LLM_v10.png}
 \caption{LLM Security Testing interface showing the Prompt Injection Playground with real-time DefensePipeline evaluation. The left panel shows the injection input; the centre displays the sanitised output with detection flags and matched rules; the right panel shows detection statistics across all 4 LLM backends.}
@@ -789,7 +789,7 @@ All 17 models are validated on the CIC-IoT-2023 benchmark (Table~\ref{tab:platfo
 
 The 4-layer defence framework~\cite{Anaedevha2026neurips} achieves 94.5\% macro-averaged detection across 517 attack scenarios. Ablation confirms each layer provides independent gain: full pipeline yields 41.6-point recovery in RAG retrieval accuracy at 30\% corpus contamination.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/Adv_Eval_v10.png}
 \caption{Adversarial Evaluation page showing (left) attack configuration panel with selectable attack family, perturbation budget, and target model; (centre) accuracy degradation under FGSM, PGD, and C\&W attacks at increasing $\varepsilon$; (right) comparison between standard and adversarially trained models.}
@@ -820,7 +820,7 @@ Post-quantum datasets are sourced from Kaggle (DOI:~\url{10.34740/kaggle/dsv/154
 
 The complete platform source code, all model implementations, the LLM defence pipeline, and the interactive dashboard are archived at Zenodo (DOI:~\url{10.5281/zenodo.19129512}). Pre-trained weights for the Multi-Agent PQC-IDS architecture are released at \url{https://github.com/rogerpanel/Multi-Agent-PQC-models}. Curated post-quantum benchmark datasets are published on Kaggle (DOI:~\url{10.34740/kaggle/dsv/15424420}). Three reproducible PCAP generation scripts enable deterministic recreation of evaluation datasets. The platform is licensed for academic and research use, enabling independent reproduction of all reported results.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/About_v10.png}
 \caption{About page showing platform version, DOI citation, contributor information, technology stack, and links to GitHub repository, Zenodo archive, and Kaggle datasets.}

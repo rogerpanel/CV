@@ -287,51 +287,58 @@ unmanned-aerial-vehicle systems.
 \textbf{Tasks:}
 
 \begin{enumerate}
-\item Systematise existing approaches to building Hybrid~IDPS
-across seven application sectors, identify the open gaps, and
-formulate uniform requirements for the developed models and
-algorithms.
+\item Carry out a systematic review of the approaches used in
+modern Hybrid~IDPS and identify their disadvantages and
+vulnerabilities across seven application sectors.
 
-\item Construct a unified mathematical description of
-Hybrid~IDPS as the tuple
-$\mathcal{H} = (\mathcal{V}_t, \mathcal{E}_t, X_t, A_t,
-f_\theta, g_\psi, \pi)$ and formalise the six cross-cutting
-properties P1--P6 as invariant conditions, organising them as a
-$3\times4$ condition--requirement matrix.
+\item Perform a review of methods to improve robustness against
+adversarial attacks and to ensure computational efficiency,
+together with a comparative analysis of current AI-augmented
+commercial products; formulate uniform requirements for the
+developed models and algorithms.
 
-\item Develop seven Models and algorithms~M1--M7 that jointly
-cover all twelve cells of this matrix: continuous-time graph
-dynamics CT-TGNN/SDE-TGNN~(M1); federated optimisation
-FedLLM-API with differential privacy~(M2); multi-level
-temporal embeddings TripleE-TGNN~(M3); selective state-space
-model MambaShield~(M4); uncertainty-calibrated inference
-Stochastic Transformer/UC-HGP~(M5--M6); and game-theoretic
-certification FedGTD~(M7).
-
-\item Instantiate Hybrid~IDPS in the NIDPS sector by developing
-a formal data-to-graph transformation pipeline, a unified
-34-class attack taxonomy, and an 83-feature engineering
-pipeline consistent with the models M1--M7.
-
-\item Conduct experimental validation of the developed models
-and algorithms on six benchmark datasets totalling over
-84.2~million labelled samples and 84~unique attack categories,
-using a unified 23-metric framework spanning accuracy,
-calibration, uncertainty, adversarial robustness, computational
+\item Formalise the mathematical model of the Hybrid~IDPS as the
+tuple $\mathcal{H} = (\mathcal{V}_t, \mathcal{E}_t, X_t, A_t,
+f_\theta, g_\psi, \pi)$ and the six cross-cutting properties
+P1--P6 as invariant conditions, organising them into a
+$3\times4$ condition--requirement matrix; explicitly pose the
+multi-criterion problem of improving robustness, accuracy,
 efficiency, and privacy.
 
-\item Implement a production-grade software platform
-\textbf{RobustIDPS.ai} that integrates 17~neural-network models
-into 10~functional groups and 51~pages of a Progressive Web
-Application, and obtain industrial validation through
-implementation acts from three organisations.
+\item Develop algorithms and models M1--M7 that improve the
+robustness and efficiency of the Hybrid~IDPS in distributed and
+non-stationary conditions: continuous-time graph dynamics
+CT-TGNN/SDE-TGNN~(M1); federated optimisation FedLLM-API with
+differential privacy~(M2); multi-level temporal embeddings
+TripleE-TGNN~(M3); selective state-space model MambaShield~(M4);
+uncertainty-calibrated inference Stochastic Transformer/UC-HGP
+(M5--M6); and game-theoretic certification FedGTD~(M7).
 
-\item Confirm the domain independence of the developed
-framework by transferring it to the adjacent sector of UAV
-onboard systems with a three-tier
-``onboard~-- droneport~-- cloud'' architecture, and by
-experimentally demonstrating cross-domain transfer to speech
-processing and medical time series.
+\item Develop software implementing the proposed models and
+algorithms: formulate the functional requirements, use cases,
+architecture, and program realisation as the production-grade
+platform \textbf{RobustIDPS.ai} (DOI~10.5281/zenodo.19129512;
+17~neural-network models in 10~functional groups, 51~pages of a
+Progressive Web Application).
+
+\item Conduct experimental research of the developed algorithms
+and models on benchmark datasets: 6~network-traffic benchmarks
+totalling over 84.2~million labelled samples and 84~unique
+attack categories, using a unified 23-metric framework spanning
+accuracy, calibration, uncertainty, adversarial robustness,
+computational efficiency, and privacy.
+
+\item Integrate the developed software into a real
+network-traffic-analysis and infrastructure-protection pipeline,
+documenting the integration with implementation acts from
+industrial-sector organisations.
+
+\item Demonstrate that the developed software admits reproduction
+in another practical area, choosing as such area the protection
+of computer-vision onboard systems of unmanned aerial vehicles
+with a three-tier ``onboard~-- droneport~-- cloud'' architecture;
+additionally confirm domain independence by cross-domain
+transfer to speech processing and medical time series.
 \end{enumerate}
 
 \subsection*{Methodology and methods of research}
@@ -662,7 +669,7 @@ instantiations of Hybrid~IDPS.
 % ============================================================
 % FIGURE 1: NIDPS Executive Overview
 % ============================================================
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{figures/fig_nidps_v1.png}
 \caption{Executive overview of the network instantiation of
@@ -681,7 +688,7 @@ condition--requirement matrix.
 % ============================================================
 % FIGURE 2: Research Framework Matrix
 % ============================================================
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/Main_arch_v1.pdf}
 \vspace{-0.5cm}
@@ -711,7 +718,7 @@ perturbations $\|\delta X\|\le\varepsilon$, the output
 sensitivity is bounded via the Gr\"{o}nwall inequality by
 $\|\delta h(T)\|\le\varepsilon L_g T\exp(L_g T)$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.70\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
 \vspace{-0.5cm}
@@ -728,7 +735,7 @@ classifier smoothing (Figure~\ref{fig:SDE_TGNN}). Achieved:
 F1~99.0\%, ECE~0.042, certified adversarial robustness 76.2\%
 at $R{=}0.25$, and cross-domain transfer of 90.5\% F1.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.80\textwidth]{figures/fig_sde_tgnn_robustness_vs_radius.pdf}
 \vspace{-0.3cm}
@@ -753,7 +760,7 @@ algorithm converges at rate $\mathcal{O}(1/\sqrt{T})$ even
 under 30\% corrupted participants while preserving
 $(\varepsilon{=}0.85,\,\delta{=}10^{-5})$-differential privacy.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.80\textwidth]{figures/fig_fedllm_api_architecture.pdf}
 \vspace{-0.3cm}
@@ -775,7 +782,7 @@ weight consolidation:
 +\frac{\lambda}{2}\sum_i F_i(\theta_i-\theta_i^*)^2.
 \end{equation}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
 \vspace{-0.4cm}
@@ -803,7 +810,7 @@ R(\theta)\le\hat{R}(\theta)
 +\sqrt{\frac{\text{KL}(\rho\|\pi)+\ln(2N/\delta)}{2N}}.
 \end{equation}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.65\textwidth]{figures/fig_mambashield_architecture.pdf}
 \vspace{-0.3cm}
@@ -827,7 +834,7 @@ q_\phi(\alpha)=\mathcal{N}(\mu_\phi,\sigma_\phi^2),\qquad
 f(x)\sim\mathcal{GP}(m(x),k(x,x')).
 \end{equation}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.80\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
 \vspace{-0.3cm}
@@ -850,7 +857,7 @@ w_i^{(t+1)}=w_i^{(t)}\exp(-\eta\ell_i^{(t)}).
 \textbf{Theorem~5 (No regret).} Cumulative regret is bounded
 by $R(T)\le 2\sqrt{T\log|\mathcal{C}|}$.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.80\textwidth]{figures/fig_game_theoretical_architecture.pdf}
 \vspace{-0.3cm}
@@ -915,7 +922,7 @@ A unified 23-metric framework spans six categories: detection
 performance, calibration, uncertainty, adversarial robustness,
 computational efficiency, and privacy.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/Figure6_ROC_Generalization.pdf}
 \caption{Combined experimental evaluation of Hybrid~IDPS:
@@ -977,7 +984,7 @@ DeepSeek). The platform deploys as a plug-in for existing
 signature-based IDPS (Snort, Suricata, Zeek). User-study
 validation confirms a 34\% reduction in analyst triage time.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
 \centering
 \includegraphics[width=0.96\textwidth]{figures/Main_arch_v1a.pdf}
 \vspace{-0.5cm}
