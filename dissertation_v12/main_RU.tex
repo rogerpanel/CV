@@ -2,7 +2,7 @@
 %%  main_RU.tex  –  Главный файл диссертации (русская версия)
 %%  Компиляция: pdflatex -> bibtex -> pdflatex -> pdflatex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[14pt,a4paper,oneside]{extreport}
+\documentclass[11pt,a4paper,oneside]{extreport}
 
 %% ──────────────── Кодировка и язык ────────────────
 \usepackage{cmap}                       % UTF-8 text layer in PDF
@@ -11,14 +11,14 @@
 \usepackage[english,russian]{babel}
 
 %% ──────────────── Геометрия страницы (ГОСТ) ────────────────
-\usepackage[left=30mm,right=15mm,top=25mm,bottom=20mm]{geometry}
+\usepackage[left=22mm,right=12mm,top=15mm,bottom=15mm]{geometry}
 
 %% ──────────────── Типографика ────────────────
 \usepackage{csquotes}
 \usepackage[expansion=false,protrusion=true]{microtype}
 \usepackage{indentfirst}
 \usepackage{setspace}
-\onehalfspacing
+\setstretch{1.1}
 
 %% ──────────────── Математика ────────────────
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
@@ -67,8 +67,8 @@
 
 %% ──────────────── Листинги кода ────────────────
 \usepackage{listings}
-\lstset{
-  basicstyle=\ttfamily\small,
+\lstset{basicstyle=\ttfamily\footnotesize,
+  basicstyle=\ttfamily\footnotesize,
   breaklines=true,
   frame=single,
   numbers=left,
@@ -118,7 +118,7 @@
 \setlength{\belowcaptionskip}{2pt}
 
 %% Компактные интервалы в списках
-\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=2pt}
+\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=0pt}
 
 %% Компактные интервалы вокруг заголовков (titlesec)
 %% Заголовок главы: уменьшенный размер + сжатые отступы
@@ -230,8 +230,14 @@
 \newpage
 \addcontentsline{toc}{chapter}{Список литературы}
 \nocite{*}
+\begingroup
+\renewcommand\bibsection{\chapter{Список литературы}}
+\footnotesize
+\setlength{\bibsep}{0pt}
 \bibliographystyle{unsrtnat}
 \bibliography{bibliography_v10}
+\endgroup
+
 
 %% ──────────────── Приложения ────────────────
 \appendix

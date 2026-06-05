@@ -1,0 +1,242 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  main_RU.tex  –  Главный файл диссертации (русская версия)
+%%  Компиляция: pdflatex -> bibtex -> pdflatex -> pdflatex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[14pt,a4paper,oneside]{extreport}
+
+%% ──────────────── Кодировка и язык ────────────────
+\usepackage{cmap}                       % UTF-8 text layer in PDF
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[english,russian]{babel}
+
+%% ──────────────── Геометрия страницы (ГОСТ) ────────────────
+\usepackage[left=30mm,right=15mm,top=25mm,bottom=20mm]{geometry}
+
+%% ──────────────── Типографика ────────────────
+\usepackage{csquotes}
+\usepackage[expansion=false,protrusion=true]{microtype}
+\usepackage{indentfirst}
+\usepackage{setspace}
+\onehalfspacing
+
+%% ──────────────── Математика ────────────────
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+
+%% ──────────────── Окружения теорем ────────────────
+\newtheorem{theorem}{Теорема}[chapter]
+\newtheorem{lemma}[theorem]{Лемма}
+\newtheorem{proposition}[theorem]{Утверждение}
+\newtheorem{corollary}[theorem]{Следствие}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Определение}
+\newtheorem{remark}[theorem]{Замечание}
+\newtheorem{example}[theorem]{Пример}
+
+%% ──────────────── Графика и рисунки ────────────────
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage[section]{placeins}   % \FloatBarrier
+\usepackage{pgfplots}             % графики метрик
+\pgfplotsset{compat=1.18}
+
+%% ──────────────── TikZ ────────────────
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,shapes,arrows.meta,calc,fit,
+                 decorations.pathreplacing,backgrounds,matrix,trees,shapes.geometric}
+
+%% ──────────────── Таблицы ────────────────
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{array}
+
+%% ──────────────── Подписи (ГОСТ) ────────────────
+\usepackage[labelsep=endash]{caption}
+
+%% ──────────────── Алгоритмы ────────────────
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\SetAlgoNoEnd
+\SetKwInput{KwInput}{Вход}
+\SetKwInput{KwOutput}{Выход}
+
+%% ──────────────── Листинги кода ────────────────
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny,
+  tabsize=4
+}
+
+%% ──────────────── Гиперссылки ────────────────
+\usepackage[colorlinks=true,linkcolor=blue!60!black,
+            citecolor=green!50!black,urlcolor=blue!70!black]{hyperref}
+\usepackage{cleveref}
+
+%% ──────────────── Библиография ────────────────
+\usepackage[numbers,sort&compress]{natbib}
+
+%% ──────────────── Разное ────────────────
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{etoolbox}
+
+%% ──────────────── Колонтитулы ────────────────
+%% v11: убраны заголовки глав в колонтитулах в соответствии с образцами
+%% (Григорьев, Абидова, Романов). Номер страницы снизу по центру.
+\pagestyle{plain}
+
+%% ──────────────── Глубина оглавления ────────────────
+%% Только главы и разделы по умолчанию.  Локально включаем подразделы
+%% в важных главах через \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{3}
+
+%% ──────────────── Параметры размещения плавающих объектов ────────────────
+%% v11 (компактная редакция): уменьшены вертикальные интервалы вокруг
+%% плавающих объектов, разделов и списков для устранения избыточных
+%% пробелов между текстом, рисунками, таблицами и алгоритмами.
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.90}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.85}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\setlength{\intextsep}{10pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+
+%% Компактные интервалы в списках
+\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=2pt}
+
+%% Компактные интервалы вокруг заголовков (titlesec)
+%% Заголовок главы: уменьшенный размер + сжатые отступы
+%% (соответствует образцу PhD_Dissertation.pdf)
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries}
+  {\Large\chaptertitlename\ \thechapter}
+  {0.8ex}
+  {\LARGE\raggedright}
+\titlespacing*{\chapter}{0pt}{-2ex}{2.2ex}
+\titlespacing*{\section}{0pt}{2.4ex plus 0.6ex minus 0.2ex}{1.6ex plus 0.2ex}
+\titlespacing*{\subsection}{0pt}{2.0ex plus 0.5ex minus 0.2ex}{1.2ex plus 0.2ex}
+\titlespacing*{\subsubsection}{0pt}{1.6ex plus 0.4ex minus 0.2ex}{1.0ex plus 0.2ex}
+
+%% Компактные интервалы вокруг алгоритмов и таблиц
+\setlength{\algotitleheightrule}{0.4pt}
+\SetAlCapSkip{4pt}
+\renewcommand{\arraystretch}{1.05}
+
+%% Разрешить большее растяжение интервалов на проблемных строках
+%% (для путей в \texttt и длинных URL без явных break-точек).
+\emergencystretch=3em
+\hbadness=10000  % suppress underfull \hbox messages
+
+%% ──────────────── Математические команды ────────────────
+\newcommand{\E}{\mathbb{E}}
+\providecommand{\Prob}{\mathrm{Pr}}    % ← Fixed: "Pr" not "ℙ"
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\calD}{\mathcal{D}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calV}{\mathcal{V}}
+\newcommand{\calE}{\mathcal{E}}
+\newcommand{\calC}{\mathcal{C}}
+\newcommand{\calS}{\mathcal{S}}
+\newcommand{\calK}{\mathcal{K}}
+\providecommand{\calA}{\mathcal{A}}
+\providecommand{\calB}{\mathcal{B}}
+\providecommand{\calT}{\mathcal{T}}
+\providecommand{\Z}{\mathbb{Z}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\by}{\mathbf{y}}
+\newcommand{\bw}{\mathbf{w}}
+\newcommand{\bh}{\mathbf{h}}
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bB}{\mathbf{B}}
+\newcommand{\bC}{\mathbf{C}}
+\newcommand{\bD}{\mathbf{D}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\bdelta}{\boldsymbol{\delta}}
+\newcommand{\eps}{\varepsilon}
+\providecommand{\argmax}{\mathop{\mathrm{arg\,max}}}
+\providecommand{\argmin}{\mathop{\mathrm{arg\,min}}}
+\providecommand{\Norm}[1]{\left\lVert#1\right\rVert}
+
+%% ──────────────── Цвета TikZ ────────────────
+\definecolor{rootbg}{HTML}{2C3E50}
+\definecolor{mastbg}{HTML}{34495E}
+\definecolor{subbg}{HTML}{D5D8DC}
+\definecolor{subtxt}{HTML}{2C3E50}
+\definecolor{methbg}{HTML}{F2F3F4}
+\definecolor{methedge}{HTML}{5D6D7E}
+\definecolor{unifbg}{HTML}{E8DAEF}
+\definecolor{unifedge}{HTML}{7D3C98}
+\definecolor{foundbg}{HTML}{EAECEE}
+\definecolor{arrmain}{HTML}{2C3E50}
+\definecolor{arrcross}{HTML}{5D6D7E}
+\definecolor{arrlight}{HTML}{AEB6BF}
+\definecolor{labgray}{HTML}{7F8C8D}
+\definecolor{lablight}{HTML}{95A5A6}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  ТЕЛО ДОКУМЕНТА
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+%% ──────────────── Предварительные страницы ────────────────
+\pagenumbering{roman}
+\input{chapters/preliminaries_v10a_Rus}
+
+%% ──────────────── Оглавление, списки ────────────────
+\tableofcontents
+\newpage
+\listoffigures
+\newpage
+\listoftables
+\newpage
+\input{chapters/abbreviations_v10_RU}
+
+%% ──────────────── Основная часть ────────────────
+\newpage
+\pagenumbering{arabic}
+
+\input{chapters/Introduction_v10a_Rus}
+\input{chapters/chapter1_v9_RU}
+\input{chapters/chapter2_v9_RU}
+\input{chapters/chapter3_v9_RU}
+\input{chapters/chapter4_v9_RU}
+\input{chapters/chapter5_v9_RU}
+\input{chapters/chapter6_v11_RU}
+\input{chapters/conclusion_v10_RU}
+
+%% ──────────────── Библиография ────────────────
+\newpage
+\addcontentsline{toc}{chapter}{Список литературы}
+\nocite{*}
+\bibliographystyle{unsrtnat}
+\bibliography{bibliography_v10}
+
+%% ──────────────── Приложения ────────────────
+\appendix
+\input{appendices/appendixA_v10_RU}
+\input{appendices/appendixB_v10_RU}
+\input{appendices/appendixC_v10_RU}
+
+\end{document}

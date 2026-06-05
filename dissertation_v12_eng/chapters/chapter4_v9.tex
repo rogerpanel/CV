@@ -56,17 +56,16 @@ volume, and statistical characteristics, which is what makes the transfer of the
 %% ===== Migrated from former Chapter 3 (Chapter 3 = software only, Chapter 4 = all results) =====
 \section{Objectives, Tasks and Methodology of Experimental Research}
 \label{sec:exp_methodology}
-%%=====================================================================
+%%====
 
 \subsection{Datasets}
 
 Evaluation employs six benchmark datasets spanning diverse network environments, attack taxonomies, and temporal characteristics.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Summary of benchmark datasets used in experimental evaluation.}
 \label{tab:datasets}
-\begin{tabular}{lrrrl}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lrrrl}
 \toprule
 Dataset & Records & Attack types & Features & Domain \\
 \midrule
@@ -84,29 +83,24 @@ Total              & 84.2M & 84 &    & \\
 
 CIC-IoT-2023~\cite{Neto2023,Ring2019} comprises 46.6~million flow records from 105 IoT devices with 33 attack types. CSE-CICIDS2018~\cite{Sharafaldin2018} contains 16.2~million flows with 7 attack categories. UNSW-NB15~\cite{Moustafa2015,Mirsky2018} provides 2.5~million records with 9 attack classes. The ICS3D collection adds: Microsoft GUIDE (13.7M records, 15 attack types), Container Security (3.2M records, 8 attack patterns), and Edge-IIoT (2.0M records, 12 attack scenarios). All datasets are standardised to the 83-feature vector described in Chapter~\ref{ch:adaptation}.
 
-
 \subsection{Unified Evaluation Framework}
 
 Performance characterisation employs twenty-three metrics spanning five categories: classification (accuracy, balanced accuracy, precision, recall, F1, MCC~\cite{Matthews1975}, Cohen's kappa~\cite{Cohen1960}), ROC analysis (AUC-ROC, TPR, TNR, FPR, FNR), calibration (ECE~\cite{Naeini2015}, Brier score~\cite{Brier1950}), uncertainty (mean entropy, epistemic uncertainty, aleatoric uncertainty), and computational (latency, throughput, parameters, GPU memory, energy consumption, attack success rate, certified accuracy).
 
-
 \subsection{Implementation Details}
 
 All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss. Hardware: NVIDIA Tesla V100 (32\,GB) for training, P100 (16\,GB) for deployment. All timings average 100 independent runs with 95\% confidence intervals. Stratified 70/15/15 splits maintain class distributions with focal loss ($\gamma=2$) for class imbalance~\cite{Lin2017focal}.
-
-
-%%=====================================================================
+%%====
 \section{Datasets and Experimental Infrastructure}
 \label{sec:benchmark_results}
-%%=====================================================================
+%%====
 
 Table~\ref{tab:unified_results} summarises the performance of the unified framework across all six datasets, compared against the best single baseline.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Unified framework performance across all benchmark datasets.}
 \label{tab:unified_results}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 \textbf{Dataset} & \textbf{Acc (\%)} & \textbf{F1 (\%)} & \textbf{Best Baseline (\%)} & \textbf{$\Delta$ (p.p.)} \\
 \midrule
@@ -128,26 +122,22 @@ The unified framework consistently outperforms the best single baseline by 2.9--
 \caption{Per-dataset accuracy improvement (percentage points) of the unified framework over the best single baseline. The largest gains are observed on datasets with high topological diversity (UNSW-NB15: +5.6, Edge-IIoT: +5.5).}
 \label{fig:benchmark_bars}
 \end{figure}
-
-
-%%=====================================================================
+%%====
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 \section{System of Quality, Robustness and Efficiency Metrics}
 \label{sec:method_results}
-%%=====================================================================
+%%====
 
 This section presents results for each method individually, demonstrating how each addresses its corresponding gap from Chapter~\ref{ch:literature} and sub-problem from Chapter~\ref{ch:methods}.
-
 
 \subsection{M1: CT-TGNN Results (Gap 1, Sub-problem 1)}
 
 CT-TGNN~\cite{Anaedevha2025cais} employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration. On CIC-IoT-2023 the architecture achieves 98.3\% accuracy with 47\,ms median inference latency and 8.7~million events per second throughput. Per-category recall: DDoS 99.1\%, reconnaissance 96.8\%, web attacks 97.3\%, brute force 98.6\%, spoofing 95.2\%, malware 98.9\%, Mirai 97.4\%.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{CT-TGNN performance across benchmark datasets.}
 \label{tab:ct_tgnn_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Dataset & Accuracy & Recall & FPR & ECE & Latency (ms) \\
 \midrule
@@ -165,16 +155,14 @@ UNSW-NB15      & 97.1\% & 96.5\% & 1.9\% & 0.069 & 44 \\
 \label{fig:ct_tgnn_recall}
 \end{figure}
 
-
 \subsection{SDE-TGNN: Stochastic Extension (Gap 1, Sub-problem 1)}
 
 The SDE-TGNN~\cite{Anaedevha2026sdetgnn} extends CT-TGNN with It\^{o} SDEs and Fokker-Planck moment propagation, achieving uncertainty quantification at $\calO(d^2)$ cost without Monte Carlo sampling.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{SDE-TGNN: detection, calibration, certified robustness, and transfer.}
 \label{tab:sde_tgnn_results}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 Dataset & F1 (\%) & ECE & Certified $R{=}0.25$ & Transfer F1 (\%) \\
 \midrule
@@ -194,14 +182,12 @@ Average        & 99.0 & 0.042 & 76.2\% & 90.5 \\
 \label{fig:sde_robustness}
 \end{figure}
 
-
 \subsection{M2: FedLLM-API Results (Gap 2, Sub-problem 2)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{FedLLM-API performance under varying Byzantine fractions.}
 \label{tab:fedllm_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Byzantine \% & FedLLM-API & FedAvg & FedProx & Krum & Median \\
 \midrule
@@ -223,19 +209,16 @@ With 40\% Byzantine participants, FedLLM-API achieves 87.1\% versus 61.4\% for F
 \label{fig:fedllm_byzantine}
 \end{figure}
 
-
 \subsection{M3: TripleE-TGNN Results (Gap 3, Sub-problem 3)}
 
 Overall accuracy 96.8\%, outperforming single-granularity baselines by 8.3\%. Service-level: 95.7\%, trace-level: 97.2\%, node-level: 96.4\%. Container escape: 98.7\%, supply chain: 97.3\%. Under 12 daily topology changes with EWC~\cite{Kirkpatrick2017}, maintains 94.7\% versus 78.3\% for standard GNNs without retraining. Latency 73\,ms, memory 4.7\,GB.
 
-
 \subsection{M4: MambaShield Results (Gap 4, Sub-problem 4)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{MambaShield accuracy under increasing poisoning rates.}
 \label{tab:mamba_results}
-\begin{tabular}{lccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccc}
 \toprule
 Poisoning \% & MambaShield & Standard AT & No Defence \\
 \midrule
@@ -249,24 +232,20 @@ Poisoning \% & MambaShield & Standard AT & No Defence \\
 
 PAC-Bayesian bound predicts true risk bounded by 0.089 (91.1\% accuracy); empirical 91.4\% confirms bound with 2.7\% margin. Inference latency 0.5\,ms per flow --- lowest of all models.
 
-
 \subsection{M5/M6: Uncertainty-Calibrated Results (Gap 6, Sub-problem 6)}
 
 ECE of 0.078 versus 0.192 for deterministic attention --- a 59\% reduction. Analyst workload reduced by 43\% through uncertainty-driven triage. Epistemic-aleatoric decomposition enables principled detection of out-of-distribution inputs.
-
 
 \subsection{M7: Game-Theoretic Certification Results (Gap 7, Sub-problem 7)}
 
 Accuracy 94.7\% against adaptive adversaries versus 87.6\% for non-strategic approaches. Multiplicative weights regret converges at the theoretical $\calO(\sqrt{T\log|\calC|})$ rate. Uncertainty-penalised payoffs with $\kappa=0.5$ produce risk-sensitive policies that abstain when model confidence is low.
 
-
 \subsection{CyberSecLLM: Foundation Model Results (Gap 5)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{CyberSecLLM zero-shot performance on CyberSecBench.}
 \label{tab:cybersecllm_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Model & Detection & Transfer & OOD & Triage & Avg \\
 \midrule
@@ -279,18 +258,16 @@ CyberSecLLM-7B    & 97.4\% & 86.2\% & 95.3\% & 89.1\% & 89.1\% \\
 
 CyberSecLLM-7B achieves 89.1\% average zero-shot accuracy, a 20.5-point improvement over GPT-4 and 15.3-point over Foundation-Sec-8B. Processes million-token sequences in 2.3\,s --- a 19$\times$ speedup over transformers.
 
-
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
-%%=====================================================================
+%%====
 \section{Comparative Analysis with Existing Intrusion Detection and Prevention Systems}
 \label{sec:comparative}
-%%=====================================================================
+%%====
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Comparative performance against baselines on CIC-IoT-2023.}
 \label{tab:comparative}
-\begin{tabular}{lcccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccccc}
 \toprule
 Method & Acc. & F1 & AUC & FPR & MCC & Latency \\
 \midrule
@@ -306,18 +283,15 @@ Multimodal Trans.  & 91.8\% & 90.1\% & 0.974 & 3.7\% & 0.908 & 63\,ms \\
 \end{table}
 
 The unified framework achieves the highest accuracy (94.7\%) and lowest FPR (1.4\%) while maintaining competitive latency (47\,ms). CT-TGNN processes 8.7M events/s versus 6.2M for transformers and 4.3M for LSTMs.
-
-
-%%=====================================================================
+%%====
 \section{Ablation Studies and Analysis of Contribution of Developed Methods}
 \label{sec:ablation}
-%%=====================================================================
+%%====
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Ablation study: impact of removing individual components.}
 \label{tab:ablation}
-\begin{tabular}{lcc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcc}
 \toprule
 Ablated Component & Full System & Without \\
 \midrule
@@ -344,26 +318,23 @@ Every component contributes measurably. The largest single-component impact is t
 \caption{Ablation study: performance drop when each component is removed. Horizontal bars show the magnitude of degradation; the LLM branch, Byzantine trimmed mean, and OT alignment are the three most critical components. DP noise is the only component whose removal improves accuracy (+3.1\%), reflecting the privacy--utility trade-off.}
 \label{fig:ablation_waterfall}
 \end{figure}
+%%====
 
-
-%%=====================================================================
-
-%%=====================================================================
+%%====
 
 transfer of the reported figures from the benchmarks to the
 operating deployments correct.
 
 \section{Investigation of Methods for Certifying Adversarial Robustness}
 \label{sec:adversarial_eval}
-%%=====================================================================
+%%====
 
 Six attack families~\cite{Goodfellow2015,Madry2018,Carlini2017,Croce2020} are evaluated at configurable perturbation budgets:
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Platform adversarial robustness under six attack methods.}
 \label{tab:adversarial}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 Attack & Budget & Clean & Attacked & Robust (AT) \\
 \midrule
@@ -385,12 +356,10 @@ CT-TGNN maintains 93.1\% under PGD-10 at $\epsilon=0.1$ owing to Lipschitz-bound
 \caption{Robust accuracy as a function of perturbation budget $\varepsilon$ for FGSM, PGD-20, and certified (randomised smoothing) evaluations on SDE-TGNN. The certified curve provides a provable lower bound; FGSM and PGD represent empirical upper bounds under specific attack strategies.}
 \label{fig:adversarial_curves}
 \end{figure}
-
-
-%%=====================================================================
+%%====
 \section{Comprehensive Assessment of Efficiency and Robustness of the RobustIDPS.ai System}
 \label{sec:transfer}
-%%=====================================================================
+%%====
 
 To validate domain independence, CT-TGNN and the stochastic transformer are applied without modification to two non-security domains.
 
@@ -404,7 +373,6 @@ SDE-TGNN cross-domain F1 (without fine-tuning): CSE-CICIDS2018 91.5\%, CIC-IoT-2
 \caption{Cross-domain transfer F1 (\%) for SDE-TGNN, Neural ODE baseline, and BiLSTM baseline across three security datasets and two non-security domains (speech, healthcare). SDE-TGNN achieves 90.5\% average transfer without fine-tuning, a 9.4-point improvement over Neural ODE and 14.1-point over BiLSTM.}
 \label{fig:cross_domain}
 \end{figure}
-
 
 \medskip
 \noindent\textbf{Transfer to an adjacent safety-critical domain (UAV).}
@@ -435,12 +403,10 @@ and the Models M1--M7 at the level of mathematical operations on
 graph structures.}
 \label{fig:roc_generalization}
 \end{figure}
-
-
-%%=====================================================================
+%%====
 \section{Cross-cutting Validation of System Efficiency, Privacy, and Calibration Properties}
 \label{sec:ch4_cross_cutting_properties}
-%%=====================================================================
+%%====
 
 Beyond adversarial robustness and cross-domain transfer
 (\S\ref{sec:adversarial_eval}--\S\ref{sec:transfer}), the
@@ -497,20 +463,17 @@ also properties P3--P6 (efficiency, distributed environment, human
 factor, and non-stationarity), covering the complete
 condition--requirement matrix $3\times 4$ from
 \S\ref{subsec:six_properties}.
-
-
-%%=====================================================================
+%%====
 \section{Multi-Agent PQC-Aware Detection Results}
 \label{sec:mapqc_results}
-%%=====================================================================
+%%====
 
 The Multi-Agent PQC-IDS~\cite{Anaedevha2026mapqc} extends the framework to post-quantum protocol environments. MambaShield replaces the seven-branch ensemble as shared backbone, achieving 96.7\% accuracy (versus 96.9\% for ensemble) at $7.3\times$ inference speedup. The structured Fisher Information Matrix derived from state-space dynamics reduces backward transfer (forgetting) by 38\% compared to diagonal FIM. Four cooperative agents (Traffic Analyst, PQC Specialist, Anomaly Detector, Coordinator) coordinate via Multi-Agent CPO, achieving 96.1\% threat mitigation with zero constraint violations and 34\% reduction in multi-segment response latency.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Forward-compatible detection accuracy by protocol family.}
 \label{tab:pqc_results}
-\begin{tabular}{llc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{llc}
 \toprule
 Protocol Family & Attack Type & Accuracy \\
 \midrule
@@ -533,22 +496,18 @@ Under C\&W attack across PQC migration stages, MambaShield+Structured FIM degrad
 \caption{Accuracy under C\&W attack across four PQC migration stages (Classical $\to$ Hybrid $\to$ Pure Kyber $\to$ Full PQC). MambaShield with structured FIM maintains accuracy within 2.5 p.p. across all stages, while naive fine-tuning collapses by 25.5 p.p. due to catastrophic forgetting of classical traffic patterns.}
 \label{fig:pqc_migration}
 \end{figure}
-
-
-%%=====================================================================
+%%====
 \section{Investigation of Efficiency of Continuous-Time Dynamic Graph Neural Networks}
 \label{sec:discussion}
-%%=====================================================================
+%%====
 
 The experimental programme establishes several findings. Continuous-time dynamics provide a 6.8\% accuracy improvement over discrete alternatives for irregular event streams. Multi-level representations yield 8.3\% over single-level methods. Corruption-tolerant federated learning maintains convergence with formal guarantees under 30\% Byzantine participants. LLM integration unlocks zero-shot generalisation from 34.2\% to 87.6\% F1. Calibrated Bayesian uncertainty achieves ECE 0.078 with 43\% analyst workload reduction. Game-theoretic modelling improves accuracy by 7.1\% over non-strategic approaches.
 
 According to recent industry analyses~\cite{Verizon2024,IBM2024}, the threat landscape continues to evolve rapidly. Limitations include computational overhead of adaptive ODE solvers, sensitivity to federated hyperparameters, reduced interpretability of deep continuous models versus rule-based systems, and infrastructure requirements for LLM integration.
-
-
-%%=====================================================================
+%%====
 \section{Conclusions for Chapter 4}
 \label{sec:ch4_summary}
-%%=====================================================================
+%%====
 
 This chapter has presented comprehensive experimental validation across six benchmark datasets totalling 84.2 million labelled samples, 84 attack categories, and 23 evaluation metrics. The key results are: CT-TGNN at 98.3\% accuracy with Lipschitz-certified robustness; SDE-TGNN at 99.0\% F1 with 76.2\% certified robustness and 90.5\% cross-domain transfer; FedLLM-API at 87.1\% under 40\% Byzantine corruption with $(\varepsilon{=}0.85,\delta{=}10^{-5})$ privacy; TripleE-TGNN at 96.8\% with 40\% cost reduction; MambaShield at 91.4\% under 25\% poisoning with PAC-Bayesian certificates; M5/M6 with ECE 0.078 and 43\% analyst workload reduction; M7 at 94.7\% against adaptive adversaries; and CyberSecLLM at 89.1\% zero-shot with 20.5-point improvement over GPT-4. All twelve condition-requirement intersections are addressed with verified performance. The next chapter describes the RobustIDPS.ai software platform that implements all methods as a unified, deployable system.
 
