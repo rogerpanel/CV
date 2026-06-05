@@ -77,55 +77,6 @@ The following terms are used throughout this chapter and the experimental valida
 
 
 %%=====================================================================
-
-%%=====================================================================
-\section{Formation of Requirements for the RobustIDPS.ai System}
-\label{sec:platform_requirements}
-%%=====================================================================
-
-Based on the problem statement (\S\ref{sec:nidps_context}) and the
-mathematical model of the Hybrid IDPS (Chapter~\ref{ch:methods}),
-requirements for the network-traffic-analysis software system
-RobustIDPS.ai are formulated. The requirements are decomposed into
-four groups.
-
-\subsection{Functional Requirements}
-
-The system shall: (1)~capture network traffic in PCAP, NetFlow, and
-EVE-JSON formats; (2)~transform flows into temporal graph structures
-with 12-dimensional node features and 83-dimensional edge features;
-(3)~classify flows under the 34-class taxonomy in 7 attack categories
-using the M1--M7 model ensemble; (4)~generate ranked alerts with
-model-confidence estimates; (5)~produce deployment-ready rules for
-Snort and Suricata signature engines; (6)~transmit control actions
-(flow blocking, node isolation, SIEM/SOAR escalation) over a
-REST/WebSocket interface.
-
-\subsection{Robustness Requirements}
-
-The system shall provide certified adversarial robustness based on a
-Lipschitz-constant bound on the learnable detector; formal bounds on
-output change under bounded input perturbations; resilience to
-training-data poisoning attacks and Byzantine influences in federated
-learning.
-
-\subsection{Performance Requirements}
-
-Throughput shall be at least $10^6$ flows per second per node; the
-inference latency for an individual flow shall not exceed 50~ms; the
-asymptotic processing complexity for a sequence of length~$L$ shall
-not exceed $\mathcal{O}(L\log L)$.
-
-\subsection{Scalability and Confidentiality Requirements}
-
-Horizontal scaling support (Docker Compose / Kubernetes); federated
-learning across organisations without raw-data transfer; formal
-differential privacy with parameters
-$(\varepsilon{=}0.85,\ \delta{=}10^{-5})$; integration with existing
-signature-based IDS of partner organisations without modification of
-their rule sets.
-
-%%=====================================================================
 \section{Architecture of the RobustIDPS.ai Software System}
 \label{sec:data_to_graph}
 %%=====================================================================
@@ -233,7 +184,7 @@ where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and 
 
 
 %%=====================================================================
-\subsection{Domain-Specific Realisation of Methods M1--M7}
+\section{Domain-Specific Realisation of Methods M1--M7}
 \label{sec:method_instantiation}
 %%=====================================================================
 
@@ -324,59 +275,6 @@ Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process ti
 \caption{Forward-compatible multi-protocol detection architecture for post-quantum traffic.}
 \label{fig:pqidps_arch}
 \end{figure}
-
-
-%%=====================================================================
-\section{System Performance Optimisation}
-\label{sec:hyperparams}
-%%=====================================================================
-
-Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all methods as configured for the network-security domain. All values were selected through grid search on the CIC-IoT-2023 validation set and confirmed stable across the remaining five datasets.
-
-\begin{table}[htbp]
-\centering
-\caption{Consolidated hyperparameter configuration for all methods in the cybersecurity domain.}
-\label{tab:hyperparams}
-\small
-\begin{tabular}{p{3.5cm} p{2.5cm} p{2.5cm} p{5.0cm}}
-\toprule
-\textbf{Method} & \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
-\midrule
-\multirow{4}{3.5cm}{M1: CT-TGNN}
-& Hidden dim & 256 & Capacity for 83-feature input \\
-& ODE tolerance & $10^{-5}$ & Balance accuracy/speed \\
-& Time constants & 1/60/3600\,s & Packet/session/campaign scales \\
-& Lipschitz bound & Spectral norm & Certified robustness \\
-\addlinespace
-\multirow{4}{3.5cm}{M2: FedLLM-API}
-& Clipping $C$ & 1.0 & DP sensitivity bound \\
-& DP $(\epsilon,\delta)$ & $(0.85, 10^{-5})$ & Strong privacy guarantee \\
-& OT reg $\lambda$ & 0.1 & Sinkhorn convergence \\
-& LLM weight & 0.3 & Ensemble balance \\
-\addlinespace
-\multirow{3}{3.5cm}{M3: TripleE-TGNN}
-& EWC $\lambda$ & 0.5 & Forgetting prevention \\
-& Level weights & 0.4/0.3/0.3 & Service emphasis \\
-& Consistency $\lambda_{\mathrm{con}}$ & 0.1 & Cross-level agreement \\
-\addlinespace
-\multirow{3}{3.5cm}{M4: MambaShield}
-& State dim & 64 & SSM capacity \\
-& Kernel length & 1024 & Sequence coverage \\
-& Poison schedule & 0.05--0.3 & Progressive hardening \\
-\addlinespace
-\multirow{3}{3.5cm}{M5/M6: Stoch.Trans.}
-& MC samples & 50 & Uncertainty quality \\
-& Triage threshold & 0.3 & FP/FN balance \\
-& Calibration & Temperature & ECE minimisation \\
-\addlinespace
-\multirow{2}{3.5cm}{M7: Certification}
-& MWU $\eta$ & $\sqrt{\log|\calC|/T}$ & Optimal regret \\
-& Unc. penalty $\kappa$ & 0.5 & Risk sensitivity \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss.
 
 
 %%=====================================================================
@@ -593,6 +491,59 @@ of NII~IKT~LLC (active use of the platform by in-house
 cybersecurity specialists) and Ksyrix~LLC (integration into the
 operating network-traffic analysis and infrastructure-protection
 system).
+
+
+%%=====================================================================
+\section{System Performance Optimisation}
+\label{sec:hyperparams}
+%%=====================================================================
+
+Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all methods as configured for the network-security domain. All values were selected through grid search on the CIC-IoT-2023 validation set and confirmed stable across the remaining five datasets.
+
+\begin{table}[htbp]
+\centering
+\caption{Consolidated hyperparameter configuration for all methods in the cybersecurity domain.}
+\label{tab:hyperparams}
+\small
+\begin{tabular}{p{3.5cm} p{2.5cm} p{2.5cm} p{5.0cm}}
+\toprule
+\textbf{Method} & \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\midrule
+\multirow{4}{3.5cm}{M1: CT-TGNN}
+& Hidden dim & 256 & Capacity for 83-feature input \\
+& ODE tolerance & $10^{-5}$ & Balance accuracy/speed \\
+& Time constants & 1/60/3600\,s & Packet/session/campaign scales \\
+& Lipschitz bound & Spectral norm & Certified robustness \\
+\addlinespace
+\multirow{4}{3.5cm}{M2: FedLLM-API}
+& Clipping $C$ & 1.0 & DP sensitivity bound \\
+& DP $(\epsilon,\delta)$ & $(0.85, 10^{-5})$ & Strong privacy guarantee \\
+& OT reg $\lambda$ & 0.1 & Sinkhorn convergence \\
+& LLM weight & 0.3 & Ensemble balance \\
+\addlinespace
+\multirow{3}{3.5cm}{M3: TripleE-TGNN}
+& EWC $\lambda$ & 0.5 & Forgetting prevention \\
+& Level weights & 0.4/0.3/0.3 & Service emphasis \\
+& Consistency $\lambda_{\mathrm{con}}$ & 0.1 & Cross-level agreement \\
+\addlinespace
+\multirow{3}{3.5cm}{M4: MambaShield}
+& State dim & 64 & SSM capacity \\
+& Kernel length & 1024 & Sequence coverage \\
+& Poison schedule & 0.05--0.3 & Progressive hardening \\
+\addlinespace
+\multirow{3}{3.5cm}{M5/M6: Stoch.Trans.}
+& MC samples & 50 & Uncertainty quality \\
+& Triage threshold & 0.3 & FP/FN balance \\
+& Calibration & Temperature & ECE minimisation \\
+\addlinespace
+\multirow{2}{3.5cm}{M7: Certification}
+& MWU $\eta$ & $\sqrt{\log|\calC|/T}$ & Optimal regret \\
+& Unc. penalty $\kappa$ & 0.5 & Risk sensitivity \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss.
 
 
 %%=====================================================================

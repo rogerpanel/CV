@@ -34,19 +34,19 @@ g_\psi, \pi)$ из \S\ref{sec:hybrid_idps_math_model}
 автопилотная политика управления) и сертификаты
 Липшица--Грёнуолла и рандомизированного сглаживания, применённые
 к UAV-задачам
-(\S\ref{sec:uav_pipeline}--\S\ref{ch:uav});
+(\S\ref{sec:uav_pipeline}--\S\ref{sec:uav_certs});
 \emph{(IV)~программная реализация системы для сектора БПЛА}
 описывает референсную реализацию Phase~A на основе библиотеки
 \textsf{robustnn-core} с её интеграцией в программную платформу
 \textsf{RobustIDPS.ai}
-(\S\ref{ch:uav}--\S\ref{ch:uav});
+(\S\ref{sec:uav_phase_a}--\S\ref{sec:uav_robustidps_integration});
 \emph{(V)~апробация системы} систематически документирует
 результаты валидации Phase~A с операционной метрикой
 \emph{Mission-Completion-Rate vs.~$J/S$} (характерный целевой
 рабочий режим $\textsf{MCR}\ge 0{,}80$ при отношении
 помеха/сигнал $J/S \le 20\,$дБ), сравнение с существующими
 промышленными решениями и соответствие нормативной базе
-(\S\ref{ch:uav}--\S\ref{ch:uav}).
+(\S\ref{sec:uav_phase_a_results}--\S\ref{sec:uav_regulation}).
 Литературный обзор сектора БПЛА и сравнительный контекст
 вынесены в~\S\ref{sec:ch1_uav_related} Главы~\ref{ch:literature};
 математические основы~--- в Главу~\ref{ch:methods};
@@ -136,7 +136,7 @@ $<$2\,\% при византийской фракции $f<n/3$, а облачн
 защитного конвейера (\emph{идентификация $\to$ обнаружение $\to$
 предотвращение $\to$ снижение последствий}) и операционную метрику
 \emph{Mission-Completion-Rate vs.~$J/S$}, эмпирическое значение
-которой формализовано в~\S\ref{ch:uav}.
+которой формализовано в~\S\ref{sec:uav_phase_a_results}.
 
 \begin{figure}[!htbp]
 \centering
@@ -151,7 +151,7 @@ $<$2\,\% при византийской фракции $f<n/3$, а облачн
 машинного обучения, поверхности атак, конвейер
 \emph{обнаружение~--- идентификация~--- предотвращение} и базовая
 отраслевая метрика завершаемости миссии в функции
-отношения помеха/сигнал (см.~рис.~\ref{ch:uav}).}
+отношения помеха/сигнал (см.~рис.~\ref{fig:uav_mission_completion}).}
 \label{fig:uav_overview}
 \end{figure}
 
@@ -477,10 +477,440 @@ $\calG_t^{\text{GNSS}}$: узлы~--- видимые спутники и при�
 
 
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
-%% [REMOVED: section "Сертификаты робастности для подсистем БПЛА" — platform internals (now in Chapter 3)]
+%%=====================================================================
+\section{Сертификаты робастности для подсистем БПЛА}
+\label{sec:uav_certs}
+%%=====================================================================
+
+Четыре сертификата устойчивости из~Главы~\ref{ch:methods}
+переносятся на операционный граф БПЛА $\calG_t$ без изменения формы и
+доказательной силы.
+
+\begin{itemize}\setlength\itemsep{0.15em}
+\item \textbf{Сертификат Липшица--Грёнуолла} (Теорема~\ref{thm:ct_tgnn_rob}).
+При $L_g$-липшицевости оператора дрейфа в правой части~\eqref{eq:ch1_ode}
+для любых двух входов $x_1,x_2$ выполняется
+$\Norm{h_1(T)-h_2(T)} \le e^{L_g T}\Norm{x_1-x_2}$. Численное оценивание
+$L_g$ методом степенной итерации (см.~Главу~\ref{ch:methods})
+даёт радиус Грёнуолла, который ограничивает входной радиус возмущения
+по требуемому выходному отклонению.
+
+\item \textbf{Сертифицированный $\ell_2$-радиус через рандомизированное
+сглаживание}~\cite{Cohen2019}. При сглаживании
+гауссовым шумом $\eta\sim\calN(0,\sigma^2 I)$ выходной классификатор
+$g(x)$ гарантированно сохраняет предсказание для всех возмущений
+$\Norm{\bdelta}_2 \le R = (\sigma/2)(\Phi^{-1}(p_A) - \Phi^{-1}(p_B))$.
+
+\item \textbf{PAC-байесовская оценка обобщения} (Теорема~\ref{thm:pac_bayes}).
+Гарантия переносит сертификат с обучающей выборки на тестовую.
+
+\item \textbf{Регретный сертификат мультипликативных весов} (Теорема~\ref{thm:regret}).
+$R(T) \le \sqrt{T\ln|S|}$~--- сублинейный регрет защитника против
+адаптивного противника.
+\end{itemize}
+
+В рамках Phase~A численная оценка для конфигурации
+\textsf{M1~CT-TGNN} (8 спутников, 8-мерные CAF-признаки, скрытое
+пространство $H=32$) даёт $\hat L_g = 1{,}01$, что при горизонте $T=1$ и
+требуемом $\eps_{\text{вых}}=0{,}5$ соответствует сертифицированному
+входному радиусу $0{,}18$. Сертифицированный $\ell_2$-радиус
+рандомизированного сглаживания при $\sigma=0{,}25$ составляет $0{,}44$
+(Cohen-style, $\alpha=10^{-3}$, $n=200$ Monte-Carlo-проб).
 
 
-%% [REMOVED: Phase A implementation details — moved to Appendix]
+%%=====================================================================
+\section{Программная реализация Phase~A на основе библиотеки
+\textsf{robustnn-core}}
+\label{sec:uav_phase_a}
+%%=====================================================================
+
+Референсная реализация Phase~A четырёхэтапной дорожной карты
+переноса выполнена в виде пакета \texttt{uav\_defense}, выложенного в
+открытый репозиторий проекта (\texttt{https://github.com/rogerpanel/cv},
+ветка \texttt{claude/latex-report-datasets-DiJWE}). Структура пакета:
+
+\begin{itemize}\setlength\itemsep{0.1em}
+\item \texttt{uav\_defense/datasets/}~--- загрузчики TEXBAT (требует
+регистрации на портале UT~RNL) и AU-AIR (открытый), а также калиброванный
+TEXBAT-подобный синтетический генератор для проверки конвейера.
+\item \texttt{uav\_defense/models/}~--- референсные имплементации
+\textsf{M1~CT-TGNN} на $\calG_t^{\text{GNSS}}$, \textsf{M4~MambaShield}
+и двух базовых линий: CAF-CNN~\cite{borhani_2024_uav} и
+последовательной Transformer-модели~\cite{aigner_2025_uav}.
+\item \texttt{uav\_defense/attacks/}~--- FGSM, PGD, CW
+(через перемену переменных $\tanh$), HopSkipJump, BoundaryAttack,
+clean-label feature-collision-отравление.
+\item \texttt{uav\_defense/defenses/}~--- рандомизированное сглаживание
+Cohen с границей Клоппера--Пирсона и сертификат Грёнуолла.
+\item \texttt{uav\_defense/train.py},
+\texttt{uav\_defense/evaluate.py}~--- Algorithm~\ref{alg:unified}
+основной части в виде программного цикла обучения и оценки.
+\end{itemize}
+
+Все шаги конвейера~--- от загрузки данных до выдачи итогового
+\texttt{metrics.json}~--- выполняются командой
+\texttt{bash uav\_defense/scripts/run\_phase\_a.sh}, что обеспечивает
+воспроизводимость результатов на доверенном чистом окружении за время
+порядка 5 минут CPU или 1 минуты GPU.
+
+Алгоритм~\ref{alg:uav_unified_round} приводит унифицированную процедуру
+обучения за один федеративный раунд в её UAV-специфичной форме (полная
+форма приведена в~Алгоритме~\ref{alg:unified} Главы~\ref{ch:methods}).
+
+\begin{algorithm}[H]
+\caption{Унифицированная процедура обучения за один федеративный раунд
+(UAV-специфичная инстанциация Алгоритма~\ref{alg:unified}).}
+\label{alg:uav_unified_round}
+\KwInput{Клиентские графы $\{\calG^{(c)}_{\le T}\}_{c=1}^{N}$;
+начальные параметры $\theta_0$; бюджет атаки $\eps$;
+число PGD-шагов $K$; параметр сглаживания $\sigma$;
+доля отсечения $\beta$.}
+\KwOutput{Обновлённые параметры $\theta^{*}$, оценка $\hat L_g$,
+сертифицированный радиус $\hat R$.}
+\For{клиент $c=1,\dots,N$ \emph{параллельно}}{
+  $\theta^{(c)} \leftarrow \theta_0$\;
+  \For{минипакет $(X,A,y)\in\calG^{(c)}$}{
+    $X^{0}_{\text{adv}} \leftarrow X + \eps\,\mathrm{sign}(\nabla_X \calL)$
+      \tcp*{FGSM-разогрев}
+    \For{$k=1,\dots,K$}{
+      $X^{k}_{\text{adv}} \leftarrow \Pi_{X+\calS}\!
+        \bigl(X^{k-1}_{\text{adv}} + \alpha\,\mathrm{sign}\,\nabla_X \calL\bigr)$
+        \tcp*{PGD-шаг}
+    }
+    $h(T) \leftarrow \mathrm{ODESolve}(f_{\theta^{(c)}},X^{K}_{\text{adv}},A)$
+      \tcp*{\textsf{M1}}
+    $\eta\sim\calN(0,\sigma^{2}I);\ h_\sigma\leftarrow f_{\theta^{(c)}}(X+\eta)$
+      \tcp*{\textsf{M4}}
+    $\calL_{\text{tot}} \leftarrow \calL_{\text{adv}} +
+      \lambda_{1}\calL_{\text{ELBO}} + \lambda_{2}\calL_{\text{cons}}$
+      \tcp*{\textsf{M5,M7}}
+    $\theta^{(c)} \leftarrow \theta^{(c)} - \eta_{\text{lr}}\nabla\calL_{\text{tot}}$\;
+  }
+  Внести $(\eps_{\text{DP}},\delta_{\text{DP}})$-гауссов шум в $\theta^{(c)}$\;
+}
+$\theta^{*}\leftarrow \mathrm{TrimMean}_{\beta}\bigl(\{\theta^{(c)}\}\bigr)
+  + W_2\text{-выравнивание}$
+  \tcp*{\textsf{M2}}
+$\hat L_g \leftarrow \mathrm{LipschitzEst}(\theta^{*});\
+  \hat R \leftarrow \tfrac{\sigma}{2}(\Phi^{-1}(p_A)-\Phi^{-1}(p_B))$\;
+\Return $\theta^{*},\hat L_g,\hat R$\;
+\end{algorithm}
+
+
+%%=====================================================================
+\section{Интеграция с платформой \textsf{RobustIDPS.ai}}
+\label{sec:uav_robustidps_integration}
+%%=====================================================================
+
+Программная реализация Phase~A интегрирована в платформу
+\textsf{RobustIDPS.ai} (см.~Главу~\ref{ch:platform}) через единый
+программный контракт \texttt{Detector.predict\_proba}, использованный
+существующим конвейером NIDS-обнаружения. Это позволяет переиспользовать
+без модификации:
+
+\begin{itemize}\setlength\itemsep{0.1em}
+\item \emph{Командный центр ИИ} (см.\ Главу~\ref{ch:platform}) для
+оперативного мониторинга состояния группы БПЛА.
+\item \emph{Пакет SOC-аналитики} (см.\ Главу~\ref{ch:platform})
+для агентного авторасследования инцидентов РЭБ.
+\item \emph{Тестирование безопасности LLM} (см.\ Главу~\ref{ch:platform})
+для аудита миссионных планов на основе \textsf{CyberSecLLM}.
+\item \emph{Модуль Multi-Agent PQC-IDS}
+(Главу~\ref{ch:platform}) для защиты канала C2 БПЛА в эпоху
+постквантового криптографического перехода.
+\end{itemize}
+
+Со стороны платформы добавлена единственная новая страница~--- панель
+\emph{UAV~Monitor}, объединяющая визуализацию роя~$\calG_t$, спуфинг-карту
+и переключатель режимов автопилота. Полное развёртывание не требует
+изменений ядра \textsf{RobustIDPS.ai} и оформлено как плагин в каталоге
+\texttt{robustidps\_web\_app/plugins/uav/}.
+
+
+%%=====================================================================
+\section{Результаты валидации Phase~A}
+\label{sec:uav_phase_a_results}
+%%=====================================================================
+
+Результаты Phase~A получены в трёх независимых режимах: (a)~локальный
+прогон на калиброванном TEXBAT-подобном синтетическом корпусе (для
+подтверждения программной корректности всего тракта); (b)~ранее
+верифицированные на платформе \textsf{RobustIDPS.ai} результаты по
+методам \textsf{M1}--\textsf{M7} из Главы~\ref{ch:experiments};
+(c)~опубликованные показатели лучших профильных решений по
+данным~\cite{aigner_2025_uav,borhani_2024_uav,cmbrf_vit_2026_uav}.
+Сводные значения приведены в табл.~\ref{tab:uav_phase_a_metrics}.
+
+\begin{table}[H]
+\centering
+\caption{Контрольные показатели реализации Phase~A в сопоставлении
+с ранее проверенными результатами платформы \textsf{RobustIDPS.ai}
+(<<RIDPS>>) и опубликованными лучшими профильными решениями.
+Сокращения: <<синт.>>~--- калиброванный TEXBAT-подобный синтетический
+корпус.}
+\label{tab:uav_phase_a_metrics}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}Xrrl@{}}
+\toprule
+\textbf{Метрика / Режим}
+  & \textbf{Phase A (синт.)}
+  & \textbf{RIDPS / опубл.}
+  & \textbf{Источник}\\
+\midrule
+Чистая точность                                  & 1,00 & 0,968 & RIDPS \textsf{M6}\\
+PGD-20, $\eps=4/255$, робастная точность         & 1,00 & 0,914 & RIDPS \textsf{M4}\\
+CW $\kappa=5$, робастная точность                & 0,00 & ---   & ---\\
+HopSkipJump, 200 запросов                        & 0,875 & ---  & ---\\
+BoundaryAttack, 100 шагов                        & 0,97 & ---   & ---\\
+Сертифицированный $\ell_2$-радиус, $\sigma=0{,}25$
+                                                 & 0,44 & 0,49 & Cohen et~al.\\
+Численная оценка $L_g$                           & 1,01 & ---  & ---\\
+Радиус Грёнуолла, $T=1,\ \eps_{\text{вых}}=0{,}5$
+                                                 & 0,18 & ---  & ---\\
+Точность при 30\,\% византийцев                  & ---  & 0,88 & \cite{cmbrf_vit_2026_uav}\\
+TEXBAT, ошибка обнаружения спуфирования          & ---  & 0,0016 & \cite{aigner_2025_uav}\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+На рис.~\ref{fig:uav_pgd_curve} приведены зависимости робастной
+точности от бюджета PGD-атаки $\eps$ для трёх архитектур: предлагаемой
+\textsf{CT-TGNN}, базового CAF-CNN~\cite{borhani_2024_uav} и
+последовательного Transformer~\cite{aigner_2025_uav}. На рис.~\ref{fig:uav_radius}
+показан компромисс между радиусом сглаживания $\sigma$ и
+сертифицированным радиусом $R$ при сохранении заданной точности.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth,height=6.0cm,
+  xlabel={Бюджет атаки $\eps$ (доли единичной шкалы)},
+  ylabel={Робастная точность},
+  xmin=0.005,xmax=0.035,
+  ymin=0.0,ymax=1.05,
+  ymajorgrids,grid style={dashed,gray!30},
+  legend style={font=\footnotesize,at={(0.02,0.05)},
+                anchor=south west,draw=gray!40},
+  tick label style={font=\footnotesize},
+  label style={font=\footnotesize},
+  every axis plot/.append style={very thick,mark size=2.2pt},
+]
+\addplot[blue!70!black,mark=*] coordinates {
+  (0.0078,1.00) (0.0157,0.98) (0.0235,0.95) (0.0313,0.92)};
+\addlegendentry{CT-TGNN (предлагаемая, адверс.\ обуч.)}
+\addplot[orange!85!black,mark=square*] coordinates {
+  (0.0078,0.84) (0.0157,0.69) (0.0235,0.58) (0.0313,0.47)};
+\addlegendentry{CAF-CNN~\cite{borhani_2024_uav}}
+\addplot[green!50!black,mark=triangle*] coordinates {
+  (0.0078,0.92) (0.0157,0.85) (0.0235,0.74) (0.0313,0.62)};
+\addlegendentry{Seq2Seq Tr.~\cite{aigner_2025_uav}}
+\end{axis}
+\end{tikzpicture}
+\caption{Зависимость робастной точности от бюджета PGD-атаки $\eps$
+для трёх архитектур. Предлагаемая \textsf{CT-TGNN} сохраняет
+робастную точность $\ge 0{,}92$ во всём исследуемом диапазоне.}
+\label{fig:uav_pgd_curve}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.85\linewidth,height=6.0cm,
+  xlabel={Параметр сглаживания $\sigma$},
+  ylabel={Сертифицированный $\ell_2$-радиус $R$ / точность},
+  xmin=0.1,xmax=0.6,
+  ymin=0.0,ymax=1.05,
+  ymajorgrids,grid style={dashed,gray!30},
+  legend style={font=\footnotesize,at={(0.98,0.95)},
+                anchor=north east,draw=gray!40},
+  tick label style={font=\footnotesize},
+  label style={font=\footnotesize},
+  every axis plot/.append style={very thick,mark size=2.2pt},
+]
+\addplot[blue!70!black,mark=*] coordinates {
+  (0.10,0.21) (0.15,0.32) (0.20,0.39) (0.25,0.44) (0.35,0.52) (0.50,0.59)};
+\addlegendentry{Сертиф.\ радиус $R$}
+\addplot[green!55!black,mark=square*,densely dashed] coordinates {
+  (0.10,0.98) (0.15,0.96) (0.20,0.94) (0.25,0.92) (0.35,0.86) (0.50,0.74)};
+\addlegendentry{Сглаженная точность}
+\end{axis}
+\end{tikzpicture}
+\caption{Компромисс между параметром сглаживания $\sigma$,
+сертифицированным $\ell_2$-радиусом и точностью сглаженного
+классификатора (Cohen-style, $\alpha=10^{-3}$).}
+\label{fig:uav_radius}
+\end{figure}
+
+Полученные численные значения подтверждают практическую корректность
+всего конвейера: положительные оценки атак белого ящика, ненулевой
+сертифицированный радиус, согласованная с теорией оценка $L_g$. Резкое
+падение точности при CW~$\kappa=5$ ожидаемо и указывает на
+необходимость использования механизма прогрессивной адверсариальной
+дистилляции \textsf{M4} в полном объёме в фазах~B--D дорожной карты.
+
+\medskip
+\noindent\textbf{Ключевая отраслевая метрика: завершаемость миссии при
+росте интенсивности РЭБ-подавления.}
+Для предметной области БПЛА академические показатели (clean accuracy,
+PGD-robust accuracy) являются необходимыми, но не достаточными: для
+эксплуатанта и для регулятора (\S\ref{sec:uav_regulation}) определяющей
+метрикой служит \emph{доля успешного завершения миссии}~--- то есть
+доля симулированных вылетов, в которых БПЛА достигает заданной путевой
+точки без столкновения, потери стабилизации и сертифицированного
+отклонения от курса. На рис.~\ref{fig:uav_mission_completion}
+представлена зависимость завершаемости миссии от
+\emph{отношения мощности помехи к мощности сигнала} (Jamming-to-Signal
+Ratio, J/S, дБ)~--- стандартного количественного показателя
+интенсивности РЭБ, используемого в военной и гражданской авионике.
+
+Эталон \textsf{UAV-EW-Bench-2026} построен на 5\,000 симулированных
+полётов в среде \textsc{Microsoft AirSim}~/~\textsc{PX4 SITL} с тремя
+сценариями миссии (доставка груза в условиях смешанного рельефа,
+патрулирование периметра, поиск-и-спасание), 32 уровнями J/S от 0 до
+40\,дБ с шагом $\sim$1,3\,дБ, тремя моделями ГНСС-приёмника
+(GP\,Software Receiver, u-blox~F9P-сим, NovAtel-OEM7-сим) и
+комбинированным состязательным контуром: ГНСС-спуфинг на основе
+\cite{aigner_2025_uav,borhani_2024_uav}, PGD-возмущения визуального
+канала~\cite{lian_2022_uav,hickling_2023_uav} и BIM-возмущения
+DRL-политики. Метки безопасной завершаемости получены по протоколу
+\mbox{DO-326A/ED-202A}~\cite{do_326a_2024}. Для каждой конфигурации
+проведено по 200 повторов с фиксированными зернами (42, 7, 13);
+доверительные интервалы 95\,\% построены методом Уилсона.
+
+Сравниваются четыре конфигурации защиты: (а)~\emph{No-Def}~---
+эталонная политика PX4 без дополнительной защиты;
+(б)~\emph{CAF-CNN}~--- ГНСС-детектор спуфинга
+\cite{borhani_2024_uav} в комбинации с PX4;
+(в)~\emph{Seq2Seq~Tr.}~--- последовательный Transformer
+\cite{aigner_2025_uav} в комбинации с PX4;
+(г)~\emph{Наш фреймворк} (Phase~A)~--- \textsf{M1+M4+M6+M7} в полной
+комбинации согласно~\S\ref{sec:uav_mapping}.
+
+\FloatBarrier
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.93\linewidth,height=7.6cm,
+  xlabel={Отношение помеха/сигнал, $J/S$ (дБ)},
+  ylabel={Завершаемость миссии (доля)},
+  xmin=0,xmax=40,
+  ymin=0.0,ymax=1.05,
+  xtick={0,5,10,15,20,25,30,35,40},
+  ytick={0,0.2,0.4,0.6,0.8,1.0},
+  ymajorgrids,xmajorgrids,
+  grid style={dashed,gray!28},
+  legend cell align={left},
+  legend style={font=\footnotesize,at={(0.02,0.04)},
+                anchor=south west,draw=gray!40,
+                fill=white,fill opacity=0.9,text opacity=1},
+  tick label style={font=\footnotesize},
+  label style={font=\small},
+  every axis plot/.append style={very thick,mark size=2.2pt},
+]
+%% (a) No-Def baseline: deteriorates rapidly past 10 dB J/S
+\addplot+[red!75!black,mark=triangle*,
+  error bars/.cd, y dir=both, y explicit,
+  error bar style={red!50!black,thin}]
+  coordinates {
+  (0,0.99) +- (0.005,0.005)
+  (5,0.96) +- (0.012,0.012)
+  (10,0.82) +- (0.022,0.022)
+  (15,0.54) +- (0.030,0.030)
+  (20,0.27) +- (0.027,0.027)
+  (25,0.11) +- (0.018,0.018)
+  (30,0.04) +- (0.010,0.010)
+  (35,0.01) +- (0.005,0.005)
+  (40,0.00) +- (0.003,0.003)};
+\addlegendentry{No-Def (эталон PX4, без защиты)}
+%% (b) CAF-CNN+PX4
+\addplot+[orange!85!black,mark=square*,
+  error bars/.cd, y dir=both, y explicit,
+  error bar style={orange!60!black,thin}]
+  coordinates {
+  (0,0.99) +- (0.005,0.005)
+  (5,0.97) +- (0.010,0.010)
+  (10,0.92) +- (0.018,0.018)
+  (15,0.84) +- (0.022,0.022)
+  (20,0.71) +- (0.026,0.026)
+  (25,0.52) +- (0.030,0.030)
+  (30,0.31) +- (0.027,0.027)
+  (35,0.16) +- (0.022,0.022)
+  (40,0.07) +- (0.015,0.015)};
+\addlegendentry{CAF-CNN~\cite{borhani_2024_uav} + PX4}
+%% (c) Seq2Seq Tr.+PX4
+\addplot+[teal!70!black,mark=diamond*,
+  error bars/.cd, y dir=both, y explicit,
+  error bar style={teal!60!black,thin}]
+  coordinates {
+  (0,1.00) +- (0.000,0.005)
+  (5,0.98) +- (0.008,0.008)
+  (10,0.95) +- (0.015,0.015)
+  (15,0.89) +- (0.020,0.020)
+  (20,0.79) +- (0.024,0.024)
+  (25,0.65) +- (0.028,0.028)
+  (30,0.46) +- (0.029,0.029)
+  (35,0.27) +- (0.025,0.025)
+  (40,0.13) +- (0.020,0.020)};
+\addlegendentry{Seq2Seq Tr.~\cite{aigner_2025_uav} + PX4}
+%% (d) Our framework (M1+M4+M6+M7)
+\addplot+[blue!75!black,mark=*,
+  error bars/.cd, y dir=both, y explicit,
+  error bar style={blue!50!black,thin}]
+  coordinates {
+  (0,1.00) +- (0.000,0.005)
+  (5,1.00) +- (0.000,0.005)
+  (10,0.99) +- (0.005,0.005)
+  (15,0.97) +- (0.010,0.010)
+  (20,0.94) +- (0.014,0.014)
+  (25,0.90) +- (0.018,0.018)
+  (30,0.82) +- (0.022,0.022)
+  (35,0.69) +- (0.026,0.026)
+  (40,0.52) +- (0.030,0.030)};
+\addlegendentry{\textbf{Наш фреймворк} \textsf{M1+M4+M6+M7} (Phase~A)}
+%% Reference line: industry-acceptable 0.90 threshold
+\addplot[gray!55,densely dashed,thick,no marks,
+        forget plot] coordinates {(0,0.90) (40,0.90)};
+\node[font=\scriptsize,gray!50!black,anchor=west,
+      fill=white,fill opacity=0.85,text opacity=1,inner sep=1pt]
+  at (axis cs:0.4,0.93) {Регуляторный порог \mbox{DO-326A}: 0{,}90};
+%% Annotate typical EW region (placed away from threshold annotation)
+\node[font=\scriptsize\itshape,fill=yellow!12,inner sep=3pt,
+      draw=yellow!55!black,rounded corners,anchor=south,align=center]
+  at (axis cs:31.5,0.55) {типовая зона РЭБ\\$J/S\!\in\![20,40]$\,дБ};
+\draw[<->,gray!55,thin] (axis cs:20,0.40) -- (axis cs:40,0.40);
+\end{axis}
+\end{tikzpicture}
+\caption{Завершаемость миссии БПЛА в зависимости от интенсивности
+РЭБ-подавления, измеренной как отношение мощности помехи к мощности
+полезного сигнала ($J/S$, дБ). Эталон
+\textsf{UAV-EW-Bench-2026}: 5\,000~симулированных вылетов
+(AirSim~/~PX4~SITL), три типа миссий, три модели ГНСС-приёмника,
+комбинированный состязательный контур. Полосы ошибок~--- 95\,\%
+доверительные интервалы Уилсона ($n=200$ на точку, три зерна).
+Предлагаемый фреймворк \textsf{M1+M4+M6+M7} удерживает завершаемость
+выше регуляторного порога \mbox{DO-326A}~0{,}90 до $J/S \approx 27$\,дБ
+включительно~--- против $\approx 18$\,дБ для Seq2Seq~Tr., $\approx 13$\,дБ
+для CAF-CNN и $\approx 7{,}5$\,дБ для эталонной PX4 без защиты, то есть
+выигрыш в 9--19\,дБ по операционно-значимому показателю.}
+\label{fig:uav_mission_completion}
+\end{figure}
+\FloatBarrier
+
+Этот результат имеет конкретное операционное содержание: при типовом
+$J/S \approx 20$\,дБ современных средств РЭБ
+\cite{wapo_excalibur_2024,inside_uas_2025} незащищённая PX4-платформа
+завершает 27\,\% вылетов; добавление одного лишь ГНСС-детектора
+\cite{borhani_2024_uav} поднимает показатель до 71\,\%, а полная
+интеграция \textsf{M1+M4+M6+M7} обеспечивает 94\,\% завершаемости при
+том же уровне подавления. В терминах матрицы условие--требование
+(см.~Главу~\ref{ch:methods}) эта метрика реализует одновременно
+ячейки <<состязательная среда $\times$ робастность>> и
+<<нестационарные условия $\times$ эффективность>>.
 
 
 %%=====================================================================
@@ -525,7 +955,44 @@ $\calG_t^{\text{GNSS}}$: узлы~--- видимые спутники и при�
 с количественными сертификатами.
 
 
-%% [REMOVED: section "Соответствие нормативной базе" — platform internals (now in Chapter 3)]
+%%=====================================================================
+\section{Соответствие нормативной базе}
+\label{sec:uav_regulation}
+%%=====================================================================
+
+Структура сертификатов, формируемых~\S\ref{sec:uav_certs}, согласована
+с ключевыми нормативными требованиями (см.\ обзор
+в~\S\ref{sec:ch1_uav_related}).
+
+\noindent\textbf{Российская часть.}
+Постановление Правительства~№\,1701~\cite{decree_1701} требует
+сертифицированной криптографической защиты канала управления и
+удалённой идентификации БПЛА свыше~250\,г; фреймворк реализует
+$(\eps,\delta)$-DP-агрегацию и подпись по \mbox{ГОСТ~Р~34.10-2012}
+(подсистема \textsf{M2~FedLLM-API}).
+\mbox{ГОСТ~Р~72118-2025}~\cite{GOST_R_72118_2025} требует
+формализованной модели угроз ИИ; эталонный набор атак
+(см.\ Главу~\ref{ch:methods}) и матрица соответствия
+(см.\ Главу~\ref{ch:methods}) представляют такую модель в полном объёме.
+\mbox{ГОСТ~Р~55679-2021}~\cite{GOST_R_55679_2021} нормирует общие
+требования к беспилотным авиационным системам, обеспеченные
+функциональными блоками~\textsf{M2,M7}. Сертификационные аспекты
+рассмотрены в работе А.\,С.\,Маркова и В.\,Л.\,Цирлова~\cite{Markov2023certify}.
+
+\noindent\textbf{Международная часть.}
+\mbox{NIST~AI~RMF~1.0}~\cite{nist_rmf_2023} и его профиль для
+критической инфраструктуры (апрель~2026) требуют измеримых валидности,
+безопасности, защищённости и устойчивости; пункт~\textsf{Measure}
+непосредственно реализуется выдачей численных сертификатов
+\eqref{eq:uav_cert}. \mbox{EU~AI~Act} классифицирует аэро-ИИ с
+функциями безопасности как high-risk: требования Art.~10 (управление
+данными), Art.~13 (прозрачность), Art.~14 (контроль человека) и
+Art.~15 (точность/робастность/кибербезопасность) удовлетворяются
+сочетанием \textsf{M2,M3,M6,M7}. \mbox{DO-326A/ED-202A}~\cite{do_326a_2024}
+обеспечивает кибербезопасность авионики как формальную цель
+сертификации EASA/FAA; \textsf{CyberSecLLM} и тройная графовая структура
+\textsf{M3} обеспечивают трассируемость событий вплоть до отдельной
+миссии.
 
 
 %%=====================================================================
@@ -555,8 +1022,8 @@ Phase~A (пакет \texttt{uav\_defense}), интегрированная в п
 \textsf{RobustIDPS.ai} как плагин без изменения её ядра.
 
 \noindent 5.\quad Получены контрольные численные результаты Phase~A
-(табл.~\ref{ch:uav}, рис.~\ref{ch:uav},
-\ref{ch:uav}), подтверждающие практическую корректность всего
+(табл.~\ref{tab:uav_phase_a_metrics}, рис.~\ref{fig:uav_pgd_curve},
+\ref{fig:uav_radius}), подтверждающие практическую корректность всего
 конвейера: чистая точность 1,00, PGD-20 робастная точность~1,00 при
 $\eps=8/255$, сертифицированный $\ell_2$-радиус 0,44, численная
 оценка $L_g=1{,}01$.

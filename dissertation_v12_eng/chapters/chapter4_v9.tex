@@ -60,29 +60,7 @@ volume, and statistical characteristics, which is what makes the transfer of the
 
 \subsection{Datasets}
 
-Evaluation employs six benchmark datasets spanning diverse network environments, attack taxonomies, and temporal characteristics.
-
-\begin{table}[htbp]
-\centering
-\caption{Summary of benchmark datasets used in experimental evaluation.}
-\label{tab:datasets}
-\begin{tabular}{lrrrl}
-\toprule
-Dataset & Records & Attack types & Features & Domain \\
-\midrule
-CIC-IoT-2023      & 46.6M & 33 & 46 & IoT Networks \\
-CSE-CICIDS2018     & 16.2M &  7 & 79 & Enterprise \\
-UNSW-NB15          &  2.5M &  9 & 49 & Hybrid \\
-Microsoft GUIDE    & 13.7M & 15 & 51 & Cloud/Enterprise \\
-Container Security &  3.2M &  8 & 93 & Microservices \\
-Edge-IIoT          &  2.0M & 12 & 69 & Edge/Industrial \\
-\midrule
-Total              & 84.2M & 84 &    & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-CIC-IoT-2023~\cite{Neto2023,Ring2019} comprises 46.6~million flow records from 105 IoT devices with 33 attack types. CSE-CICIDS2018~\cite{Sharafaldin2018} contains 16.2~million flows with 7 attack categories. UNSW-NB15~\cite{Moustafa2015,Mirsky2018} provides 2.5~million records with 9 attack classes. The ICS3D collection adds: Microsoft GUIDE (13.7M records, 15 attack types), Container Security (3.2M records, 8 attack patterns), and Edge-IIoT (2.0M records, 12 attack scenarios). All datasets are standardised to the 83-feature vector described in Chapter~\ref{ch:adaptation}.
+Six benchmark datasets (CIC-IoT-2023, CSE-CICIDS2018, UNSW-NB15, Microsoft GUIDE, Container Security, Edge-IIoT) are used, totalling 84.2~million labelled samples and 84 attack types and spanning IoT networks, enterprise, hybrid, cloud, container, and edge/industrial environments. Detailed descriptions of each dataset and of the preprocessing pipeline are provided in Chapter~\ref{ch:adaptation}.
 
 
 \subsection{Unified Evaluation Framework}
@@ -92,7 +70,7 @@ Performance characterisation employs twenty-three metrics spanning five categori
 
 \subsection{Implementation Details}
 
-All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss. Hardware: NVIDIA Tesla V100 (32\,GB) for training, P100 (16\,GB) for deployment. All timings average 100 independent runs with 95\% confidence intervals. Stratified 70/15/15 splits maintain class distributions with focal loss ($\gamma=2$) for class imbalance~\cite{Lin2017focal}.
+Software-implementation details (PyTorch~2.1, AdamW, hardware configurations) are provided in~\S\ref{sec:tech_stack_ui} of Chapter~\ref{ch:adaptation}.
 
 
 %%=====================================================================
@@ -349,9 +327,6 @@ Every component contributes measurably. The largest single-component impact is t
 %%=====================================================================
 
 %%=====================================================================
-
-transfer of the reported figures from the benchmarks to the
-operating deployments correct.
 
 \section{Investigation of Methods for Certifying Adversarial Robustness}
 \label{sec:adversarial_eval}
