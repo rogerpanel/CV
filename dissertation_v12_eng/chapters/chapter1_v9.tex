@@ -231,7 +231,48 @@ integration mode for each.}
 \label{fig:orga_apps_idps}
 \end{figure}
 
-\paragraph{(a) Network Traffic Protection (NIDS)}\label{subsubsec:sector_nids}
+Seven practically significant application sectors of Hybrid IDPS are systematised in Table~\ref{tab:idps_sectors}. Each sector is characterised by a specific attack surface and special requirements for integrating defensive models; key quantitative vulnerability indicators are retained in the attack-surface column with their respective citations.
+
+\begin{table}[htbp]
+\centering
+\caption{Hybrid IDPS application domains: attack surface and special requirements.}
+\label{tab:idps_sectors}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.8cm} p{6.5cm} p{5.0cm}}
+\toprule
+\textbf{Domain} & \textbf{Attack surface} & \textbf{Special requirements} \\
+\midrule
+(a)~Network traffic (NIDS) & Port scanning, service exploitation, DoS/DDoS, lateral movement, C2 channels, exfiltration, post-quantum protocol transitions; 46--83-dim vectors (CIC-IoT-2023, CSE-CICIDS-2018, UNSW-NB15) & Integration with signature engines (Snort, Suricata); SIEM alerts; see Chap.~\ref{ch:platform} \\
+\addlinespace
+(b)~UAV & GNSS spoofing/jamming, EW, adversarial attacks on onboard vision, autopilot policy poisoning, command-link hijacking, kinetic and biological threats & Graph representation of UAV operational environment; M1--M7 apparatus unchanged; see Chap.~\ref{ch:uav} \\
+\addlinespace
+(c)~Fintech & Carding, money laundering, raid-style transactional attacks (MonTi~\cite{MonTi2025}: CARE-GNN/PC-GNN/GAGA error from 25.7\% to 68.6\%), credential spoofing, phishing & Class imbalance ($<\!1\%$ fraud); Byzantine-resilient federated learning across banks \\
+\addlinespace
+(d)~Medical & Edge-sensitivity attacks on GIN (AUC drop to 25\% on MoleculeNet, toxic compounds as safe~\cite{EdgeSensitivity2025}), model inversion, membership inference, poisoning of clinical-trial graphs & $(\varepsilon,\delta)$-DP training; calibrated epistemic uncertainty \\
+\addlinespace
+(e)~IIoT/SCADA & PLC state manipulation, sensor signal replay, timestamp attacks; federated detector poisoning causes accuracy collapse from 94.2\% to 30.0\% under non-i.i.d.~\cite{FerragPoisoning2023} & Specialised protocols (\texttt{Modbus}, \texttt{DNP3}, \texttt{IEC~61850}, \texttt{OPC-UA}, \texttt{S7}); deterministic tens-of-ms latency \\
+\addlinespace
+(f)~Autonomous vehicles & Adversarial physical patches on traffic signs, GNSS spoofing, falsified V2X injection, trajectory-planner poisoning & Sensor-fusion graph (camera, LiDAR, radar, INS); calibrated uncertainty as safe-mode trigger \\
+\addlinespace
+(g)~Cloud/SaaS & Container escape, IAM abuse, supply-chain attacks, image substitution; PROVNINJA~\cite{PROVNINJA2023} reduces provenance-IDS detection to 59\% & East--west API traffic via service mesh (\texttt{Istio}, \texttt{Linkerd}); multi-tenant isolation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Full system-level realisations for the two showcase sectors~--- (a)~network traffic protection and~(b)~UAV protection~--- are presented in Chapters~\ref{ch:platform} and~\ref{ch:uav}; sectors~(c)--(g) are realised on the basis of Models M1--M7 developed in Chapter~\ref{ch:methods}.
+
+%% Anchor labels preserved for cross-references from other chapters:
+\phantomsection\label{subsubsec:sector_nids}%
+\phantomsection\label{subsubsec:sector_uav}%
+\phantomsection\label{subsubsec:sector_fintech}%
+\phantomsection\label{subsubsec:sector_medical}%
+\phantomsection\label{subsubsec:sector_iiot}%
+\phantomsection\label{subsubsec:sector_av}%
+\phantomsection\label{subsubsec:sector_cloud}%
+
+\iffalse
+ORIGINAL TEXT (collapsed into Table~\ref{tab:idps_sectors}):
 
 Network traffic protection is historically the first and most
 extensively studied application area of IDPS. The object of
@@ -348,6 +389,7 @@ credentials, supply-chain attacks against software, and container-
 image substitution. The PROVNINJA attack~\cite{PROVNINJA2023}, which
 reduces detection in provenance-based GNN systems to 59\%,
 documents the necessity of protecting this sector. A Hybrid~IDPS in the cloud sector requires multi-level representations at service/trace/node layers and game-theoretic certification of response-strategy selection~--- these requirements are formalised as system properties P6 and P1 in Chapter~\\ref{ch:methods}.
+\fi
 
 
 %%=====================================================================
@@ -439,62 +481,34 @@ direction~item~4 of the specialty~2.3.1 passport.
 \label{subsec:commercial_ai_idps}
 %%---------------------------------------------------------------------
 
-Since 2023--2025, leading information-security vendors have
-introduced a class of \emph{AI-augmented} commercial detection and
-response platforms layered above classical signature-based and
-behavioural engines. A systematic review of this class is required
-to position the RobustIDPS.ai framework developed in this work
-against the prevailing industrial state of the art.
+Since 2023--2025, leading information-security vendors have introduced a class of \emph{AI-augmented} commercial detection and response platforms layered above classical signature-based and behavioural engines. A systematic review of seven representative products in Table~\ref{tab:ai_idps_products} positions the RobustIDPS.ai framework developed in this work against the prevailing industrial state of the art.
 
-\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
-
-\item \textbf{CrowdStrike Falcon with the Charlotte~AI module}~---
-an EDR/XDR platform with an embedded LLM assistant for accelerated
-alert triage and automated generation of response playbooks; the
-detection core relies on behavioural indicators of attack (IoA)
-and process graphs. The declared advantage is reduction of SOC
-analyst response time; the limitations are a closed rule corpus,
-the absence of formal robustness certificates against adversarial
-influence, and dependence on the CrowdStrike cloud back-end.
-
-\item \textbf{SentinelOne Singularity with Purple~AI}~--- an
-autonomous XDR platform with an agentic AI for natural-language
-incident investigation; implements behavioural detection at the
-endpoint level and automated rollback under ransomware. Limitations
-relevant to the present work: absence of a formal privacy model
-for federated training on data from multiple customers, and the
-absence of certified resilience against poisoning of training data.
-
-\item \textbf{Microsoft Security Copilot}~--- a layer on top of
-the Defender~XDR / Sentinel SIEM family powered by GPT-family
-LLMs; oriented toward augmenting the SOC operator (incident
-summarisation, KQL query generation, response-plan construction).
-The principal limitation is that the LLM decisions are not
-accompanied by quantitative uncertainty estimates and carry no
-formal robustness guarantees under adversarial prompts
-(prompt-injection).
-
-\item \textbf{Google Cloud Threat Intelligence (Mandiant +
-Gemini)}~--- integrates Mandiant indicators of compromise with the
-Gemini LLM assistant for attribution and threat prioritisation;
-the strong side is aggregated threat-intelligence feeds, the weak
-side is the closed-model nature and the absence of guarantees for
-on-premises deployments.
-
-\item \textbf{Cisco AI Endpoint Analytics / Hypershield}~---
-targets network segmentation and workstation-level anomaly
-detection by means of learnable device-identification models;
-constitutes a commercial counterpart of the feature-learning
-models for NIDPS reviewed in Section~1.6.
-
-\item \textbf{IBM QRadar SIEM AI Assistant} and \textbf{Palo~Alto
-Networks Cortex~XSIAM}~--- AI-augmented SIEM/SOAR platforms;
-they provide automated event correlation and analyst
-recommendation systems but neither supply certified guarantees
-of adversarial resilience nor implement federated learning across
-organisations.
-
-\end{enumerate}
+\begin{table}[htbp]
+\centering
+\caption{AI-augmented commercial IDPS products (2023--2025): approach and key limitations.}
+\label{tab:ai_idps_products}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.7cm} p{2.0cm} p{4.5cm} p{4.8cm}}
+\toprule
+\textbf{Product} & \textbf{Vendor} & \textbf{Approach} & \textbf{Key limitations} \\
+\midrule
+Falcon + Charlotte~AI & CrowdStrike & EDR/XDR with LLM assistant; behavioural IoA and process graphs & Closed rule corpus; no formal robustness certificates; cloud back-end dependence \\
+\addlinespace
+Singularity + Purple~AI & SentinelOne & Autonomous XDR with agentic AI for natural-language incident investigation; ransomware rollback & No formal privacy model for federated training; no certified resilience to poisoning \\
+\addlinespace
+Security Copilot & Microsoft & Layer over Defender~XDR/Sentinel SIEM on GPT-family LLMs; incident summarisation, KQL generation & No quantitative uncertainty estimates; no guarantees against prompt-injection \\
+\addlinespace
+Mandiant + Gemini & Google Cloud & Integration of Mandiant IoCs with Gemini LLM for attribution and prioritisation & Closed-model nature; no guarantees for on-premises deployments \\
+\addlinespace
+AI Endpoint Analytics / Hypershield & Cisco & Network segmentation and workstation-level anomaly detection via learnable device identification & Commercial counterpart of NIDPS feature-learning models; no robustness certificates \\
+\addlinespace
+QRadar SIEM AI Assistant & IBM & AI-augmented SIEM/SOAR: automated event correlation and analyst recommendations & No certified adversarial guarantees; no cross-organisation federated learning \\
+\addlinespace
+Cortex~XSIAM & Palo~Alto Networks & AI-augmented SIEM/SOAR: extended analytics and response automation & No certified adversarial guarantees; no cross-organisation federated learning \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \noindent A systematic analysis of the products listed above
 shows that \emph{all} of them are pipeline overlays of LLM/EDR
@@ -669,7 +683,7 @@ Graph neural networks are deployed in healthcare (molecular property prediction 
 
 Unlike conventional neural networks that receive a single data tensor, a graph neural network receives two inputs simultaneously: numerical \emph{input data} $\mathbf{X}\in\mathbb{R}^{n\times d}$ (the feature matrix encoding entity attributes) and relational \emph{input structure} $\mathbf{A}\in\{0,1\}^{n\times n}$ (the adjacency matrix encoding pairwise connectivity). The network produces its output by propagating data along the structure through iterative neighbourhood aggregation, and perturbation of \emph{either} input --- the data or the structure --- can compromise the output~\cite{Zuegner2018,Bojchevski2019,Dai2018}.
 
-Z\"{u}gner et al.~\cite{Zuegner2018} demonstrated that modifying as few as five edges in a citation graph can flip the predicted label of a targeted node, while Bojchevski and G\"{u}nnemann~\cite{Bojchevski2019} showed that global poisoning attacks degrade node classification accuracy by up to 20\% on benchmark datasets. Dai et al.~\cite{Dai2018} extended these findings to reinforcement-learning-based graph perturbation, and subsequent work~\cite{Xu2019b,Wu2019} confirmed that both feature and topological perturbations transfer across GNN architectures. Biggio and Roli~\cite{Biggio2018} provided a comprehensive taxonomy of adversarial attacks on machine learning, while Carlini and Wagner~\cite{Carlini2017} established benchmark evaluation methodologies. Kurakin et al.~\cite{Kurakin2017} demonstrated that adversarial perturbations persist in physical-world settings, and Papernot et al.~\cite{Papernot2016,Papernot2017pate} showed the feasibility of black-box attacks through transferability. Athalye et al.~\cite{Athalye2018} later showed that obfuscated gradients give a false sense of security, motivating the need for certified rather than empirical defences. Bhagoji et al.~\cite{Bhagoji2019} analysed adversarial attacks in distributed settings, Jia and Liang~\cite{Jia2019} studied data poisoning for recommendations, and Bose and Hamilton~\cite{Bose2020} developed adversarial attacks on graph embeddings. Sun et al.~\cite{Sun2022gnn_robustness} surveyed graph-specific robustness methods, and Jin et al.~\cite{Jin2020} developed graph adversarial training frameworks. The adversarial robustness--accuracy trade-off was formally characterised by Tsipras et al.~\cite{Tsipras2019}, and Tram\`{e}r et al.~\cite{Tramer2018} demonstrated ensemble-based attacks that defeat gradient masking.
+Structural attacks on GNNs have been quantitatively confirmed: modifying five edges flips a targeted node's label~\cite{Zuegner2018}, global poisoning degrades node classification by up to 20\%~\cite{Bojchevski2019}, and RL-based perturbations together with transferability of feature/topological attacks across architectures have been established~\cite{Dai2018,Xu2019b,Wu2019}. A general taxonomy of adversarial attacks~\cite{Biggio2018}, benchmark evaluation methodologies~\cite{Carlini2017,Kurakin2017,Papernot2016,Papernot2017pate}, and the demonstration that obfuscated gradients give a false sense of security~\cite{Athalye2018,Tramer2018} together motivate the need for certified rather than empirical defences. Adversarial attacks in distributed settings~\cite{Bhagoji2019}, data poisoning of recommenders~\cite{Jia2019}, attacks on graph embeddings~\cite{Bose2020}, surveys of graph-specific robustness~\cite{Sun2022gnn_robustness} and adversarial training~\cite{Jin2020}, and the formal robustness--accuracy trade-off~\cite{Tsipras2019} form the established threat spectrum against which existing defences remain empirical.
 
 Gama, Bruna, and Ribeiro~\cite{Gama2020} introduced a stability framework bounding the output sensitivity of graph filters through the Lipschitz constant of their frequency response. However, these bounds grow rapidly with network depth and do not extend to the temporal, distributional, or adversarial settings that real-world graph systems encounter.
 
@@ -694,7 +708,7 @@ Chen et al.~\cite{Chen2018} introduced neural ordinary differential equations (n
 \frac{d\bh(t)}{dt} = f_\theta\!\bigl(\bh(t),\, t\bigr),
 \label{eq:ch1_ode}
 \end{equation}
-where $f_\theta$ is a neural network parameterising the vector field. The output at any time $T$ is obtained by numerically integrating Equation~\eqref{eq:ch1_ode} from $t=0$ to $t=T$ using adaptive-step solvers, and gradients are computed memory-efficiently through the adjoint sensitivity method~\cite{Pontryagin1962}. This formulation has been extended to graph-structured data: Chamberlain et al.~\cite{Chamberlain2021} formulated graph neural diffusion as a continuous PDE on the graph, and Rusch et al.~\cite{Rusch2022} developed coupled oscillatory graph neural ODEs that prevent over-smoothing. Rubanova et al.~\cite{Rubanova2019} extended neural ODEs to irregularly-sampled time series, Dupont et al.~\cite{Dupont2019} introduced augmented neural ODEs with higher-dimensional state spaces, and Kidger et al.~\cite{Kidger2020} developed neural controlled differential equations for irregular time series. Grathwohl et al.~\cite{Grathwohl2019} connected neural ODEs to continuous normalising flows, and Finlay et al.~\cite{Finlay2020} proposed regularisation techniques for stable training. Hasani et al.~\cite{Hasani2021} developed liquid time-constant neural ODEs for adaptive computation, and Li et al.~\cite{Li2020ode} applied neural ODEs to continuous graph neural networks on static topologies.
+where $f_\theta$ parameterises the vector field; the output is integrated by adaptive-step solvers and gradients computed via the $O(1)$-memory adjoint method~\cite{Pontryagin1962}. Graph extensions include continuous-PDE diffusion on the graph~\cite{Chamberlain2021} and oscillatory graph ODEs preventing over-smoothing~\cite{Rusch2022}; for irregular time series~--- latent ODEs~\cite{Rubanova2019}, augmented ODEs~\cite{Dupont2019}, and neural CDEs~\cite{Kidger2020}; connection to normalising flows~\cite{Grathwohl2019} and regularisation for stable training~\cite{Finlay2020}; liquid time-constant ODEs for adaptive computation~\cite{Hasani2021}; continuous GNNs on static topologies~\cite{Li2020ode}.
 
 Temporal graph networks such as TGAT~\cite{Xu2020tgat} and TGN~\cite{Rossi2020} model time-stamped interactions on evolving graphs, but they operate in discrete time --- each event triggers a single update step. This forces irregular graph events onto a fixed computational clock, losing information about the precise timing and ordering of interactions between steps.
 
@@ -729,7 +743,7 @@ Despite the theoretical promise, no existing work derives certified robustness b
 
 \subsection{Federated Learning Fundamentals}
 
-McMahan et al.~\cite{McMahan2017} introduced Federated Averaging (FedAvg), enabling distributed training across multiple participants without centralising raw data. Each participant computes local gradient updates on its data fragment, and a central server aggregates these updates into a global model. This paradigm is essential for graph data in healthcare (patient-interaction graphs across hospitals), finance (transaction graphs across banks), and cybersecurity (traffic graphs across data centres), where privacy regulations prohibit data sharing~\cite{Kairouz2021,Konecny2016,Mothukuri2021}. Dwork~\cite{Dwork2014} established the foundations of algorithmic privacy, and McMahan et al.~\cite{McMahan2018dp} combined federated learning with differential privacy at scale. Li et al.~\cite{Li2020fedprox} addressed heterogeneous federated learning through proximal regularisation, and Zhao et al.~\cite{Zhao2020fl_noniid} characterised the non-IID challenge in federated settings. Wang et al.~\cite{Wang2020fedma} proposed federated matched averaging for heterogeneous architectures. Sun and Lyu~\cite{Sun2019fl_poison} demonstrated poisoning attacks against federated learning, Fang et al.~\cite{Fang2020} developed local model poisoning attacks, and El-Mhamdi et al.~\cite{ElMhamdi2018} provided information-theoretic limits on Byzantine-resilient aggregation. Geyer et al.~\cite{Geyer2017} proposed client-level differential privacy for federated learning, and Agarwal et al.~\cite{Agarwal2018cpsgd,Bernstein2017,Bernstein2019} developed communication-efficient distributed SGD with privacy guarantees. Wei et al.~\cite{Wei2020dpfl} analysed the convergence of differentially private federated learning.
+FedAvg~\cite{McMahan2017} enables distributed training without centralising raw data, which is essential for graph data in healthcare, finance, and cybersecurity~\cite{Kairouz2021,Konecny2016,Mothukuri2021}. Subsequent lines include: foundations of algorithmic privacy~\cite{Dwork2014} and large-scale combination of FL with DP~\cite{McMahan2018dp,Geyer2017,Agarwal2018cpsgd,Bernstein2017,Bernstein2019,Wei2020dpfl}; adaptation to heterogeneous and non-IID settings~\cite{Li2020fedprox,Zhao2020fl_noniid,Wang2020fedma}; poisoning attacks and information-theoretic limits of Byzantine resilience~\cite{Sun2019fl_poison,Fang2020,ElMhamdi2018}.
 
 
 \subsection{Byzantine-Resilient Aggregation}
@@ -848,79 +862,28 @@ neural-network navigation subsystem of unmanned aerial vehicles
 adversarial-machine-learning pressure. The present section briefly
 summarises the corresponding literature.
 
-\subsection{Degradation of UAV Neural-Network Components under EW
-Pressure}
-Open military reviews and analytical briefs document an accelerating
-degradation of UAV neural-network components as EW pressure grows.
-According to investigative journalism~\cite{wapo_excalibur_2024},
-the hit rate of the GPS-guided M982~Excalibur artillery shell fell
-from above~50\,\% to below~10\,\% within months in zones covered by
-Russian EW assets. The review~\cite{inside_uas_2025} reports that up
-to 31\,\% of FPV-UAV sorties are lost to jamming. The Latvian
-electronic-communications authority recorded 820~GNSS-interference
-incidents in 2024 versus 26 in 2022~--- a more than 31-fold rise.
-A systematic survey of the domestic literature on EW against UAV
-command-and-control systems has been carried out by
-S.\,I.\,Makarenko~\cite{Makarenko2022uav}.
+The body of evidence on robustness in safety-critical UAV intelligent systems~--- covering neural-network degradation under EW, adversarial attacks on aerial vision and RL policies, GNSS spoofing, and graph-based swarm models~--- is systematised in Table~\ref{tab:uav_robustness}. All numeric vulnerability metrics documenting the 25--65 percentage-point robustness gap in the UAV sector are preserved together with their primary sources.
 
-\subsection{Adversarial Attacks on Aerial Visual Detectors}
-Lian et~al.~\cite{lian_2022_uav} have shown that adaptive
-adversarial patches against the aerial detectors YOLOv2--v5,
-Faster~R-CNN and SSD on the VisDrone benchmark reduce mean average
-precision (mAP) by 87.86~p.p.\ in the white-box and 85.48~p.p.\ in
-the black-box regime. Du et~al.~\cite{du_2022_uav} obtained an
-mAP drop of YOLOv3 from $\approx$0.95 to~$<$0.20 with physically
-printed patches. Xiang et~al.~\cite{xiang_2019_uav} report >99\,\%
-success of targeted attacks on PointNet by adding only a few
-adversarial points.
-
-\subsection{Adversarial Attacks on Deep Reinforcement Learning
-Policies}
-Hickling, Aouf and Spencer~\cite{hickling_2023_uav} have shown that
-the iterative BIM method drops the obstacle-course completion rate
-of an APF+DDPG-PER UAV pilot from 97\,\% to 35\,\%, and proposed a
-SHAP detector of adversarial influences with 80--91\,\% detection
-rate. A review of adversarial attacks on UAV neural-network
-components and existing defence methods has been presented in the
-work of A.\,E.\,Lisin and S.\,G.\,Cherny~\cite{Lisin2023uav}.
-
-\subsection{GNSS Spoofing and Drift-Evasive Attacks}
-Borhani-Darian et~al.~\cite{borhani_2024_uav} have built a deep
-convolutional network that detects spoofing at the signal level
-through cross-ambiguity-function (CAF) features. Aigner
-et~al.~\cite{aigner_2025_uav} have obtained a detection error of
-0.16\,\% on the TEXBAT benchmark with a Seq2Seq Transformer
-architecture. Panda and Guo~\cite{panda_2025_uav} have formalised
-drift-evasive spoofing, in which the attacker slowly perturbs
-pseudoranges while remaining within signal-level thresholds and
-steering the trajectory by hundreds of metres. The application of
-deep-learning methods to GNSS spoofing detection from a UAV receiver
-has been studied by A.\,A.\,Galyaev, L.\,N.\,Lysenko and
-D.\,S.\,Yashin~\cite{Galyaev2024gnss}.
-
-\subsection{Graph Neural Networks in UAV-Swarm Tasks}
-Mou et~al.~\cite{mou_2021_uav} have applied a GCN to self-healing
-UAV-swarm communications. The hierarchical federated GAT
-\cite{hfgat_2025_uav} delivers below-2\,\% collision rate at 500~UAVs
-and Byzantine fraction $f<n/3$. The CM-BRF-ViT architecture
-\cite{cmbrf_vit_2026_uav} reaches 89.6\,\% accuracy at 40\,\%
-Byzantine clients against 45.6\,\% of vanilla FedAvg.
-
-\subsection{Regulatory Context for UAVs}
-In the Russian Federation, Government Decree No.~1701 of
-30~November~2024~\cite{decree_1701} requires that UAVs above 250\,g
-be equipped with certified communication, remote-identification and
-cryptographic-information-protection means.
-\mbox{GOST~R~72118-2025}~\cite{GOST_R_72118_2025} regulates the
-formalisation of AI threat models, and
-\mbox{GOST~R~55679-2021}~\cite{GOST_R_55679_2021} sets general
-requirements for unmanned aerial systems. Methodological and
-regulatory aspects of certification of ML-based information-security
-tools are analysed in detail in the work of A.\,S.\,Markov and
-V.\,L.\,Tsirlov~\cite{Markov2023certify}. The international layer is
-shaped by \mbox{NIST~AI~RMF~1.0}~\cite{nist_rmf_2023}, the
-\mbox{EU~AI~Act} (which classifies safety-critical aero-AI as
-high-risk) and \mbox{DO-326A/ED-202A}~\cite{do_326a_2024}.
+\begin{table}[htbp]
+\centering
+\caption{Robustness experience in safety-critical UAV intelligent systems: attack types, robustness gap, and sources.}
+\label{tab:uav_robustness}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.4cm} p{4.8cm} p{4.8cm} p{2.6cm}}
+\toprule
+\textbf{Sub-sector} & \textbf{Attack types} & \textbf{Robustness gap} & \textbf{Source} \\
+\midrule
+NN component degradation under EW & GNSS jamming, signal denial & M982~Excalibur hit rate fell from $>$50\,\% to $<$10\,\%; up to 31\,\% FPV sorties lost; Latvian GNSS-interference incidents rose 31-fold (820 in 2024 vs 26 in 2022) & \cite{wapo_excalibur_2024,inside_uas_2025,Makarenko2022uav} \\
+\addlinespace
+Aerial visual detectors and autopilot RL policies & Adaptive patches vs YOLOv2--v5/Faster~R-CNN/SSD; targeted PointNet attacks; BIM on DRL pilot & mAP drops by 87.86~p.p.\ (white-box) and 85.48~p.p.\ (black-box) on VisDrone; YOLOv3 from $\approx$0.95 to $<$0.20; $>$99\,\% success on PointNet; APF+DDPG-PER from 97\,\% to 35\,\%; SHAP detector 80--91\,\% & \cite{lian_2022_uav,du_2022_uav,xiang_2019_uav,hickling_2023_uav,Lisin2023uav} \\
+\addlinespace
+GNSS spoofing and drift-evasive attacks & Signal-level spoofing, drift-evasive pseudorange perturbation & CNN on CAF features; Seq2Seq Transformer 0.16\,\% error on TEXBAT; formalised drift-evasive spoofing steering trajectory by hundreds of metres while signal-level thresholds remain nominal & \cite{borhani_2024_uav,aigner_2025_uav,panda_2025_uav,Galyaev2024gnss} \\
+\addlinespace
+UAV-swarm graph models and regulatory context & Byzantine clients in federated GNNs; regulatory requirements for ML-based ISP tools & GCN for self-healing; hierarchical federated GAT~--- $<$2\,\% collision rate at 500~UAVs with $f<n/3$; CM-BRF-ViT~--- 89.6\,\% accuracy at 40\,\% Byzantine (vs 45.6\,\% FedAvg). Regulatory layer: RF Government Decree~No.~1701 of 30.11.2024, GOST~R~72118-2025, GOST~R~55679-2021, NIST~AI~RMF~1.0, EU~AI~Act, DO-326A/ED-202A & \cite{mou_2021_uav,hfgat_2025_uav,cmbrf_vit_2026_uav,decree_1701,GOST_R_72118_2025,GOST_R_55679_2021,Markov2023certify,nist_rmf_2023,do_326a_2024} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \medskip
 \noindent\textit{Section summary.} The adversarial-machine-learning
