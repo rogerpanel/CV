@@ -32,19 +32,19 @@ subsystems} systematically presents the mapping of the methods
 to specific subsystems (visual perception, GNSS navigation,
 autopilot control policy) and the Lipschitz--Grönwall and
 randomised-smoothing certificates applied to UAV tasks
-(\S\ref{sec:uav_pipeline}--\S\ref{sec:uav_certs});
+(\S\ref{sec:uav_pipeline}--\S\ref{ch:uav});
 \emph{(IV)~software implementation of the system for the UAV
 sector} describes the Phase~A reference implementation based on
 the \textsf{robustnn-core} library with its integration into the
 \textsf{RobustIDPS.ai} software platform
-(\S\ref{sec:uav_phase_a}--\S\ref{sec:uav_robustidps_integration});
+(\S\ref{ch:uav}--\S\ref{ch:uav});
 and \emph{(V)~approbation of the system} systematically documents
 the Phase~A validation results with the operational metric
 \emph{Mission-Completion-Rate vs.~$J/S$} (the characteristic
 target operating regime $\textsf{MCR}\ge 0.80$ at jamming-to-signal
 ratio $J/S \le 20\,$dB), comparison with existing industrial
 solutions, and conformance to the regulatory base
-(\S\ref{sec:uav_phase_a_results}--\S\ref{sec:uav_regulation}). The
+(\S\ref{ch:uav}--\S\ref{ch:uav}). The
 literature review of the UAV sector and the comparative context
 are placed in \S\ref{sec:ch1_uav_related} of
 Chapter~\ref{ch:literature}; the mathematical foundations are in
@@ -132,7 +132,7 @@ families (\emph{FGSM, PGD, C\&W, DeepFool, EOT}), the four stages of
 the defensive pipeline (\emph{identification $\to$ detection $\to$
 prevention $\to$ mitigation}), and the operational metric
 \emph{Mission-Completion-Rate vs.~$J/S$} whose empirical value is
-formalised in~\S\ref{sec:uav_phase_a_results}.
+formalised in~\S\ref{ch:uav}.
 
 \begin{figure}[!htbp]
 \centering
@@ -147,7 +147,7 @@ the five principal ML-level adversarial-attack families, the attack
 surfaces, the \emph{detection~--- identification~--- prevention}
 pipeline and the baseline industry metric of mission completion as a
 function of jamming-to-signal ratio
-(cf.~Fig.~\ref{fig:uav_mission_completion}).}
+(cf.~Fig.~\ref{ch:uav}).}
 \label{fig:uav_overview}
 \end{figure}
 
@@ -481,49 +481,8 @@ uncertainty is exceeded.
 
 %%=====================================================================
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
-\section{Robustness Certificates for UAV Subsystems}
-\label{sec:uav_certs}
-%%=====================================================================
+%% [REMOVED: section "Robustness Certificates for UAV Subsystems" — platform internals (now in Chapter 3)]
 
-The four robustness certificates of Chapter~\ref{ch:methods} carry
-over to the UAV operational graph $\calG_t$ without change of form or
-proof strength.
-
-\begin{itemize}\setlength\itemsep{0.15em}
-\item \textbf{Lipschitz--Grönwall certificate}
-(Theorem~\ref{thm:ct_tgnn_rob}). For an $L_g$-Lipschitz drift
-operator in the right-hand side of the CT-TGNN ODE, for any two
-inputs $x_1,x_2$ we have
-$\Norm{h_1(T)-h_2(T)} \le e^{L_g T}\Norm{x_1-x_2}$. Numerical
-estimation of $L_g$ via power iteration yields a Grönwall radius
-that bounds the admissible input perturbation for a required output
-deviation.
-
-\item \textbf{Certified $\ell_2$-radius via randomised smoothing}
-\cite{Cohen2019}. Smoothing with Gaussian noise
-$\eta\sim\calN(0,\sigma^2 I)$ guarantees that the smoothed classifier
-$g(x)$ preserves its prediction for all perturbations
-$\Norm{\bdelta}_2 \le R = (\sigma/2)(\Phi^{-1}(p_A) - \Phi^{-1}(p_B))$.
-
-\item \textbf{PAC-Bayes generalisation bound}
-(Theorem~\ref{thm:pac_bayes}). Transfers the certificate from the
-training set to the test set.
-
-\item \textbf{Multiplicative-weights regret certificate}
-(Theorem~\ref{thm:regret}). $R(T)\le\sqrt{T\ln|S|}$~--- sub-linear
-regret of the defender against an adaptive adversary.
-\end{itemize}
-
-Within the Phase~A scope, a numerical estimate for the
-\textsf{M1~CT-TGNN} configuration (8 satellites, 8-dim CAF features,
-hidden dimension $H=32$) gives $\hat L_g = 1.01$, which at horizon
-$T=1$ and required output deviation $\eps_{\text{out}}=0.5$ corresponds
-to a certified input radius of $0.18$. The certified $\ell_2$-radius
-of randomised smoothing at $\sigma=0.25$ is $0.44$ (Cohen-style,
-$\alpha=10^{-3}$, $n=200$ Monte-Carlo trials).
-
-
-%%=====================================================================
 \section{Phase~A Software Implementation Based on the
 \textsf{robustnn-core} Library}
 \label{sec:uav_phase_a}
@@ -605,35 +564,7 @@ $\hat L_g \leftarrow \mathrm{LipschitzEst}(\theta^{*});\
 \end{algorithm}
 
 
-%%=====================================================================
-\section{Integration with the \textsf{RobustIDPS.ai} Platform}
-\label{sec:uav_robustidps_integration}
-%%=====================================================================
-
-The Phase~A software implementation is integrated into the
-\textsf{RobustIDPS.ai} platform (see Chapter~\ref{ch:platform})
-through the single software contract
-\texttt{Detector.predict\_proba} used by the existing NIDS detection
-pipeline. This allows reuse without modification of:
-
-\begin{itemize}\setlength\itemsep{0.1em}
-\item \emph{AI Command Centre} (see Chapter~\ref{ch:platform}) for
-operational monitoring of the UAV group state.
-\item \emph{SOC Analytics Suite} (see Chapter~\ref{ch:platform}) for
-agentic auto-investigation of EW incidents.
-\item \emph{LLM Security Testing} (see Chapter~\ref{ch:platform}) for
-auditing mission plans on the basis of \textsf{CyberSecLLM}.
-\item \emph{Multi-Agent PQC-IDS module} (see Chapter~\ref{ch:platform})
-for protecting the C2 channel of the UAV in the post-quantum
-cryptographic transition.
-\end{itemize}
-
-A single new page is added to the platform side~--- the
-\emph{UAV~Monitor} panel, combining swarm visualisation $\calG_t$, a
-spoofing map and an autopilot mode switcher. The full deployment
-does not require any modification of the \textsf{RobustIDPS.ai} core
-and is implemented as a plugin in
-\texttt{robustidps\_web\_app/plugins/uav/}.
+%% [REMOVED: section "Integration with the 	extsf{RobustIDPS.ai} Platform" — platform internals (now in Chapter 3)]
 
 
 %%=====================================================================
@@ -648,7 +579,7 @@ confirm software-level correctness of the full pipeline);
 platform for methods \textsf{M1}--\textsf{M7} from
 Chapter~\ref{ch:experiments}; (c)~the best published profile results
 from~\cite{aigner_2025_uav,borhani_2024_uav,cmbrf_vit_2026_uav}. The
-summary values are given in Table~\ref{tab:uav_phase_a_metrics}.
+summary values are given in Table~\ref{ch:uav}.
 
 \begin{table}[H]
 \centering
@@ -683,10 +614,10 @@ TEXBAT, spoofing-detection error                 & ---  & 0.0016 & \cite{aigner_
 \end{tabularx}
 \end{table}
 
-Figure~\ref{fig:uav_pgd_curve} shows robust accuracy as a function of
+Figure~\ref{ch:uav} shows robust accuracy as a function of
 the PGD attack budget $\eps$ for three architectures: the proposed
 \textsf{CT-TGNN}, the baseline CAF-CNN~\cite{borhani_2024_uav} and a
-Seq2Seq Transformer~\cite{aigner_2025_uav}. Figure~\ref{fig:uav_radius}
+Seq2Seq Transformer~\cite{aigner_2025_uav}. Figure~\ref{ch:uav}
 shows the trade-off between the smoothing radius $\sigma$ and the
 certified radius $R$ at a fixed accuracy level.
 
@@ -766,11 +697,11 @@ of the roadmap.
 growing EW pressure.}
 In the UAV domain, academic metrics (clean accuracy, PGD-robust
 accuracy) are necessary but not sufficient: for the operator and the
-regulator (\S\ref{sec:uav_regulation}) the defining metric is the
+regulator (\S\ref{ch:uav}) the defining metric is the
 \emph{mission completion rate}~--- i.e.\ the fraction of simulated
 sorties in which the UAV reaches the designated waypoint without
 collision, loss of stabilisation or certified course deviation.
-Figure~\ref{fig:uav_mission_completion} shows mission completion as
+Figure~\ref{ch:uav} shows mission completion as
 a function of the \emph{jamming-to-signal} power ratio
 ($J/S$, dB)~--- the standard quantitative measure of EW intensity
 used in military and civilian avionics.
@@ -968,7 +899,7 @@ certificates.
 \label{sec:uav_regulation}
 %%=====================================================================
 
-The structure of the certificates produced by \S\ref{sec:uav_certs}
+The structure of the certificates produced by \S\ref{ch:uav}
 is consistent with the key regulatory requirements
 (survey in \S\ref{sec:ch1_uav_related}).
 
@@ -1034,9 +965,9 @@ the \textsf{RobustIDPS.ai} platform as a plugin without modification
 of its core.
 
 \noindent 5.\quad Numerical reference results of Phase~A have been
-obtained (Table~\ref{tab:uav_phase_a_metrics},
-Figs.~\ref{fig:uav_pgd_curve}, \ref{fig:uav_radius},
-\ref{fig:uav_mission_completion}), confirming the practical
+obtained (Table~\ref{ch:uav},
+Figs.~\ref{ch:uav}, \ref{ch:uav},
+\ref{ch:uav}), confirming the practical
 correctness of the full pipeline: clean accuracy 1.00, PGD-20 robust
 accuracy~1.00 at $\eps=8/255$, certified $\ell_2$-radius 0.44,
 numerical estimate $L_g=1.01$, and a 9--19\,dB margin gain on

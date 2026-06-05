@@ -1,0 +1,668 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  chapter3.tex  –  Chapter 3: Instantiation of the Hybrid IDPS System
+%%                              for Network Traffic Protection and Its
+%%                              Benchmark Validation (with preliminary
+%%                              extension to the UAV sector)
+%%  v12 (Phase 2.5) – Merge of former Chapter 3 (instantiation) and
+%%                    former Chapter 4 \S\S4.1-4.5 (methodology + NIDS
+%%                    benchmark validation) into a single chapter.
+%%                    Cross-cutting experiments remain in
+%%                    Chapter~\ref{ch:experiments}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Instantiation of the Hybrid~IDPS System for Network Traffic Protection and Its Benchmark Validation}
+\label{ch:adaptation}
+
+This chapter systematically instantiates and validates the
+\emph{system} Hybrid~IDPS formalised in Chapter~\ref{ch:methods} for
+the network-traffic-protection sector
+(\S\ref{subsubsec:sector_nids}). The chapter consists of two
+methodologically linked parts. The \emph{first part}
+(\S\ref{sec:nidps_context}--\S\ref{sec:integrated_arch})
+systematically instantiates the tuple~\eqref{eq:hybrid_idps_tuple}
+with the concrete entities of network security: NIDS-specific
+terminologies are defined, together with the pipeline for
+transforming raw traffic into a temporal graph, a unified
+classification taxonomy of 34 threat classes, the engineering
+pipeline for the 83-dimensional flow feature vector, the
+hyperparameter configuration, and the integrated system
+architecture. The \emph{second part}
+(\S\ref{sec:exp_methodology}--\S\ref{sec:ablation}) systematically
+validates the resulting instantiated system on six benchmark
+datasets totalling 84.2 million labelled samples: it presents the
+experimental methodology, the unified benchmark results, the
+per-Model results for each of the seven Models M1--M7, the
+comparison with baselines, and the ablation studies. The chapter
+concludes with Chapter~\ref{ch:uav}~--- a \emph{preliminary
+extension} of the Hybrid~IDPS system to the UAV sector, which
+demonstrates the system's domain-independence as a preamble to the
+full experimental programme for UAVs in Chapter~\ref{ch:uav}. The
+cross-cutting validation of the Hybrid~IDPS system (adversarial
+robustness across six attack families, cross-domain transfer to
+speech and healthcare, post-quantum compatibility) is presented
+separately in Chapter~\ref{ch:experiments}.
+
+
+%%=====================================================================
+\section{Problem Statement of Constructing an Adversarially Robust Hybrid IDPS for Network Traffic Analysis}
+\label{sec:nidps_context}
+%%=====================================================================
+
+\subsection{Hybrid Intrusion Detection and Prevention Systems}
+
+A hybrid intrusion detection and prevention system (HIDPS)~\cite{Buczak2016,Ahmad2021,Aldweesh2020,Ferrag2020,Paxson1999} combines two complementary detection paradigms. Signature-based detection matches incoming traffic against a database of known patterns (rules) and achieves high precision on previously catalogued threats but cannot detect novel attacks. Anomaly-based detection learns a statistical model of normal behaviour and flags deviations, enabling detection of zero-day exploits and evolving attack patterns at the cost of potentially higher false-positive rates. The dissertation's methods operate within the anomaly-based branch, augmented by large language model reasoning for zero-shot classification of novel categories.
+
+A Network IDPS (NIDPS) monitors traffic at the network layer, analysing flows and packets between hosts rather than events within a single endpoint. The three operating conditions of the architectural framework (Figure~\ref{fig:dissertation_architecture}) are all present in this domain: adversarial manipulation by deliberate opponents who craft traffic to evade detection, non-stationarity through evolving traffic patterns and protocol changes, and distribution of the monitoring infrastructure across organisational boundaries.
+
+
+\subsection{Key Terminologies}
+
+The following terms are used throughout this chapter and the experimental validation in Chapter~\ref{ch:experiments}:
+
+\noindent\textbf{Flow.} A sequence of packets sharing a common 5-tuple (source IP, destination IP, source port, destination port, protocol). A flow is the fundamental unit of analysis and corresponds to a directed edge in the network graph.
+
+\noindent\textbf{Session.} A bidirectional communication comprising a forward flow and its reverse counterpart, capturing the full exchange between two endpoints.
+
+\noindent\textbf{Host.} A network endpoint (IP address) that participates as either source or destination. Hosts correspond to nodes in the network graph.
+
+\noindent\textbf{Service.} A functional component identified by port number and protocol (e.g., HTTP on port 80, SSH on port 22). In cloud-native deployments, services correspond to microservice containers.
+
+\noindent\textbf{PCAP (Packet Capture).} The raw binary format capturing full packet headers and optionally payloads, from which flow-level features are extracted.
+
+\noindent\textbf{IDS Rule.} A structured pattern specification (e.g., Snort or Suricata rule syntax) encoding a detection signature with action, protocol, addresses, ports, and content matching directives.
+
+\noindent\textbf{MITRE ATT\&CK.} A comprehensive knowledge base of adversary tactics, techniques, and procedures (TTPs) used to classify and contextualise detected threats.
+
+\noindent\textbf{SOC (Security Operations Centre).} The organisational unit responsible for monitoring, analysing, and responding to security events, staffed by analysts at Tiers~1--3.
+
+
+%%=====================================================================
+\section{Architecture of the RobustIDPS.ai Software System}
+\label{sec:data_to_graph}
+%%=====================================================================
+
+The central premise of this dissertation is that network traffic is naturally graph-structured: hosts are nodes, flows are edges, and temporal ordering defines the graph evolution. This section formalises the transformation from raw network data to the graph inputs required by the developed GNN architectures.
+
+\subsection{Graph Construction from Network Traffic}
+
+Given a stream of network flows $\{(s_i, d_i, t_i, \mathbf{f}_i)\}_{i=1}^{N}$, where $s_i$ is the source host, $d_i$ is the destination host, $t_i$ is the timestamp, and $\mathbf{f}_i\in\mathbb{R}^{83}$ is the feature vector, the temporal graph $\calG(t)=(\calV,\calE(t),\mathbf{X}(t))$ is constructed as follows:
+
+\noindent\textbf{Nodes.} Each unique IP address becomes a node $v\in\calV$. Node features $\bx_v(t)$ aggregate the host-level statistics computed over a sliding window $[t-\Delta_w, t]$: cumulative byte counts (sent/received), active connection counts, unique destination ports contacted, protocol distribution (TCP/UDP/ICMP ratios), and mean inter-connection interval. This yields a 12-dimensional node feature vector.
+
+\noindent\textbf{Edges.} Each flow $(s_i, d_i, t_i, \mathbf{f}_i)$ creates a directed edge from node $s_i$ to node $d_i$ at time $t_i$ with edge features $\mathbf{e}_{s_id_i}(t_i) = \mathbf{f}_i$. The full 83-dimensional feature vector (Section~\ref{sec:features}) is attached to the edge.
+
+\noindent\textbf{Temporal evolution.} The graph evolves as new flows arrive and old connections expire. A flow is considered active if its most recent packet arrived within a configurable timeout $\Delta_{\mathrm{timeout}}=120$\,s. Expired edges are removed, yielding a dynamic, time-varying topology.
+
+\subsection{Multi-Level Graph Construction}
+
+For the TripleE-TGNN (Model M3) and the SOC Intelligence integration, the network traffic is additionally mapped to three hierarchical levels:
+
+\noindent\textbf{Service graph $\calG_s(t)$.} Nodes represent services (port/protocol pairs); edges represent API calls between services, aggregated over configurable windows. Used for detecting inter-service attack patterns in microservices environments.
+
+\noindent\textbf{Trace graph $\calG_r(t)$.} Nodes represent distributed request traces (identified by trace IDs in HTTP headers or OpenTelemetry instrumentation); edges connect traces that share at least one service. Used for detecting multi-stage attack chains.
+
+\noindent\textbf{Host graph $\calG_n(t)$.} Nodes represent infrastructure hosts; edges represent observed network flows. This is the primary graph for all methods.
+
+\noindent Bipartite coupling graphs $\calB_{sr}$, $\calB_{sn}$, $\calB_{rn}$ link entities across levels, enabling the cross-level attention mechanism of Equation~\eqref{eq:triple_cross_attn}.
+
+
+%%=====================================================================
+\section{Functionality of the RobustIDPS.ai System}
+\label{sec:taxonomy}
+%%=====================================================================
+
+The platform classifies network traffic into 34 distinct classes: 1 benign class and 33 attack classes organised into 7 major categories. This taxonomy is unified across all six benchmark datasets, with dataset-specific attack types mapped to the canonical categories. Table~\ref{tab:taxonomy} presents the complete taxonomy.
+
+\begin{table}[htbp]
+\centering
+\caption{Unified classification taxonomy: 34 classes across 7 attack categories.}
+\label{tab:taxonomy}
+\small
+\begin{tabular}{p{2.5cm} p{10.5cm}}
+\toprule
+\textbf{Category} & \textbf{Attack Classes} \\
+\midrule
+\textbf{DDoS} (8) & DDoS-TCP, DDoS-UDP, DDoS-ICMP, DDoS-HTTP, DDoS-SYN Flood, DDoS-DNS Amplification, DDoS-SSDP, DDoS-NTP Amplification \\
+\addlinespace
+\textbf{DoS} (5) & DoS GoldenEye, DoS Hulk, DoS Slowhttptest, DoS Slowloris, DoS HeartBeat \\
+\addlinespace
+\textbf{Reconnaissance} (4) & PortScan, Nmap Scan, Service Probe, OS Fingerprint \\
+\addlinespace
+\textbf{Brute Force} (4) & FTP-Patator, SSH-Patator, Web Login Brute Force, RDP Brute Force \\
+\addlinespace
+\textbf{Web Attacks} (4) & XSS, SQL Injection, Command Injection, Directory Traversal \\
+\addlinespace
+\textbf{Malware/Botnet} (5) & Mirai, Botnet Communication, Trojan Callback, Ransomware Beacon, Cryptomining \\
+\addlinespace
+\textbf{Advanced} (3) & Infiltration, Heartbleed, Spoofing \\
+\addlinespace
+\textbf{Benign} (1) & Normal traffic \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The taxonomy is extensible: new attack classes can be registered through the platform administration interface without retraining the full model ensemble, leveraging the CyberSecLLM zero-shot classification capability and the TripleE-TGNN elastic weight consolidation for incremental learning.
+
+
+%%=====================================================================
+\section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
+\label{sec:features}
+%%=====================================================================
+
+All models operate on a shared vector of 83 engineered features extracted from raw PCAP files or pre-processed CSV datasets. Features span five categories, summarised in Table~\ref{tab:features}.
+
+\begin{table}[htbp]
+\centering
+\caption{The 83-feature engineering pipeline organised by category.}
+\label{tab:features}
+\small
+\begin{tabular}{p{3.5cm} p{1.5cm} p{8.5cm}}
+\toprule
+\textbf{Category} & \textbf{Count} & \textbf{Representative Features} \\
+\midrule
+Flow-level statistics & 22 & Duration, forward/backward packet counts, total bytes (fwd/bwd), packet length (mean, max, min, std), flow bytes/s, flow packets/s, flow IAT (mean, std, max, min) \\
+\addlinespace
+Inter-arrival time distributions & 18 & Forward IAT (mean, std, min, max), backward IAT (mean, std, min, max), active/idle time statistics, sub-flow forward/backward counts \\
+\addlinespace
+Flag-based indicators & 15 & SYN count, FIN count, RST count, PSH count, ACK count, URG count, CWE count, ECE count, forward/backward PSH flags, forward/backward URG flags, FIN flag count, SYN flag count, RST flag count \\
+\addlinespace
+Payload statistics & 16 & Segment sizes (min, max, mean), header lengths (mean, total), initial window bytes (forward/backward), payload byte entropy, packet length variance, average packet size, average segment size \\
+\addlinespace
+Derived ratios & 12 & Bytes-per-packet (fwd/bwd), packets-per-second, down/up ratio, average packet size ratio, flow IAT ratio, bulk rate (forward/backward), active mean/std, idle mean/std \\
+\midrule
+\textbf{Total} & \textbf{83} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Feature extraction is performed by a shared \texttt{FeatureExtractor} module using per-feature z-score standardisation fitted on the training distribution:
+\begin{equation}
+\tilde{f}_j = \frac{f_j - \mu_j^{\mathrm{train}}}{\sigma_j^{\mathrm{train}} + \varepsilon},
+\label{eq:zscore}
+\end{equation}
+where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and standard deviation of feature $j$ computed on the training set, and $\varepsilon=10^{-8}$ prevents division by zero. Datasets with fewer than 83 native features are zero-padded to the standard dimension; those with more are projected via PCA retaining 95\% explained variance.
+
+
+%%=====================================================================
+\section{Domain-Specific Realisation of Methods M1--M7}
+\label{sec:method_instantiation}
+%%=====================================================================
+
+This section describes how each of the seven methods from Chapter~\ref{ch:methods} is instantiated with cybersecurity-specific parameters, demonstrating the mapping from abstract mathematical objects to concrete network-security entities.
+
+
+\subsection{M1: CT-TGNN Applied to Network-Traffic Graph Dynamics}
+
+CT-TGNN~\cite{Anaedevha2025cais} is instantiated as follows. In the network security instantiation, the node set $\calV$ comprises hosts and services, and the edge set $\calE(t)$ records flows. Node features $\bx_v(t)$ encode host-level statistics (12 dimensions). Edge features $\mathbf{e}_{uv}(t)$ capture the 83-dimensional flow feature vector from Table~\ref{tab:features}.
+
+The three parallel ODE branches of Equation~\eqref{eq:ct_tgnn_multi} are assigned time constants $\tau_1=1$\,s (packet-level transients), $\tau_2=60$\,s (flow-level session dynamics), and $\tau_3=3600$\,s (campaign-level trends). This enables simultaneous resolution of sub-second port-scanning bursts and multi-hour advanced persistent threat campaigns. The architecture employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration with tolerances $10^{-5}$ (relative) and $10^{-7}$ (absolute).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.69\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
+\caption{CT-TGNN architecture instantiated for network traffic dynamics.}
+\label{fig:ct_tgnn_arch}
+\end{figure}
+
+
+\subsection{M2: FedLLM-API for Collaborative Threat Intelligence}
+
+FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat intelligence. Each federated client corresponds to a security operations centre possessing local traffic datasets. Byzantine-robust aggregation (Algorithm~\ref{alg:fedllm}) protects against compromised participants submitting poisoned gradient updates. Differential privacy through local gradient clipping at threshold $C=1.0$ and Gaussian noise with scale $\sigma=0.8$ achieves an $(\epsilon{=}0.85,\delta{=}10^{-5})$ guarantee over 100 communication rounds. Sinkhorn OT alignment with regularisation $\lambda=0.1$ corrects for distributional heterogeneity across centres. The LLM ensemble weight is $\lambda_{\mathrm{LLM}}=0.3$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/fig_fedllm_api_architecture.pdf}
+\caption{FedLLM-API architecture for collaborative threat intelligence across organisational boundaries.}
+\label{fig:fedllm_arch}
+\end{figure}
+
+
+\subsection{M3: TripleE-TGNN for Multi-Level Security Monitoring}
+
+The service graph $\calG_s(t)$ has nodes representing microservices and edges representing API calls. The trace graph $\calG_r(t)$ has nodes representing distributed traces. The host graph $\calG_n(t)$ has nodes representing infrastructure hosts. EWC consolidation strength $\lambda_{\mathrm{ewc}}=0.5$ balances plasticity and stability during topology evolution. Multi-task loss weights are $\lambda_s=0.4$, $\lambda_r=0.3$, $\lambda_n=0.3$ with consistency weight $\lambda_{\mathrm{con}}=0.1$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
+\caption{TripleE-TGNN architecture for multi-level security monitoring in cloud-native environments.}
+\label{fig:triplee_arch}
+\end{figure}
+
+
+\subsection{M4: MambaShield for Drift-Adaptive Detection}
+
+MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detection. Sequential flow records are processed by the selective state-space model whose input-dependent transitions adapt to the current traffic regime. The state dimension is $d_s=64$, discretisation step $\Delta=0.01$, and FFT convolution kernel length $L=1024$. The teacher ensemble comprises $M=5$ models trained on disjoint data subsets. The curriculum schedule starts at $\rho_0=0.05$ poisoning fraction and increases to $\rho_{\max}=0.3$. PAC-Bayesian prior variance $\sigma_P^2=1.0$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_mambashield_architecture.pdf}
+\caption{MambaShield architecture for drift-adaptive intrusion detection with progressive robustness distillation.}
+\label{fig:mamba_arch}
+\end{figure}
+
+
+\subsection{M5/M6: Uncertainty-Calibrated Threat Assessment}
+
+The stochastic transformer uses $M=50$ Monte Carlo forward passes at inference to produce epistemic and aleatoric uncertainty estimates. Predictions with epistemic uncertainty exceeding threshold $\tau=0.3$ are routed to human analysts, reducing alert fatigue by 43\%. The UC-HGP module provides hierarchical Gaussian process uncertainty at time scales matching the CT-TGNN branches ($\tau_1$, $\tau_2$, $\tau_3$). Variational learning rate $\alpha_\phi=5\times10^{-4}$; perturbation learning rate $\alpha_\psi=10^{-3}$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
+\caption{Stochastic transformer with uncertainty-driven triage for security operations.}
+\label{fig:stochastic_arch}
+\end{figure}
+
+
+\subsection{M7: Game-Theoretic Framework for Adaptive Adversaries}
+
+The defender's action space $\calC$ comprises detection configurations: monitoring coverage, alert thresholds, and response policies. The adversary's action space $\calA$ encompasses target selection, perturbation type, and evasion strategy. The multiplicative weights learning rate $\eta=\sqrt{\log|\calC|/T}$. Uncertainty penalty $\kappa=0.5$; expert-referral threshold $\tau=0.3$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_game_theoretical_architecture.pdf}
+\caption{Game-theoretic framework for adaptive graph adversaries in network security.}
+\label{fig:game_arch}
+\end{figure}
+
+
+\subsection{Forward-Compatible Detection for Post-Quantum Protocols}
+
+Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process timing features for lattice-based protocols (Kyber/Dilithium~\cite{Avanzi2022}), structural features for code-based protocols (McEliece/Niederreiter), and hash-based features (SPHINCS+). Cross-attention fusion combines the three representations. Adversarial training budget $\epsilon=0.03$ with PGD-40 perturbations.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
+\caption{Forward-compatible multi-protocol detection architecture for post-quantum traffic.}
+\label{fig:pqidps_arch}
+\end{figure}
+
+
+%%=====================================================================
+\section{Deployment and Integration Infrastructure of the System}
+\label{sec:tech_stack_ui}
+%%=====================================================================
+
+\subsection{Implementation Technology Stack}
+\label{subsec:tech_stack}
+
+The RobustIDPS.ai software platform is a \emph{single Progressive
+Web Application} (PWA) split into a server-side and a client-side
+tier, containerised with Docker~Compose and orchestrated by a unified
+back-end / inference process. The stack has been chosen so as to
+provide simultaneously: (i)~reproducible training and inference of
+the deep graph-neural-network Models M1--M7; (ii)~resilient
+streaming processing of real-time network traffic; (iii)~an
+interactive SOC-analyst user interface; (iv)~integration with
+external large-language-model (LLM) providers through a single
+API-abstract layer.
+
+\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+\item \textbf{Server tier (Python~3.11)}~--- an asynchronous
+HTTP/WebSocket server on FastAPI (60+ REST API endpoints) on top
+of which the model pipeline runs in PyTorch~2.x with PyTorch
+Geometric and DGL extensions for graph operations; batch traffic
+processing relies on NFStream for flow-feature extraction from
+PCAP and on dpkt/Scapy for raw-packet parsing; service queues and
+Pub/Sub are implemented in Redis~7 (cache + queue); persistent
+storage of benchmarks and incident logs is PostgreSQL~16.
+
+\item \textbf{Client tier (TypeScript / React~18)}~--- a
+Progressive Web Application of \textbf{51~user-interface pages}
+organised into ten functional groups (see
+Section~\ref{subsec:ui_walkthrough}). Real-time updates of
+streaming classifications are pushed over WebSocket; graph and
+metric visualisations use Recharts and a bespoke D3.js graph
+visualisation; styling is Tailwind~CSS with a dark theme by
+default.
+
+\item \textbf{LLM integration tier}~--- a single LLM-provider
+abstraction with implementations for four commercial back-ends
+(Anthropic Claude, OpenAI GPT-4o, Google Gemini, DeepSeek) and a
+local-inference back-end; the four-level LLM defence (Prompt
+Injection, Jailbreak, RAG Poisoning, Multi-Agent Chain) is
+implemented as a transparent middleware between UI and providers.
+
+\item \textbf{Deployment tier}~--- Docker containerisation with
+multi-stage builds and Compose orchestration; integration with
+existing information-security tooling is provided by a plug-in
+for the Suricata EVE-JSON format, which allows RobustIDPS.ai to
+be embedded into the operating IDS of an organisation without
+modifying existing signature rules (confirmed by the NII~IKT~LLC
+implementation act, see Chapter~\ref{ch:platform}).
+
+\end{enumerate}
+
+\subsection{Used Packages and Versions}
+\label{subsec:packages_versions}
+
+Table~\ref{tab:packages_versions} lists the key software
+dependencies of the RobustIDPS.ai platform with the versions used
+to produce the experimental results and to sign the implementation
+acts. The complete \texttt{requirements.txt} and
+\texttt{package.json} are deposited with the source code on Zenodo
+(DOI: 10.5281/zenodo.19129512).
+
+\begin{table}[H]
+\centering
+\caption{Software dependencies of the RobustIDPS.ai platform.}
+\label{tab:packages_versions}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Category} & \textbf{Package} & \textbf{Version} \\
+\midrule
+Implementation language & Python & 3.11.x \\
+Web server & FastAPI & 0.110+ \\
+ASGI server & Uvicorn (uvloop) & 0.27+ \\
+Deep learning & PyTorch & 2.2+ \\
+Graph operations & PyTorch~Geometric & 2.5+ \\
+Graph operations (alt.) & DGL & 2.1+ \\
+Neural ODEs & torchdiffeq & 0.2.4 \\
+State-space models & mamba-ssm & 1.2+ \\
+Flow-feature extraction & NFStream & 6.5+ \\
+Raw-packet parsing & dpkt~/~Scapy & 1.9~/~2.5 \\
+Persistent store & PostgreSQL & 16 \\
+Cache and queues & Redis & 7 \\
+Containerisation & Docker & 24+ \\
+Orchestration & Docker Compose & v2 \\
+Client (language) & TypeScript & 5.3+ \\
+Client (framework) & React & 18 \\
+Client build & Vite & 5 \\
+UI library & Tailwind CSS & 3.4 \\
+Chart visualisation & Recharts & 2.10 \\
+Graph visualisation & D3.js & 7 \\
+Real-time updates & WebSocket (RFC~6455) & --- \\
+LLM providers (APIs) & anthropic, openai, google-genai, deepseek & current \\
+Signature plug-in & Suricata EVE-JSON & 7.0 (compat.) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{User Interface and Demonstration of Practical
+Application}
+\label{subsec:ui_walkthrough}
+
+The RobustIDPS.ai user interface is designed as a \emph{single
+entry point} for all cybersecurity roles in an organisation: SOC
+operator, incident-response analyst, ML model engineer, compliance
+auditor. The interface consists of 51~pages grouped into ten
+functional groups: ``AI Command Centre,'' ``AI Data \& Models,''
+``AI Active Defence,'' ``SOC Intelligence,'' ``AI Novel Methods,''
+``LLM Attack Surfaces,'' ``MLSecOps Standards,'' ``AI Security
+\& Gov,'' ``Industry \& Research,'' and ``Notice Board.''
+Fig.~\ref{fig:gui_walkthrough_p1} below illustrates the platform in
+operation in a typical analyst usage scenario.
+
+\begin{figure}[htbp]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_08_ethical_use.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_09_soc_dashboard.png}} \\
+\scriptsize (a) Authentication &
+\scriptsize (b) Ethical-use consent &
+\scriptsize (c) SOC Dashboard \\[4pt]
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_10_fed_learning.png}} \\
+\scriptsize (d) Live Monitor &
+\scriptsize (e) SOC Copilot (LLM assistant) &
+\scriptsize (f) Federated Learning Simulator \\
+\end{tabular}
+\caption{Demonstration of practical operation of RobustIDPS.ai
+(part~1)~--- from sign-in to distributed training:
+\textbf{(a)}~Sign-In page with e-mail/password authentication and
+new-user registration; \textbf{(b)}~``Ethical Use Guidance and
+Consent'' page~--- mandatory acknowledgement of permitted
+scenarios (academic research, authorised penetration testing,
+government and defence research, evaluation and benchmarking) and
+prohibited actions, implementing the MLSecOps requirement on
+operator admission; \textbf{(c)}~SOC Dashboard page~--- summary
+over 1{,}000 flows, 347 detected threats, 65.3\,\% benign-traffic
+share, and the current calibration estimate ECE\,=\,0.043, with
+the distribution across five severity levels and the canonical
+attack-distribution and confidence histograms;
+\textbf{(d)}~Live~Monitor page~--- starting a streaming capture
+on the network interface \texttt{eth0} with selection of an
+ensemble of seven detection models (SurrogateIDS, Neural~ODE,
+Optimal~Transport, FedGTD, SDE-TGNN, CyberSecLLM, and others)
+and the capture interval (5--120~s); \textbf{(e)}~SOC Copilot
+page~--- the interactive LLM assistant in local mode answering
+the analyst's query ``Get the Live Monitor results with breakdown
+by threat, severity, and confidence'' against the real capture
+session data; \textbf{(f)}~Federated Learning Simulator page~---
+launching federated training over several datasets simultaneously
+(CSV/PCAP slots Slot~1--3) with selection of the aggregation
+strategy (FedAvg, FedProx, Weighted, FedGTD), IID/Non-IID regime,
+and the differential-privacy option.}
+\label{fig:gui_walkthrough_p1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} &
+\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} \\
+\scriptsize (g) Adversarial robustness comparison &
+\scriptsize (h) Analytics and evaluation &
+\scriptsize (i) RAG Poisoning Simulator \\
+\end{tabular}
+\caption{Demonstration of practical operation of RobustIDPS.ai
+(part~2)~--- adversarial testing, analytics, and LLM attack
+surfaces: \textbf{(g)}~Adversarial~Eval page~--- multi-dataset
+comparison of models for robustness against six adversarial-attack
+methods (FGSM, PGD, C\&W, DeepFool, Gaussian noise, Label masking);
+\textbf{(h)}~Analytics \& Evaluation page~--- F1 metric comparison
+for seven models across six benchmarks with a heatmap, a radar
+profile, and a cross-dataset consistency table;
+\textbf{(i)}~RAG Poisoning Simulator page~--- simulation of attacks
+on the RAG pipeline of an LLM with four attack vectors (document
+injection, query manipulation, embedding-space perturbation,
+cross-contamination).}
+\label{fig:gui_walkthrough_p2}
+\end{figure}
+
+\noindent An additional screenshot of the Analytics page with the
+``How to use'' hint open is shown in
+Fig.~\ref{fig:gui_analytics_intro}, illustrating the five built-in
+interactive explanations of the ten model-evaluation tabs
+(Performance, Convergence, Robustness, Privacy, Transfer Learning,
+Calibration, ROC/AUC, Dataset Comparison, Statistical Analysis,
+Cross-Module Intel).
+
+\begin{figure}[htbp]
+\centering
+\fbox{\includegraphics[width=0.86\textwidth]{figures/gui/gui_06_analytics_intro.png}}
+\caption{The Analytics \& Evaluation page with the ``How to use''
+hint open: interactive explanations of the ten comparative
+model-evaluation tabs, with PNG/PDF export and a PDF presentation
+export.}
+\label{fig:gui_analytics_intro}
+\end{figure}
+
+The screenshots above demonstrate that RobustIDPS.ai implements
+all the theoretical developments M1--M7 as a \emph{practically
+deployed} platform with an interface of industrial quality;
+implementation integrity is confirmed by the implementation acts
+of NII~IKT~LLC (active use of the platform by in-house
+cybersecurity specialists) and Ksyrix~LLC (integration into the
+operating network-traffic analysis and infrastructure-protection
+system).
+
+
+%%=====================================================================
+\section{System Performance Optimisation}
+\label{sec:hyperparams}
+%%=====================================================================
+
+Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all methods as configured for the network-security domain. All values were selected through grid search on the CIC-IoT-2023 validation set and confirmed stable across the remaining five datasets.
+
+\begin{table}[htbp]
+\centering
+\caption{Consolidated hyperparameter configuration for all methods in the cybersecurity domain.}
+\label{tab:hyperparams}
+\small
+\begin{tabular}{p{3.5cm} p{2.5cm} p{2.5cm} p{5.0cm}}
+\toprule
+\textbf{Method} & \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
+\midrule
+\multirow{4}{3.5cm}{M1: CT-TGNN}
+& Hidden dim & 256 & Capacity for 83-feature input \\
+& ODE tolerance & $10^{-5}$ & Balance accuracy/speed \\
+& Time constants & 1/60/3600\,s & Packet/session/campaign scales \\
+& Lipschitz bound & Spectral norm & Certified robustness \\
+\addlinespace
+\multirow{4}{3.5cm}{M2: FedLLM-API}
+& Clipping $C$ & 1.0 & DP sensitivity bound \\
+& DP $(\epsilon,\delta)$ & $(0.85, 10^{-5})$ & Strong privacy guarantee \\
+& OT reg $\lambda$ & 0.1 & Sinkhorn convergence \\
+& LLM weight & 0.3 & Ensemble balance \\
+\addlinespace
+\multirow{3}{3.5cm}{M3: TripleE-TGNN}
+& EWC $\lambda$ & 0.5 & Forgetting prevention \\
+& Level weights & 0.4/0.3/0.3 & Service emphasis \\
+& Consistency $\lambda_{\mathrm{con}}$ & 0.1 & Cross-level agreement \\
+\addlinespace
+\multirow{3}{3.5cm}{M4: MambaShield}
+& State dim & 64 & SSM capacity \\
+& Kernel length & 1024 & Sequence coverage \\
+& Poison schedule & 0.05--0.3 & Progressive hardening \\
+\addlinespace
+\multirow{3}{3.5cm}{M5/M6: Stoch.Trans.}
+& MC samples & 50 & Uncertainty quality \\
+& Triage threshold & 0.3 & FP/FN balance \\
+& Calibration & Temperature & ECE minimisation \\
+\addlinespace
+\multirow{2}{3.5cm}{M7: Certification}
+& MWU $\eta$ & $\sqrt{\log|\calC|/T}$ & Optimal regret \\
+& Unc. penalty $\kappa$ & 0.5 & Risk sensitivity \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss.
+
+
+%%=====================================================================
+\section{Comparative Analysis of Architectural and Functional Capabilities of RobustIDPS.ai versus Existing Intrusion Detection Systems}
+\label{sec:integrated_arch}
+%%=====================================================================
+
+The seven methods (M1--M7) are integrated into a unified detection pipeline whose data flow proceeds as follows. Raw network traffic enters through a data ingestion module that performs protocol parsing, flow extraction, and 83-feature computation. The CT-TGNN module constructs the temporal graph and computes continuous-time node embeddings. The TripleE-TGNN module maintains multi-level embeddings for hierarchical environments. The MambaShield module processes sequential event records for drift-adaptive scoring. The Stochastic Transformer and UC-HGP modules provide calibrated uncertainty estimates. All outputs feed into a decision engine that applies the game-theoretic strategy from the M7 Certification framework, producing alerts classified by severity and confidence. The FedLLM-API module enables periodic model synchronisation across organisational boundaries.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/Main_arch_v1b.pdf}
+\caption{Integrated detection pipeline showing the data flow from raw network traffic through all seven methods to severity-ranked, confidence-scored alerts. The FedLLM-API module synchronises models across boundaries under differential privacy.}
+\label{fig:u_idps_arch}
+\end{figure}
+
+The system is designed for deployment as a plug-in for existing IDPS frameworks such as Snort~3~\cite{Roesch1999} and Suricata, consuming their alert feeds as additional input and producing enriched, confidence-scored outputs. The full software implementation is described in Chapter~\ref{ch:platform}, publicly archived under DOI 10.5281/zenodo.19129512~\cite{Anaedevha2026robustidps}.
+
+
+%%=====================================================================
+
+%%=====================================================================
+%%   BENCHMARK VALIDATION OF THE HYBRID IDPS SYSTEM ON NETWORK TRAFFIC
+%%   (Moved from former Chapter~4 \S\S4.1-4.5 as part of the Phase 2.5
+%%   Option-B reorganisation: NIDS instantiation and its benchmark
+%%   validation now sit together in one chapter.)
+%%=====================================================================
+
+% Bridging paragraph before the methodology.
+\medskip
+\noindent\emph{Bridge with the above:}
+Sections~\ref{sec:nidps_context}--\ref{sec:integrated_arch}
+have shaped the instantiation of the Hybrid~IDPS system for the
+network-traffic protection task at the level of entities, features,
+hyperparameters, and integrated architecture.
+Sections~\ref{sec:exp_methodology}--\ref{sec:ablation} below
+systematically validate this realisation of the system on six
+benchmark datasets, providing a direct mapping from results to the
+invariants~P2--P6 from \S\ref{subsec:six_properties}.
+
+
+%%=====================================================================
+
+%%=====================================================================
+\section{Ensuring Reproducibility of Results and Distribution of the Software Complex}
+\label{sec:reproducibility}
+
+Reproducibility of the dissertation's results is ensured by complete
+deposition of source code, trained models, and experimental protocols in
+the open Zenodo repository (DOI:~10.5281/zenodo.19129512).
+
+\textbf{Source-code publication.} All RobustIDPS.ai components, including
+17 neural-network models, server-side tier (FastAPI/Python), client-side
+tier (React/TypeScript), and Suricata EVE-JSON plug-in, are released under
+an open licence. The complete \texttt{requirements.txt} (Python) and
+\texttt{package.json} (Node.js) with pinned dependency versions are
+deposited alongside the code.
+
+\textbf{Component descriptions.} Each component is accompanied by a
+technical description of interfaces, input/output data formats, startup
+parameters, and dependencies, structured as \texttt{README.md} and a
+\texttt{docs/} directory split by functional group.
+
+\textbf{Documentation and experiment-reproduction tools.} Scripts and
+Makefile targets enable single-command launch of all key experiments on
+benchmark datasets; hyperparameter configurations, dataset splits, and
+evaluation parameters are pinned in YAML files.
+
+\textbf{Open-source contributions.} Derived results with stand-alone value
+beyond the dissertation (Suricata EVE-JSON plug-in, PyTorch~Geometric
+wrappers for continuously evolving graphs) are submitted to the
+corresponding upstream projects as pull requests.
+
+%%===================================================================
+\section{Conclusions for Chapter 3}
+\label{sec:ch3_summary}
+%%=====================================================================
+
+This chapter has systematically developed and software-implemented
+the \textbf{RobustIDPS.ai} system as a NIDS-sector instantiation of
+the Hybrid~IDPS mathematical model from
+Chapter~\ref{ch:methods}. The chapter is \emph{strictly software-development
+oriented}: the experimental investigation of the developed system
+and its quantitative validation on benchmark datasets are reported
+in Chapter~\ref{ch:experiments}.
+
+Key software-engineering contributions of this chapter:
+\begin{itemize}\setlength\itemsep{2pt}
+\item \emph{(1)}~A formal pipeline for transforming raw PCAP and
+CSV traffic into temporal graph structures with 12-dimensional
+node features and 83-dimensional edge features, systematically
+implementing the components $(\calV_t, \calE_t, X_t, A_t)$ of the
+Hybrid IDPS tuple~\eqref{eq:hybrid_idps_tuple}.
+\item \emph{(2)}~A unified 34-class classification taxonomy across
+seven attack categories, extensible via LLM zero-shot classification.
+\item \emph{(3)}~A comprehensive 83-feature engineering pipeline
+covering flow statistics, inter-packet-interval distributions, flag
+indicators, payload statistics and derived ratios.
+\item \emph{(4)}~A NIDS-oriented software realisation of all seven
+models M1--M7 with hyperparameters, time constants and architectural
+configurations tailored to the network-traffic protection sector.
+\item \emph{(5)}~A unified integrated system architecture providing
+end-to-end flow from raw traffic to SOC analyst alerts with
+confidence estimation and automated response.
+\item \emph{(6)}~A production-grade technology stack
+(FastAPI/PyTorch~2.x with PyTorch~Geometric and DGL extensions,
+React~18 PWA, PostgreSQL~16, Redis~7, Docker~Compose), including
+integration with four commercial LLM providers and a Suricata
+EVE-JSON plug-in.
+\item \emph{(7)}~A 51-page progressive web application user
+interface aggregating 17 neural-network models into 10 functional
+groups; a representative SOC analyst workflow is demonstrated.
+\end{itemize}
+
+The complete set of implemented components constitutes the
+\textbf{RobustIDPS.ai} platform, deposited in the Zenodo
+repository (DOI: 10.5281/zenodo.19129512) with open source code.
+\emph{The quantitative experimental validation of the developed
+system~--- detection quality assessment, adversarial robustness,
+efficiency, privacy, calibration, ablation studies and cross-domain
+transfer~--- is presented in Chapter~\ref{ch:experiments}.}
+
