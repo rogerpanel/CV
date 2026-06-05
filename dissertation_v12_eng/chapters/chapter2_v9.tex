@@ -572,7 +572,7 @@ where $\mu_{[t-\Delta,t]}$ and $\sigma^2_{[t-\Delta,t]}$ are the windowed mean a
 Suppose the dynamics function $f_\theta$ is $L_f$-Lipschitz in~$\bh$ and $L_\theta$-Lipschitz in~$\theta$. Under gradient descent with learning rate $\eta<2/(L_f L_\theta)$, the training loss converges to a stationary point at rate $\calO(1/\sqrt{T})$, where $T$ denotes the number of gradient steps.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The loss $\calL(\theta)$ is evaluated through the ODE solution map $\bh(T;\theta)$. By the chain rule and the Lipschitz properties of~$f_\theta$, the gradient $\nabla_\theta\calL$ is bounded and Lipschitz-continuous, placing the problem in the standard framework of smooth non-convex optimisation. Applying the descent lemma with the stated learning rate yields the $\calO(1/\sqrt{T})$ rate to an $\epsilon$-stationary point. The full proof appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.1, see~\ref{app:proof_ct_conv}).}
 
 \begin{theorem}[Lipschitz Robustness Certificate]
 \label{thm:ct_tgnn_rob}
@@ -585,7 +585,7 @@ Let $f_\theta$ be $L_g$-Lipschitz in its first argument and let the integration 
 Consequently, if the classifier head has Lipschitz constant~$L_c$, the end-to-end model is $L_c\,e^{L_g T}$-Lipschitz, and the prediction is certified constant within a ball of radius $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$, where $\Delta_{\min}$ is the margin between the top two logits.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} Let $\bm{\eta}(t)=\bh_1(t)-\bh_2(t)$. Then $d\bm{\eta}/dt = f_\theta(\bh_1,t)-f_\theta(\bh_2,t)$, so $d\|\bm{\eta}\|/dt\le L_g\|\bm{\eta}\|$ by the Lipschitz property. Gr\"{o}nwall's inequality gives $\|\bm{\eta}(T)\|\le e^{L_g T}\|\bm{\eta}(0)\|$, and $\bm{\eta}(0)=\bx_1-\bx_2$. Composing with the classifier head completes the certificate. The full derivation with spectral-norm constraints enforcing the Lipschitz bound during training appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.2, see~\ref{app:proof_ct_rob}).}
 
 \subsection{Computational Complexity}
 
@@ -656,7 +656,7 @@ Assume the global loss $F(\bw)=\frac{1}{K}\sum_{k=1}^K F_k(\bw)$ is $\mu$-strong
 where $\sigma_k^2$ is the gradient variance of honest client~$k$ and $C_{\mathrm{byz}}$ bounds the Byzantine influence.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The key step is showing that the trimmed mean of honest-plus-Byzantine gradient vectors is close to the true mean of honest gradients. Let $\bar{\mathbf{g}}_H$ be the mean of honest gradients and $\bar{\mathbf{g}}_{\mathrm{TM}}$ the trimmed-mean output. Because at most $b$ of the $2b$ discarded entries can be honest, the error $\|\bar{\mathbf{g}}_{\mathrm{TM}}-\bar{\mathbf{g}}_H\|$ is bounded by the order statistics of honest gradient norms via concentration inequalities. Substituting into the standard strongly convex descent recursion yields the stated bound. Full details are in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.3, see~\ref{app:proof_fed}).}
 
 \subsection{Differential Privacy Through Calibrated Noise}
 
@@ -973,7 +973,7 @@ For any $\delta\in(0,1)$, with probability at least $1-\delta$ over the draw of 
 where $R(\theta)$ is the true risk, $\hat{R}_n(\theta)$ is the empirical risk, and $P$ is a data-independent prior.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The proof follows the standard PAC-Bayesian template of Catoni, applying a change of measure from $P$ to~$Q$ through the Donsker-Varadhan variational representation of the KL divergence, combined with a moment-generating-function argument for the empirical process. The bound is valid uniformly over all posteriors~$Q$, including those concentrated on a single parameter vector, and is therefore non-vacuous whenever the KL term is small relative to $n$. With Gaussian prior $P=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ and posterior $Q=\calN(\bm{\mu}_Q,\sigma_Q^2\mathbf{I})$, the KL term has the closed form
+\noindent With Gaussian prior $P=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ and posterior $Q=\calN(\bm{\mu}_Q,\sigma_Q^2\mathbf{I})$, the KL term has the closed form
 \begin{equation}
 \mathrm{KL}(Q\|P)
 = \frac{d}{2}\Bigl(
@@ -984,7 +984,7 @@ where $R(\theta)$ is the true risk, $\hat{R}_n(\theta)$ is the empirical risk, a
 \Bigr),
 \label{eq:pac_kl_gauss}
 \end{equation}
-which is minimised by keeping the posterior close to the origin and its variance close to that of the prior. Full details appear in Appendix~A.\qed
+which is minimised by keeping the posterior close to the origin. \textit{The full proof is given in Appendix~A (\S~A.4, see~\ref{app:proof_pac}).}
 
 \begin{algorithm}[htbp]
 \caption{MambaShield: Training with Progressive Adversarial Robustness Distillation}\label{alg:mamba}
@@ -1337,7 +1337,7 @@ R(T)\le 2\sqrt{T\log|\calC|},
 so that the average per-round regret $R(T)/T=\calO(\sqrt{\log|\calC|/T})\to 0$ as $T\to\infty$.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The proof proceeds by bounding the potential function $\Phi_t=\log\sum_c\exp(\eta\sum_{s=1}^{t}r_s(c))$ from above and below. The upper bound uses the concavity of the logarithm and the definition of the algorithm; the lower bound isolates the best action in hindsight. Combining the two bounds and optimising over~$\eta$ yields the stated rate. The full argument appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.5, see~\ref{app:proof_regret}).}
 
 \subsection{Uncertainty-Guided Strategy Selection}
 
@@ -1412,7 +1412,7 @@ Assume each component loss $\calL_i$ is $L_i$-smooth and each coupling loss $\ca
 where $\eta_{\min}=\min_i\eta_i$ and $\theta^*$ is a stationary point.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} Each alternating gradient step on component~$i$ decreases the unified objective by at least $\eta_i\|\nabla_{\theta_i}\calL_{\mathrm{unified}}\|^2/2$ under the smoothness condition, because the coupling terms are smooth in each block of variables. Summing over all components and all $T$ rounds, dividing by $T$, and taking the minimum over learning rates yields the stated bound. The full derivation, including the treatment of cross-term gradients, appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.6, see~\ref{app:proof_unified}).}
 
 \begin{algorithm}[htbp]
 \caption{Unified Framework: Alternating Optimisation with Consistency Coupling}\label{alg:unified}
