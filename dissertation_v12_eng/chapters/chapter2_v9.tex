@@ -28,18 +28,17 @@ or more invariants from Table~\ref{tab:six_properties};
 used to evaluate the quality of Hybrid IDPS, grouped by the six
 properties. The chapter concludes with a unified certification
 framework that couples all models through consistency regularisation.
-
-%%=====================================================================
+%%====
 \section*{Notation Conventions}
 \label{sec:notation_conventions}
 \addcontentsline{toc}{section}{Notation Conventions}
-%%=====================================================================
+%%====
 
 Throughout the dissertation the symbols below are used
 \emph{consistently}; local redefinitions are admitted only with
 explicit indication in the text.
 
-\begin{itemize}[leftmargin=2em, itemsep=0.2em]
+\begin{itemize}[leftmargin=2em, itemsep=0pt]
 
 \item $f_\theta$~--- the \emph{learnable detector} of the
 Hybrid~IDPS, parameterised by $\theta\in\Theta$, mapping the
@@ -117,11 +116,10 @@ the threat set $\Theta_{\mathrm{adv}}$.
 
 \noindent All other symbols are introduced locally and retain
 their interpretation within their own subsection.
-
-%%=====================================================================
+%%====
 \section{Formalisation of the Hybrid Intrusion Detection and Prevention System}
 \label{sec:hybrid_idps_math_model}
-%%=====================================================================
+%%====
 
 \subsection{Formal Model of Hybrid IDPS}
 \label{subsec:idps_formal_model}
@@ -307,7 +305,7 @@ by one or several Models M1--M7.}
 \label{tab:six_properties}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{l p{2.6cm} p{5.5cm} p{3.5cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{l p{2.6cm} p{5.5cm} p{3.5cm}}
 \toprule
 \textbf{Label} & \textbf{Property} & \textbf{Invariant} & \textbf{Addressed by} \\
 \midrule
@@ -334,7 +332,7 @@ invariants from Table~\ref{tab:six_properties}.
 \section{Unified Problem Statement}
 \label{sec:problem_statement}
 \label{sec:unified_problem}
-%%=====================================================================
+%%====
 
 The progressive derivation of the problem statement proceeds in seven stages, each introducing a new mathematical constraint that corresponds to a specific requirement or operating condition. The result is a single multi-objective optimisation problem whose decomposition yields the seven methods developed in this dissertation.
 
@@ -455,12 +453,11 @@ Combining all stages yields the unified multi-objective optimisation problem of 
 
 \noindent\textbf{Decomposition.} This unified problem is intractable as a monolithic optimisation. However, it admits a natural decomposition into seven sub-problems, one per identified gap, that can be solved by alternating optimisation with consistency coupling. Table~\ref{tab:decomposition} maps each sub-problem to its gap, the terms in Equation~\eqref{eq:ps_unified} it addresses, and the method that solves it.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Decomposition of the unified problem statement into seven sub-problems.}
 \label{tab:decomposition}
 \small
-\begin{tabular}{p{0.5cm} p{3.0cm} p{4.5cm} p{5.0cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{0.5cm} p{3.0cm} p{4.5cm} p{5.0cm}}
 \toprule
 \textbf{SP} & \textbf{Method} & \textbf{Terms Addressed} & \textbf{Key Constraint} \\
 \midrule
@@ -482,7 +479,7 @@ The remainder of this chapter develops each method in the order of the sub-probl
 %%=====================================================================
 \section{Model M1: CT-TGNN --- Continuous-Time Temporal Graph Neural Dynamics}
 \label{sec:ct_tgnn}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~1 by developing a graph neural network whose node representations evolve according to a neural ordinary differential equation, yielding the certified robustness bound from the Lipschitz constraint in Equation~\eqref{eq:ps_ode}. The method addresses Gap~1 (Adversarial $\times$ Robustness; Non-stationary $\times$ Robustness).
 
@@ -577,7 +574,7 @@ where $\mu_{[t-\Delta,t]}$ and $\sigma^2_{[t-\Delta,t]}$ are the windowed mean a
 Suppose the dynamics function $f_\theta$ is $L_f$-Lipschitz in~$\bh$ and $L_\theta$-Lipschitz in~$\theta$. Under gradient descent with learning rate $\eta<2/(L_f L_\theta)$, the training loss converges to a stationary point at rate $\calO(1/\sqrt{T})$, where $T$ denotes the number of gradient steps.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The loss $\calL(\theta)$ is evaluated through the ODE solution map $\bh(T;\theta)$. By the chain rule and the Lipschitz properties of~$f_\theta$, the gradient $\nabla_\theta\calL$ is bounded and Lipschitz-continuous, placing the problem in the standard framework of smooth non-convex optimisation. Applying the descent lemma with the stated learning rate yields the $\calO(1/\sqrt{T})$ rate to an $\epsilon$-stationary point. The full proof appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.1, see~\ref{app:proof_ct_conv}).}
 
 \begin{theorem}[Lipschitz Robustness Certificate]
 \label{thm:ct_tgnn_rob}
@@ -590,7 +587,7 @@ Let $f_\theta$ be $L_g$-Lipschitz in its first argument and let the integration 
 Consequently, if the classifier head has Lipschitz constant~$L_c$, the end-to-end model is $L_c\,e^{L_g T}$-Lipschitz, and the prediction is certified constant within a ball of radius $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$, where $\Delta_{\min}$ is the margin between the top two logits.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} Let $\bm{\eta}(t)=\bh_1(t)-\bh_2(t)$. Then $d\bm{\eta}/dt = f_\theta(\bh_1,t)-f_\theta(\bh_2,t)$, so $d\|\bm{\eta}\|/dt\le L_g\|\bm{\eta}\|$ by the Lipschitz property. Gr\"{o}nwall's inequality gives $\|\bm{\eta}(T)\|\le e^{L_g T}\|\bm{\eta}(0)\|$, and $\bm{\eta}(0)=\bx_1-\bx_2$. Composing with the classifier head completes the certificate. The full derivation with spectral-norm constraints enforcing the Lipschitz bound during training appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.2, see~\ref{app:proof_ct_rob}).}
 
 \subsection{Computational Complexity}
 
@@ -635,7 +632,7 @@ Compute Lipschitz certificate $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ for each t
 
 \section{Mathematical Model of Distributed Learning of Graph Representations with Confidentiality Guarantees}
 \label{sec:fedllm}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~2 by developing a federated learning algorithm that achieves the privacy constraint and Byzantine resilience of Equation~\eqref{eq:ps_fed} while consuming the Lipschitz certificates produced by M1. The method addresses Gap~2 (Distributed $\times$ Robustness; Distributed $\times$ Privacy; Distributed $\times$ Efficiency).
 
@@ -662,7 +659,7 @@ Assume the global loss $F(\bw)=\frac{1}{K}\sum_{k=1}^K F_k(\bw)$ is $\mu$-strong
 where $\sigma_k^2$ is the gradient variance of honest client~$k$ and $C_{\mathrm{byz}}$ bounds the Byzantine influence.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The key step is showing that the trimmed mean of honest-plus-Byzantine gradient vectors is close to the true mean of honest gradients. Let $\bar{\mathbf{g}}_H$ be the mean of honest gradients and $\bar{\mathbf{g}}_{\mathrm{TM}}$ the trimmed-mean output. Because at most $b$ of the $2b$ discarded entries can be honest, the error $\|\bar{\mathbf{g}}_{\mathrm{TM}}-\bar{\mathbf{g}}_H\|$ is bounded by the order statistics of honest gradient norms via concentration inequalities. Substituting into the standard strongly convex descent recursion yields the stated bound. Full details are in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.3, see~\ref{app:proof_fed}).}
 
 \subsection{Differential Privacy Through Calibrated Noise}
 
@@ -769,7 +766,7 @@ Initialise global model $\bw_0$; compute noise scale $\sigma = C\sqrt{2\ln(1.25/
 
 \section{Model M3: TripleE-TGNN --- Multi-Level Temporal Graph Embeddings}
 \label{sec:triple_e}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~3 by developing multi-level graph embeddings that address the accuracy and anti-forgetting terms in Equation~\eqref{eq:ps_triple}. The method addresses Gap~3 (Non-stationary $\times$ Accuracy; Non-stationary $\times$ Efficiency).
 
@@ -924,7 +921,7 @@ Initialise all encoder and attention parameters\;
 
 \section{Model for Improving Computational Efficiency of Streaming Data Analysis Based on State-Space Models}
 \label{sec:mamba}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~4 by developing an efficient sequential model that satisfies the computational complexity constraint of Equation~\eqref{eq:ps_ssm} while maintaining robustness under training-time poisoning through progressive distillation and PAC-Bayesian certification. The method addresses Gap~4 (Adversarial $\times$ Efficiency; Non-stationary $\times$ Efficiency).
 
@@ -981,7 +978,7 @@ For any $\delta\in(0,1)$, with probability at least $1-\delta$ over the draw of 
 where $R(\theta)$ is the true risk, $\hat{R}_n(\theta)$ is the empirical risk, and $P$ is a data-independent prior.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The proof follows the standard PAC-Bayesian template of Catoni, applying a change of measure from $P$ to~$Q$ through the Donsker-Varadhan variational representation of the KL divergence, combined with a moment-generating-function argument for the empirical process. The bound is valid uniformly over all posteriors~$Q$, including those concentrated on a single parameter vector, and is therefore non-vacuous whenever the KL term is small relative to $n$. With Gaussian prior $P=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ and posterior $Q=\calN(\bm{\mu}_Q,\sigma_Q^2\mathbf{I})$, the KL term has the closed form
+\noindent With Gaussian prior $P=\calN(\mathbf{0},\sigma_P^2\mathbf{I})$ and posterior $Q=\calN(\bm{\mu}_Q,\sigma_Q^2\mathbf{I})$, the KL term has the closed form
 \begin{equation}
 \mathrm{KL}(Q\|P)
 = \frac{d}{2}\Bigl(
@@ -992,7 +989,7 @@ where $R(\theta)$ is the true risk, $\hat{R}_n(\theta)$ is the empirical risk, a
 \Bigr),
 \label{eq:pac_kl_gauss}
 \end{equation}
-which is minimised by keeping the posterior close to the origin and its variance close to that of the prior. Full details appear in Appendix~A.\qed
+which is minimised by keeping the posterior close to the origin. \textit{The full proof is given in Appendix~A (\S~A.4, see~\ref{app:proof_pac}).}
 
 \begin{algorithm}[htbp]
 \caption{MambaShield: Training with Progressive Adversarial Robustness Distillation}\label{alg:mamba}
@@ -1072,7 +1069,7 @@ def mamba_selective_fft(x, A, B, C, D, dt):
 
 \section{Algorithm for Anomaly Detection Based on Calibrated Uncertainty Estimation of Graph Models}
 \label{sec:stochastic}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~6 by developing two complementary methods that achieve the sub-linear regret and uncertainty decomposition required by Equation~\eqref{eq:ps_regret}. Model M5 (Stochastic Transformer) provides variational Bayesian attention, and Model M6 (UC-HGP) provides hierarchical Gaussian process uncertainty at multiple temporal scales. Together they address Gap~6 (Adversarial $\times$ Accuracy; Non-stationary $\times$ Accuracy).
 
@@ -1187,7 +1184,7 @@ Initialise perturbation network parameters $\psi$\;
 
 \section{Forward-Compatible Detection Under Protocol Regime Change}
 \label{sec:pq_idps}
-%%=====================================================================
+%%====
 
 This section addresses Sub-problem~5 (Gap~5: Non-stationary $\times$ Robustness) by constructing a detection architecture that maintains robustness when the data-generating protocols underlying the graph undergo structural change, providing the forward compatibility that the domain-specific foundation model (CyberSecLLM) requires.
 
@@ -1285,11 +1282,10 @@ queued for expert labelling.
 parameters whose Fisher-information importance exceeds a threshold, which
 prevents catastrophic forgetting of previously learnt regularities and
 preserves 94.7\,\% F1 without full retraining.
-
-%%===================================================================
+%%====
 \section{Method of Game-Theoretic Certification of Adversarial Robustness of the Hybrid IDPS}
 \label{sec:game}
-%%=====================================================================
+%%====
 
 This section solves Sub-problem~7 by developing the Stackelberg game formulation and the consistency coupling term $\sum_{i<j}\calL_{ij}(\theta_i,\theta_j)$ from the unified problem (Equation~\eqref{eq:ps_unified}). Together with the certification components, this constitutes Model M7 and addresses Gap~7 (all conditions $\times$ all requirements).
 
@@ -1349,7 +1345,7 @@ R(T)\le 2\sqrt{T\log|\calC|},
 so that the average per-round regret $R(T)/T=\calO(\sqrt{\log|\calC|/T})\to 0$ as $T\to\infty$.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} The proof proceeds by bounding the potential function $\Phi_t=\log\sum_c\exp(\eta\sum_{s=1}^{t}r_s(c))$ from above and below. The upper bound uses the concavity of the logarithm and the definition of the algorithm; the lower bound isolates the best action in hindsight. Combining the two bounds and optimising over~$\eta$ yields the stated rate. The full argument appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.5, see~\ref{app:proof_regret}).}
 
 \subsection{Uncertainty-Guided Strategy Selection}
 
@@ -1389,7 +1385,7 @@ Compute empirical Nash equilibrium from play frequencies $\{(c_t,a_t)\}_{t=1}^T$
 %%=====================================================================
 \subsection{Unified Certification Through Coupled Optimisation}
 \label{sec:unified}
-%%=====================================================================
+%%====
 
 The seven methods developed above (M1 through M6, plus the game-theoretic component of M7) share mathematical structures — adjoint sensitivity analysis, Wasserstein geometry, KL-divergence regularisation, and Lipschitz-bounded dynamics — that permit a unified treatment through coupled optimisation. This section completes Model M7 by developing the certification framework that integrates all component guarantees.
 
@@ -1425,7 +1421,7 @@ Assume each component loss $\calL_i$ is $L_i$-smooth and each coupling loss $\ca
 where $\eta_{\min}=\min_i\eta_i$ and $\theta^*$ is a stationary point.
 \end{theorem}
 
-\noindent\textit{Proof sketch.} Each alternating gradient step on component~$i$ decreases the unified objective by at least $\eta_i\|\nabla_{\theta_i}\calL_{\mathrm{unified}}\|^2/2$ under the smoothness condition, because the coupling terms are smooth in each block of variables. Summing over all components and all $T$ rounds, dividing by $T$, and taking the minimum over learning rates yields the stated bound. The full derivation, including the treatment of cross-term gradients, appears in Appendix~A.\qed
+\noindent\textit{The full proof is given in Appendix~A (\S~A.6, see~\ref{app:proof_unified}).}
 
 \begin{algorithm}[htbp]
 \caption{Unified Framework: Alternating Optimisation with Consistency Coupling}\label{alg:unified}
@@ -1456,7 +1452,7 @@ Set learning rates $\eta_i = 1/(L_i + \sum_j L_{ij})$ for each component\;
 
 \section{Systematisation of Quality Metrics for Hybrid IDPS}
 \label{sec:metrics_taxonomy}
-%%=====================================================================
+%%====
 
 The evaluation of the quality of the developed Models and algorithms
 M1--M7 relies on a unified framework of twenty-three metrics
@@ -1475,7 +1471,7 @@ for Hybrid IDPS by the six properties from
 \label{tab:metrics_by_property}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{l p{3.0cm} p{9.3cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{l p{3.0cm} p{9.3cm}}
 \toprule
 \textbf{Property} & \textbf{Metric class} & \textbf{Specific metrics} \\
 \midrule
@@ -1503,7 +1499,7 @@ the text of Chapter~\ref{ch:experiments} at first use.
 %%=====================================================================
 \section{Conclusions for Chapter 2}
 \label{sec:ch2_summary}
-%%=====================================================================
+%%====
 
 This chapter has developed the complete mathematical foundations for seven novel methods, derived from a single unified problem statement (Equation~\eqref{eq:ps_unified}) through systematic decomposition into seven sub-problems. The unified problem was progressively constructed by incorporating adversarial robustness (Stage~2), continuous-time dynamics with Lipschitz certification (Stage~3), distributed learning with differential privacy (Stage~4), multi-level representation with anti-forgetting (Stage~5), computational efficiency through state-space models (Stage~6), and non-stationary adaptation with uncertainty quantification (Stage~7).
 

@@ -55,7 +55,7 @@ Chapter~\ref{ch:uav} of Chapter~\ref{ch:adaptation}.
 %%=====================================================================
 \section{Subsystem Overview and Target Defence Tasks}
 \label{sec:uav_overview}
-%%=====================================================================
+%%====
 
 A modern UAV is a neural-network-dependent system at every level of
 the software stack: onboard convolutional and transformer detectors
@@ -154,7 +154,7 @@ function of jamming-to-signal ratio
 \section{System Architecture: Three-Tier
 \emph{Onboard~--- Droneport~--- Cloud} Model}
 \label{sec:uav_arch}
-%%=====================================================================
+%%====
 
 Architecturally, the framework is implemented as a three-tier system
 that inherits the software stack of the \textsf{RobustIDPS.ai}
@@ -191,7 +191,7 @@ inter-tier channels; dashed arrows~--- attack families
 
 \begin{figure}[!htbp]
 \centering
-\begin{tikzpicture}[font=\footnotesize,
+\begin{tikzpicture}[font=\scriptsize,
   tier/.style={rectangle,rounded corners=3pt,draw=blue!70,
                very thick,fill=blue!10,minimum height=1.35cm,
                minimum width=3.4cm,align=center,inner sep=4pt,
@@ -246,7 +246,7 @@ their computational complexity and network constraints.}
 %%=====================================================================
 \section{Operational UAV Graph as an Instance of the Unified Problem}
 \label{sec:uav_graph}
-%%=====================================================================
+%%====
 
 The operational environment of a UAV group is formalised as an
 instance of the unified problem
@@ -292,7 +292,7 @@ domain-independence of methods \textsf{M1}--\textsf{M7}.
 %%=====================================================================
 \section{UAV Telemetry-to-Graph Pipeline}
 \label{sec:uav_pipeline}
-%%=====================================================================
+%%====
 
 The pipeline that transforms onboard sensor data into an instance of
 $\calG_t$ is built by analogy with the pipeline of
@@ -391,7 +391,7 @@ sensor rates.}
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 \section{Mapping of Methods \textsf{M1}--\textsf{M7} to UAV Subsystems}
 \label{sec:uav_mapping}
-%%=====================================================================
+%%====
 
 Table~\ref{tab:uav_mapping} gives the mapping of every disciplinary
 method of Chapter~\ref{ch:methods} to a concrete defence mechanism in
@@ -477,7 +477,7 @@ uncertainty is exceeded.
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
 \section{Robustness Certificates for UAV Subsystems}
 \label{sec:uav_certs}
-%%=====================================================================
+%%====
 
 The four robustness certificates of Chapter~\ref{ch:methods} carry
 over to the UAV operational graph $\calG_t$ without change of form or
@@ -520,7 +520,7 @@ $\alpha=10^{-3}$, $n=200$ Monte-Carlo trials).
 \section{Phase~A Software Implementation Based on the
 \textsf{robustnn-core} Library}
 \label{sec:uav_phase_a}
-%%=====================================================================
+%%====
 
 The Phase~A reference implementation of the four-stage transfer
 roadmap is delivered as the \texttt{uav\_defense} package, released
@@ -600,7 +600,7 @@ $\hat L_g \leftarrow \mathrm{LipschitzEst}(\theta^{*});\
 %%=====================================================================
 \section{Integration with the \textsf{RobustIDPS.ai} Platform}
 \label{sec:uav_robustidps_integration}
-%%=====================================================================
+%%====
 
 The Phase~A software implementation is integrated into the
 \textsf{RobustIDPS.ai} platform (see Chapter~\ref{ch:platform})
@@ -630,7 +630,7 @@ and is implemented as a plugin in
 %%=====================================================================
 \section{Phase~A Validation Results}
 \label{sec:uav_phase_a_results}
-%%=====================================================================
+%%====
 
 The Phase~A results are obtained in three independent modes:
 (a)~a local run on the calibrated TEXBAT-like synthetic corpus (to
@@ -914,7 +914,7 @@ addresses the cells \emph{``adversarial environment} $\times$
 %%=====================================================================
 \section{Applicability Limitations of RobustIDPS.ai for UAV Intelligent-System Security}
 \label{sec:uav_comparison}
-%%=====================================================================
+%%====
 
 Table~\ref{tab:uav_industry_cmp} gives a comparison of the proposed
 framework with existing industrial and research solutions~--- Anduril
@@ -955,7 +955,7 @@ certificates.
 %%=====================================================================
 \section{Conformance to the Regulatory Framework}
 \label{sec:uav_regulation}
-%%=====================================================================
+%%====
 
 The structure of the certificates produced by \S\ref{sec:uav_certs}
 is consistent with the key regulatory requirements
@@ -994,7 +994,7 @@ down to the level of a single mission.
 %%=====================================================================
 \section{Conclusions for Chapter 6}
 \label{sec:uav_summary}
-%%=====================================================================
+%%====
 
 \noindent 1.\quad A three-tier \emph{onboard~--- droneport~--- cloud}
 architecture of the unified defence framework for a neural-network
