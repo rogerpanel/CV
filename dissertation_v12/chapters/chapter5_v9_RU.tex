@@ -49,7 +49,7 @@
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[font=\footnotesize,
+\begin{tikzpicture}[font=\scriptsize,
   inp/.style={draw,rounded corners=2pt,fill=blue!10,
     minimum width=3.0cm,minimum height=11mm,align=center,thick},
   sys/.style={draw,rounded corners=3pt,fill=orange!18,
@@ -158,7 +158,7 @@ requests.post("https://suricata.local/api/reload")
 %%    сравнение с коммерческими и открытыми платформами, вклад в
 %%    открытый исходный код и факты внедрения системы в профильных
 %%    организациях)
-%%=====================================================================
+%%====
 
 \paragraph{Связь с предыдущим.}Разделы~\ref{ch:platform}--\ref{sec:deployment} выше
 систематически реализовали программную \emph{систему}~\textsf{RobustIDPS.ai}
@@ -180,12 +180,11 @@ Microsoft Security Copilot, Google Sec-Gemini, Snort~3, Suricata)};
 %%=====================================================================\section{Экспериментальная оценка состязательной устойчивости системы}
 \label{sec:platform_comparison}%%=====================================================================
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Сравнение возможностей с открытыми и коммерческими платформами.}
 \label{tab:platform_comparison}
 \footnotesize
-\begin{tabular}{p{3.5cm}ccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.5cm}ccccc}
 \toprule
 \textbf{Возможность} & \rotatebox{70}{\textbf{RobustIDPS.ai}} & \rotatebox{70}{\textbf{Suricata}} & \rotatebox{70}{\textbf{Snort 3}} & \rotatebox{70}{\textbf{CrowdStrike}} & \rotatebox{70}{\textbf{MS Copilot}} \\
 \midrule

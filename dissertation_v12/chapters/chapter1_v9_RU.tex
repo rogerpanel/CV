@@ -198,7 +198,48 @@ IDPS (см.~Введение): задержки сигнатурных баз в
 \label{fig:orga_apps_idps}
 \end{figure}
 
-\paragraph{(а) Защита сетевого трафика (NIDS)}\label{subsubsec:sector_nids}
+Семь практически значимых секторов применения гибридной СОПВ систематизированы в табл.~\ref{tab:idps_sectors}. Каждый сектор характеризуется специфической поверхностью атак и особыми требованиями к интеграции защитных моделей; ключевые количественные индикаторы уязвимостей сохранены в столбце поверхности атак с соответствующими ссылками.
+
+\begin{table}[htbp]
+\centering
+\caption{Предметные области применения гибридной СОПВ: поверхность атак и специальные требования.}
+\label{tab:idps_sectors}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.8cm} p{6.5cm} p{5.0cm}}
+\toprule
+\textbf{Область} & \textbf{Поверхность атак} & \textbf{Специальные требования} \\
+\midrule
+(а)~Сетевой трафик (NIDS) & Сканирование портов, эксплуатация служб, DoS/DDoS, горизонтальное распространение, C2-каналы, эксфильтрация, постквантовые протокольные переходы; векторы 46--83-мерные (CIC-IoT-2023, CSE-CICIDS-2018, UNSW-NB15) & Интеграция с сигнатурными движками (Snort, Suricata); SIEM-оповещения; см.\ Главу~\ref{ch:platform} \\
+\addlinespace
+(б)~БПЛА (UAV) & Спуфинг/подавление ГНСС, РЭБ, состязательные атаки на бортовое зрение, отравление политик автопилота, перехват командного канала, кинетические и биологические угрозы & Граф-представление операционной обстановки; математический аппарат М1--М7 сохраняется; см.\ Главу~\ref{ch:uav} \\
+\addlinespace
+(в)~Финтех & Кардинг, отмывание, рейдовые транзакционные атаки (MonTi~\cite{MonTi2025}: ошибка CARE-GNN/PC-GNN/GAGA с 25{,}7\% до 68{,}6\%), спуфинг учётных данных, фишинг & Дисбаланс классов ($<\!1\%$ мошенничества); византийско-устойчивое федеративное обучение между банками \\
+\addlinespace
+(г)~Медицина & Атаки на чувствительность рёбер в GIN (падение AUC до 25\% на MoleculeNet, токсичные соединения~--- как безопасные~\cite{EdgeSensitivity2025}), модельная инверсия, атаки на принадлежность, отравление графов клинических исследований & $(\varepsilon,\delta)$-DP обучение; калиброванная эпистемическая неопределённость \\
+\addlinespace
+(д)~IIoT/SCADA & Манипуляция состоянием ПЛК, повтор сигналов датчиков, атаки на временные метки; отравление обучения федеративных детекторов~--- коллапс точности с 94{,}2\% до 30{,}0\% при не-i.i.d.~\cite{FerragPoisoning2023} & Специализированные протоколы (\texttt{Modbus}, \texttt{DNP3}, \texttt{IEC~61850}, \texttt{OPC-UA}, \texttt{S7}); детерминированная задержка десятки мс \\
+\addlinespace
+(е)~Автономные ТС & Состязательные физические заплатки на дорожные знаки, спуфинг ГНСС, инжекция ложных V2X-сообщений, отравление траекторного планировщика & Граф слияния сенсоров (камера, ЛиДАР, радар, ИНС); калиброванная неопределённость как триггер безопасного режима \\
+\addlinespace
+(ж)~Cloud/SaaS & Побег из контейнера, злоупотребление IAM, атаки на цепочку поставок, подмена образов; PROVNINJA~\cite{PROVNINJA2023} снижает обнаружение провенанс-IDS до 59\% & East--west API-трафик через сервисный меш (\texttt{Istio}, \texttt{Linkerd}); multi-tenant изоляция \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Полные системные реализации для двух показательных секторов~--- (а)~защиты сетевого трафика и~(б)~защиты БПЛА~--- изложены в Главах~\ref{ch:platform} и~\ref{ch:uav}; сектора~(в)--(ж) реализуются на основе моделей М1--М7, разработанных в Главе~\ref{ch:methods}.
+
+%% Сохранены якорные метки для перекрёстных ссылок из других глав:
+\phantomsection\label{subsubsec:sector_nids}%
+\phantomsection\label{subsubsec:sector_uav}%
+\phantomsection\label{subsubsec:sector_fintech}%
+\phantomsection\label{subsubsec:sector_medical}%
+\phantomsection\label{subsubsec:sector_iiot}%
+\phantomsection\label{subsubsec:sector_av}%
+\phantomsection\label{subsubsec:sector_cloud}%
+
+\iffalse
+ОРИГИНАЛЬНЫЙ ТЕКСТ (свёрнут в табл.~\ref{tab:idps_sectors}):
 
 Защита сетевого трафика исторически является первой и наиболее
 изученной областью применения IDPS. Объектом наблюдения служит
@@ -369,7 +410,8 @@ IIoT/SCADA отдельной предметной областью примен
 коммерческих платформ обнаружения и реагирования, надстраиваемых
 поверх классических сигнатурных и поведенческих движков.
 
-\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+<<<<<<< HEAD
+\begin{enumerate}[leftmargin=2em, itemsep=0pt]
 
 \item \textbf{CrowdStrike Falcon с модулем Charlotte~AI}~---
 EDR/XDR-платформа с интегрированным LLM-ассистентом для
@@ -422,6 +464,34 @@ Networks Cortex~XSIAM}~--- ИИ-усиленные SIEM/SOAR-платформы;
 организациями.
 
 \end{enumerate}
+=======
+\begin{table}[htbp]
+\centering
+\caption{ИИ-усиленные коммерческие IDPS-продукты (2023--2025): подход и ключевые ограничения.}
+\label{tab:ai_idps_products}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.7cm} p{2.0cm} p{4.5cm} p{4.8cm}}
+\toprule
+\textbf{Продукт} & \textbf{Поставщик} & \textbf{Подход} & \textbf{Ключевые ограничения} \\
+\midrule
+Falcon + Charlotte~AI & CrowdStrike & EDR/XDR с LLM-ассистентом, поведенческие IOA и графы процессов & Закрытый кодекс правил; нет формальных сертификатов робастности; зависимость от облачного бэкенда \\
+\addlinespace
+Singularity + Purple~AI & SentinelOne & Автономная XDR, агентный ИИ для расследования на естественном языке, rollback при ransomware & Нет формальной модели приватности для федеративного обучения; нет сертифицированной устойчивости к отравлению \\
+\addlinespace
+Security Copilot & Microsoft & Надстройка над Defender~XDR/Sentinel SIEM на GPT-семействе LLM; резюмирование инцидентов, генерация KQL & Нет количественной оценки неопределённости; нет гарантий против prompt-injection \\
+\addlinespace
+Mandiant + Gemini & Google Cloud & Интеграция Mandiant IoC с LLM Gemini для атрибуции и приоритизации угроз & Закрытость моделей; отсутствие гарантий для on-premise развёртываний \\
+\addlinespace
+AI Endpoint Analytics / Hypershield & Cisco & Сегментация сети и обнаружение аномалий через обучаемую идентификацию устройств & Коммерческий аналог моделей обучения признаков NIDPS; нет сертификатов робастности \\
+\addlinespace
+QRadar SIEM AI Assistant & IBM & ИИ-усиленный SIEM/SOAR: автоматизированная корреляция и рекомендации аналитику & Нет сертифицированных гарантий к состязательным воздействиям; нет федеративного обучения между организациями \\
+\addlinespace
+Cortex~XSIAM & Palo~Alto Networks & ИИ-усиленный SIEM/SOAR: расширенная аналитика и автоматизация реагирования & Нет сертифицированных гарантий к состязательным воздействиям; нет федеративного обучения между организациями \\
+\bottomrule
+\end{tabular}
+\end{table}
+>>>>>>> 28891ca3fdb2051a91911334e6adc5a547c387c5
 
 \noindent Систематический разбор перечисленных продуктов
 показывает, что \emph{все} они являются конвейерными надстройками
@@ -785,7 +855,7 @@ Mou и соавторы~\cite{mou_2021_uav} применили GCN к самов
 \label{tab:models_to_methods}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{p{3.0cm} p{4.5cm} p{6.5cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.0cm} p{4.5cm} p{6.5cm}}
 \toprule
 \textbf{Ось проблем} & \textbf{Конкретная уязвимость} & \textbf{Разработанная модель / алгоритм} \\
 \midrule
@@ -806,12 +876,11 @@ Mou и соавторы~\cite{mou_2021_uav} применили GCN к самов
 \bottomrule
 \end{tabular}\end{table}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Семь выявленных исследовательских пробелов, их покрытие условий и требований, а также методы, предложенные для их решения в настоящей диссертации.}
 \label{tab:gaps}
 \small
-\begin{tabular}{p{0.5cm} p{5.5cm} p{2.5cm} p{2.0cm} p{2.5cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{0.5cm} p{5.5cm} p{2.5cm} p{2.0cm} p{2.5cm}}
 \toprule
 \textbf{\#} & \textbf{Описание пробела} & \textbf{Условия} & \textbf{Требо\-вания} & \textbf{Предлож. модель/алгоритм} \\
 \midrule

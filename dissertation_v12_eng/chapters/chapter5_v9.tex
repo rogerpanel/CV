@@ -49,7 +49,7 @@ isolation, SIEM/SOAR escalation).
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[font=\footnotesize,
+\begin{tikzpicture}[font=\scriptsize,
   inp/.style={draw,rounded corners=2pt,fill=blue!10,
     minimum width=3.0cm,minimum height=11mm,align=center,thick},
   sys/.style={draw,rounded corners=3pt,fill=orange!18,
@@ -157,7 +157,7 @@ the reference Python implementation of release v3.}
 \small
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.15}
-\begin{tabular}{@{}lrrr@{}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}lrrr@{}}
 \toprule
 \textbf{Metric} & \textbf{v3 (Python)} & \textbf{v4 (Rust + XDP)} & \textbf{Gain}\\
 \midrule
@@ -220,7 +220,7 @@ requests.post("https://suricata.local/api/reload")
 %%    comparison with commercial and open-source platforms, the
 %%    open-source contribution, and the letters of implementation
 %%    from the participating organisations)
-%%=====================================================================
+%%====
 
 \paragraph{Bridge with the above.}Sections~\ref{ch:platform}--\ref{sec:deployment} above
 have systematically realised the software \emph{system}
@@ -245,12 +245,11 @@ the course of formalisation}.
 %%=====================================================================\section{Comparison with Commercial and Open-Source Platforms}
 \label{sec:platform_comparison}%%=====================================================================
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Feature comparison with open-source and commercial platforms.}
 \label{tab:platform_comparison}
 \footnotesize
-\begin{tabular}{p{3.5cm}ccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.5cm}ccccc}
 \toprule
 \textbf{Capability} & \rotatebox{70}{\textbf{RobustIDPS.ai}} & \rotatebox{70}{\textbf{Suricata}} & \rotatebox{70}{\textbf{Snort 3}} & \rotatebox{70}{\textbf{CrowdStrike}} & \rotatebox{70}{\textbf{MS Copilot}} \\
 \midrule

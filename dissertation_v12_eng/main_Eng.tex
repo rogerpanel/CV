@@ -7,23 +7,24 @@
 %%  Author: Roger Nick Anaedevha
 %%  Compile with: pdflatex -> bibtex -> pdflatex -> pdflatex
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[14pt,a4paper,oneside]{extreport}
+\documentclass[11pt,a4paper,oneside]{extreport}
 
 %% ──────────────── Encoding and Language ────────────────
+\usepackage{mathptmx}  % Times Roman
 \usepackage{cmap}                       % UTF-8 text layer in PDF
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage[russian,english]{babel}     % English is the default
 
 %% ──────────────── Page Geometry (MEPhI standard) ────────────────
-\usepackage[left=30mm,right=15mm,top=25mm,bottom=20mm]{geometry}
+\usepackage[left=22mm,right=12mm,top=15mm,bottom=15mm]{geometry}
 
 %% ──────────────── Typography ────────────────
 \usepackage{csquotes}
 \usepackage[expansion=false,protrusion=true]{microtype}
 \usepackage{indentfirst}
 \usepackage{setspace}
-\onehalfspacing
+\setstretch{1.1}
 
 %% ──────────────── Mathematics ────────────────
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
@@ -72,8 +73,8 @@
 
 %% ──────────────── Code listings ────────────────
 \usepackage{listings}
-\lstset{
-  basicstyle=\ttfamily\small,
+\lstset{basicstyle=\ttfamily\footnotesize,
+  basicstyle=\ttfamily\footnotesize,
   breaklines=true,
   frame=single,
   numbers=left,
@@ -122,7 +123,7 @@
 \setlength{\belowcaptionskip}{2pt}
 
 %% Compact list spacing
-\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=2pt}
+\setlist{nosep,topsep=2pt,partopsep=0pt,parsep=2pt,itemsep=0pt}
 
 %% Compact heading spacing (titlesec)
 %% Chapter title: smaller size and tighter padding to match the
@@ -234,12 +235,18 @@
 \newpage
 \addcontentsline{toc}{chapter}{Bibliography}
 \nocite{*}
+\begingroup
+\renewcommand\bibsection{\chapter{References}}
+\footnotesize
+\setlength{\bibsep}{0pt}
 \bibliographystyle{unsrtnat}
 \bibliography{bibliography_v10}
+\endgroup
+
 
 %% ──────────────── Appendices ────────────────
 \appendix
-\input{appendices/appendixA_v10}
+\input{appendices/appendixA_proofs}
 \input{appendices/appendixB_v10}
 \input{appendices/appendixC_v10}
 

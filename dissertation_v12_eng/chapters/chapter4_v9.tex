@@ -57,11 +57,10 @@ volume, and statistical characteristics, which is what makes the transfer of the
 
 Evaluation employs six benchmark datasets spanning diverse network environments, attack taxonomies, and temporal characteristics.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Summary of benchmark datasets used in experimental evaluation.}
 \label{tab:datasets}
-\begin{tabular}{lrrrl}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lrrrl}
 \toprule
 Dataset & Records & Attack types & Features & Domain \\
 \midrule
@@ -91,11 +90,10 @@ All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Tra
 
 Table~\ref{tab:unified_results} summarises the performance of the unified framework across all six datasets, compared against the best single baseline.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Unified framework performance across all benchmark datasets.}
 \label{tab:unified_results}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 \textbf{Dataset} & \textbf{Acc (\%)} & \textbf{F1 (\%)} & \textbf{Best Baseline (\%)} & \textbf{$\Delta$ (p.p.)} \\
 \midrule
@@ -127,11 +125,10 @@ This section presents results for each method individually, demonstrating how ea
 
 CT-TGNN~\cite{Anaedevha2025cais} employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration. On CIC-IoT-2023 the architecture achieves 98.3\% accuracy with 47\,ms median inference latency and 8.7~million events per second throughput.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{CT-TGNN performance across benchmark datasets.}
 \label{tab:ct_tgnn_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Dataset & Accuracy & Recall & FPR & ECE & Latency (ms) \\
 \midrule
@@ -152,11 +149,10 @@ UNSW-NB15      & 97.1\% & 96.5\% & 1.9\% & 0.069 & 44 \\
 
 The SDE-TGNN~\cite{Anaedevha2026sdetgnn} extends CT-TGNN with It\^{o} SDEs and Fokker-Planck moment propagation, achieving uncertainty quantification at $\calO(d^2)$ cost without Monte Carlo sampling.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{SDE-TGNN: detection, calibration, certified robustness, and transfer.}
 \label{tab:sde_tgnn_results}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 Dataset & F1 (\%) & ECE & Certified $R{=}0.25$ & Transfer F1 (\%) \\
 \midrule
@@ -177,11 +173,10 @@ Average        & 99.0 & 0.042 & 76.2\% & 90.5 \\
 
 \subsection{M2: FedLLM-API Results (Gap 2, Sub-problem 2)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{FedLLM-API performance under varying Byzantine fractions.}
 \label{tab:fedllm_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Byzantine \% & FedLLM-API & FedAvg & FedProx & Krum & Median \\
 \midrule
@@ -208,11 +203,10 @@ Overall accuracy 96.8\%, outperforming single-granularity baselines by 8.3\%. Se
 
 \subsection{M4: MambaShield Results (Gap 4, Sub-problem 4)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{MambaShield accuracy under increasing poisoning rates.}
 \label{tab:mamba_results}
-\begin{tabular}{lccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccc}
 \toprule
 Poisoning \% & MambaShield & Standard AT & No Defence \\
 \midrule
@@ -235,11 +229,10 @@ Accuracy 94.7\% against adaptive adversaries versus 87.6\% for non-strategic app
 
 \subsection{CyberSecLLM: Foundation Model Results (Gap 5)}
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{CyberSecLLM zero-shot performance on CyberSecBench.}
 \label{tab:cybersecllm_results}
-\begin{tabular}{lccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lccccc}
 \toprule
 Model & Detection & Transfer & OOD & Triage & Avg \\
 \midrule
@@ -255,11 +248,10 @@ CyberSecLLM-7B achieves 89.1\% average zero-shot accuracy, a 20.5-point improvem
 %%=====================================================================\section{Comparative Analysis with Existing Intrusion Detection and Prevention Systems}
 \label{sec:comparative}%%=====================================================================
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Comparative performance against baselines on CIC-IoT-2023.}
 \label{tab:comparative}
-\begin{tabular}{lcccccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccccc}
 \toprule
 Method & Acc. & F1 & AUC & FPR & MCC & Latency \\
 \midrule
@@ -278,11 +270,10 @@ The unified framework achieves the highest accuracy (94.7\%) and lowest FPR (1.4
 %%=====================================================================\section{Ablation Studies and Analysis of Contribution of Developed Methods}
 \label{sec:ablation}%%=====================================================================
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Ablation study: impact of removing individual components.}
 \label{tab:ablation}
-\begin{tabular}{lcc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcc}
 \toprule
 Ablated Component & Full System & Without \\
 \midrule
@@ -321,11 +312,10 @@ operating deployments correct.
 
 Six attack families~\cite{Goodfellow2015,Madry2018,Carlini2017,Croce2020} are evaluated at configurable perturbation budgets:.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Platform adversarial robustness under six attack methods.}
 \label{tab:adversarial}
-\begin{tabular}{lcccc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{lcccc}
 \toprule
 Attack & Budget & Clean & Attacked & Robust (AT) \\
 \midrule
@@ -434,11 +424,10 @@ user study.
 
 The Multi-Agent PQC-IDS~\cite{Anaedevha2026mapqc} extends the framework to post-quantum protocol environments. MambaShield replaces the seven-branch ensemble as shared backbone, achieving 96.7\% accuracy (versus 96.9\% for ensemble) at $7.3\times$ inference speedup.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Forward-compatible detection accuracy by protocol family.}
 \label{tab:pqc_results}
-\begin{tabular}{llc}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{llc}
 \toprule
 Protocol Family & Attack Type & Accuracy \\
 \midrule

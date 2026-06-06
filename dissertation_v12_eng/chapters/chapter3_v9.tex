@@ -45,7 +45,7 @@ separately in Chapter~\ref{ch:experiments}.
 %%=====================================================================
 \section{Problem Statement of Constructing an Adversarially Robust Hybrid IDPS for Network Traffic Analysis}
 \label{sec:nidps_context}
-%%=====================================================================
+%%====
 
 \subsection{Hybrid Intrusion Detection and Prevention Systems}
 
@@ -76,7 +76,7 @@ The following terms are used throughout this chapter and the experimental valida
 %%=====================================================================
 \section{Architecture of the RobustIDPS.ai Software System}
 \label{sec:data_to_graph}
-%%=====================================================================
+%%====
 
 The central premise of this dissertation is that network traffic is naturally graph-structured: hosts are nodes, flows are edges, and temporal ordering defines the graph evolution. This section formalises the transformation from raw network data to the graph inputs required by the developed GNN architectures.
 
@@ -105,16 +105,15 @@ For the TripleE-TGNN (Model M3) and the SOC Intelligence integration, the networ
 %%=====================================================================
 \section{Functionality of the RobustIDPS.ai System}
 \label{sec:taxonomy}
-%%=====================================================================
+%%====
 
 The platform classifies network traffic into 34 distinct classes: 1 benign class and 33 attack classes organised into 7 major categories. This taxonomy is unified across all six benchmark datasets, with dataset-specific attack types mapped to the canonical categories. Table~\ref{tab:taxonomy} presents the complete taxonomy.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Unified classification taxonomy: 34 classes across 7 attack categories.}
 \label{tab:taxonomy}
 \small
-\begin{tabular}{p{2.5cm} p{10.5cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{2.5cm} p{10.5cm}}
 \toprule
 \textbf{Category} & \textbf{Attack Classes} \\
 \midrule
@@ -142,16 +141,15 @@ The taxonomy is extensible: new attack classes can be registered through the pla
 %%=====================================================================
 \section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
 \label{sec:features}
-%%=====================================================================
+%%====
 
 All models operate on a shared vector of 83 engineered features extracted from raw PCAP files or pre-processed CSV datasets. Features span five categories, summarised in Table~\ref{tab:features}.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{The 83-feature engineering pipeline organised by category.}
 \label{tab:features}
 \small
-\begin{tabular}{p{3.5cm} p{1.5cm} p{8.5cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.5cm} p{1.5cm} p{8.5cm}}
 \toprule
 \textbf{Category} & \textbf{Count} & \textbf{Representative Features} \\
 \midrule
@@ -180,7 +178,7 @@ where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and 
 %%=====================================================================
 \section{Domain-Specific Realisation of Methods M1--M7}
 \label{sec:method_instantiation}
-%%=====================================================================
+%%====
 
 This section describes how each of the seven methods from Chapter~\ref{ch:methods} is instantiated with cybersecurity-specific parameters, demonstrating the mapping from abstract mathematical objects to concrete network-security entities.
 
@@ -266,7 +264,7 @@ Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process ti
 %%=====================================================================
 \section{Deployment and Integration Infrastructure of the System}
 \label{sec:tech_stack_ui}
-%%=====================================================================
+%%====
 
 \subsection{Implementation Technology Stack}
 \label{subsec:tech_stack}
@@ -282,7 +280,7 @@ interactive SOC-analyst user interface; (iv)~integration with
 external large-language-model (LLM) providers through a single
 API-abstract layer.
 
-\begin{enumerate}[leftmargin=2em, itemsep=0.2em]
+\begin{enumerate}[leftmargin=2em, itemsep=0pt]
 \item \textbf{Server tier (Python~3.11)}~--- an asynchronous
 HTTP/WebSocket server on FastAPI (60+ REST API endpoints) on top
 of which the model pipeline runs in PyTorch~2.x with PyTorch
@@ -333,7 +331,7 @@ acts. The complete \texttt{requirements.txt} and
 \caption{Software dependencies of the RobustIDPS.ai platform.}
 \label{tab:packages_versions}
 \small
-\begin{tabular}{@{}lll@{}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}lll@{}}
 \toprule
 \textbf{Category} & \textbf{Package} & \textbf{Version} \\
 \midrule
@@ -382,7 +380,7 @@ operation in a typical analyst usage scenario.
 \begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
-\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_08_ethical_use.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_09_soc_dashboard.png}} \\
@@ -428,7 +426,7 @@ and the differential-privacy option.}
 \begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
-\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} &
 \fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} \\
@@ -481,16 +479,15 @@ system).
 %%=====================================================================
 \section{System Performance Optimisation}
 \label{sec:hyperparams}
-%%=====================================================================
+%%====
 
 Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all methods as configured for the network-security domain. All values were selected through grid search on the CIC-IoT-2023 validation set and confirmed stable across the remaining five datasets.
 
-\begin{table}[htbp]
-\centering
+\begin{table}[htbp]\centering\small
 \caption{Consolidated hyperparameter configuration for all methods in the cybersecurity domain.}
 \label{tab:hyperparams}
 \small
-\begin{tabular}{p{3.5cm} p{2.5cm} p{2.5cm} p{5.0cm}}
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.5cm} p{2.5cm} p{2.5cm} p{5.0cm}}
 \toprule
 \textbf{Method} & \textbf{Parameter} & \textbf{Value} & \textbf{Rationale} \\
 \midrule
@@ -533,7 +530,7 @@ All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Tra
 %%=====================================================================
 \section{Comparative Analysis of Architectural and Functional Capabilities of RobustIDPS.ai versus Existing Intrusion Detection Systems}
 \label{sec:integrated_arch}
-%%=====================================================================
+%%====
 
 The seven methods (M1--M7) are integrated into a unified detection pipeline whose data flow proceeds as follows. Raw network traffic enters through a data ingestion module that performs protocol parsing, flow extraction, and 83-feature computation. The CT-TGNN module constructs the temporal graph and computes continuous-time node embeddings. The TripleE-TGNN module maintains multi-level embeddings for hierarchical environments. The MambaShield module processes sequential event records for drift-adaptive scoring. The Stochastic Transformer and UC-HGP modules provide calibrated uncertainty estimates. All outputs feed into a decision engine that applies the game-theoretic strategy from the M7 Certification framework, producing alerts classified by severity and confidence. The FedLLM-API module enables periodic model synchronisation across organisational boundaries.
 
@@ -553,7 +550,7 @@ The system is designed for deployment as a plug-in for existing IDPS frameworks 
 %%   (Moved from former Chapter~4 \S\S4.1-4.5 as part of the Phase 2.5
 %%   Option-B reorganisation: NIDS instantiation and its benchmark
 %%   validation now sit together in one chapter.)
-%%=====================================================================
+%%====
 
 % Bridging paragraph before the methodology.
 \medskip
@@ -598,11 +595,10 @@ evaluation parameters are pinned in YAML files.
 beyond the dissertation (Suricata EVE-JSON plug-in, PyTorch~Geometric
 wrappers for continuously evolving graphs) are submitted to the
 corresponding upstream projects as pull requests.
-
-%%===================================================================
+%%====
 \section{Conclusions for Chapter 3}
 \label{sec:ch3_summary}
-%%=====================================================================
+%%====
 
 This chapter has systematically developed and software-implemented
 the \textbf{RobustIDPS.ai} system as a NIDS-sector instantiation of
