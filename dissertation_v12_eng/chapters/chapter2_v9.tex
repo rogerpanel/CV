@@ -330,7 +330,6 @@ problem of simultaneous optimisation of these properties
 algorithms M1--M7, each of which is responsible for one or more
 invariants from Table~\ref{tab:six_properties}.
 
-
 %%=====================================================================
 \section{Unified Problem Statement}
 \label{sec:problem_statement}
@@ -338,7 +337,6 @@ invariants from Table~\ref{tab:six_properties}.
 %%=====================================================================
 
 The progressive derivation of the problem statement proceeds in seven stages, each introducing a new mathematical constraint that corresponds to a specific requirement or operating condition. The result is a single multi-objective optimisation problem whose decomposition yields the seven methods developed in this dissertation.
-
 
 \subsection{Stage 1: Graph Classification on Dynamic Topologies}
 
@@ -351,7 +349,6 @@ Consider a temporal graph $\calG(t)=(\calV,\calE(t),\mathbf{X}(t))$ in which nod
 \label{eq:ps_base}
 \end{equation}
 where $\calL$ is the cross-entropy loss and $\calD$ is the data-generating distribution. This formulation assumes that the graph is clean, static during inference, centrally available, and that the data distribution does not change. Each of these assumptions is violated in practice.
-
 
 \subsection{Stage 2: Adversarial Robustness}
 
@@ -366,7 +363,6 @@ Under the adversarial environment (Condition C1), a deliberate opponent perturbs
 \end{equation}
 where $\bdelta$ represents perturbations to node features, edge weights, or topological structure, and $\epsilon_{\mathrm{adv}}$ is the perturbation budget. This is the standard robust optimisation formulation~\cite{Madry2018,Goodfellow2015,Szegedy2014}.
 
-
 \subsection{Stage 3: Continuous-Time Dynamics with Certified Bounds}
 
 To obtain certified robustness rather than empirical adversarial training, the model's internal dynamics must be constrained. Requiring that $f_\theta$ evolves through a neural ODE with Lipschitz-bounded vector field adds the constraint:
@@ -377,7 +373,6 @@ To obtain certified robustness rather than empirical adversarial training, the m
 \label{eq:ps_ode}
 \end{equation}
 which, by Gr\"{o}nwall's inequality, guarantees $\|\bh_1(T)-\bh_2(T)\|\le e^{L_gT}\|\bx_1-\bx_2\|$. This transforms the uncertified adversarial training of Equation~\eqref{eq:ps_robust} into a certified robustness problem. \emph{Sub-problem 1 (Gap~1) is to solve Equations~\eqref{eq:ps_robust}--\eqref{eq:ps_ode} jointly, with multi-scale temporal dynamics and $O(1)$-memory adjoint training. This is addressed by Model M1: CT-TGNN.}
-
 
 \subsection{Stage 4: Distributed Learning with Privacy}
 
@@ -391,7 +386,6 @@ Under distributed dynamics (Condition C3), the graph $\calG$ is partitioned acro
 \end{equation}
 where $\calM$ is the training mechanism and the constraint must hold for all neighbouring datasets $\calD,\calD'$. Additionally, the heterogeneous distributions across participants require alignment through the Wasserstein distance $W_1(\calD_k,\calD_{k'})$, which must itself be computed under the privacy constraint. \emph{Sub-problem 2 (Gap~2) is to solve Equation~\eqref{eq:ps_fed} with Byzantine-resilient aggregation and optimal-transport alignment while consuming the Lipschitz certificates from Sub-problem~1. This is addressed by Model M2: FedLLM-API.}
 
-
 \subsection{Stage 5: Multi-Level Representation and Anti-Forgetting}
 
 Incorporating Requirement R2 (accuracy) on temporal graphs with hierarchical structure requires learning representations at multiple semantic and temporal scales --- component, trace, and node levels --- while preventing catastrophic forgetting as the topology evolves:
@@ -404,7 +398,6 @@ Incorporating Requirement R2 (accuracy) on temporal graphs with hierarchical str
 \end{equation}
 where $F_j$ is the Fisher information penalising departure from previously learned parameters $\theta^*$, and the KL-divergence term enforces cross-level consistency. \emph{Sub-problem 3 (Gap~3) is to solve Equation~\eqref{eq:ps_triple} with structured sparsity and quantisation-aware training. This is addressed by Model M3: TripleE-TGNN.}
 
-
 \subsection{Stage 6: Computational Efficiency}
 
 Requirement R3 (efficiency) demands that inference complexity is at most $\calO(L\log L)$ rather than the $\calO(L^2)$ of transformer-based models. This is achieved by reformulating the sequential processing as a selective state-space model with input-dependent transitions:
@@ -416,7 +409,6 @@ Requirement R3 (efficiency) demands that inference complexity is at most $\calO(
 \end{equation}
 whose convolutional kernel is evaluated through the Fast Fourier Transform. This must be combined with progressive adversarial robustness distillation and PAC-Bayesian generalisation certificates. \emph{Sub-problem 4 (Gap~4) is to solve the efficient inference problem of Equation~\eqref{eq:ps_ssm} with formal robustness guarantees under training-time poisoning. This is addressed by Model M4: MambaShield.}
 
-
 \subsection{Stage 7: Non-Stationary Adaptation with Uncertainty}
 
 Under non-stationarity (Condition C2), the distribution $\calD_t$ changes over time. The model must adapt online while quantifying both epistemic and aleatoric uncertainty and achieving sub-linear regret:
@@ -427,7 +419,6 @@ R(T) = \max_{f^*}\sum_{t=1}^{T}\calL(f_{\theta_t},y_t) - \sum_{t=1}^{T}\calL(f^*
 where the comparison is against the best fixed policy in hindsight. The predictive uncertainty decomposes as $U_{\mathrm{total}} = U_{\mathrm{epi}} + U_{\mathrm{ale}}$, with epistemic uncertainty driving drift detection and aleatoric uncertainty capturing inherent noise.
 
 \emph{Sub-problem 5 (Gap~5) concerns forward compatibility under protocol regime change and is addressed by a domain-specific foundation model (CyberSecLLM). Sub-problem 6 (Gap~6) is to solve the online adaptation problem of Equation~\eqref{eq:ps_regret} with integrated epistemic--aleatoric decomposition and Bayesian posterior updates. This is addressed by Methods M5: Stochastic Transformer and M6: UC-HGP.}
-
 
 \subsection{The Complete Unified Problem}
 
@@ -487,8 +478,6 @@ Combining all stages yields the unified multi-objective optimisation problem of 
 \emph{Sub-problem 7 (Gap~7) is to couple all methods through the consistency regularisation term $\sum_{i<j}\calL_{ij}$ in Equation~\eqref{eq:ps_unified} and prove convergence of the alternating optimisation. This is addressed by Model M7: Certification and the unified framework developed in Section~\ref{sec:unified}.}
 
 The remainder of this chapter develops each method in the order of the sub-problem chain: M1 (Section~\ref{sec:ct_tgnn}), M2 (Section~\ref{sec:fedllm}), M3 (Section~\ref{sec:triple_e}), M4 (Section~\ref{sec:mamba}), M5/M6 (Section~\ref{sec:stochastic}), forward-compatible detection (Section~\ref{sec:pq_idps}), and M7 with the unified framework (Section~\ref{sec:game}).
-
-
 
 %%=====================================================================
 \section{Model M1: CT-TGNN --- Continuous-Time Temporal Graph Neural Dynamics}
@@ -635,7 +624,6 @@ Compute Lipschitz certificate $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ for each t
 \Return $\theta^*,\;\{\rho_i\}$
 \end{algorithm}
 
-
 %%=====================================================================
 
 \begin{figure}[!htbp]
@@ -769,7 +757,6 @@ Initialise global model $\bw_0$; compute noise scale $\sigma = C\sqrt{2\ln(1.25/
 }
 \Return $\bw_T$
 \end{algorithm}
-
 
 %%=====================================================================
 
@@ -926,8 +913,6 @@ Initialise all encoder and attention parameters\;
 \Return trained encoders and attention parameters
 \end{algorithm}
 
-
-
 %%=====================================================================
 
 \begin{figure}[!htbp]
@@ -1033,7 +1018,6 @@ Compute teacher weights $w_m \propto \mathrm{ValAcc}(f_{\theta_m})$\;
 Evaluate PAC-Bayes bound: $R \le \hat{R}_n + \sqrt{(\mathrm{KL}(Q\|P)+\log(2\sqrt{n}/\delta))/(2n)}$\;
 \Return $f_\phi$ and generalisation certificate
 \end{algorithm}
-
 
 %%=====================================================================
 
@@ -1192,7 +1176,6 @@ Initialise perturbation network parameters $\psi$\;
 \Return $\phi^*,\psi^*$ together with $U_{\mathrm{epi}},U_{\mathrm{ale}}$ for each test input
 \end{algorithm}
 
-
 %%=====================================================================
 
 \begin{figure}[!htbp]
@@ -1263,7 +1246,6 @@ The robustness guarantee of the detection framework under the new protocol regim
 \textbf{Certification:} Verify LWE reduction (Appendix~A) and report robustness parameter $\lambda_{\mathrm{sec}}$\;
 \Return classification and robustness certificate
 \end{algorithm}
-
 
 %%=====================================================================
 
@@ -1404,7 +1386,6 @@ Compute empirical Nash equilibrium from play frequencies $\{(c_t,a_t)\}_{t=1}^T$
 \Return $\pi_d^*$ and verified regret $R(T)\le 2\sqrt{T\log|\calC|}$
 \end{algorithm}
 
-
 %%=====================================================================
 \subsection{Unified Certification Through Coupled Optimisation}
 \label{sec:unified}
@@ -1464,7 +1445,6 @@ Set learning rates $\eta_i = 1/(L_i + \sum_j L_{ij})$ for each component\;
 \Return $\theta^* = \theta^{(T)}$
 \end{algorithm}
 
-
 %%=====================================================================
 
 \begin{figure}[!htbp]
@@ -1519,7 +1499,6 @@ benchmark datasets (84.2 million labelled samples across 84 attack
 categories) is presented in Chapter~\ref{ch:experiments}. The
 extended mathematical definitions of each metric are introduced in
 the text of Chapter~\ref{ch:experiments} at first use.
-
 
 %%=====================================================================
 \section{Conclusions for Chapter 2}

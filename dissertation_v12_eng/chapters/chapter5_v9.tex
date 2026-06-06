@@ -36,7 +36,6 @@ the participating organisations
 least six screenshots of the system's user interface are included
 to illustrate its operational capabilities.
 
-
 %%=====================================================================
 \section{Problem Statement: Network Traffic Protection by the Hybrid~IDPS System}
 \label{sec:platform_problem_statement}
@@ -106,15 +105,12 @@ XDP fast path (\S\ref{sec:rust_edge_agent}); and
 realised through uncertainty-guided alert triage in the SOC
 copilot (\S\ref{sec:soc_intelligence}).
 
-
 %%=====================================================================
 %%   PART II: DESCRIPTION OF THE SYSTEM / SOFTWARE IMPLEMENTATION
 %%   (systematically covered in \S\S5.2--5.12 below: use cases,
 %%    functionality, documentation, frontend/backend, architecture,
 %%    models, deployment)
 %%=====================================================================
-
-
 
 %%=====================================================================
 \section{Platform Overview and Target Users}
@@ -134,7 +130,6 @@ The platform is designed for five categories of target users:
 \noindent\textbf{AI Developers.} Researchers and engineers building graph-based detection models. The platform provides 17 pre-trained models with configurable hyperparameters, ablation studio, and reproducible benchmarking datasets.
 
 \noindent\textbf{Academic Researchers.} PhD students, postdoctoral fellows, and faculty conducting research in graph neural network robustness. The platform serves as a reproducible research instrument with DOI-archived code and datasets.
-
 
 %%=====================================================================
 \section{System Architecture}
@@ -255,7 +250,6 @@ student model to running agents without service restart.}
 \label{fig:two_plane_arch}
 \end{figure}
 
-
 %%=====================================================================
 \section{Functional Groups and Page Inventory}
 \label{sec:functional_groups}
@@ -287,7 +281,6 @@ System                 & 5 & Profile/RobustID, Admin, Architecture, API Docs, Ab
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 %%=====================================================================
 \section{AI Command Centre}
@@ -325,7 +318,6 @@ WebSocket-based real-time streaming displays classification decisions as graph e
 \subsection{Alert Causality}
 
 The Alert Causality page constructs temporal dependency graphs between related alerts, enabling analysts to trace multi-stage attack campaigns. Correlation is based on shared source/destination IPs, temporal proximity ($\pm$30\,s), and MITRE ATT\&CK technique linkage.
-
 
 %%=====================================================================
 \section{Detection Models}
@@ -400,7 +392,6 @@ formalised in the author's publication~\cite{Anaedevha2026sdetgnn}.
 \label{fig:screenshot_models}
 \end{figure}
 
-
 %%=====================================================================
 \section{SOC Intelligence Suite}
 \label{sec:soc_intelligence}
@@ -426,7 +417,6 @@ Translates detected attacks into deployable Suricata/Snort rules using 21 templa
 \caption{SOC Intelligence Suite showing (left) the Auto-Investigation panel with LLM reasoning output and MITRE ATT\&CK~\cite{Hernandez2015}, (centre) the Threat Hunt interface with natural language query, and (right) the generated Suricata rule with SID, priority, and CVE references.}
 \label{fig:screenshot_soc}
 \end{figure}
-
 
 %%=====================================================================
 \section{LLM Security Testing}
@@ -464,14 +454,12 @@ The five modules cover: Prompt Injection Playground (8 injection categories test
 \label{fig:screenshot_llm}
 \end{figure}
 
-
 %%=====================================================================
 \section{MLSecOps Standards Compliance}
 \label{sec:mlsecops}
 %%=====================================================================
 
 The platform integrates three major security and AI governance frameworks: MITRE ATT\&CK~\cite{Hernandez2015} (30 detection classes mapped to kill chain techniques with interactive visualisation), OWASP LLM Top~10~\cite{Xiong2020} Scorecard (2025 edition compliance with residual risk ratings), and NIST AI Risk Management Framework Dashboard (Govern, Map, Measure, Manage functions with per-subcategory evidence). An ML-assisted Alert Triage Classifier assigns severity tiers (Critical/High/Medium/Low/Informational) based on attack class, confidence, asset criticality, and historical false-positive rates.
-
 
 %%=====================================================================
 \section{Multi-Agent PQC-IDS Module}
@@ -489,7 +477,6 @@ The Multi-Agent Post-Quantum Cryptography IDS module~\cite{Anaedevha2026mapqc,NI
 \noindent\textbf{Coordinator} --- fuses agent outputs via learned attention weights and produces final classification with per-agent contribution scores.
 
 The complete model comprises 70,598 trainable parameters. PQC traffic datasets are sourced from Kaggle (DOI:~\url{10.34740/kaggle/dsv/15424420}) and published separately at \url{https://github.com/rogerpanel/Multi-Agent-PQC-models}.
-
 
 %%=====================================================================
 \section{Rust Edge-Agent Migration and the XDP Fast Path}
@@ -555,7 +542,6 @@ Cold start to ready, s                & 9.4     & 0.7     & $\times$13\\
 \bottomrule
 \end{tabular}
 \end{table}
-
 
 %%=====================================================================
 \section{Operational Deployment Infrastructure}
@@ -670,7 +656,6 @@ Footprint                     & 4 binaries & $\sim$120\,MiB image & 270 LOC scri
 \end{tabular}
 \end{table}
 
-
 %%=====================================================================
 \section{Integration of the System with Existing Information-Security Tooling}
 \label{sec:deployment}
@@ -717,7 +702,6 @@ with open("/etc/suricata/rules/robustidps.rules", "w") as f:
     f.write(rules)
 requests.post("https://suricata.local/api/reload")
 \end{lstlisting}
-
 
 %%=====================================================================
 %%   PART III: APPROBATION OF THE SYSTEM
@@ -775,7 +759,6 @@ Open-source                 & \checkmark & \checkmark & \checkmark & ---        
 \end{tabular}
 \end{table}
 
-
 %%=====================================================================
 \section{Analysis of Operational Characteristics of the System}
 \label{sec:platform_validation}
@@ -811,7 +794,6 @@ Three purpose-built PCAP datasets provide controlled ground truth for regression
 \noindent\textbf{Dataset C:} 50,000 flows with injected concept drift at three temporal boundaries for continual learning validation.
 
 Post-quantum datasets are sourced from Kaggle (DOI:~\url{10.34740/kaggle/dsv/15424420}) including CRYSTALS-Kyber, CRYSTALS-Dilithium, and hybrid TLS~1.3 handshake captures.
-
 
 %%=====================================================================
 \section{Economic and Organisational Effectiveness of Implementation}
@@ -870,7 +852,6 @@ The complete platform source code, all model implementations, the LLM defence pi
 \caption{About page showing platform version, DOI citation, contributor information, technology stack, and links to GitHub repository, Zenodo archive, and Kaggle datasets.}
 \label{fig:screenshot_about}
 \end{figure}
-
 
 %%=====================================================================
 \section{Conclusions for Chapter 5}
