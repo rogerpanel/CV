@@ -23,7 +23,35 @@ and vulnerabilities of models in Hybrid IDPS
 (\S\ref{sec:idps_problems}). Graph neural networks are treated in
 this work as one branch of the family of models applicable to
 Hybrid IDPS, alongside statistical, classical-ML, hybrid, and
-game-theoretic approaches.
+game-theoretic approaches. Following the domain systematisation,
+Sections~\ref{sec:gnn_vulnerability}--\ref{sec:certification}
+proceed in technical depth through the foundations underlying the
+development of Models~M1--M7 according to the progressive scope
+of the dissertation: from continuous-time dynamics on evolving
+graphs, through distributed federated learning with privacy, to
+computational efficiency for large-scale graphs, and finally to
+non-stationary adaptation with uncertainty quantification. Each
+section addresses one or more intersections of the three
+operating conditions (adversarial environment, distributed
+dynamics, non-stationarity) and the four cross-cutting
+requirements (robustness, accuracy, efficiency, privacy),
+building toward a systematic enumeration of seven research gaps
+that motivate the models and algorithms developed in
+Chapter~\ref{ch:methods}. The classification of vulnerability
+classes and adversary models, the analysis of drift regimes
+between training and operational distributions, and the role of
+formal certification provide the conceptual scaffolding linking
+the literature survey to the methods chapter.
+
+A high-level integrated diagram of the Hybrid~IDPS system,
+systematically covering the data sources, the normalisation
+pipeline, the three-channel detection core (signature-based,
+anomaly-based, protocol-analysis-based) with the AI-native
+intelligence layer, the unified decision-and-response manager,
+the protected application sectors with their characteristic
+vulnerability classes, and the operational outcomes and benefits
+of system deployment, is shown in
+Fig.~\ref{fig:hybrid_idps_executive}.
 
 \begin{figure}[htbp]
 \centering
@@ -232,6 +260,20 @@ Seven practically significant application sectors of Hybrid IDPS are systematise
 \end{table}
 
 Full system-level realisations for the two showcase sectors~--- (a)~network traffic protection and~(b)~UAV protection~--- are presented in Chapters~\ref{ch:platform} and~\ref{ch:uav}; sectors~(c)--(g) are realised on the basis of Models M1--M7 developed in Chapter~\ref{ch:methods}.
+
+\paragraph{(a)~Network traffic protection (NIDS).} Network-traffic protection is historically the first and most extensively studied application area of IDPS. The object of observation is a sequence of network packets and flows aggregated into multidimensional feature vectors (46- to 83-dimensional vectors in the CIC-IoT-2023, CSE-CICIDS-2018, and UNSW-NB15 benchmarks). The attack surface includes port scanning, service-vulnerability exploitation, denial of service (DoS/DDoS), lateral movement, command-and-control (C2) channels, data exfiltration, and post-quantum protocol regime transitions. A Hybrid~IDPS integrates into the protective stack as a complement to classical signature engines (Snort, Suricata) and consumes aggregated flow features, event graphs of node interactions, and SIEM alert streams. The full system-level description of this sector is given in Chapter~\ref{ch:platform}.
+
+\paragraph{(b)~UAV protection.} UAV protection is a showcase extension of Hybrid~IDPS beyond the traditional network perimeter. The object of observation is a heterogeneous stream of onboard-sensor telemetry (INS/GNSS, LiDAR, optical flow, engine and payload state) combined with the command-and-telemetry channel onboard--droneport--cloud. The attack surface includes GNSS spoofing and jamming, electronic warfare (EW), adversarial attacks on the onboard neural-network modules for visual perception, poisoning of autopilot policies, hijacking of the command channel, and also kinetic and biological threats (mid-air collisions, raptor strikes). A Hybrid~IDPS adapts to this environment by replacing the network-traffic graph representation with a graph representation of the UAV operational environment while keeping the mathematical apparatus of M1--M7 unchanged. The full system-level description is given in Chapter~\ref{ch:uav}.
+
+\paragraph{(c)~Fintech sector.} In the fintech sector, Hybrid~IDPS operates under \emph{severe class imbalance} (the share of fraudulent transactions $<\!1\%$) and \emph{regulatory restrictions} on the use of personal data, which simultaneously demand Byzantine resilience and certified resilience to adversarial re-arrangements of the transactional subgraph. The MonTi attack family~\cite{MonTi2025} illustrates the urgency: state-of-the-art fraud detectors degrade from 25.7\% to 68.6\% classification error under targeted graph manipulations.
+
+\paragraph{(d)~Medical sector.} In the medical sector a Hybrid~IDPS must provide strict $(\varepsilon,\delta)$-differentially-private training and calibrated epistemic-uncertainty estimation to separate untrustworthy from trustworthy predictions. The attack surface includes edge-sensitivity attacks on graph-isomorphism networks (with AUC drops up to 25\% on MoleculeNet benchmarks and toxic compounds reclassified as safe~\cite{EdgeSensitivity2025}), training-data confidentiality attacks (model inversion, membership inference), and poisoning of clinical-trial graphs.
+
+\paragraph{(e)~IIoT/SCADA sector.} In the IIoT sector, a Hybrid~IDPS is realised through the models developed in Chapter~\ref{ch:methods}, with explicit accommodations for the specialised protocols (\texttt{Modbus}, \texttt{DNP3}, \texttt{IEC~61850}, \texttt{OPC-UA}, \texttt{S7}) and the deterministic tens-of-millisecond latency budgets characteristic of industrial control loops. Federated detector poisoning is documented to collapse accuracy from 94.2\% to 30.0\% under non-i.i.d.\ conditions~\cite{FerragPoisoning2023}, reinforcing the need for Method~M2's Byzantine-resilient aggregation in this sector.
+
+\paragraph{(f)~Autonomous-vehicle sector.} Hybrid~IDPS in this sector uses continuous-time representation, efficient inference, and calibrated epistemic-uncertainty estimation as a trigger for transition to a safe-mode~--- this combination of requirements is formalised as system properties P1, P3, and P5 in Chapter~\ref{ch:methods}. The sector differs from the UAV sector in that the actors are situated in a terrestrial environment with a different legal regime and a different information-exchange topology.
+
+\paragraph{(g)~Cloud/SaaS sector.} The PROVNINJA attack~\cite{PROVNINJA2023}, which reduces provenance-based IDS detection to 59\%, documents the necessity of protecting this sector. A Hybrid~IDPS in the cloud sector requires multi-level representations at service/trace/node layers and game-theoretic certification of response-strategy selection~--- these requirements are formalised as system properties P6 and P1 in Chapter~\ref{ch:methods}.
 
 %% Anchor labels preserved for cross-references from other chapters:
 \phantomsection\label{subsubsec:sector_nids}%
@@ -642,7 +684,7 @@ Unlike conventional neural networks that receive a single data tensor, a graph n
 
 \subsection{Documented Failures in Safety-Critical Domains}
 
-The vulnerability of graph neural networks is not a theoretical concern --- it has been documented in peer-reviewed studies across four safety-critical domains. In healthcare, edge-sensitivity gradient attacks on Graph Isomorphism Networks caused approximately 25\% AUC degradation on MoleculeNet benchmarks (Tox21, ClinTox, SIDER), with toxic compounds misclassified as safe~\cite{EdgeSensitivity2025}.
+The vulnerability of graph neural networks is not a theoretical concern --- it has been documented in peer-reviewed studies across four safety-critical domains. In healthcare, edge-sensitivity gradient attacks on Graph Isomorphism Networks caused approximately 25\% AUC degradation on MoleculeNet benchmarks (Tox21, ClinTox, SIDER), with toxic compounds misclassified as safe~\cite{EdgeSensitivity2025}. In finance, the MonTi attack~\cite{MonTi2025} on transaction-graph fraud detectors (CARE-GNN, PC-GNN, GAGA) drove classification error from 25.7\% to 68.6\%, demonstrating that even production-grade graph neural networks can be defeated by targeted node-feature and edge-rewiring attacks. In cybersecurity, the FerragPoisoning2023 attack~\cite{FerragPoisoning2023} on federated intrusion-detection systems caused accuracy collapse from 94.2\% to 30.0\% under non-i.i.d.\ conditions, and the PROVNINJA attack~\cite{PROVNINJA2023} reduced provenance-based IDS detection rates to 59\%. These four documented failures share a common thread: the dual-input vulnerability of graph neural networks is exploited by adversaries who jointly perturb features and structure, an attack surface that single-input neural-network robustness techniques do not address. The chapter that follows develops a unified mathematical apparatus that explicitly couples feature-space and structure-space robustness through continuous-time dynamics, certified Lipschitz bounds, and game-theoretic strategy selection.
 
 %%=====================================================================\section{Continuous-Time Dynamics on Evolving Graphs}
 \label{sec:ct_dynamics}%%=====================================================================
@@ -687,7 +729,7 @@ McMahan et al.~\cite{McMahan2017} introduced Federated Averaging (FedAvg), enabl
 
 \subsection{Byzantine-Resilient Aggregation}
 
-Standard federated averaging is vulnerable to Byzantine participants who submit corrupted gradient updates. Blanchard et al.~\cite{Blanchard2017} proposed Krum, which selects the update closest to its neighbours, while Yin et al.~\cite{Yin2018} showed that coordinate-wise trimmed means achieve minimax-optimal rates under Byzantine corruption.
+Standard federated averaging is vulnerable to Byzantine participants who submit corrupted gradient updates. Blanchard et al.~\cite{Blanchard2017} proposed Krum, which selects the update closest to its neighbours, while Yin et al.~\cite{Yin2018} showed that coordinate-wise trimmed means achieve minimax-optimal rates under Byzantine corruption. In the Hybrid~IDPS context the Byzantine fraction is rarely known a priori, and the joint distribution over participants is shaped by both legitimate heterogeneity (different network segments, different traffic seasonality) and active interference, calling for aggregation rules that combine robust statistics with privacy-preserving noise injection. Furthermore, the computational-efficiency challenge for large-scale graphs (millions of nodes, billions of edges) is interlocked with the federated and Byzantine challenges: a single aggregator must process gradient updates of size proportional to the model dimension, and any Byzantine-robust median or trimmed-mean estimator must be implementable at near-linear amortised cost in the model size. Recent work on bucket-aggregation and sketch-based compression points to a path forward but does not yet provide the formal coupling of efficiency with provable robustness that the Hybrid~IDPS use case requires.
 
 \subsection{Differential Privacy and Optimal Transport}
 
@@ -733,7 +775,7 @@ Temporal graphs in which nodes and edges carry different semantic types and evol
 
 \subsection{Distribution Drift in Deployed Models}
 
-Real graph data drifts after deployment: topologies evolve, attack patterns change, new protocols emerge, and static models silently lose accuracy without warning. This is unacceptable in safety-critical systems where a stale model is a dangerous model.
+Real graph data drifts after deployment: topologies evolve, attack patterns change, new protocols emerge, and static models silently lose accuracy without warning. This is unacceptable in safety-critical systems where a stale model is a dangerous model. The literature distinguishes four characteristic drift regimes that are observed in Hybrid~IDPS deployments and that motivate qualitatively different adaptation strategies: \emph{(i)~covariate shift}~--- a change in the marginal distribution $p(x)$ of inputs while the conditional $p(y|x)$ is approximately preserved (typical for seasonal traffic fluctuations and legitimate-software updates); \emph{(ii)~concept drift}~--- a change in the conditional $p(y|x)$ caused by adversaries developing new attack variants and evasion techniques; \emph{(iii)~prior shift}~--- a change in class prevalence $p(y)$ (e.g., a sudden rise in the share of DDoS during organised campaigns); and \emph{(iv)~structural drift}~--- a change in the graph topology itself (mergers of subnets, expansion to new IoT segments). A robust Hybrid~IDPS must detect the drift regime and select an adequate response: replay of historical examples for covariate shift, elastic weight consolidation for concept drift, prior recalibration for prior shift, and incremental retraining of graph encoders for structural drift.
 
 \subsection{Bayesian Approaches to Uncertainty}
 
@@ -760,7 +802,7 @@ Tambe~\cite{Tambe2011} and Sinha et al.~\cite{Sinha2018} formalised security res
 
 \subsection{Existing Certification Methods}
 
-Randomised smoothing~\cite{Cohen2019,Salman2019} provides probabilistic robustness certificates for continuous input spaces. Interval bound propagation~\cite{Gowal2019,Wong2018} provides deterministic bounds by propagating interval-valued inputs through the network.
+Randomised smoothing~\cite{Cohen2019,Salman2019} provides probabilistic robustness certificates for continuous input spaces. Interval bound propagation~\cite{Gowal2019,Wong2018} provides deterministic bounds by propagating interval-valued inputs through the network. Lipschitz constants of feedforward and convolutional networks have been studied through spectral-norm bounds and polynomial-time approximations; the extension to graph neural networks with neighbourhood aggregation is non-trivial because the Lipschitz constant of an aggregation step depends on the maximum node degree of the graph, which is itself adversarially controllable in IDPS settings. PAC-Bayesian generalisation bounds~\cite{McAllester1999,Dziugaite2017} provide distribution-free guarantees on the test error of randomised classifiers and have been adapted to graph neural networks through structure-aware priors. None of the existing certification techniques addresses the full attack surface of a Hybrid~IDPS, where the adversary can simultaneously perturb features, edges, the time stamps of events, and the federated participants who contribute training data. The certification gap is therefore not a gap in any single technique but in their \emph{composition}, which is the object of Method~M7.
 
 \noindent\textbf{Gap~7:} \emph{Oversimplified game-theoretic threat models.} No existing unified certification framework combines game-theoretic strategy selection (Stackelberg equilibria with no-regret online learning), interval bound propagation, Lipschitz estimation on graph operators, and randomised smoothing adapted to discrete graph structures within a single methodology that couples all component methods through consistency regularisation.
 
@@ -893,6 +935,14 @@ Non-stationarity & Distribution shift, online learning
 \end{tabular}\end{table}
 
 Together, the seven gaps span all three operating conditions (C1: adversarial environment, C2: non-stationarity, C3: distributed dynamics) and all four requirements (R1: robustness, R2: accuracy, R3: efficiency, R4: privacy), confirming that the twelve intersections of the $3\times4$ condition--requirement matrix are covered by the proposed methods. Each gap has been demonstrated to be unresolved by existing work through the analysis presented in this chapter.
+
+The seven gaps are not independent: they form a directed acyclic graph of dependencies in which solving one gap supplies a primitive needed to solve the next. Gap~1 (continuous-time dynamics with Lipschitz certification) supplies the certified-radius primitive consumed by Gap~2 (federated learning with privacy) when the federated aggregation has to respect a global Lipschitz bound. Gap~3 (multi-level embeddings) consumes the federated primitives of Gap~2 when the elastic-weight-consolidation regulariser is itself trained across federated participants. Gap~4 (efficient state-space inference) supplies the near-linear-time primitive that makes Gaps~2--3 deployable at production scale. Gap~5 (forward-compatible foundation model) supplies the cross-protocol generalisation that absorbs the post-quantum protocol regime changes orthogonal to Gaps~1--4. Gaps~6--7 (uncertainty-calibrated adaptation and unified certification) sit at the apex of the dependency graph, consuming the primitives of all preceding gaps to produce a single aggregate certificate over the seven-method ensemble. The directed-acyclic structure of the gap dependencies motivates the chapter ordering of the dissertation: each chapter resolves a layer of dependencies before the next chapter builds on it.
+
+The gap-dependency graph also clarifies why prior work has not produced a unified solution. Existing work tends to optimise individual layers in isolation: continuous-time graph dynamics has been studied without consideration of federated privacy; federated learning has been studied without certified Lipschitz dynamics; state-space models have been studied without uncertainty quantification; uncertainty-calibration has been studied without game-theoretic equilibria. The dissertation's central architectural commitment is to refuse the isolation: every method is designed with the explicit pre-condition that the certificates of the methods on which it depends are simultaneously preserved. The unified certification framework of Method~M7 is the formal device that enforces this commitment through consistency regularisation across the seven methods. The aggregate result is a defence framework whose certificates compose into a single aggregate certificate, rather than a collection of incompatible certificates each defending one layer in isolation.
+
+The seven Gaps~1--7 enumerated above are also mapped onto the seven research tasks listed in the Introduction's Research Objective. The bijective correspondence between gaps and tasks ensures that every research task carries with it a published gap as evidence of necessity and a method as evidence of resolution. This is the formal structure that makes the dissertation a thesis rather than a series of independent papers: the gaps motivate the methods, the methods address the gaps, and the unified certification framework binds the methods into a single coherent system.
+
+The condition--requirement coverage matrix is the formal evidence that the seven Methods M1--M7 together address the full open-problem space of the Hybrid~IDPS system: every cell of the $3\times4$ matrix is non-empty, and the methods that occupy each cell carry quantified certificates with explicit ablation studies in Chapter~\ref{ch:experiments}. This completeness is what allows the dissertation to claim a \emph{unified} defence framework rather than a collection of independent contributions.
 
 \medskip
 \noindent\textit{Chapter summary.} This chapter has established the theoretical foundations and surveyed the existing literature on graph neural network robustness, continuous-time dynamics, distributed learning, computational efficiency, non-stationary adaptation, and unified certification. Seven specific research gaps have been identified, each supported by evidence from the literature that no existing method resolves the gap. The next chapter presents the mathematical methods, algorithms, and architectural frameworks developed to address these gaps, following the same progressive order: continuous-time certified dynamics (Gap~1), distributed federated learning (Gap~2), multi-level embeddings (Gap~3), efficient state-space inference (Gap~4), forward-compatible foundation models (Gap~5), uncertainty-calibrated adaptation (Gap~6), and unified game-theoretic certification (Gap~7).
