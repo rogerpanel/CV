@@ -329,8 +329,10 @@ credentials, supply-chain attacks against software, and container-
 image substitution. The PROVNINJA attack~\cite{PROVNINJA2023}, which
 reduces detection in provenance-based GNN systems to 59\%,
 documents the necessity of protecting this sector.
+\fi
 
-%%=====================================================================\section{Models and Algorithms Used in Hybrid IDPS: A Taxonomy}
+%%=====================================================================
+\section{Models and Algorithms Used in Hybrid IDPS: A Taxonomy}
 \label{sec:idps_models_taxonomy}%%=====================================================================
 
 The collection of models and algorithms used in Hybrid IDPS is
@@ -399,14 +401,15 @@ interpretable decision boundaries, but they cannot automatically
 extract abstract representations from raw sensor streams and do
 not scale to million-node graphs.
 
-%%---------------------------------------------------------------------\subsection{Modern Commercial AI-Augmented IDPS Products}
+%%---------------------------------------------------------------------
+\subsection{Modern Commercial AI-Augmented IDPS Products}
 \label{subsec:commercial_ai_idps}
 
 %%---------------------------------------------------------------------
 
 Since 2023--2025, leading information-security vendors have introduced a class of \emph{AI-augmented} commercial detection and response platforms layered above classical signature-based and behavioural engines. A systematic review of seven representative products in Table~\ref{tab:ai_idps_products} positions the RobustIDPS.ai framework developed in this work against the prevailing industrial state of the art.
 
-<<<<<<< HEAD
+\iffalse
 \begin{enumerate}[leftmargin=2em, itemsep=0pt]
 
 \item \textbf{CrowdStrike Falcon with the Charlotte~AI module}~---
@@ -456,7 +459,7 @@ of adversarial resilience nor implement federated learning across
 organisations.
 
 \end{enumerate}
-=======
+\fi
 \begin{table}[htbp]
 \centering
 \caption{AI-augmented commercial IDPS products (2023--2025): approach and key limitations.}
@@ -483,7 +486,6 @@ Cortex~XSIAM & Palo~Alto Networks & AI-augmented SIEM/SOAR: extended analytics a
 \bottomrule
 \end{tabular}
 \end{table}
->>>>>>> 28891ca3fdb2051a91911334e6adc5a547c387c5
 
 \noindent A systematic analysis of the products listed above
 shows that \emph{all} of them are pipeline overlays of LLM/EDR
