@@ -42,6 +42,7 @@ robustness across six attack families, cross-domain transfer to
 speech and healthcare, post-quantum compatibility) is presented
 separately in Chapter~\ref{ch:experiments}.
 
+
 %%=====================================================================
 \section{Problem Statement of Constructing an Adversarially Robust Hybrid IDPS for Network Traffic Analysis}
 \label{sec:nidps_context}
@@ -52,6 +53,7 @@ separately in Chapter~\ref{ch:experiments}.
 A hybrid intrusion detection and prevention system (HIDPS)~\cite{Buczak2016,Ahmad2021,Aldweesh2020,Ferrag2020,Paxson1999} combines two complementary detection paradigms. Signature-based detection matches incoming traffic against a database of known patterns (rules) and achieves high precision on previously catalogued threats but cannot detect novel attacks. Anomaly-based detection learns a statistical model of normal behaviour and flags deviations, enabling detection of zero-day exploits and evolving attack patterns at the cost of potentially higher false-positive rates. The dissertation's methods operate within the anomaly-based branch, augmented by large language model reasoning for zero-shot classification of novel categories.
 
 A Network IDPS (NIDPS) monitors traffic at the network layer, analysing flows and packets between hosts rather than events within a single endpoint. The three operating conditions of the architectural framework (Figure~\ref{fig:dissertation_architecture}) are all present in this domain: adversarial manipulation by deliberate opponents who craft traffic to evade detection, non-stationarity through evolving traffic patterns and protocol changes, and distribution of the monitoring infrastructure across organisational boundaries.
+
 
 \subsection{Key Terminologies}
 
@@ -72,6 +74,7 @@ The following terms are used throughout this chapter and the experimental valida
 \noindent\textbf{MITRE ATT\&CK.} A comprehensive knowledge base of adversary tactics, techniques, and procedures (TTPs) used to classify and contextualise detected threats.
 
 \noindent\textbf{SOC (Security Operations Centre).} The organisational unit responsible for monitoring, analysing, and responding to security events, staffed by analysts at Tiers~1--3.
+
 
 %%=====================================================================
 \section{Architecture of the RobustIDPS.ai Software System}
@@ -101,6 +104,7 @@ For the TripleE-TGNN (Model M3) and the SOC Intelligence integration, the networ
 \noindent\textbf{Host graph $\calG_n(t)$.} Nodes represent infrastructure hosts; edges represent observed network flows. This is the primary graph for all methods.
 
 \noindent Bipartite coupling graphs $\calB_{sr}$, $\calB_{sn}$, $\calB_{rn}$ link entities across levels, enabling the cross-level attention mechanism of Equation~\eqref{eq:triple_cross_attn}.
+
 
 %%=====================================================================
 \section{Functionality of the RobustIDPS.ai System}
@@ -138,6 +142,7 @@ The platform classifies network traffic into 34 distinct classes: 1 benign class
 \end{table}
 
 The taxonomy is extensible: new attack classes can be registered through the platform administration interface without retraining the full model ensemble, leveraging the CyberSecLLM zero-shot classification capability and the TripleE-TGNN elastic weight consolidation for incremental learning.
+
 
 %%=====================================================================
 \section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
@@ -177,12 +182,14 @@ Feature extraction is performed by a shared \texttt{FeatureExtractor} module usi
 \end{equation}
 where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and standard deviation of feature $j$ computed on the training set, and $\varepsilon=10^{-8}$ prevents division by zero. Datasets with fewer than 83 native features are zero-padded to the standard dimension; those with more are projected via PCA retaining 95\% explained variance.
 
+
 %%=====================================================================
 \section{Domain-Specific Realisation of Methods M1--M7}
 \label{sec:method_instantiation}
 %%=====================================================================
 
 This section describes how each of the seven methods from Chapter~\ref{ch:methods} is instantiated with cybersecurity-specific parameters, demonstrating the mapping from abstract mathematical objects to concrete network-security entities.
+
 
 \subsection{M1: CT-TGNN Applied to Network-Traffic Graph Dynamics}
 
@@ -197,6 +204,7 @@ The three parallel ODE branches of Equation~\eqref{eq:ct_tgnn_multi} are assigne
 \label{fig:ct_tgnn_arch}
 \end{figure}
 
+
 \subsection{M2: FedLLM-API for Collaborative Threat Intelligence}
 
 FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat intelligence. Each federated client corresponds to a security operations centre possessing local traffic datasets. Byzantine-robust aggregation (Algorithm~\ref{alg:fedllm}) protects against compromised participants submitting poisoned gradient updates. Differential privacy through local gradient clipping at threshold $C=1.0$ and Gaussian noise with scale $\sigma=0.8$ achieves an $(\epsilon{=}0.85,\delta{=}10^{-5})$ guarantee over 100 communication rounds. Sinkhorn OT alignment with regularisation $\lambda=0.1$ corrects for distributional heterogeneity across centres. The LLM ensemble weight is $\lambda_{\mathrm{LLM}}=0.3$.
@@ -207,6 +215,7 @@ FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat 
 \caption{FedLLM-API architecture for collaborative threat intelligence across organisational boundaries.}
 \label{fig:fedllm_arch}
 \end{figure}
+
 
 \subsection{M3: TripleE-TGNN for Multi-Level Security Monitoring}
 
@@ -219,6 +228,7 @@ The service graph $\calG_s(t)$ has nodes representing microservices and edges re
 \label{fig:triplee_arch}
 \end{figure}
 
+
 \subsection{M4: MambaShield for Drift-Adaptive Detection}
 
 MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detection. Sequential flow records are processed by the selective state-space model whose input-dependent transitions adapt to the current traffic regime. The state dimension is $d_s=64$, discretisation step $\Delta=0.01$, and FFT convolution kernel length $L=1024$. The teacher ensemble comprises $M=5$ models trained on disjoint data subsets. The curriculum schedule starts at $\rho_0=0.05$ poisoning fraction and increases to $\rho_{\max}=0.3$. PAC-Bayesian prior variance $\sigma_P^2=1.0$.
@@ -229,6 +239,7 @@ MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detecti
 \caption{MambaShield architecture for drift-adaptive intrusion detection with progressive robustness distillation.}
 \label{fig:mamba_arch}
 \end{figure}
+
 
 \subsection{M5/M6: Uncertainty-Calibrated Threat Assessment}
 
@@ -241,6 +252,7 @@ The stochastic transformer uses $M=50$ Monte Carlo forward passes at inference t
 \label{fig:stochastic_arch}
 \end{figure}
 
+
 \subsection{M7: Game-Theoretic Framework for Adaptive Adversaries}
 
 The defender's action space $\calC$ comprises detection configurations: monitoring coverage, alert thresholds, and response policies. The adversary's action space $\calA$ encompasses target selection, perturbation type, and evasion strategy. The multiplicative weights learning rate $\eta=\sqrt{\log|\calC|/T}$. Uncertainty penalty $\kappa=0.5$; expert-referral threshold $\tau=0.3$.
@@ -252,6 +264,7 @@ The defender's action space $\calC$ comprises detection configurations: monitori
 \label{fig:game_arch}
 \end{figure}
 
+
 \subsection{Forward-Compatible Detection for Post-Quantum Protocols}
 
 Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process timing features for lattice-based protocols (Kyber/Dilithium~\cite{Avanzi2022}), structural features for code-based protocols (McEliece/Niederreiter), and hash-based features (SPHINCS+). Cross-attention fusion combines the three representations. Adversarial training budget $\epsilon=0.03$ with PGD-40 perturbations.
@@ -262,6 +275,7 @@ Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process ti
 \caption{Forward-compatible multi-protocol detection architecture for post-quantum traffic.}
 \label{fig:pqidps_arch}
 \end{figure}
+
 
 %%=====================================================================
 \section{Deployment and Integration Infrastructure of the System}
@@ -478,6 +492,7 @@ cybersecurity specialists) and Ksyrix~LLC (integration into the
 operating network-traffic analysis and infrastructure-protection
 system).
 
+
 %%=====================================================================
 \section{System Performance Optimisation}
 \label{sec:hyperparams}
@@ -530,6 +545,7 @@ Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all m
 
 All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss.
 
+
 %%=====================================================================
 \section{Comparative Analysis of Architectural and Functional Capabilities of RobustIDPS.ai versus Existing Intrusion Detection Systems}
 \label{sec:integrated_arch}
@@ -545,6 +561,7 @@ The seven methods (M1--M7) are integrated into a unified detection pipeline whos
 \end{figure}
 
 The system is designed for deployment as a plug-in for existing IDPS frameworks such as Snort~3~\cite{Roesch1999} and Suricata, consuming their alert feeds as additional input and producing enriched, confidence-scored outputs. The full software implementation is described in Chapter~\ref{ch:platform}, publicly archived under DOI 10.5281/zenodo.19129512~\cite{Anaedevha2026robustidps}.
+
 
 %%=====================================================================
 
@@ -566,6 +583,7 @@ Sections~\ref{sec:exp_methodology}--\ref{sec:ablation} below
 systematically validate this realisation of the system on six
 benchmark datasets, providing a direct mapping from results to the
 invariants~P2--P6 from \S\ref{subsec:six_properties}.
+
 
 %%=====================================================================
 

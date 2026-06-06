@@ -52,6 +52,7 @@ Chapter~\ref{ch:methods}; and the preliminary validation of the
 Hybrid~IDPS system on UAV tasks as a preamble~--- in
 Chapter~\ref{ch:uav} of Chapter~\ref{ch:adaptation}.
 
+
 %%=====================================================================
 \section{Subsystem Overview and Target Defence Tasks}
 \label{sec:uav_overview}
@@ -150,6 +151,7 @@ function of jamming-to-signal ratio
 \label{fig:uav_overview}
 \end{figure}
 
+
 %%=====================================================================
 \section{System Architecture: Three-Tier
 \emph{Onboard~--- Droneport~--- Cloud} Model}
@@ -243,6 +245,7 @@ their computational complexity and network constraints.}
 \label{fig:uav_arch}
 \end{figure}
 
+
 %%=====================================================================
 \section{Operational UAV Graph as an Instance of the Unified Problem}
 \label{sec:uav_graph}
@@ -288,6 +291,7 @@ Chapter~\ref{ch:adaptation}; the difference reduces to the
 composition of nodes, the feature set $X_t$ and the process driving
 the dynamics of $A_t$. This is the formal basis for the
 domain-independence of methods \textsf{M1}--\textsf{M7}.
+
 
 %%=====================================================================
 \section{UAV Telemetry-to-Graph Pipeline}
@@ -387,6 +391,7 @@ sensor rates.}
 \label{fig:uav_telemetry_pipeline}
 \end{figure}
 
+
 %%=====================================================================
 \addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
 \section{Mapping of Methods \textsf{M1}--\textsf{M7} to UAV Subsystems}
@@ -473,6 +478,7 @@ against any adaptive jammer. \textsf{M6~UC-HGP} switches to a
 conservative policy when the calibrated threshold of epistemic
 uncertainty is exceeded.
 
+
 %%=====================================================================
 \addtocontents{toc}{\protect\setcounter{tocdepth}{1}}
 \section{Robustness Certificates for UAV Subsystems}
@@ -515,6 +521,7 @@ $T=1$ and required output deviation $\eps_{\text{out}}=0.5$ corresponds
 to a certified input radius of $0.18$. The certified $\ell_2$-radius
 of randomised smoothing at $\sigma=0.25$ is $0.44$ (Cohen-style,
 $\alpha=10^{-3}$, $n=200$ Monte-Carlo trials).
+
 
 %%=====================================================================
 \section{Phase~A Software Implementation Based on the
@@ -597,6 +604,7 @@ $\hat L_g \leftarrow \mathrm{LipschitzEst}(\theta^{*});\
 \Return $\theta^{*},\hat L_g,\hat R$\;
 \end{algorithm}
 
+
 %%=====================================================================
 \section{Integration with the \textsf{RobustIDPS.ai} Platform}
 \label{sec:uav_robustidps_integration}
@@ -626,6 +634,7 @@ spoofing map and an autopilot mode switcher. The full deployment
 does not require any modification of the \textsf{RobustIDPS.ai} core
 and is implemented as a plugin in
 \texttt{robustidps\_web\_app/plugins/uav/}.
+
 
 %%=====================================================================
 \section{Phase~A Validation Results}
@@ -911,6 +920,7 @@ addresses the cells \emph{``adversarial environment} $\times$
 \emph{robustness''} and \emph{``non-stationary conditions} $\times$
 \emph{efficiency''}.
 
+
 %%=====================================================================
 \section{Applicability Limitations of RobustIDPS.ai for UAV Intelligent-System Security}
 \label{sec:uav_comparison}
@@ -952,6 +962,7 @@ The table shows that the framework is the first published solution
 that simultaneously meets all seven criteria with quantitative
 certificates.
 
+
 %%=====================================================================
 \section{Conformance to the Regulatory Framework}
 \label{sec:uav_regulation}
@@ -990,6 +1001,7 @@ the combination of \textsf{M2,M3,M6,M7}. \mbox{DO-326A/ED-202A}
 EASA/FAA certification objective; \textsf{CyberSecLLM} and the
 triple-graph structure of \textsf{M3} provide event traceability
 down to the level of a single mission.
+
 
 %%=====================================================================
 \section{Conclusions for Chapter 6}
