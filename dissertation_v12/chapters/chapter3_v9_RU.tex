@@ -185,27 +185,19 @@ NIDS-ориентированные терминологии, конвейер �
 \subsection{Подсистема анализа инцидентов и поддержки принятия решений}
 \label{subsec:func_incident}
 
-Подсистема анализа инцидентов и поддержки принятия решений предоставляет аналитику SOC интерактивные средства расследования и реагирования. Модуль \texttt{incident\_manager} группирует связанные оповещения в инциденты по признакам общего источника, цели и временной близости (окно 300\,с), формируя цепочку TTP MITRE~ATT\&CK. Модуль \texttt{soc\_copilot} интегрирует LLM-ассистента (Claude/GPT-4o/Gemini/DeepSeek/локальный) с RAG-поиском по базе знаний угроз, отвечающего на запросы аналитика на естественном языке. Модуль \texttt{playbook\_executor} запускает SOAR-плейбуки по правилам: автоматическая блокировка IP через интеграцию с фаерволом, изоляция хоста через EDR-API, эскалация Tier~1$\to$Tier~2$\to$Tier~3 по конфигурируемым порогам. Модуль \texttt{audit\_logger} ведёт неизменяемый журнал действий аналитика (append-only WAL в PostgreSQL) для аудита соответствия ГОСТ~Р~57580. Пользовательский интерфейс из 51~страницы, объединяющий 17~нейросетевых моделей в 10~функциональных групп (см.~рис.~\ref{fig:gui_walkthrough_p1}--\ref{fig:gui_analytics_intro}), служит единой точкой входа для всех ролей: оператора SOC, аналитика по реагированию на инциденты, инженера ML-моделей и аудитора соответствия.
+Подсистема анализа инцидентов и поддержки принятия решений предоставляет аналитику SOC интерактивные средства расследования и реагирования. Модуль \texttt{incident\_manager} группирует связанные оповещения в инциденты по признакам общего источника, цели и временной близости (окно 300\,с), формируя цепочку TTP MITRE~ATT\&CK. Модуль \texttt{soc\_copilot} интегрирует LLM-ассистента (Claude/GPT-4o/Gemini/DeepSeek/локальный) с RAG-поиском по базе знаний угроз, отвечающего на запросы аналитика на естественном языке. Модуль \texttt{playbook\_executor} запускает SOAR-плейбуки по правилам: автоматическая блокировка IP через интеграцию с фаерволом, изоляция хоста через EDR-API, эскалация Tier~1$\to$Tier~2$\to$Tier~3 по конфигурируемым порогам. Модуль \texttt{audit\_logger} ведёт неизменяемый журнал действий аналитика (append-only WAL в PostgreSQL) для аудита соответствия ГОСТ~Р~57580. Пользовательский интерфейс из 51~страницы, объединяющий 17~нейросетевых моделей в 10~функциональных групп (см.~рис.~\ref{fig:gui_walkthrough_p1}--\ref{fig:gui_walkthrough_p5}), служит единой точкой входа для всех ролей: оператора SOC, аналитика по реагированию на инциденты, инженера ML-моделей и аудитора соответствия.
 
 \begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
-\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_08_ethical_use.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_09_soc_dashboard.png}} \\
+\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}c@{\hspace{6pt}}c@{}}
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_01_login.png}} &
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_08_ethical_use.png}} \\
 \scriptsize (а) Аутентификация &
-\scriptsize (б) Этические требования и согласие &
-\scriptsize (в) Панель SOC \\[4pt]
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_10_fed_learning.png}} \\
-\scriptsize (г) Live Monitor &
-\scriptsize (д) SOC Copilot (LLM-ассистент) &
-\scriptsize (е) Симулятор федеративного обучения \\
+\scriptsize (б) Этические требования и согласие \\
 \end{tabular}
 \caption{Демонстрация практической работы RobustIDPS.ai
-(часть~1)~--- от входа в систему до распределённого обучения:
+(часть~1)~--- вход в систему и допуск оператора:
 \textbf{(а)}~страница входа с аутентификацией по электронной
 почте и паролю и регистрацией нового пользователя;
 \textbf{(б)}~страница <<Этические требования и согласие>>~---
@@ -213,7 +205,21 @@ NIDS-ориентированные терминологии, конвейер �
 (академические исследования, авторизованное тестирование на
 проникновение, государственные и оборонные исследования,
 оценочные исследования) и запрещённых действий, реализующее
-требование MLSecOps к процедуре допуска оператора;
+требование MLSecOps к процедуре допуска оператора.}
+\label{fig:gui_walkthrough_p1}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}c@{\hspace{6pt}}c@{}}
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_09_soc_dashboard.png}} &
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_02_live_monitor.png}} \\
+\scriptsize (в) Панель SOC &
+\scriptsize (г) Live Monitor \\
+\end{tabular}
+\caption{Демонстрация практической работы RobustIDPS.ai
+(часть~2)~--- оперативная сводка и потоковый захват:
 \textbf{(в)}~страница SOC Dashboard~--- сводка по 1\,000 потокам,
 347 обнаруженным угрозам, 65{,}3\,\% доли доброкачественного
 трафика и текущей оценке калибровки ECE\,=\,0{,}043 с
@@ -223,7 +229,22 @@ NIDS-ориентированные терминологии, конвейер �
 захвата сетевого интерфейса \texttt{eth0} с выбором ансамбля из
 семи моделей обнаружения (SurrogateIDS, Neural~ODE,
 Optimal~Transport, FedGTD, SDE-TGNN, CyberSecLLM и др.) и
-регулировкой интервала захвата 5--120~с;
+регулировкой интервала захвата 5--120~с.}
+\label{fig:gui_walkthrough_p2}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}c@{\hspace{6pt}}c@{}}
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_03_soc_copilot.png}} &
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_10_fed_learning.png}} \\
+\scriptsize (д) SOC Copilot (LLM-ассистент) &
+\scriptsize (е) Симулятор федеративного обучения \\
+\end{tabular}
+\caption{Демонстрация практической работы RobustIDPS.ai
+(часть~3)~--- интеллектуальная поддержка аналитика и
+распределённое обучение:
 \textbf{(д)}~страница SOC Copilot~--- интерактивный
 LLM-ассистент в локальном режиме, отвечающий на запрос
 аналитика <<Получить результаты Live Monitor с разбивкой по
@@ -234,43 +255,54 @@ LLM-ассистент в локальном режиме, отвечающий 
 одновременно (CSV/PCAP-слоты Slot\,1--3) с выбором стратегии
 агрегации (FedAvg, FedProx, Weighted, FedGTD), режима IID/Non-IID
 и опции дифференциальной приватности.}
-\label{fig:gui_walkthrough_p1}
+\label{fig:gui_walkthrough_p3}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
-\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}c@{\hspace{4pt}}c@{\hspace{4pt}}c@{}}
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} &
-\fbox{\includegraphics[width=0.31\textwidth,height=2.6cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} \\
+\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}c@{\hspace{6pt}}c@{}}
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_04_adversarial_eval.png}} &
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_05_analytics_charts.png}} \\
 \scriptsize (ж) Сравнение моделей по робастности &
-\scriptsize (з) Аналитика и оценка качества &
-\scriptsize (и) Симулятор отравления RAG \\
+\scriptsize (з) Аналитика и оценка качества \\
 \end{tabular}
 \caption{Демонстрация практической работы RobustIDPS.ai
-(часть~2)~--- состязательное тестирование, аналитика и атаки на
-LLM: \textbf{(ж)}~страница Adversarial~Eval~--- мультидатасетное
+(часть~4)~--- состязательное тестирование и аналитика моделей:
+\textbf{(ж)}~страница Adversarial~Eval~--- мультидатасетное
 сравнение моделей по устойчивости к шести методам состязательных
 атак (FGSM, PGD, C\&W, DeepFool, Gaussian noise, Label masking);
 \textbf{(з)}~страница Analytics \& Evaluation~--- сравнение
 метрик F1 для семи моделей по шести бенчмаркам с тепловой
 картой, радар-профилем и таблицей кросс-датасетной
-согласованности; \textbf{(и)}~страница RAG Poisoning Simulator~---
-симуляция атак на RAG-конвейер LLM с четырьмя векторами атаки
-(document injection, query manipulation, embedding space
-perturbation, cross-contamination).}
-\label{fig:gui_walkthrough_p2}
+согласованности.}
+\label{fig:gui_walkthrough_p4}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
-\fbox{\includegraphics[width=0.86\textwidth]{figures/gui/gui_06_analytics_intro.png}}
-\caption{Страница Analytics~\& Evaluation с подсказкой
-<<Как пользоваться>>: интерактивные пояснения к десяти вкладкам
-сравнительной оценки моделей, экспорт результатов в PNG/PDF и
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+\renewcommand{\arraystretch}{1.0}\begin{tabular}{@{}c@{\hspace{6pt}}c@{}}
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_07_rag_poisoning.png}} &
+\fbox{\includegraphics[width=0.48\textwidth,height=8.5cm,keepaspectratio]{figures/gui/gui_06_analytics_intro.png}} \\
+\scriptsize (и) Симулятор отравления RAG &
+\scriptsize (к) Подсказка <<Как пользоваться>> \\
+\end{tabular}
+\caption{Демонстрация практической работы RobustIDPS.ai
+(часть~5)~--- защита от атак на LLM-конвейер и справочная
+поддержка пользователя:
+\textbf{(и)}~страница RAG Poisoning Simulator~--- симуляция
+атак на RAG-конвейер LLM с четырьмя векторами атаки
+(document injection, query manipulation, embedding space
+perturbation, cross-contamination);
+\textbf{(к)}~страница Analytics~\& Evaluation с открытой
+подсказкой <<Как пользоваться>>~--- интерактивные пояснения
+к десяти вкладкам сравнительной оценки моделей (Performance,
+Convergence, Robustness, Privacy, Transfer Learning,
+Calibration, ROC/AUC, Dataset Comparison, Statistical Analysis,
+Cross-Module Intel) с экспортом результатов в PNG/PDF и
 PDF-презентацию.}
-\label{fig:gui_analytics_intro}
+\label{fig:gui_walkthrough_p5}
 \end{figure}
 
 %%=====================================================================
