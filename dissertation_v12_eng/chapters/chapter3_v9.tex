@@ -74,6 +74,33 @@ The following terms are used throughout this chapter and the experimental valida
 \noindent\textbf{SOC (Security Operations Centre).} The organisational unit responsible for monitoring, analysing, and responding to security events, staffed by analysts at Tiers~1--3.
 
 %%=====================================================================
+\section{Formation of Requirements for RobustIDPS.ai}
+\label{sec:requirements}
+%%====
+
+Requirements for RobustIDPS.ai are formulated according to the architectural framework of Chapter~\ref{ch:methods} and the operating conditions of an industrial-grade Security Operations Centre. Four classes of requirements --- functional, robustness, performance, scalability and confidentiality --- define both the quality contract of the system and the quantitative acceptance thresholds for its software realisation.
+
+\subsection{Functional Requirements}
+\label{subsec:req_functional}
+
+The system ingests network traffic in three formats: raw PCAP captures at line rates up to 10\,Gbit/s, real-time Zeek conn.log records, and NetFlow~v9/IPFIX exports from edge switches. The graph-construction subsystem builds the temporal tuple $(\calV_t,\calE_t,X_t,A_t)$ with configurable aggregation windows $\Delta_w\in\{1,60,3600\}$\,s and supports three hierarchical levels (services, traces, hosts). The detection subsystem provides a unified API for invoking all seven methods M1--M7 in single-inference, ensemble-voting, and uncertainty-aware modes. The alerting subsystem emits JSON events carrying the mandatory fields \texttt{severity}, \texttt{confidence}, \texttt{MITRE\_TTP}, \texttt{detector\_id}, routed through SIEM (Splunk, ELK, ArcSight) and SOAR (Cortex~XSOAR, Phantom) integration connectors with exactly-once delivery guarantees and an analyst-annotation back-channel.
+
+\subsection{Robustness Requirements}
+\label{subsec:req_robustness}
+
+The certified robustness radius is $r_\sigma\geq 0.08$ in the $\ell_\infty$ norm of the input feature vector under adversarial budgets $\epsilon\in[0,0.1]$ and covers six attack families (FGSM, PGD, C\&W, DeepFool, HopSkipJump, BoundaryAttack). For structural graph perturbations, the admissible budget is up to $5\,\%$ of modified edges while preserving AUC$\geq 0.90$ under attack. The target Lipschitz bound of the detector $f_\theta$ is constrained by the spectral norm $L_f\leq 2.5$, guaranteeing gradient stability and randomised-smoothing certification. Predictive calibration satisfies $\mathrm{ECE}\leq 0.05$ across all benchmarks, and the fraction of correctly rejected high-uncertainty predictions at threshold $\tau=0.3$ is at least $90\,\%$.
+
+\subsection{Performance Requirements}
+\label{subsec:req_performance}
+
+The throughput of the ingest and inference pipeline reaches 10\,Gbit/s on a single node equipped with an NVIDIA~A100 (80\,GB) GPU and two AMD~EPYC~7763 CPUs. End-to-end latency from packet arrival to alert publication does not exceed $50\,$ms at the 99\textsuperscript{th} percentile (P99) and $20\,$ms at the median. Inference batch size is bounded by $\leq 1024$ events with dynamic buffering subject to a $\Delta_b=10\,$ms timeout. GPU utilisation stays $\geq 70\,\%$ under nominal load; the CPU fallback path provides a degraded mode of $\leq 2\,$Gbit/s without loss of detection functionality.
+
+\subsection{Scalability and Confidentiality Requirements}
+\label{subsec:req_scalability_privacy}
+
+Horizontal scaling is realised on Kubernetes (helm chart \texttt{robustidps-chart}) with autoscaling driven by CPU/GPU load and Redis queue depth; the inference service replicates from 1 to 32 pods without retraining. Federated learning crosses the participant-consent boundary: each security operations centre retains custody of its local dataset, and communication is restricted to differentially private clipped gradient exchanges. The differential-privacy budget is $\varepsilon\leq 1.0$ and $\delta\leq 10^{-5}$ over the entire training lifecycle (100 federation rounds). Compliance with GOST~R~57580.1-2017 and post-quantum standards is achieved through the cryptographic primitives Kyber-1024 (KEM) and Dilithium~III (signatures) for all inter-service communications and client certificates.
+
+%%=====================================================================
 \section{Architecture of the RobustIDPS.ai Software System}
 \label{sec:data_to_graph}
 %%====
@@ -107,7 +134,7 @@ For the TripleE-TGNN (Model M3) and the SOC Intelligence integration, the networ
 \label{sec:taxonomy}
 %%====
 
-The platform classifies network traffic into 34 distinct classes: 1 benign class and 33 attack classes organised into 7 major categories. This taxonomy is unified across all six benchmark datasets, with dataset-specific attack types mapped to the canonical categories. Table~\ref{tab:taxonomy} presents the complete taxonomy.
+The functionality of the RobustIDPS.ai system is organised as four complementary subsystems providing end-to-end processing of network traffic from raw data ingestion to SOC-analyst decision support. The platform classifies network traffic into 34 distinct classes: 1 benign class and 33 attack classes organised into 7 major categories. Table~\ref{tab:taxonomy} presents the complete taxonomy.
 
 \begin{table}[htbp]\centering\small
 \caption{Unified classification taxonomy: 34 classes across 7 attack categories.}
@@ -138,244 +165,29 @@ The platform classifies network traffic into 34 distinct classes: 1 benign class
 
 The taxonomy is extensible: new attack classes can be registered through the platform administration interface without retraining the full model ensemble, leveraging the CyberSecLLM zero-shot classification capability and the TripleE-TGNN elastic weight consolidation for incremental learning.
 
-%%=====================================================================
-\section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
-\label{sec:features}
-%%====
+\subsection{Data Ingestion and Preprocessing Subsystem}
+\label{subsec:func_ingestion}
 
-All models operate on a shared vector of 83 engineered features extracted from raw PCAP files or pre-processed CSV datasets. Features span five categories, summarised in Table~\ref{tab:features}.
-
-\begin{table}[htbp]\centering\small
-\caption{The 83-feature engineering pipeline organised by category.}
-\label{tab:features}
-\small
-\renewcommand{\arraystretch}{0.92}\begin{tabular}{p{3.5cm} p{1.5cm} p{8.5cm}}
-\toprule
-\textbf{Category} & \textbf{Count} & \textbf{Representative Features} \\
-\midrule
-Flow-level statistics & 22 & Duration, forward/backward packet counts, total bytes (fwd/bwd), packet length (mean, max, min, std), flow bytes/s, flow packets/s, flow IAT (mean, std, max, min) \\
-\addlinespace
-Inter-arrival time distributions & 18 & Forward IAT (mean, std, min, max), backward IAT (mean, std, min, max), active/idle time statistics, sub-flow forward/backward counts \\
-\addlinespace
-Flag-based indicators & 15 & SYN count, FIN count, RST count, PSH count, ACK count, URG count, CWE count, ECE count, forward/backward PSH flags, forward/backward URG flags, FIN flag count, SYN flag count, RST flag count \\
-\addlinespace
-Payload statistics & 16 & Segment sizes (min, max, mean), header lengths (mean, total), initial window bytes (forward/backward), payload byte entropy, packet length variance, average packet size, average segment size \\
-\addlinespace
-Derived ratios & 12 & Bytes-per-packet (fwd/bwd), packets-per-second, down/up ratio, average packet size ratio, flow IAT ratio, bulk rate (forward/backward), active mean/std, idle mean/std \\
-\midrule
-\textbf{Total} & \textbf{83} & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Feature extraction is performed by a shared \texttt{FeatureExtractor} module using per-feature z-score standardisation fitted on the training distribution:
+The data ingestion and preprocessing subsystem realises network-traffic acquisition from three sources. The \texttt{pcap\_ingestor} module processes PCAP files and live captures on network interfaces (libpcap/AF\_PACKET), feeding them through \texttt{NFStream} to extract 5-tuple flow records and then to compute the 83-dimensional feature vector. The \texttt{zeek\_consumer} module receives structured conn.log/http.log/dns.log records over the Kafka topic \texttt{zeek-stream-v1}, performing field normalisation and mapping to the RobustIDPS.ai feature taxonomy. The \texttt{netflow\_collector} module implements a UDP receiver for NetFlow~v9 and IPFIX (RFC~7011), aggregating records into sliding windows and supporting exporter templates from Cisco, Juniper, and nProbe. The internal API \texttt{/api/v1/ingest} unifies the three sources into a single event stream with exactly-once guarantees via Redis~Streams and back-pressure for peak-load protection. The preprocessing pipeline performs per-feature z-score standardisation according to Eq.~\eqref{eq:zscore_ingest}, zero-padding for missing fields, and PCA projection for datasets whose native feature count differs from 83:
 \begin{equation}
-\tilde{f}_j = \frac{f_j - \mu_j^{\mathrm{train}}}{\sigma_j^{\mathrm{train}} + \varepsilon},
-\label{eq:zscore}
+\tilde{f}_j = \frac{f_j - \mu_j^{\mathrm{train}}}{\sigma_j^{\mathrm{train}} + \varepsilon}, \qquad \varepsilon=10^{-8}.
+\label{eq:zscore_ingest}
 \end{equation}
-where $\mu_j^{\mathrm{train}}$ and $\sigma_j^{\mathrm{train}}$ are the mean and standard deviation of feature $j$ computed on the training set, and $\varepsilon=10^{-8}$ prevents division by zero. Datasets with fewer than 83 native features are zero-padded to the standard dimension; those with more are projected via PCA retaining 95\% explained variance.
 
-%%=====================================================================
-\section{Domain-Specific Realisation of Methods M1--M7}
-\label{sec:method_instantiation}
-%%====
+\subsection{Network Interaction Graph Construction Subsystem}
+\label{subsec:func_graph}
 
-This section describes how each of the seven methods from Chapter~\ref{ch:methods} is instantiated with cybersecurity-specific parameters, demonstrating the mapping from abstract mathematical objects to concrete network-security entities.
+The graph-construction subsystem transforms the stream of normalised events into the temporal tuple $(\calV_t,\calE_t,X_t,A_t)$ following the procedure of \S\ref{sec:data_to_graph}. The \texttt{graph\_builder} module realises the three-level mapping: service graph $\calG_s(t)$, trace graph $\calG_r(t)$, and host graph $\calG_n(t)$, supporting dynamic insertion and removal of edges under the timeout $\Delta_{\mathrm{timeout}}=120$\,s. The \texttt{topology\_tracker} module maintains consistent graph snapshots in Redis with TTL 3600\,s, providing access to time slices $[t-\Delta_w,t]$ for all three time constants $\tau_1,\tau_2,\tau_3$ of the CT-TGNN model. The \texttt{cross\_level\_coupler} module builds the bipartite coupling graphs $\calB_{sr},\calB_{sn},\calB_{rn}$ for the TripleE-TGNN cross-level attention mechanism. The internal API \texttt{/api/v1/graph/snapshot} returns the current graph as a PyTorch~Geometric \texttt{Data} object, while \texttt{/api/v1/graph/diff} streams incremental updates for online inference.
 
-\subsection{M1: CT-TGNN Applied to Network-Traffic Graph Dynamics}
+\subsection{Intrusion Detection Subsystem}
+\label{subsec:func_detection}
 
-CT-TGNN~\cite{Anaedevha2025cais} is instantiated as follows. In the network security instantiation, the node set $\calV$ comprises hosts and services, and the edge set $\calE(t)$ records flows. Node features $\bx_v(t)$ encode host-level statistics (12 dimensions). Edge features $\mathbf{e}_{uv}(t)$ capture the 83-dimensional flow feature vector from Table~\ref{tab:features}.
+The intrusion detection subsystem unifies the seven models M1--M7 into a single ensemble with a configurable aggregation strategy. The \texttt{detector\_router} module accepts a graph or a feature vector, dispatches it to the relevant models (CT-TGNN for dynamics, FedLLM-API for distributed intelligence, TripleE-TGNN for multi-level monitoring, MambaShield for drift-adaptive detection, the stochastic transformer for uncertainty estimation, and the game-theoretic certification for resistance to adaptive adversaries), and collects their outputs. The \texttt{ensemble\_aggregator} module implements four voting strategies: average probability, FedAvg-weighted, uncertainty-weighted, and Stackelberg-optimal. The \texttt{alert\_classifier} module emits JSON alerts with mandatory fields \texttt{severity} (Critical/High/Medium/Low/Info), \texttt{confidence} ($\in[0,1]$), \texttt{MITRE\_TTP} (attribution to a MITRE~ATT\&CK technique), \texttt{detector\_id}, and \texttt{evidence} (top-5 features driving the decision). The internal API \texttt{/api/v1/detect} handles both single and batched requests (up to 1024 events) at P99 latency $\leq$\,50\,ms.
 
-The three parallel ODE branches of Equation~\eqref{eq:ct_tgnn_multi} are assigned time constants $\tau_1=1$\,s (packet-level transients), $\tau_2=60$\,s (flow-level session dynamics), and $\tau_3=3600$\,s (campaign-level trends). This enables simultaneous resolution of sub-second port-scanning bursts and multi-hour advanced persistent threat campaigns. The architecture employs four message-passing layers, hidden dimension 256, state dimension 64, and DOPRI5 adaptive integration with tolerances $10^{-5}$ (relative) and $10^{-7}$ (absolute).
+\subsection{Incident Analysis and Decision Support Subsystem}
+\label{subsec:func_incident}
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.69\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
-\caption{CT-TGNN architecture instantiated for network traffic dynamics.}
-\label{fig:ct_tgnn_arch}
-\end{figure}
-
-\subsection{M2: FedLLM-API for Collaborative Threat Intelligence}
-
-FedLLM-API~\cite{Anaedevha2026neurips} is instantiated for collaborative threat intelligence. Each federated client corresponds to a security operations centre possessing local traffic datasets. Byzantine-robust aggregation (Algorithm~\ref{alg:fedllm}) protects against compromised participants submitting poisoned gradient updates. Differential privacy through local gradient clipping at threshold $C=1.0$ and Gaussian noise with scale $\sigma=0.8$ achieves an $(\epsilon{=}0.85,\delta{=}10^{-5})$ guarantee over 100 communication rounds. Sinkhorn OT alignment with regularisation $\lambda=0.1$ corrects for distributional heterogeneity across centres. The LLM ensemble weight is $\lambda_{\mathrm{LLM}}=0.3$.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.78\textwidth]{figures/fig_fedllm_api_architecture.pdf}
-\caption{FedLLM-API architecture for collaborative threat intelligence across organisational boundaries.}
-\label{fig:fedllm_arch}
-\end{figure}
-
-\subsection{M3: TripleE-TGNN for Multi-Level Security Monitoring}
-
-The service graph $\calG_s(t)$ has nodes representing microservices and edges representing API calls. The trace graph $\calG_r(t)$ has nodes representing distributed traces. The host graph $\calG_n(t)$ has nodes representing infrastructure hosts. EWC consolidation strength $\lambda_{\mathrm{ewc}}=0.5$ balances plasticity and stability during topology evolution. Multi-task loss weights are $\lambda_s=0.4$, $\lambda_r=0.3$, $\lambda_n=0.3$ with consistency weight $\lambda_{\mathrm{con}}=0.1$.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
-\caption{TripleE-TGNN architecture for multi-level security monitoring in cloud-native environments.}
-\label{fig:triplee_arch}
-\end{figure}
-
-\subsection{M4: MambaShield for Drift-Adaptive Detection}
-
-MambaShield~\cite{Anaedevha2026mamba} is instantiated for drift-adaptive detection. Sequential flow records are processed by the selective state-space model whose input-dependent transitions adapt to the current traffic regime. The state dimension is $d_s=64$, discretisation step $\Delta=0.01$, and FFT convolution kernel length $L=1024$. The teacher ensemble comprises $M=5$ models trained on disjoint data subsets. The curriculum schedule starts at $\rho_0=0.05$ poisoning fraction and increases to $\rho_{\max}=0.3$. PAC-Bayesian prior variance $\sigma_P^2=1.0$.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\textwidth]{figures/fig_mambashield_architecture.pdf}
-\caption{MambaShield architecture for drift-adaptive intrusion detection with progressive robustness distillation.}
-\label{fig:mamba_arch}
-\end{figure}
-
-\subsection{M5/M6: Uncertainty-Calibrated Threat Assessment}
-
-The stochastic transformer uses $M=50$ Monte Carlo forward passes at inference to produce epistemic and aleatoric uncertainty estimates. Predictions with epistemic uncertainty exceeding threshold $\tau=0.3$ are routed to human analysts, reducing alert fatigue by 43\%. The UC-HGP module provides hierarchical Gaussian process uncertainty at time scales matching the CT-TGNN branches ($\tau_1$, $\tau_2$, $\tau_3$). Variational learning rate $\alpha_\phi=5\times10^{-4}$; perturbation learning rate $\alpha_\psi=10^{-3}$.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
-\caption{Stochastic transformer with uncertainty-driven triage for security operations.}
-\label{fig:stochastic_arch}
-\end{figure}
-
-\subsection{M7: Game-Theoretic Framework for Adaptive Adversaries}
-
-The defender's action space $\calC$ comprises detection configurations: monitoring coverage, alert thresholds, and response policies. The adversary's action space $\calA$ encompasses target selection, perturbation type, and evasion strategy. The multiplicative weights learning rate $\eta=\sqrt{\log|\calC|/T}$. Uncertainty penalty $\kappa=0.5$; expert-referral threshold $\tau=0.3$.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\textwidth]{figures/fig_game_theoretical_architecture.pdf}
-\caption{Game-theoretic framework for adaptive graph adversaries in network security.}
-\label{fig:game_arch}
-\end{figure}
-
-\subsection{Forward-Compatible Detection for Post-Quantum Protocols}
-
-Protocol-specific encoders~\cite{Anaedevha2026edm,NIST2024,Regev2009} process timing features for lattice-based protocols (Kyber/Dilithium~\cite{Avanzi2022}), structural features for code-based protocols (McEliece/Niederreiter), and hash-based features (SPHINCS+). Cross-attention fusion combines the three representations. Adversarial training budget $\epsilon=0.03$ with PGD-40 perturbations.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
-\caption{Forward-compatible multi-protocol detection architecture for post-quantum traffic.}
-\label{fig:pqidps_arch}
-\end{figure}
-
-%%=====================================================================
-\section{Deployment and Integration Infrastructure of the System}
-\label{sec:tech_stack_ui}
-%%====
-
-\subsection{Implementation Technology Stack}
-\label{subsec:tech_stack}
-
-The RobustIDPS.ai software platform is a \emph{single Progressive
-Web Application} (PWA) split into a server-side and a client-side
-tier, containerised with Docker~Compose and orchestrated by a unified
-back-end / inference process. The stack has been chosen so as to
-provide simultaneously: (i)~reproducible training and inference of
-the deep graph-neural-network Models M1--M7; (ii)~resilient
-streaming processing of real-time network traffic; (iii)~an
-interactive SOC-analyst user interface; (iv)~integration with
-external large-language-model (LLM) providers through a single
-API-abstract layer.
-
-\begin{enumerate}[leftmargin=2em, itemsep=0pt]
-\item \textbf{Server tier (Python~3.11)}~--- an asynchronous
-HTTP/WebSocket server on FastAPI (60+ REST API endpoints) on top
-of which the model pipeline runs in PyTorch~2.x with PyTorch
-Geometric and DGL extensions for graph operations; batch traffic
-processing relies on NFStream for flow-feature extraction from
-PCAP and on dpkt/Scapy for raw-packet parsing; service queues and
-Pub/Sub are implemented in Redis~7 (cache + queue); persistent
-storage of benchmarks and incident logs is PostgreSQL~16.
-
-\item \textbf{Client tier (TypeScript / React~18)}~--- a
-Progressive Web Application of \textbf{51~user-interface pages}
-organised into ten functional groups (see
-Section~\ref{subsec:ui_walkthrough}). Real-time updates of
-streaming classifications are pushed over WebSocket; graph and
-metric visualisations use Recharts and a bespoke D3.js graph
-visualisation; styling is Tailwind~CSS with a dark theme by
-default.
-
-\item \textbf{LLM integration tier}~--- a single LLM-provider
-abstraction with implementations for four commercial back-ends
-(Anthropic Claude, OpenAI GPT-4o, Google Gemini, DeepSeek) and a
-local-inference back-end; the four-level LLM defence (Prompt
-Injection, Jailbreak, RAG Poisoning, Multi-Agent Chain) is
-implemented as a transparent middleware between UI and providers.
-
-\item \textbf{Deployment tier}~--- Docker containerisation with
-multi-stage builds and Compose orchestration; integration with
-existing information-security tooling is provided by a plug-in
-for the Suricata EVE-JSON format, which allows RobustIDPS.ai to
-be embedded into the operating IDS of an organisation without
-modifying existing signature rules (confirmed by the NII~IKT~LLC
-implementation act, see Chapter~\ref{ch:platform}).
-
-\end{enumerate}
-
-\subsection{Used Packages and Versions}
-\label{subsec:packages_versions}
-
-Table~\ref{tab:packages_versions} lists the key software
-dependencies of the RobustIDPS.ai platform with the versions used
-to produce the experimental results and to sign the implementation
-acts. The complete \texttt{requirements.txt} and
-\texttt{package.json} are deposited with the source code on Zenodo
-(DOI: 10.5281/zenodo.19129512).
-
-\begin{table}[H]
-\centering
-\caption{Software dependencies of the RobustIDPS.ai platform.}
-\label{tab:packages_versions}
-\small
-\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}lll@{}}
-\toprule
-\textbf{Category} & \textbf{Package} & \textbf{Version} \\
-\midrule
-Implementation language & Python & 3.11.x \\
-Web server & FastAPI & 0.110+ \\
-ASGI server & Uvicorn (uvloop) & 0.27+ \\
-Deep learning & PyTorch & 2.2+ \\
-Graph operations & PyTorch~Geometric & 2.5+ \\
-Graph operations (alt.) & DGL & 2.1+ \\
-Neural ODEs & torchdiffeq & 0.2.4 \\
-State-space models & mamba-ssm & 1.2+ \\
-Flow-feature extraction & NFStream & 6.5+ \\
-Raw-packet parsing & dpkt~/~Scapy & 1.9~/~2.5 \\
-Persistent store & PostgreSQL & 16 \\
-Cache and queues & Redis & 7 \\
-Containerisation & Docker & 24+ \\
-Orchestration & Docker Compose & v2 \\
-Client (language) & TypeScript & 5.3+ \\
-Client (framework) & React & 18 \\
-Client build & Vite & 5 \\
-UI library & Tailwind CSS & 3.4 \\
-Chart visualisation & Recharts & 2.10 \\
-Graph visualisation & D3.js & 7 \\
-Real-time updates & WebSocket (RFC~6455) & --- \\
-LLM providers (APIs) & anthropic, openai, google-genai, deepseek & current \\
-Signature plug-in & Suricata EVE-JSON & 7.0 (compat.) \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{User Interface and Demonstration of Practical
-Application}
-\label{subsec:ui_walkthrough}
-
-The RobustIDPS.ai user interface is designed as a \emph{single
-entry point} for all cybersecurity roles in an organisation: SOC
-operator, incident-response analyst, ML model engineer, compliance
-auditor. The interface consists of 51~pages grouped into ten
-functional groups: ``AI Command Centre,'' ``AI Data \& Models,''
-``AI Active Defence,'' ``SOC Intelligence,'' ``AI Novel Methods,''
-``LLM Attack Surfaces,'' ``MLSecOps Standards,'' ``AI Security
-\& Gov,'' ``Industry \& Research,'' and ``Notice Board.''
-Fig.~\ref{fig:gui_walkthrough_p1} below illustrates the platform in
-operation in a typical analyst usage scenario.
+The incident analysis and decision support subsystem provides the SOC analyst with interactive investigation and response tooling. The \texttt{incident\_manager} module groups related alerts into incidents by shared source, target, and temporal proximity (window 300\,s), assembling a MITRE~ATT\&CK TTP chain. The \texttt{soc\_copilot} module integrates an LLM assistant (Claude/GPT-4o/Gemini/DeepSeek/local) with RAG retrieval over the threat knowledge base, answering analyst queries in natural language. The \texttt{playbook\_executor} module triggers SOAR playbooks by rule: automatic IP blocking via firewall integration, host isolation via EDR API, and Tier~1$\to$Tier~2$\to$Tier~3 escalation under configurable thresholds. The \texttt{audit\_logger} module maintains an immutable analyst-action journal (append-only WAL in PostgreSQL) for GOST~R~57580 compliance auditing. The 51-page user interface, aggregating 17 neural-network models into 10 functional groups (see Fig.~\ref{fig:gui_walkthrough_p1}--\ref{fig:gui_analytics_intro}), serves as a single entry point for all roles: SOC operator, incident-response analyst, ML model engineer, and compliance auditor.
 
 \begin{figure}[htbp]
 \centering
@@ -449,14 +261,6 @@ cross-contamination).}
 \label{fig:gui_walkthrough_p2}
 \end{figure}
 
-\noindent An additional screenshot of the Analytics page with the
-``How to use'' hint open is shown in
-Fig.~\ref{fig:gui_analytics_intro}, illustrating the five built-in
-interactive explanations of the ten model-evaluation tabs
-(Performance, Convergence, Robustness, Privacy, Transfer Learning,
-Calibration, ROC/AUC, Dataset Comparison, Statistical Analysis,
-Cross-Module Intel).
-
 \begin{figure}[htbp]
 \centering
 \fbox{\includegraphics[width=0.86\textwidth]{figures/gui/gui_06_analytics_intro.png}}
@@ -467,14 +271,30 @@ export.}
 \label{fig:gui_analytics_intro}
 \end{figure}
 
-The screenshots above demonstrate that RobustIDPS.ai implements
-all the theoretical developments M1--M7 as a \emph{practically
-deployed} platform with an interface of industrial quality;
-implementation integrity is confirmed by the implementation acts
-of NII~IKT~LLC (active use of the platform by in-house
-cybersecurity specialists) and Ksyrix~LLC (integration into the
-operating network-traffic analysis and infrastructure-protection
-system).
+%%=====================================================================
+\section{Software Realisation of Models and Algorithms for Adversarially Robust Network Traffic Analysis}
+\label{sec:features}
+%%====
+
+The software realisation of all seven models M1--M7 is organised as a Python package \texttt{robustidps} with the following file layout: models live in \texttt{robustidps/models/} as separate modules \texttt{ct\_tgnn.py} (M1), \texttt{fedllm\_api.py} (M2), \texttt{triplee\_tgnn.py} (M3), \texttt{mambashield.py} (M4), \texttt{sde\_tgnn.py} and \texttt{uc\_hgp.py} (M5/M6), \texttt{game\_theoretic.py} (M7), and \texttt{pq\_idps.py} (post-quantum module); the training pipeline lives in \texttt{robustidps/training/} with sub-modules \texttt{federated.py} (Byzantine-robust FL aggregation), \texttt{adversarial.py} (PGD/FGSM/C\&W), and \texttt{calibration.py} (temperature and Platt calibration); the inference pipeline lives in \texttt{robustidps/inference/} with batch and streaming implementations.
+
+Key library dependencies are: \texttt{torch~2.2+} (core framework), \texttt{torch\_geometric~2.5+} with \texttt{torch\_geometric\_temporal~0.54} (graph operations and temporal layers), \texttt{torchdiffeq~0.2.4} (adaptive DOPRI5 Neural-ODE integration), \texttt{mamba\_ssm~1.2+} (selective state-space model for M4), \texttt{flwr~1.7+} (Flower as federated framework for M2), \texttt{geomloss~0.2.6} (Sinkhorn optimal-transport regularisers), and \texttt{pyOpenSSL} with PQClean bindings (Kyber, Dilithium, SPHINCS+) for post-quantum cryptography.
+
+Representative training and inference invocations:
+\begin{verbatim}
+python -m robustidps.train --model ct_tgnn --dataset cic-iot-2023 \
+       --epochs 100 --lr 2e-4 --hidden 256
+python -m robustidps.train --model fedllm_api --num-clients 10 \
+       --rounds 100 --dp-epsilon 0.85 --dp-delta 1e-5
+python -m robustidps.train --model mambashield --state-dim 64 \
+       --poison-min 0.05 --poison-max 0.3
+python -m robustidps.eval --model-ensemble all --dataset unsw-nb15 \
+       --attack pgd --eps 0.03
+python -m robustidps.serve --port 8080 --batch-size 1024 \
+       --device cuda:0
+\end{verbatim}
+
+Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training (\texttt{torch.cuda.amp}) reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss. Architectural details of models M1--M7 are not re-stated in this section and are given in Chapter~\ref{ch:methods}.
 
 %%=====================================================================
 \section{System Performance Optimisation}
@@ -525,7 +345,110 @@ Table~\ref{tab:hyperparams} consolidates the principal hyperparameters for all m
 \end{tabular}
 \end{table}
 
-All methods are implemented in PyTorch~2.1~\cite{Paszke2019} with CUDA~12.1. Training uses AdamW with initial learning rate $2\times10^{-4}$, weight decay $10^{-5}$, and cosine annealing. Mixed-precision training reduces memory by 40\%. Gradient clipping at norm 1.0 prevents instability. Early stopping with patience of 10 epochs monitors validation loss.
+Performance optimisation of the inference pipeline includes: (i)~ahead-of-time JIT compilation of graph modules via \texttt{torch.compile} with the \texttt{reduce-overhead} mode, yielding a $28\,\%$ latency reduction; (ii)~batched inference with dynamic buffering up to 1024 events and a $10\,$ms timeout, sustaining a throughput of $10\,$Gbit/s on a node equipped with an NVIDIA~A100 GPU; (iii)~mixed precision (\texttt{bfloat16} activations, \texttt{float32} normalisation) reducing GPU memory consumption by $40\,\%$; (iv)~Redis-cached graph snapshots with TTL $3600\,$s, eliminating redundant topology reconstructions under high-frequency queries. End-to-end latency from packet arrival to alert publication remains below $50\,$ms at the 99\textsuperscript{th} percentile.
+
+%%=====================================================================
+\section{Deployment and Integration Infrastructure of the System}
+\label{sec:tech_stack_ui}
+%%====
+
+\subsection{Implementation Technology Stack}
+\label{subsec:tech_stack}
+
+The RobustIDPS.ai software platform is a \emph{single Progressive
+Web Application} (PWA) split into a server-side and a client-side
+tier, containerised with Docker~Compose and orchestrated by a unified
+back-end / inference process. The stack has been chosen so as to
+provide simultaneously: (i)~reproducible training and inference of
+the deep graph-neural-network Models M1--M7; (ii)~resilient
+streaming processing of real-time network traffic; (iii)~an
+interactive SOC-analyst user interface; (iv)~integration with
+external large-language-model (LLM) providers through a single
+API-abstract layer.
+
+\begin{enumerate}[leftmargin=2em, itemsep=0pt]
+\item \textbf{Server tier (Python~3.11)}~--- an asynchronous
+HTTP/WebSocket server on FastAPI (60+ REST API endpoints) on top
+of which the model pipeline runs in PyTorch~2.x with PyTorch
+Geometric and DGL extensions for graph operations; batch traffic
+processing relies on NFStream for flow-feature extraction from
+PCAP and on dpkt/Scapy for raw-packet parsing; service queues and
+Pub/Sub are implemented in Redis~7 (cache + queue); persistent
+storage of benchmarks and incident logs is PostgreSQL~16.
+
+\item \textbf{Client tier (TypeScript / React~18)}~--- a
+Progressive Web Application of \textbf{51~user-interface pages}
+organised into ten functional groups (see
+Section~\ref{subsec:func_incident}). Real-time updates of
+streaming classifications are pushed over WebSocket; graph and
+metric visualisations use Recharts and a bespoke D3.js graph
+visualisation; styling is Tailwind~CSS with a dark theme by
+default.
+
+\item \textbf{LLM integration tier}~--- a single LLM-provider
+abstraction with implementations for four commercial back-ends
+(Anthropic Claude, OpenAI GPT-4o, Google Gemini, DeepSeek) and a
+local-inference back-end; the four-level LLM defence (Prompt
+Injection, Jailbreak, RAG Poisoning, Multi-Agent Chain) is
+implemented as a transparent middleware between UI and providers.
+
+\item \textbf{Deployment tier}~--- Docker containerisation with
+multi-stage builds and Compose orchestration; integration with
+existing information-security tooling is provided by a plug-in
+for the Suricata EVE-JSON format, which allows RobustIDPS.ai to
+be embedded into the operating IDS of an organisation without
+modifying existing signature rules (confirmed by the NII~IKT~LLC
+implementation act, see Chapter~\ref{ch:platform}).
+
+\end{enumerate}
+
+\subsection{Used Packages and Versions}
+\label{subsec:packages_versions}
+
+Table~\ref{tab:packages_versions} lists the key software
+dependencies of the RobustIDPS.ai platform with the versions used
+to produce the experimental results and to sign the implementation
+acts. The complete \texttt{requirements.txt} and
+\texttt{package.json} are deposited with the source code on Zenodo
+(DOI: 10.5281/zenodo.19129512).
+
+\begin{table}[H]
+\centering
+\caption{Software dependencies of the RobustIDPS.ai platform.}
+\label{tab:packages_versions}
+\small
+\renewcommand{\arraystretch}{0.92}\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Category} & \textbf{Package} & \textbf{Version} \\
+\midrule
+Implementation language & Python & 3.11.x \\
+Web server & FastAPI & 0.110+ \\
+ASGI server & Uvicorn (uvloop) & 0.27+ \\
+Deep learning & PyTorch & 2.2+ \\
+Graph operations & PyTorch~Geometric & 2.5+ \\
+Graph operations (alt.) & DGL & 2.1+ \\
+Neural ODEs & torchdiffeq & 0.2.4 \\
+State-space models & mamba-ssm & 1.2+ \\
+Flow-feature extraction & NFStream & 6.5+ \\
+Raw-packet parsing & dpkt~/~Scapy & 1.9~/~2.5 \\
+Persistent store & PostgreSQL & 16 \\
+Cache and queues & Redis & 7 \\
+Containerisation & Docker & 24+ \\
+Orchestration & Docker Compose & v2 \\
+Client (language) & TypeScript & 5.3+ \\
+Client (framework) & React & 18 \\
+Client build & Vite & 5 \\
+UI library & Tailwind CSS & 3.4 \\
+Chart visualisation & Recharts & 2.10 \\
+Graph visualisation & D3.js & 7 \\
+Real-time updates & WebSocket (RFC~6455) & --- \\
+LLM providers (APIs) & anthropic, openai, google-genai, deepseek & current \\
+Signature plug-in & Suricata EVE-JSON & 7.0 (compat.) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The presented technology stack ensures the integrity of the system realisation: integration into operational information-security tooling is confirmed by the implementation acts of NII~IKT~LLC (active use of the platform by in-house cybersecurity specialists) and Ksyrix~LLC (integration into the operating network-traffic analysis and infrastructure-protection system).
 
 %%=====================================================================
 \section{Comparative Analysis of Architectural and Functional Capabilities of RobustIDPS.ai versus Existing Intrusion Detection Systems}
@@ -647,4 +570,3 @@ transfer~--- is presented in Chapter~\ref{ch:experiments}.}
 \noindent\textbf{Adaptation strategy across the seven methods.} The seven mathematical methods of Chapter~\ref{ch:methods} are adapted to the NIDS sector through a single principle: the abstract graph object $(\calV,\calE,X,A)$ is instantiated by replacing nodes with hosts and services, edges with network flows, node features with the 12-dimensional host-state vector, and edge features with the 83-dimensional flow-feature vector. The remaining mathematical apparatus~--- continuous-time integration, Lipschitz-bounded vector fields, Wasserstein alignment, selective state-space inference, hierarchical Gaussian processes, and Stackelberg games~--- transfers unchanged. This invariance is the technical pre-condition that allows the same Methods M1--M7 to be reused in Chapter~\ref{ch:uav} for the UAV-protection sector by simply re-instantiating the graph object: nodes become onboard sensors, edges become inter-sensor communication links, node features become per-sensor telemetry vectors, and edge features become link-quality statistics. The mathematical guarantees~--- certified Lipschitz radii, $(\varepsilon,\delta)$-differential-privacy budgets, PAC-Bayesian bounds, and no-regret regret bounds~--- carry over without modification, confirming the domain-independence claim of Chapter~\ref{ch:methods}.
 
 \noindent\textbf{Operational scenarios and SOC-analyst workflow.} The platform supports five operational scenarios. \emph{Real-time monitoring}: WebSocket-streamed flow records are classified by the SurrogateIDS ensemble, with high-confidence alerts pushed to the Tier~1 analyst console and high-uncertainty alerts routed to the SOC Copilot for agentic investigation. \emph{Forensic analysis}: PCAP files uploaded through the drag-and-drop interface are processed offline through the full M1--M7 pipeline, with per-flow attribution traceable to MITRE ATT\&CK~\cite{Hernandez2015} techniques. \emph{Adversarial-robustness testing}: the red-team arena runs configurable attack families (FGSM, PGD, C\&W, DeepFool, HopSkipJump, BoundaryAttack) against any combination of the 17 models with reporting of certified-radius regressions. \emph{Federated training}: the Federated Learning page coordinates Byzantine-resilient training across registered participants with explicit $(\varepsilon,\delta)$-privacy accounting per round. \emph{Continual-learning calibration}: the Drift Monitor module compares the live traffic distribution against the training reference and triggers EWC-protected incremental updates when the Gaussian-process test fires. The five scenarios together provide a complete end-to-end coverage of the NIDS-sector operational requirements.
-

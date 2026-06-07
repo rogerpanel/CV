@@ -617,8 +617,8 @@ Compute Lipschitz certificate $\rho = \Delta_{\min}/(L_c\,e^{L_g T})$ for each t
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
-\caption{Architectural diagram of Model \textsf{M1: CT-TGNN}~--- the continuous-time temporal graph neural network with multi-scale ODE branches and adaptive batch normalisation. The instantiation of the model for the network-traffic-protection task, with concrete time-constant and hyperparameter values, is presented in \S\ref{sec:method_instantiation} of Chapter~\ref{ch:adaptation}.}
+\includegraphics[width=0.55\textwidth]{figures/fig_CT-TGNN_architecture.pdf}
+\caption{Architectural diagram of Model \textsf{M1: CT-TGNN}~--- the continuous-time temporal graph neural network with multi-scale ODE branches and adaptive batch normalisation. The instantiation of the model for the network-traffic-protection task, with concrete time-constant and hyperparameter values, is presented in \S\ref{sec:hyperparams} of Chapter~\ref{ch:adaptation}.}
 \label{fig:m1_ct_tgnn_arch_methods}
 \end{figure}
 
@@ -748,7 +748,7 @@ Initialise global model $\bw_0$; compute noise scale $\sigma = C\sqrt{2\ln(1.25/
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_fedllm_api_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_fedllm_api_architecture.pdf}
 \caption{Architectural diagram of Model \textsf{M2: FedLLM-API}~--- the federated optimiser combining Byzantine-resilient aggregation, differential privacy via calibrated noise, and Wasserstein optimal-transport alignment of distributions, integrated with a large language model for zero-shot detection of novel threat categories.}
 \label{fig:m2_fedllm_arch_methods}
 \end{figure}
@@ -895,7 +895,7 @@ Initialise all encoder and attention parameters\;
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_triplee_tgnn_architecture.pdf}
 \caption{Architectural diagram of Model \textsf{M3: TripleE-TGNN}~--- triple-embedding multi-level temporal graph representation with dual spatio-temporal attention and elastic weight consolidation to prevent catastrophic forgetting.}
 \label{fig:m3_triplee_arch_methods}
 \end{figure}
@@ -999,7 +999,7 @@ Evaluate PAC-Bayes bound: $R \le \hat{R}_n + \sqrt{(\mathrm{KL}(Q\|P)+\log(2\sqr
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_mambashield_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_mambashield_architecture.pdf}
 \caption{Architectural diagram of Model \textsf{M4: MambaShield}~--- the selective state-space model with $\mathcal{O}(L\log L)$ inference complexity via FFT-based convolutions, augmented with progressive adversarial distillation and PAC-Bayesian generalisation certificates.}
 \label{fig:m4_mambashield_arch_methods}
 \end{figure}
@@ -1152,18 +1152,23 @@ Initialise perturbation network parameters $\psi$\;
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_stochastic_transformer_architecture.pdf}
 \caption{Architectural diagram of Models \textsf{M5: Stochastic Transformer} and \textsf{M6: UC-HGP}~--- variational Bayesian attention (M5) with hierarchical Gaussian processes (M6) for epistemic/aleatoric uncertainty decomposition and uncertainty-guided alert triage.}
 \label{fig:m5m6_stoch_trans_arch_methods}
 \end{figure}
 
-\section{Forward-Compatible Detection Under Protocol Regime Change}
-\label{sec:pq_idps}
+\section{Method of Adaptation to Changes in Statistical Characteristics of Network Traffic}
+\label{sec:drift_adaptation}
 %%====
 
-This section addresses Sub-problem~5 (Gap~5: Non-stationary $\times$ Robustness) by constructing a detection architecture that maintains robustness when the data-generating protocols underlying the graph undergo structural change, providing the forward compatibility that the domain-specific foundation model (CyberSecLLM) requires.
+This section defines the adaptation method for the learnable components of the Hybrid~IDPS under non-stationary network traffic. The method unifies two complementary adaptation regimes: structural protocol-regime change (Sub-problem~5: Non-stationary $\times$ Robustness, treated in subsection~\ref{sec:pq_idps}) and gradual statistical drift of feature distributions, application-profile evolution, and emergence of new operating regimes.
 
-\subsection{Protocol-Specific Feature Extraction}
+\subsection{Forward-Compatible Detection Under Protocol Regime Change}
+\label{sec:pq_idps}
+
+The subsection addresses Sub-problem~5 (Gap~5: Non-stationary $\times$ Robustness) by constructing a detection architecture that maintains robustness when the data-generating protocols underlying the graph undergo structural change, providing the forward compatibility that the domain-specific foundation model (CyberSecLLM) requires.
+
+\subsubsection{Protocol-Specific Feature Extraction}
 
 When a new protocol regime is deployed, the observable features on graph edges, such as timing distributions, message sizes, and interaction counts, change in characteristic ways. For lattice-based protocols, for example, the timing of key-exchange operations exhibits variations that correlate with the computational structure of the underlying lattice operations.\begin{equation}
 \mathbf{f}_{\mathrm{lattice}}
@@ -1173,7 +1178,7 @@ When a new protocol regime is deployed, the observable features on graph edges, 
 \end{equation}
 where $t=(t_1,\dots,t_n)$ denotes operational timing measurements, and the entries capture central tendency, dispersion, distribution shape, and temporal dependence. Analogous feature vectors $\mathbf{f}_{\mathrm{code}}$ and $\mathbf{f}_{\mathrm{hash}}$ are defined for code-based and hash-based protocol families, incorporating structural parameters such as key sizes, error weights, syndrome entropy, signature sizes, hash invocations, and Merkle tree depths.
 
-\subsection{Unified Multi-Protocol Detection Architecture}
+\subsubsection{Unified Multi-Protocol Detection Architecture}
 
 Protocol-specific encoders produce latent representations $\mathbf{z}_{\mathrm{lattice}}=\mathrm{ENC}_{\mathrm{lattice}}(\mathbf{f}_{\mathrm{lattice}})$, $\mathbf{z}_{\mathrm{code}}=\mathrm{ENC}_{\mathrm{code}}(\mathbf{f}_{\mathrm{code}})$, $\mathbf{z}_{\mathrm{hash}}=\mathrm{ENC}_{\mathrm{hash}}(\mathbf{f}_{\mathrm{hash}})$. Cross-attention fusion enables interaction between the three protocol representations,
 \begin{equation}
@@ -1190,7 +1195,7 @@ p(\mathrm{class},\mathrm{protocol})
 \label{eq:pq_class}
 \end{equation}
 
-\subsection{Formal Security Reduction}
+\subsubsection{Formal Security Reduction}
 
 The robustness guarantee of the detection framework under the new protocol regime inherits from the hardness of the Learning With Errors problem~\cite{Regev2009,Peikert2016}. Given $\mathbf{A}\in\Z_q^{m\times n}$ and $\mathbf{b}=\mathbf{A}\mathbf{s}+\mathbf{e}\bmod q$ for secret~$\mathbf{s}$ and small error~$\mathbf{e}$, any polynomial-time adversary that distinguishes a legitimate from a manipulated protocol-negotiation sequence can be used to construct a solver for LWE, contradicting the assumed hardness. The formal reduction, presented in full in Appendix~A, establishes that the false-negative rate of the classifier is bounded by the advantage of the best LWE solver plus a statistical term that decreases with the number of training samples.
 
@@ -1220,13 +1225,13 @@ The robustness guarantee of the detection framework under the new protocol regim
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_pq_idps_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_pq_idps_architecture.pdf}
 \caption{Architectural diagram of the \emph{Multi-Agent PQC-IDS module}~--- the forward-compatible intrusion-detection architecture for post-quantum protocol regime transitions, with protocol-specific encoders for lattice-, code-, and hash-based protocols and cross-attention fusion.}
 \label{fig:pq_idps_arch_methods}
 \end{figure}
 
-\section{Method of Adaptation to Changes in Statistical Characteristics of Network Traffic}
-\label{sec:drift_adaptation}
+\subsection{Adaptation to Statistical Drift of Distributions}
+\label{sec:drift_adaptation_substat}
 
 Operation of the learnable components of the Hybrid~IDPS in real network
 infrastructure is characterised by gradual and abrupt changes in the
@@ -1416,7 +1421,7 @@ Set learning rates $\eta_i = 1/(L_i + \sum_j L_{ij})$ for each component\;
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{figures/fig_game_theoretical_architecture.pdf}
+\includegraphics[width=0.55\textwidth]{figures/fig_game_theoretical_architecture.pdf}
 \caption{Architectural diagram of Model \textsf{M7: Game-Theoretic Certification}~--- the unified framework modelling the defender--adversary interaction as a strategic game with Stackelberg equilibrium, coupling Models M1--M6 through consistency regularisation.}
 \label{fig:m7_game_arch_methods}
 \end{figure}
