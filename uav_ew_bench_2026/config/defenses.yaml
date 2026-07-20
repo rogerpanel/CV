@@ -1,0 +1,49 @@
+# =====================================================================
+#  UAV-EW-Bench-2026 — defence configurations
+#
+#  Each defence is characterised by its calibrated mission-completion
+#  probability at the nine canonical J/S reporting points (dB).  These
+#  anchor values ARE the ground truth of the benchmark: the Monte-Carlo
+#  replay draws Bernoulli completion outcomes from a monotone curve that
+#  interpolates them (PCHIP).  The airsim backend, when run, is expected
+#  to reproduce these aggregates from real 3-D flights.
+#
+#  Anchors are transcribed verbatim from the dissertation figure
+#  fig:uav_mission_completion (Chapter 6).  Edit here to recalibrate.
+# =====================================================================
+
+js_anchor_points_db: [0, 5, 10, 15, 20, 25, 30, 35, 40]
+
+defenses:
+
+  - id: no_def
+    label: "No-Def (PX4 baseline, undefended)"
+    description: >
+      Reference PX4 autopilot policy without any additional adversarial
+      defence.
+    completion_anchors: [0.99, 0.96, 0.82, 0.54, 0.27, 0.11, 0.04, 0.01, 0.00]
+
+  - id: caf_cnn
+    label: "CAF-CNN + PX4"
+    reference: borhani_2024_uav
+    description: >
+      Cross-ambiguity-function CNN GNSS spoofing detector combined with
+      the PX4 baseline.
+    completion_anchors: [0.99, 0.97, 0.92, 0.84, 0.71, 0.52, 0.31, 0.16, 0.07]
+
+  - id: seq2seq_tr
+    label: "Seq2Seq Tr. + PX4"
+    reference: aigner_2025_uav
+    description: >
+      Sequence-to-sequence Transformer GNSS anomaly model combined with
+      the PX4 baseline.
+    completion_anchors: [1.00, 0.98, 0.95, 0.89, 0.79, 0.65, 0.46, 0.27, 0.13]
+
+  - id: ours_m1m4m6m7
+    label: "Ours: M1+M4+M6+M7 (Phase A)"
+    description: >
+      Full integration of the dissertation methods M1 (CT/SDE-TGNN),
+      M4 (MambaShield), M6 (uncertainty-calibrated detection) and
+      M7 (game-theoretic certification) mapped onto the UAV sensor
+      graph.
+    completion_anchors: [1.00, 1.00, 0.99, 0.97, 0.94, 0.90, 0.82, 0.69, 0.52]

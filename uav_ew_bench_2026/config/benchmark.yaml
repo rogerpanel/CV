@@ -1,0 +1,96 @@
+# =====================================================================
+#  UAV-EW-Bench-2026 — master benchmark configuration
+#  Adversarially-robust UAV navigation under electronic-warfare (EW)
+#  jamming.  Reproduces Figure "fig:uav_mission_completion" of the
+#  dissertation (Chapter 6).
+# =====================================================================
+
+benchmark:
+  name: UAV-EW-Bench-2026
+  version: "1.0.0"
+  description: >
+    Mission-completion of autonomous UAV navigation as a function of
+    jamming-to-signal ratio (J/S, dB) under a combined adversarial loop
+    (GNSS spoofing + PGD visual perturbation + BIM DRL-policy attack),
+    evaluated for four defence configurations.
+
+# ---------------------------------------------------------------------
+#  Physical flight corpus (generated once, replayed under every attack
+#  / defence condition).  Total = 5000 base flights.
+# ---------------------------------------------------------------------
+corpus:
+  total_flights: 5000
+  missions:                       # three mission profiles
+    - cargo_mixed_terrain         # cargo delivery over mixed relief
+    - perimeter_patrol            # perimeter patrol
+    - search_and_rescue           # search-and-rescue
+  receivers:                      # three simulated GNSS receiver models
+    - gp_software_receiver        # GP Software Receiver
+    - ublox_f9p_sim               # u-blox F9P (simulated)
+    - novatel_oem7_sim            # NovAtel OEM7 (simulated)
+  # base flights are split as evenly as possible across the 3x3 grid
+  # of (mission x receiver); exact per-cell counts are emitted to the
+  # manifest at generation time.
+
+# ---------------------------------------------------------------------
+#  Electronic-warfare sweep
+# ---------------------------------------------------------------------
+ew_sweep:
+  js_min_db: 0.0
+  js_max_db: 40.0
+  js_levels: 32                   # ~1.29 dB step  (0 .. 40 dB)
+  # canonical reporting points reproduced in the dissertation figure:
+  js_report_points_db: [0, 5, 10, 15, 20, 25, 30, 35, 40]
+
+# ---------------------------------------------------------------------
+#  Monte-Carlo replay settings
+# ---------------------------------------------------------------------
+sampling:
+  repeats_per_point: 200          # n = 200 flights per (defence, J/S, seed)
+  seeds: [42, 7, 13]              # three independent seeds
+  confidence: 0.95                # Wilson score interval
+
+# ---------------------------------------------------------------------
+#  Combined adversarial contour applied on replay
+# ---------------------------------------------------------------------
+adversary:
+  gnss_spoofing:
+    enabled: true
+    references: [aigner_2025_uav, borhani_2024_uav]
+  visual_pgd:
+    enabled: true
+    epsilon: 0.03137              # 8/255
+    steps: 20
+    references: [lian_2022_uav, hickling_2023_uav]
+  drl_bim:
+    enabled: true
+    epsilon: 0.03137
+    steps: 10
+
+# ---------------------------------------------------------------------
+#  DO-326A / ED-202A safe-completion labelling
+# ---------------------------------------------------------------------
+labelling:
+  standard: DO-326A/ED-202A
+  reference: do_326a_2024
+  # a flight is labelled "completed" iff ALL of:
+  #   (i)   reaches target waypoint,
+  #   (ii)  no collision,
+  #   (iii) no loss of stabilisation,
+  #   (iv)  certified course deviation within bound.
+  regulatory_threshold: 0.90      # DO-326A industry-acceptable floor
+
+# ---------------------------------------------------------------------
+#  Optional documented stratified effects (OFF by default so the
+#  head-line curve reproduces the dissertation anchors exactly).
+# ---------------------------------------------------------------------
+stratified_effects:
+  enabled: false
+  receiver_logit_delta:           # added in logit space when enabled
+    gp_software_receiver: -0.15
+    ublox_f9p_sim: 0.00
+    novatel_oem7_sim: 0.15
+  mission_logit_delta:
+    cargo_mixed_terrain: 0.05
+    perimeter_patrol: 0.00
+    search_and_rescue: -0.05

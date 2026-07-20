@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use UAV-EW-Bench-2026, please cite it as below."
+title: "UAV-EW-Bench-2026: A Reproducible Benchmark for Adversarially-Robust UAV Navigation under Electronic-Warfare Jamming"
+version: "1.0.0"
+date-released: "2026-01-01"
+type: dataset
+authors:
+  - family-names: "Anaedevha"
+    given-names: "Roger Nick"
+    affiliation: "National Research Nuclear University MEPhI"
+keywords:
+  - UAV
+  - electronic warfare
+  - GNSS spoofing
+  - adversarial robustness
+  - mission completion
+  - jamming-to-signal ratio
+  - DO-326A
+abstract: >
+  UAV-EW-Bench-2026 measures autonomous-UAV mission-completion as a
+  function of electronic-warfare jamming intensity (jamming-to-signal
+  ratio, dB) under a combined adversarial contour (GNSS spoofing, PGD
+  visual perturbation, BIM DRL-policy attack), across three mission
+  profiles and three simulated GNSS receiver models, for four defence
+  configurations. Completion is labelled per DO-326A/ED-202A. Ships with
+  a reproducible generation harness (analytical Monte-Carlo backend and a
+  full-fidelity AirSim/PX4 SITL backend).
+license: "CC-BY-4.0"
+# doi: 10.5281/zenodo.XXXXXXXX   # <-- fill in after the first Zenodo release

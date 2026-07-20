@@ -1,0 +1,79 @@
+{
+  "benchmark": "UAV-EW-Bench-2026",
+  "version": "1.0.0",
+  "generator_version": "1.0.0",
+  "backend": "sim-lite",
+  "generated_utc": "2026-07-20T08:35:57.234579+00:00",
+  "config": {
+    "js_min_db": 0.0,
+    "js_max_db": 40.0,
+    "js_levels": 32,
+    "repeats_per_point": 200,
+    "seeds": [
+      42,
+      7,
+      13
+    ],
+    "confidence": 0.95,
+    "labelling_standard": "DO-326A/ED-202A",
+    "regulatory_threshold": 0.9,
+    "stratified_effects": false
+  },
+  "defenses": [
+    {
+      "id": "no_def",
+      "label": "No-Def (PX4 baseline, undefended)",
+      "reference": ""
+    },
+    {
+      "id": "caf_cnn",
+      "label": "CAF-CNN + PX4",
+      "reference": "borhani_2024_uav"
+    },
+    {
+      "id": "seq2seq_tr",
+      "label": "Seq2Seq Tr. + PX4",
+      "reference": "aigner_2025_uav"
+    },
+    {
+      "id": "ours_m1m4m6m7",
+      "label": "Ours: M1+M4+M6+M7 (Phase A)",
+      "reference": ""
+    }
+  ],
+  "corpus": {
+    "total_flights": 5000,
+    "by_mission": {
+      "cargo_mixed_terrain": 1668,
+      "perimeter_patrol": 1667,
+      "search_and_rescue": 1665
+    },
+    "by_receiver": {
+      "gp_software_receiver": 1667,
+      "ublox_f9p_sim": 1667,
+      "novatel_oem7_sim": 1666
+    },
+    "example_flight": {
+      "flight_id": 0,
+      "mission": "cargo_mixed_terrain",
+      "receiver": "gp_software_receiver",
+      "waypoint_km": 4.323,
+      "terrain_roughness": 0.828,
+      "wind_mps": 4.752
+    }
+  },
+  "adversary": {
+    "gnss_spoofing": true,
+    "visual_pgd": true,
+    "drl_bim": true,
+    "pgd_epsilon": 0.03137254901960784,
+    "pgd_steps": 20
+  },
+  "sha256": {
+    "per_flight.csv": "c7bf680498d8a8e1c1bdccbe79667dd8598d6a9c7c200a2e126ea23f2798dfe4",
+    "per_point.csv": "5a0a425db3b96fa49884368b77c47888b7c9156ca7d68260a706532e33aa462c",
+    "report_points.csv": "dccc4b06d8e00b08319fb1aa330217928293f695b5b20d6fec0f65af39b545d8",
+    "crossings.csv": "8dd354ecac5177afc058a6d90bf8bd6f6b3622701ba5d59f2bd4cd37fe9bf068"
+  },
+  "total_flight_evaluations": 93600
+}

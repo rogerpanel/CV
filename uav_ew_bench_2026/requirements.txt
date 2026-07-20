@@ -1,0 +1,11 @@
+# Core (sim-lite backend, analysis, figure, packaging) — runs anywhere
+numpy>=1.24
+scipy>=1.10
+pandas>=1.5
+matplotlib>=3.6
+pyyaml>=6.0
+
+# Optional — only for the full-fidelity AirSim / PX4 SITL backend.
+# Uncomment on a GPU workstation with AirSim + PX4 SITL installed:
+# airsim>=1.8.1
+# msgpack-rpc-python>=0.4.1

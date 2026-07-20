@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Large regenerable per-flight table (regenerate with generate_benchmark.py)
+artifact/per_flight.csv
+artifact_airsim/
+
+# Zenodo bundles (regenerate with package_for_zenodo.py)
+dist/

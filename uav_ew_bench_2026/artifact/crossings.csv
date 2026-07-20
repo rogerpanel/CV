@@ -1,0 +1,5 @@
+defense,label,js_at_0.90_db
+no_def,"No-Def (PX4 baseline, undefended)",7.73
+caf_cnn,CAF-CNN + PX4,11.49
+seq2seq_tr,Seq2Seq Tr. + PX4,14.32
+ours_m1m4m6m7,Ours: M1+M4+M6+M7 (Phase A),25.0
