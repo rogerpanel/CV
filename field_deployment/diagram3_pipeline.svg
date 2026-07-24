@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 720" font-family="Arial, Helvetica, sans-serif">
+<defs>
+<marker id="arw-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f5fbf"/></marker>
+<marker id="arw-power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e2622c"/></marker>
+<marker id="arw-rf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#159a6b"/></marker>
+<marker id="arw-timing" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a4fc4"/></marker>
+</defs>
+<rect x="0" y="0" width="1240" height="720" fill="#ffffff"/>
+<text x="30" y="38" font-size="22" font-weight="700" fill="#14213d">Diagram 3  —  Dual Inference Pipeline (Harvest + Security)</text>
+<text x="30" y="60" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#5a6b86" text-anchor="start">One airframe, two co-running workloads: crop harvest-readiness sensing and network-layer robustness.</text>
+<text x="40" y="110" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#a37a00" text-anchor="start" font-weight="700">HARVEST-READINESS LANE</text>
+<rect x="40" y="125" width="200" height="90" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="40" y="125" width="200" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="40" y="138" width="200" height="13" fill="#d4a017"/>
+<text x="140.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Multispectral capture</text>
+<text x="51" y="169" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Altum-PT + DLS 2</text>
+<rect x="280" y="125" width="200" height="90" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="280" y="125" width="200" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="280" y="138" width="200" height="13" fill="#d4a017"/>
+<text x="380.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Radiometric calib.</text>
+<text x="291" y="169" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">reflectance panel</text>
+<rect x="520" y="125" width="210" height="90" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="520" y="125" width="210" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="520" y="138" width="210" height="13" fill="#d4a017"/>
+<text x="625.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">NDVI / NDRE</text>
+<text x="531" y="169" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">vegetation indices</text>
+<rect x="770" y="125" width="210" height="90" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="770" y="125" width="210" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="770" y="138" width="210" height="13" fill="#d4a017"/>
+<text x="875.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Maturity model</text>
+<text x="781" y="169" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">per-zone classifier</text>
+<rect x="1015" y="125" width="190" height="90" rx="9" fill="#eef7ea" stroke="#5a8f2b" stroke-width="1.8"/>
+<rect x="1015" y="125" width="190" height="26" rx="9" fill="#5a8f2b" stroke="#5a8f2b" stroke-width="1.8"/>
+<rect x="1015" y="138" width="190" height="13" fill="#5a8f2b"/>
+<text x="1110.0" y="143" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Harvest-due map</text>
+<text x="1026" y="169" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">due / not / N days</text>
+<path d="M 240 170 L 280 170" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 480 170 L 520 170" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 730 170 L 770 170" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 980 170 L 1020 170" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<text x="40" y="300" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#1a4fa0" text-anchor="start" font-weight="700">NETWORK-LAYER SECURITY LANE</text>
+<rect x="40" y="315" width="200" height="100" rx="9" fill="#e6f7fb" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="40" y="315" width="200" height="26" rx="9" fill="#0e8aa8" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="40" y="328" width="200" height="13" fill="#0e8aa8"/>
+<text x="140.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Link + GNSS taps</text>
+<text x="51" y="359" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">C2 Ethernet, C/N₀,</text>
+<text x="51" y="376" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">spoof flags</text>
+<rect x="280" y="315" width="200" height="100" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="280" y="315" width="200" height="26" rx="9" fill="#159a6b" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="280" y="328" width="200" height="13" fill="#159a6b"/>
+<text x="380.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">M4 MambaShield</text>
+<text x="291" y="359" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">INT8 onboard</text>
+<text x="291" y="376" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">real-time detect</text>
+<rect x="520" y="315" width="210" height="100" rx="9" fill="#e7effb" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="520" y="315" width="210" height="26" rx="9" fill="#1f5fbf" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="520" y="328" width="210" height="13" fill="#1f5fbf"/>
+<text x="625.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">M1 CT/SDE-TGNN</text>
+<text x="531" y="359" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">temporal-graph</text>
+<text x="531" y="376" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">anomaly (edge)</text>
+<rect x="770" y="315" width="210" height="100" rx="9" fill="#e7effb" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="770" y="315" width="210" height="26" rx="9" fill="#1f5fbf" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="770" y="328" width="210" height="13" fill="#1f5fbf"/>
+<text x="875.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">M6 + M7</text>
+<text x="781" y="359" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">calibrated trust +</text>
+<text x="781" y="376" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">certified policy</text>
+<rect x="1015" y="315" width="190" height="100" rx="9" fill="#fdeaea" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="1015" y="315" width="190" height="26" rx="9" fill="#c0392b" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="1015" y="328" width="190" height="13" fill="#c0392b"/>
+<text x="1110.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Decision</text>
+<text x="1026" y="359" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">continue / re-route /</text>
+<text x="1026" y="376" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">safe-hold</text>
+<path d="M 240 365 L 280 365" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 480 365 L 520 365" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 730 365 L 770 365" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 980 365 L 1020 365" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 340 315 L 340 215" fill="none" stroke="#8a4fc4" stroke-width="2.2" stroke-dasharray="2 4" marker-end="url(#arw-timing)"/>
+<rect x="445.0" y="261" width="230.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="560" y="272.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#8a4fc4" text-anchor="middle" font-weight="700">keeps link alive → data keeps flowing</text>
+<rect x="440" y="470" width="360" height="120" rx="9" fill="#eef1f6" stroke="#41506b" stroke-width="1.8"/>
+<rect x="440" y="470" width="360" height="26" rx="9" fill="#41506b" stroke="#41506b" stroke-width="1.8"/>
+<rect x="440" y="483" width="360" height="13" fill="#41506b"/>
+<text x="620.0" y="488" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Fusion &amp; Uplink (Tier 2/3)</text>
+<text x="451" y="514" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">harvest map + security log → dashboard</text>
+<text x="451" y="531" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">FedGTD federated update ↑ · PQC-signed model ↓</text>
+<text x="451" y="548" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">field completion vs UAV-EW-Bench-2026</text>
+<path d="M 620 415 L 620 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<path d="M 1110 215 L 900 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="40" y="560" width="232" height="64" rx="7" fill="#fbfcfe" stroke="#c7d2e0" stroke-width="1.4"/>
+<text x="52" y="578" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start" font-weight="700">Legend</text>
+<path d="M 52 600 L 84 600" stroke="#1f5fbf" stroke-width="2.2"/>
+<text x="92" y="604" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">inference flow</text>
+<path d="M 52 620 L 84 620" stroke="#8a4fc4" stroke-width="2.2" stroke-dasharray="2 4"/>
+<text x="92" y="624" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">cross-lane dependency</text>
+</svg>

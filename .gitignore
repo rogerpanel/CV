@@ -21,3 +21,5 @@ dissertation_v12_eng/main_Eng.pdf
 # Intermediate HTML used only to render the PDF
 field_deployment/FIELD_DEPLOYMENT_KIT.html
 uav_ew_bench_2026/DATASET_CARD.html
+field_deployment/_diagrams_combined.html
+field_deployment/recalc_result.json

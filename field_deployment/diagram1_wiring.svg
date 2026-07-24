@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 880" font-family="Arial, Helvetica, sans-serif">
+<defs>
+<marker id="arw-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f5fbf"/></marker>
+<marker id="arw-power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e2622c"/></marker>
+<marker id="arw-rf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#159a6b"/></marker>
+<marker id="arw-timing" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a4fc4"/></marker>
+</defs>
+<rect x="0" y="0" width="1240" height="880" fill="#ffffff"/>
+<text x="30" y="38" font-size="22" font-weight="700" fill="#14213d">Diagram 1  —  UAV Onboard Wiring / Integration</text>
+<text x="30" y="60" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#5a6b86" text-anchor="start">Physical build: peripherals hang off a shared data bus; two compute hubs (FC + Jetson) drive it; a power bus feeds everything.</text>
+<rect x="40" y="95" width="180" height="70" rx="9" fill="#fbe9df" stroke="#e2622c" stroke-width="1.8"/>
+<rect x="40" y="95" width="180" height="26" rx="9" fill="#e2622c" stroke="#e2622c" stroke-width="1.8"/>
+<rect x="40" y="108" width="180" height="13" fill="#e2622c"/>
+<text x="130.0" y="113" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Smart Battery</text>
+<text x="51" y="139" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">6S–12S Li-ion pack</text>
+<rect x="40" y="185" width="180" height="120" rx="9" fill="#fbe9df" stroke="#e2622c" stroke-width="1.8"/>
+<rect x="40" y="185" width="180" height="26" rx="9" fill="#e2622c" stroke="#e2622c" stroke-width="1.8"/>
+<rect x="40" y="198" width="180" height="13" fill="#e2622c"/>
+<text x="130.0" y="203" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Power Distribution / PMU</text>
+<text x="51" y="229" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Regulated rails:</text>
+<text x="51" y="246" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">  19 V → Jetson</text>
+<text x="51" y="263" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">  5 V → FC · GNSS</text>
+<text x="51" y="280" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">  12 V → radios · payload</text>
+<path d="M 130 165 L 130 185" fill="none" stroke="#e2622c" stroke-width="3.2" marker-end="url(#arw-power)"/>
+<rect x="260" y="150" width="215" height="110" rx="9" fill="#efe9fb" stroke="#8a4fc4" stroke-width="1.8"/>
+<rect x="260" y="150" width="215" height="26" rx="9" fill="#8a4fc4" stroke="#8a4fc4" stroke-width="1.8"/>
+<rect x="260" y="163" width="215" height="13" fill="#8a4fc4"/>
+<text x="367.5" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Anti-spoof GNSS</text>
+<text x="271" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">mosaic-X5 / ZED-F9P</text>
+<text x="271" y="211" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">+ CRPA antenna</text>
+<path d="M 367 260 L 367 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="309.8" y="356.0" width="114.39999999999999" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="367" y="367.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">UART·RTK / USB·C/N₀</text>
+<rect x="490" y="150" width="215" height="110" rx="9" fill="#e6f7fb" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="490" y="150" width="215" height="26" rx="9" fill="#0e8aa8" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="490" y="163" width="215" height="13" fill="#0e8aa8"/>
+<text x="597.5" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">C2 MANET Radio</text>
+<text x="501" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Silvus / Doodle Labs</text>
+<text x="501" y="211" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">the monitored link</text>
+<path d="M 597 260 L 597 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="537.0" y="356.0" width="120.0" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="597" y="367.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">Ethernet (inspected)</text>
+<rect x="720" y="150" width="215" height="110" rx="9" fill="#e6f7fb" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="720" y="150" width="215" height="26" rx="9" fill="#0e8aa8" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="720" y="163" width="215" height="13" fill="#0e8aa8"/>
+<text x="827.5" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">4G/5G + RFD900x</text>
+<text x="731" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">BVLOS backhaul</text>
+<text x="731" y="211" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">backup telemetry</text>
+<path d="M 827 260 L 827 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="795.0" y="356.0" width="64.0" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="827" y="367.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">USB / UART</text>
+<rect x="950" y="150" width="215" height="110" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="950" y="150" width="215" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="950" y="163" width="215" height="13" fill="#d4a017"/>
+<text x="1057.5" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Multispectral Payload</text>
+<text x="961" y="194" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Altum-PT + DLS 2</text>
+<text x="961" y="211" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">NDVI / NDRE</text>
+<path d="M 1057 260 L 1057 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="1013.8" y="356.0" width="86.39999999999999" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="1057" y="367.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">GigE + trigger</text>
+<rect x="160" y="466" width="1000" height="8" rx="4" fill="#1f5fbf"/>
+<text x="170" y="458" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#1f5fbf" text-anchor="start" font-weight="700">Onboard data bus  (Ethernet · serial/UART · USB · I²C)</text>
+<rect x="260" y="560" width="230" height="150" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="260" y="560" width="230" height="26" rx="9" fill="#159a6b" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="260" y="573" width="230" height="13" fill="#159a6b"/>
+<text x="375.0" y="578" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Flight Controller (PX4)</text>
+<text x="271" y="604" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Pixhawk 6X / Cube Orange+</text>
+<text x="271" y="621" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">attitude · GNSS fusion</text>
+<text x="271" y="638" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">RTK inject · fail-safe</text>
+<text x="271" y="655" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">motor &amp; gimbal PWM</text>
+<rect x="560" y="560" width="260" height="175" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="560" y="560" width="260" height="26" rx="9" fill="#159a6b" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="560" y="573" width="260" height="13" fill="#159a6b"/>
+<text x="690.0" y="578" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#fff" text-anchor="middle" font-weight="700">Embedded AI — Jetson Orin NX 16GB</text>
+<text x="571" y="604" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">M4 MambaShield (INT8)</text>
+<text x="571" y="621" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">onboard NDVI harvest screen</text>
+<text x="571" y="638" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">RobustIDPS.ai detect container</text>
+<text x="571" y="655" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">TensorRT · JetPack · MAVSDK</text>
+<rect x="900" y="560" width="215" height="110" rx="9" fill="#fdeaea" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="900" y="560" width="215" height="26" rx="9" fill="#c0392b" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="900" y="573" width="215" height="13" fill="#c0392b"/>
+<text x="1007.5" y="578" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Secure Element</text>
+<text x="911" y="604" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Microchip ATECC608</text>
+<text x="911" y="621" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">verifies signed models</text>
+<path d="M 375 560 L 375 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)" marker-start="url(#arw-data)"/>
+<rect x="331.8" y="506.0" width="86.39999999999999" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="375" y="517.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">UART · MAVLink</text>
+<path d="M 690 560 L 690 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)" marker-start="url(#arw-data)"/>
+<rect x="646.8" y="506.0" width="86.39999999999999" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="690" y="517.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">Ethernet · USB</text>
+<path d="M 1007 560 L 1007 470" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)" marker-start="url(#arw-data)"/>
+<rect x="994.6" y="506.0" width="24.799999999999997" height="15" rx="3" fill="#fff" opacity="0.95"/>
+<text x="1007" y="517.5" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#1f5fbf" text-anchor="middle" font-weight="700">I²C</text>
+<path d="M 130 305 L 175 305 L 175 620 L 260 620" fill="none" stroke="#e2622c" stroke-width="3.2" marker-end="url(#arw-power)"/>
+<rect x="162.0" y="453.5" width="26.0" height="15" rx="3" fill="#fff" opacity="0.92"/>
+<text x="175" y="465.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#e2622c" text-anchor="middle" font-weight="700">5 V</text>
+<path d="M 130 305 L 210 305 L 210 650 L 560 650" fill="none" stroke="#e2622c" stroke-width="3.2" marker-end="url(#arw-power)"/>
+<rect x="194.0" y="468.5" width="32.0" height="15" rx="3" fill="#fff" opacity="0.92"/>
+<text x="210" y="480.0" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#e2622c" text-anchor="middle" font-weight="700">19 V</text>
+<text x="40" y="335" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#e2622c" text-anchor="start">12 V / 5 V rails also feed</text>
+<text x="40" y="350" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#e2622c" text-anchor="start">radios, GNSS &amp; payload</text>
+<text x="367" y="140" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle">↑ RF to GNSS satellites</text>
+<path d="M 367 150 L 367 120" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4"/>
+<text x="597" y="140" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle">↑ RF to ground C2</text>
+<path d="M 597 150 L 597 120" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4"/>
+<rect x="900" y="720" width="232" height="84" rx="7" fill="#fbfcfe" stroke="#c7d2e0" stroke-width="1.4"/>
+<text x="912" y="738" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start" font-weight="700">Legend</text>
+<path d="M 912 760 L 944 760" stroke="#e2622c" stroke-width="3.2"/>
+<text x="952" y="764" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Power rail</text>
+<path d="M 912 780 L 944 780" stroke="#1f5fbf" stroke-width="2.2"/>
+<text x="952" y="784" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">Wired data bus</text>
+<path d="M 912 800 L 944 800" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4"/>
+<text x="952" y="804" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">RF / wireless link</text>
+<text x="40" y="760" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start" font-weight="700">Data-flow note:</text>
+<text x="40" y="781" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">GNSS C/N₀ + spoof flags and the C2-radio Ethernet stream are fed live into MambaShield (M4) / M6 on the Jetson —</text>
+<text x="40" y="799" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">the network-layer telemetry the research models classify in real time while the FC keeps flying the RTK survey grid.</text>
+</svg>

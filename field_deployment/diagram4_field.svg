@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 780" font-family="Arial, Helvetica, sans-serif">
+<defs>
+<marker id="arw-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f5fbf"/></marker>
+<marker id="arw-power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e2622c"/></marker>
+<marker id="arw-rf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#159a6b"/></marker>
+<marker id="arw-timing" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a4fc4"/></marker>
+</defs>
+<rect x="0" y="0" width="1240" height="780" fill="#ffffff"/>
+<text x="30" y="38" font-size="22" font-weight="700" fill="#14213d">Diagram 4  —  Field Test-Run / Demonstration</text>
+<text x="30" y="60" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#5a6b86" text-anchor="start">Industrial test sortie: survey the field, decide harvest readiness, and validate robustness under measured interference.</text>
+<rect x="40" y="90" width="760" height="470" rx="12" fill="#f4f9fc" stroke="#c7d2e0" stroke-width="1.4"/>
+<rect x="70" y="380" width="220" height="150" rx="8" fill="#bfe3a0" stroke="#7a8a5a" stroke-width="1.4"/>
+<rect x="128.8" y="398" width="102.39999999999999" height="17" rx="3" fill="#ffffff" opacity="0.82"/>
+<text x="180" y="411" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="middle" font-weight="700">Zone A · ready</text>
+<rect x="310" y="380" width="220" height="150" rx="8" fill="#e7e08a" stroke="#7a8a5a" stroke-width="1.4"/>
+<rect x="362.2" y="398" width="115.6" height="17" rx="3" fill="#ffffff" opacity="0.82"/>
+<text x="420" y="411" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="middle" font-weight="700">Zone B · ~5 days</text>
+<rect x="550" y="380" width="220" height="150" rx="8" fill="#e8b98a" stroke="#7a8a5a" stroke-width="1.4"/>
+<rect x="595.6" y="398" width="128.8" height="17" rx="3" fill="#ffffff" opacity="0.82"/>
+<text x="660" y="411" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="middle" font-weight="700">Zone C · not ready</text>
+<text x="70" y="370" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#5a6b86" text-anchor="start" font-style="italic">Survey grid over the field (RTK-guided)</text>
+<rect x="360" y="150" width="120" height="54" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<text x="420" y="183" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#0f7a52" text-anchor="middle" font-weight="700">UAV</text>
+<path d="M 120 340 L 700 340 L 700 300 L 120 300 L 120 260 L 700 260" fill="none" stroke="#1f5fbf" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="150" y="250" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#1f5fbf" text-anchor="start">NDVI capture sweep</text>
+<rect x="640" y="430" width="130" height="90" rx="9" fill="#fdeaea" stroke="#c0392b" stroke-width="1.8"/>
+<text x="705" y="455" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#c0392b" text-anchor="middle" font-weight="700">EW source</text>
+<text x="705" y="474" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#c0392b" text-anchor="middle">(range /</text>
+<text x="705" y="489" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#c0392b" text-anchor="middle">Faraday only)</text>
+<path d="M 640 455 L 500 190" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arw-rf)"/>
+<rect x="526.0" y="291" width="38.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="545" y="302.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle" font-weight="700">J/S ↑</text>
+<rect x="830" y="90" width="370" height="300" rx="12" fill="#eef4fc" stroke="#1f5fbf" stroke-width="1.4"/>
+<text x="850" y="120" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#1a4fa0" text-anchor="start" font-weight="700">GROUND STATION (Tier 2)</text>
+<rect x="855" y="135" width="320" height="70" rx="9" fill="#e7effb" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="855" y="135" width="320" height="26" rx="9" fill="#1f5fbf" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="855" y="148" width="320" height="13" fill="#1f5fbf"/>
+<text x="1015.0" y="153" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">GCS + Edge Gateway</text>
+<text x="866" y="179" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#14213d" text-anchor="start">QGC mission · RobustIDPS.ai live</text>
+<rect x="855" y="225" width="150" height="70" rx="9" fill="#e6f7fb" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="855" y="225" width="150" height="26" rx="9" fill="#0e8aa8" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="855" y="238" width="150" height="13" fill="#0e8aa8"/>
+<text x="930.0" y="243" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">RTK base</text>
+<text x="866" y="269" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#14213d" text-anchor="start">cm corrections</text>
+<rect x="1025" y="225" width="150" height="70" rx="9" fill="#eef1f6" stroke="#41506b" stroke-width="1.8"/>
+<rect x="1025" y="225" width="150" height="26" rx="9" fill="#41506b" stroke="#41506b" stroke-width="1.8"/>
+<rect x="1025" y="238" width="150" height="13" fill="#41506b"/>
+<text x="1100.0" y="243" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Spectrum analyzer</text>
+<text x="1036" y="269" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#14213d" text-anchor="start">measures real J/S</text>
+<rect x="855" y="315" width="320" height="60" rx="9" fill="#eef7ea" stroke="#5a8f2b" stroke-width="1.8"/>
+<rect x="855" y="315" width="320" height="26" rx="9" fill="#5a8f2b" stroke="#5a8f2b" stroke-width="1.8"/>
+<rect x="855" y="328" width="320" height="13" fill="#5a8f2b"/>
+<text x="1015.0" y="333" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Harvest-due map + security log</text>
+<text x="866" y="359" font-family="Arial, Helvetica, sans-serif" font-size="10" fill="#14213d" text-anchor="start"></text>
+<path d="M 480 175 L 830 200" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arw-rf)" marker-start="url(#arw-rf)"/>
+<rect x="568.0" y="166" width="164.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="650" y="177.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle" font-weight="700">C2 + telemetry (monitored)</text>
+<rect x="830" y="410" width="370" height="320" rx="12" fill="#fbfcfe" stroke="#c7d2e0" stroke-width="1.4"/>
+<text x="850" y="440" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#14213d" text-anchor="start" font-weight="700">RUN OUTPUTS</text>
+<text x="852" y="470" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start">1  Per-zone harvest-due map (NDVI/NDRE)</text>
+<text x="852" y="500" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start">2  Security event log (M4/M6/M7 verdicts)</text>
+<text x="852" y="530" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start">3  Measured completion vs J/S curve</text>
+<text x="852" y="560" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start">4  Field vs UAV-EW-Bench-2026 comparison</text>
+<text x="852" y="590" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start">5  Signed audit trail (DO-326A + PQC)</text>
+<rect x="40" y="590" width="760" height="140" rx="12" fill="#fbfcfe" stroke="#c7d2e0" stroke-width="1.4"/>
+<text x="60" y="616" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start" font-weight="700">SORTIE PROCEDURE</text>
+<text x="60" y="644" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">① Calibrate (panel + RTK + verify signed models)</text>
+<text x="60" y="661" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">② Baseline survey → first harvest-due map</text>
+<text x="60" y="678" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">③ Characterise RF (spectrum analyzer → J/S)</text>
+<text x="60" y="695" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">④ (Authorized) EW stress across J/S sweep</text>
+<text x="60" y="712" font-family="Arial, Helvetica, sans-serif" font-size="11.5" fill="#14213d" text-anchor="start">⑤ Export maps + logs; compare to benchmark</text>
+</svg>

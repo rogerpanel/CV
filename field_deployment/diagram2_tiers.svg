@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 860" font-family="Arial, Helvetica, sans-serif">
+<defs>
+<marker id="arw-data" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1f5fbf"/></marker>
+<marker id="arw-power" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#e2622c"/></marker>
+<marker id="arw-rf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#159a6b"/></marker>
+<marker id="arw-timing" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#8a4fc4"/></marker>
+</defs>
+<rect x="0" y="0" width="1240" height="860" fill="#ffffff"/>
+<text x="30" y="38" font-size="22" font-weight="700" fill="#14213d">Diagram 2  —  Three-Tier Deployment Architecture</text>
+<text x="30" y="60" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#5a6b86" text-anchor="start">Where each research model runs, and how models &amp; data move between the UAV, the field gateway, and the cloud.</text>
+<rect x="40" y="100" width="360" height="660" rx="14" fill="#f2fbf6" stroke="#159a6b" stroke-width="2"/>
+<text x="60" y="130" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#0f7a52" text-anchor="start" font-weight="700">TIER 1 — ONBOARD (UAV)</text>
+<rect x="70" y="150" width="300" height="120" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="70" y="150" width="300" height="26" rx="9" fill="#159a6b" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="70" y="163" width="300" height="13" fill="#159a6b"/>
+<text x="220.0" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Flight Controller (PX4)</text>
+<text x="81" y="194" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">attitude · GNSS fusion</text>
+<text x="81" y="211" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">fail-safe · RTK</text>
+<rect x="70" y="300" width="300" height="150" rx="9" fill="#eaf7f0" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="70" y="300" width="300" height="26" rx="9" fill="#159a6b" stroke="#159a6b" stroke-width="1.8"/>
+<rect x="70" y="313" width="300" height="13" fill="#159a6b"/>
+<text x="220.0" y="318" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Jetson Orin NX 16GB</text>
+<text x="81" y="344" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">M4 MambaShield (INT8)</text>
+<text x="81" y="361" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">onboard NDVI harvest flag</text>
+<text x="81" y="378" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">lowest-latency detection</text>
+<rect x="70" y="480" width="300" height="110" rx="9" fill="#efe9fb" stroke="#8a4fc4" stroke-width="1.8"/>
+<rect x="70" y="480" width="300" height="26" rx="9" fill="#8a4fc4" stroke="#8a4fc4" stroke-width="1.8"/>
+<rect x="70" y="493" width="300" height="13" fill="#8a4fc4"/>
+<text x="220.0" y="498" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Sensors / Links</text>
+<text x="81" y="524" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">anti-spoof GNSS</text>
+<text x="81" y="541" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">C2 MANET radio</text>
+<text x="81" y="558" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">multispectral cam</text>
+<rect x="70" y="620" width="300" height="90" rx="9" fill="#fdeaea" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="70" y="620" width="300" height="26" rx="9" fill="#c0392b" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="70" y="633" width="300" height="13" fill="#c0392b"/>
+<text x="220.0" y="638" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Secure Element</text>
+<text x="81" y="664" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">ATECC608 — verifies</text>
+<text x="81" y="681" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">signed model updates</text>
+<rect x="440" y="100" width="360" height="660" rx="14" fill="#eef4fc" stroke="#1f5fbf" stroke-width="2"/>
+<text x="460" y="130" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#1a4fa0" text-anchor="start" font-weight="700">TIER 2 — EDGE GATEWAY (field)</text>
+<rect x="470" y="150" width="300" height="180" rx="9" fill="#e7effb" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="470" y="150" width="300" height="26" rx="9" fill="#1f5fbf" stroke="#1f5fbf" stroke-width="1.8"/>
+<rect x="470" y="163" width="300" height="13" fill="#1f5fbf"/>
+<text x="620.0" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Jetson AGX Orin 64GB</text>
+<text x="481" y="194" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">Full RobustIDPS.ai stack</text>
+<text x="481" y="211" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">M1 CT/SDE-TGNN</text>
+<text x="481" y="228" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">M6 uncertainty calibration</text>
+<text x="481" y="245" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">M7 game-theoretic cert.</text>
+<rect x="470" y="360" width="300" height="120" rx="9" fill="#fff6e0" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="470" y="360" width="300" height="26" rx="9" fill="#d4a017" stroke="#d4a017" stroke-width="1.8"/>
+<rect x="470" y="373" width="300" height="13" fill="#d4a017"/>
+<text x="620.0" y="378" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Agronomy Engine</text>
+<text x="481" y="404" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">Full crop-maturity model</text>
+<text x="481" y="421" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">→ per-zone harvest-due map</text>
+<rect x="470" y="510" width="300" height="110" rx="9" fill="#e6f7fb" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="470" y="510" width="300" height="26" rx="9" fill="#0e8aa8" stroke="#0e8aa8" stroke-width="1.8"/>
+<rect x="470" y="523" width="300" height="13" fill="#0e8aa8"/>
+<text x="620.0" y="528" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Federated Client + RTK</text>
+<text x="481" y="554" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">FL client · RTK base/NTRIP</text>
+<text x="481" y="571" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">local dashboard</text>
+<rect x="470" y="650" width="300" height="80" rx="9" fill="#fdeaea" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="470" y="650" width="300" height="26" rx="9" fill="#c0392b" stroke="#c0392b" stroke-width="1.8"/>
+<rect x="470" y="663" width="300" height="13" fill="#c0392b"/>
+<text x="620.0" y="668" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">HSM (YubiHSM 2)</text>
+<text x="481" y="694" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">signs/verifies PQC updates</text>
+<rect x="840" y="100" width="360" height="660" rx="14" fill="#eef1f6" stroke="#41506b" stroke-width="2"/>
+<text x="860" y="130" font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#33415c" text-anchor="start" font-weight="700">TIER 3 — CLOUD / REGIONAL</text>
+<rect x="870" y="150" width="300" height="150" rx="9" fill="#eef1f6" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="150" width="300" height="26" rx="9" fill="#41506b" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="163" width="300" height="13" fill="#41506b"/>
+<text x="1020.0" y="168" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">GPU Server / VM</text>
+<text x="881" y="194" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">FedGTD aggregation</text>
+<text x="881" y="211" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">cross-farm model fusion</text>
+<rect x="870" y="330" width="300" height="140" rx="9" fill="#eef1f6" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="330" width="300" height="26" rx="9" fill="#41506b" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="343" width="300" height="13" fill="#41506b"/>
+<text x="1020.0" y="348" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Model Update Service</text>
+<text x="881" y="374" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">PQC-signed (Kyber-1024 /</text>
+<text x="881" y="391" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">Dilithium, GOST R 34.10)</text>
+<text x="881" y="408" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">versioned rollout</text>
+<rect x="870" y="500" width="300" height="130" rx="9" fill="#eef1f6" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="500" width="300" height="26" rx="9" fill="#41506b" stroke="#41506b" stroke-width="1.8"/>
+<rect x="870" y="513" width="300" height="13" fill="#41506b"/>
+<text x="1020.0" y="518" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#fff" text-anchor="middle" font-weight="700">Agronomy Dashboards</text>
+<text x="881" y="544" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">harvest-readiness maps</text>
+<text x="881" y="561" font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#14213d" text-anchor="start">long-term storage &amp; audit</text>
+<path d="M 370 360 L 470 240" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)"/>
+<rect x="371.0" y="281" width="98.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="420" y="292.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#1f5fbf" text-anchor="middle" font-weight="700">telemetry graph</text>
+<path d="M 470 700 L 370 665" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arw-rf)"/>
+<rect x="371.0" y="666" width="98.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="420" y="677.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle" font-weight="700">signed update ↓</text>
+<path d="M 770 240 L 870 225" fill="none" stroke="#1f5fbf" stroke-width="2.2" marker-end="url(#arw-data)" marker-start="url(#arw-data)"/>
+<rect x="780.0" y="201" width="80.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="820" y="212.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#1f5fbf" text-anchor="middle" font-weight="700">FL weights ↑</text>
+<path d="M 870 400 L 770 690" fill="none" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4" marker-end="url(#arw-rf)"/>
+<rect x="775.0" y="551" width="80.0" height="15" rx="3" fill="#ffffff" opacity="0.92"/>
+<text x="815" y="562.5" font-family="Arial, Helvetica, sans-serif" font-size="10.5" fill="#159a6b" text-anchor="middle" font-weight="700">PQC update ↓</text>
+<rect x="40" y="780" width="232" height="64" rx="7" fill="#fbfcfe" stroke="#c7d2e0" stroke-width="1.4"/>
+<text x="52" y="798" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#14213d" text-anchor="start" font-weight="700">Legend</text>
+<path d="M 52 820 L 84 820" stroke="#1f5fbf" stroke-width="2.2"/>
+<text x="92" y="824" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">wired / LAN</text>
+<path d="M 52 840 L 84 840" stroke="#159a6b" stroke-width="2.2" stroke-dasharray="6 4"/>
+<text x="92" y="844" font-family="Arial, Helvetica, sans-serif" font-size="11" fill="#14213d" text-anchor="start">wireless / WAN</text>
+<text x="560" y="800" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="#5a6b86" text-anchor="start" font-style="italic">Offline-tolerant: Tier 1 flies and detects with no link; Tiers 2–3 sync when connectivity returns.</text>
+</svg>
