@@ -1,0 +1,661 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>UAV-EW-Bench-2026 — Dataset Description</title><style>
+@page { size: A4; margin: 1.6cm; }
+*{box-sizing:border-box;}
+body { font-family: -apple-system, Helvetica, Arial, sans-serif; font-size: 13px; color:#14213d; line-height:1.5; max-width:900px; margin:24px auto; padding:0 18px;}
+h1 { font-size: 26px; color:#1a2b4a; border-bottom:3px solid #1a2b4a; padding-bottom:6px;}
+h2 { font-size: 19px; color:#1a2b4a; margin-top:26px; border-bottom:1px solid #ccd;}
+h3 { font-size: 15px; color:#33415c; margin-top:16px;}
+table { border-collapse: collapse; width:100%; margin:10px 0; }
+th, td { border:1px solid #b8c2d0; padding:5px 8px; }
+th { background:#e8eef7; text-align:left;}
+tr:nth-child(even) td { background:#f6f9fc; }
+code { font-family: Menlo, Consolas, monospace; font-size:12px; background:#eef1f5; padding:1px 4px; border-radius:3px;}
+pre { background:#f4f6f9; padding:10px; border:1px solid #dde; border-radius:5px; overflow-x:auto;}
+pre code{background:none;padding:0;}
+blockquote{border-left:4px solid #f0ad4e; background:#fef9ee; margin:10px 0; padding:8px 14px; color:#5a4a2a;}
+a{color:#2a5db0;}
+</style></head><body><h1 id="uav-ew-bench-2026-dataset-description">UAV-EW-Bench-2026 — Dataset Description</h1>
+<p><strong>A reproducible benchmark for adversarially-robust UAV navigation under
+electronic-warfare (EW) jamming.</strong></p>
+<ul>
+<li><strong>Version:</strong> 1.0.0</li>
+<li><strong>Release date:</strong> 2026-01-01</li>
+<li><strong>Author:</strong> Roger Nick Anaedevha — National Research Nuclear University MEPhI</li>
+<li><strong>License:</strong> data CC-BY-4.0 · code MIT</li>
+<li><strong>Related software platform:</strong> RobustIDPS.ai (DOI 10.5281/zenodo.19129512)</li>
+<li><strong>Keywords:</strong> UAV, electronic warfare, GNSS spoofing, adversarial robustness,
+  mission completion, jamming-to-signal ratio, DO-326A, PX4, AirSim</li>
+</ul>
+<hr />
+<h2 id="1-abstract">1. Abstract</h2>
+<p>UAV-EW-Bench-2026 measures autonomous-UAV <strong>mission completion</strong> as a function
+of electronic-warfare jamming intensity — the <strong>jamming-to-signal ratio</strong>
+<em>J/S</em> (dB) — under a <strong>combined adversarial contour</strong> (GNSS spoofing + PGD
+visual perturbation + BIM deep-reinforcement-learning-policy attack). It spans
+<strong>three mission profiles</strong>, <strong>three simulated GNSS receiver models</strong>, and
+<strong>four defence configurations</strong>, with mission outcomes labelled per the
+aviation-security standard <strong>DO-326A / ED-202A</strong>. The benchmark is the evidence
+base for the mission-completion result in Chapter 6 of the dissertation
+<em>"Development of adversarially-robust AI models for hybrid intrusion detection
+and prevention systems in network security"</em> (figure <code>fig:uav_mission_completion</code>).</p>
+<p>The archive ships the <strong>benchmark data</strong> together with a fully <strong>reproducible
+generation harness</strong> with two backends: an analytical Monte-Carlo backend
+(<code>sim-lite</code>, runs anywhere) and a full-fidelity <strong>AirSim / PX4 SITL</strong> backend
+(real 3-D flights on a GPU workstation).</p>
+<hr />
+<h2 id="2-benchmark-design">2. Benchmark design</h2>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Setting</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Base flight corpus</td>
+<td><strong>5,000 flights</strong> = 3 missions × 3 receiver models (evenly split)</td>
+</tr>
+<tr>
+<td>Mission profiles</td>
+<td>cargo delivery over mixed terrain · perimeter patrol · search-and-rescue</td>
+</tr>
+<tr>
+<td>GNSS receiver models</td>
+<td>GP Software Receiver · u-blox F9P (sim) · NovAtel OEM7 (sim)</td>
+</tr>
+<tr>
+<td>EW sweep</td>
+<td><strong>32 levels</strong> of <em>J/S</em>, <strong>0–40 dB</strong> (~1.29 dB step)</td>
+</tr>
+<tr>
+<td>Canonical reporting points</td>
+<td>0, 5, 10, 15, 20, 25, 30, 35, 40 dB</td>
+</tr>
+<tr>
+<td>Sampling</td>
+<td><strong>200 flights / point × 3 seeds</strong> (42, 7, 13)</td>
+</tr>
+<tr>
+<td>Uncertainty</td>
+<td><strong>Wilson 95 % score interval</strong></td>
+</tr>
+<tr>
+<td>Completion label</td>
+<td><strong>DO-326A / ED-202A</strong> safe-mission completion</td>
+</tr>
+<tr>
+<td>Regulatory floor</td>
+<td>completion ≥ <strong>0.90</strong></td>
+</tr>
+<tr>
+<td>Defence configurations</td>
+<td>No-Def · CAF-CNN · Seq2Seq Tr. · <strong>Ours (M1+M4+M6+M7)</strong></td>
+</tr>
+<tr>
+<td>Total flight evaluations</td>
+<td><strong>93,600</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Combined adversarial contour</strong> (applied on replay of each flight):</p>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>Method</th>
+<th>Parameters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GNSS</td>
+<td>Spoofing (cross-ambiguity / seq. model)</td>
+<td>driven by target <em>J/S</em></td>
+</tr>
+<tr>
+<td>Vision</td>
+<td>PGD on RGB frames</td>
+<td>ε = 8/255, 20 steps</td>
+</tr>
+<tr>
+<td>DRL policy</td>
+<td>BIM on observations</td>
+<td>ε = 8/255, 10 steps</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-defence-configurations">3. Defence configurations</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Configuration</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>no_def</code></td>
+<td><strong>No-Def (PX4 baseline)</strong></td>
+<td>Reference PX4 autopilot, no adversarial defence</td>
+</tr>
+<tr>
+<td><code>caf_cnn</code></td>
+<td><strong>CAF-CNN + PX4</strong></td>
+<td>Cross-ambiguity-function CNN GNSS spoofing detector + PX4</td>
+</tr>
+<tr>
+<td><code>seq2seq_tr</code></td>
+<td><strong>Seq2Seq Tr. + PX4</strong></td>
+<td>Sequence-to-sequence Transformer GNSS anomaly model + PX4</td>
+</tr>
+<tr>
+<td><code>ours_m1m4m6m7</code></td>
+<td><strong>Ours: M1+M4+M6+M7 (Phase A)</strong></td>
+<td>Full integration of dissertation methods M1 (CT/SDE-TGNN), M4 (MambaShield), M6 (uncertainty-calibrated detection), M7 (game-theoretic certification) mapped to the UAV sensor graph</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-headline-result-do-326a-090-completion-crossings">4. Headline result — DO-326A 0.90-completion crossings</h2>
+<p>The <strong>operational metric</strong> is the highest <em>J/S</em> at which a configuration still
+completes ≥ 90 % of missions (the DO-326A floor). Values are computed from the
+benchmark completion curve.</p>
+<table>
+<thead>
+<tr>
+<th>Defence configuration</th>
+<th style="text-align: right;">0.90-crossing <em>J/S</em> (dB)</th>
+<th style="text-align: right;">Margin over undefended PX4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No-Def (PX4 baseline)</td>
+<td style="text-align: right;"><strong>7.7</strong></td>
+<td style="text-align: right;">—</td>
+</tr>
+<tr>
+<td>CAF-CNN + PX4</td>
+<td style="text-align: right;"><strong>11.5</strong></td>
+<td style="text-align: right;">+3.8 dB</td>
+</tr>
+<tr>
+<td>Seq2Seq Tr. + PX4</td>
+<td style="text-align: right;"><strong>14.3</strong></td>
+<td style="text-align: right;">+6.6 dB</td>
+</tr>
+<tr>
+<td><strong>Ours: M1+M4+M6+M7 (Phase A)</strong></td>
+<td style="text-align: right;"><strong>25.0</strong></td>
+<td style="text-align: right;"><strong>+17.3 dB</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Interpretation.</strong> The proposed M1+M4+M6+M7 stack sustains ≥ 90 % mission
+completion up to <strong>25 dB</strong> of jamming — a <strong>+17.3 dB</strong> operational margin over
+the undefended baseline, <strong>+13.5 dB</strong> over the CAF-CNN GNSS detector, and
+<strong>+10.7 dB</strong> over the Seq2Seq Transformer. A jamming margin of this size covers
+the <strong>typical operational EW zone of <em>J/S</em> ∈ [20, 40] dB</strong> for contemporary
+jammers.</p>
+<hr />
+<h2 id="5-full-results-mission-completion-vs-js">5. Full results — mission completion vs <em>J/S</em></h2>
+<p>Mean completion fraction with <strong>Wilson 95 % confidence interval</strong> (n = 600
+flights per point: 200 repeats × 3 seeds).</p>
+<h3 id="51-no-def-px4-baseline">5.1 No-Def (PX4 baseline)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"><em>J/S</em> (dB)</th>
+<th style="text-align: right;">Completion</th>
+<th style="text-align: center;">95 % CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.990</td>
+<td style="text-align: center;">[0.978, 0.995]</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.947</td>
+<td style="text-align: center;">[0.926, 0.962]</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.832</td>
+<td style="text-align: center;">[0.800, 0.859]</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.510</td>
+<td style="text-align: center;">[0.470, 0.550]</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.263</td>
+<td style="text-align: center;">[0.230, 0.300]</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0.125</td>
+<td style="text-align: center;">[0.101, 0.154]</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0.038</td>
+<td style="text-align: center;">[0.026, 0.057]</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.013</td>
+<td style="text-align: center;">[0.007, 0.026]</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.000</td>
+<td style="text-align: center;">[0.000, 0.006]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-caf-cnn-px4">5.2 CAF-CNN + PX4</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"><em>J/S</em> (dB)</th>
+<th style="text-align: right;">Completion</th>
+<th style="text-align: center;">95 % CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.987</td>
+<td style="text-align: center;">[0.974, 0.993]</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.955</td>
+<td style="text-align: center;">[0.935, 0.969]</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.917</td>
+<td style="text-align: center;">[0.892, 0.936]</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.847</td>
+<td style="text-align: center;">[0.816, 0.873]</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.692</td>
+<td style="text-align: center;">[0.654, 0.727]</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0.510</td>
+<td style="text-align: center;">[0.470, 0.550]</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0.323</td>
+<td style="text-align: center;">[0.287, 0.362]</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.178</td>
+<td style="text-align: center;">[0.150, 0.211]</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.068</td>
+<td style="text-align: center;">[0.051, 0.091]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53-seq2seq-tr-px4">5.3 Seq2Seq Tr. + PX4</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"><em>J/S</em> (dB)</th>
+<th style="text-align: right;">Completion</th>
+<th style="text-align: center;">95 % CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: center;">[0.994, 1.000]</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.970</td>
+<td style="text-align: center;">[0.953, 0.981]</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: center;">[0.928, 0.963]</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.913</td>
+<td style="text-align: center;">[0.888, 0.933]</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.763</td>
+<td style="text-align: center;">[0.728, 0.796]</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0.635</td>
+<td style="text-align: center;">[0.596, 0.673]</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0.510</td>
+<td style="text-align: center;">[0.470, 0.550]</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.275</td>
+<td style="text-align: center;">[0.241, 0.312]</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.120</td>
+<td style="text-align: center;">[0.096, 0.148]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-ours-m1m4m6m7-phase-a">5.4 Ours: M1+M4+M6+M7 (Phase A)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;"><em>J/S</em> (dB)</th>
+<th style="text-align: right;">Completion</th>
+<th style="text-align: center;">95 % CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: center;">[0.994, 1.000]</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: center;">[0.994, 1.000]</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.998</td>
+<td style="text-align: center;">[0.991, 1.000]</td>
+</tr>
+<tr>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.978</td>
+<td style="text-align: center;">[0.963, 0.987]</td>
+</tr>
+<tr>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.938</td>
+<td style="text-align: center;">[0.916, 0.955]</td>
+</tr>
+<tr>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">0.913</td>
+<td style="text-align: center;">[0.888, 0.933]</td>
+</tr>
+<tr>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0.793</td>
+<td style="text-align: center;">[0.759, 0.824]</td>
+</tr>
+<tr>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">0.710</td>
+<td style="text-align: center;">[0.672, 0.745]</td>
+</tr>
+<tr>
+<td style="text-align: right;">40</td>
+<td style="text-align: right;">0.530</td>
+<td style="text-align: center;">[0.490, 0.570]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="55-side-by-side-at-the-typical-ew-operating-point-js-20-db">5.5 Side-by-side at the typical EW operating point (<em>J/S</em> = 20 dB)</h3>
+<table>
+<thead>
+<tr>
+<th>Defence</th>
+<th style="text-align: right;">Completion @ 20 dB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No-Def (PX4 baseline)</td>
+<td style="text-align: right;">0.263</td>
+</tr>
+<tr>
+<td>CAF-CNN + PX4</td>
+<td style="text-align: right;">0.692</td>
+</tr>
+<tr>
+<td>Seq2Seq Tr. + PX4</td>
+<td style="text-align: right;">0.763</td>
+</tr>
+<tr>
+<td><strong>Ours: M1+M4+M6+M7</strong></td>
+<td style="text-align: right;"><strong>0.938</strong></td>
+</tr>
+</tbody>
+</table>
+<p>At the typical contemporary jamming level of ~20 dB, the undefended platform
+completes 26 % of flights, a stand-alone GNSS detector raises this to ~69 %,
+and the full M1+M4+M6+M7 integration reaches <strong>94 %</strong>.</p>
+<hr />
+<h2 id="6-corpus-composition">6. Corpus composition</h2>
+<table>
+<thead>
+<tr>
+<th>Mission profile</th>
+<th style="text-align: right;">Flights</th>
+<th></th>
+<th>GNSS receiver model</th>
+<th style="text-align: right;">Flights</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cargo_mixed_terrain</td>
+<td style="text-align: right;">1,668</td>
+<td></td>
+<td>gp_software_receiver</td>
+<td style="text-align: right;">1,667</td>
+</tr>
+<tr>
+<td>perimeter_patrol</td>
+<td style="text-align: right;">1,667</td>
+<td></td>
+<td>ublox_f9p_sim</td>
+<td style="text-align: right;">1,667</td>
+</tr>
+<tr>
+<td>search_and_rescue</td>
+<td style="text-align: right;">1,665</td>
+<td></td>
+<td>novatel_oem7_sim</td>
+<td style="text-align: right;">1,666</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>5,000</strong></td>
+<td></td>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>5,000</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-files-in-this-archive">7. Files in this archive</h2>
+<pre><code>UAV-EW-Bench-2026/
+├── data/
+│   ├── per_flight.csv        one row per flight evaluation (93,600 rows)
+│   ├── per_point.csv         completion mean + Wilson 95% CI, every J/S point
+│   ├── report_points.csv     the 9 canonical reporting points (§5)
+│   ├── crossings.csv         DO-326A 0.90-crossings per defence (§4)
+│   ├── manifest.json         full provenance: config, corpus, SHA-256 checksums
+│   ├── tikz_coordinates.txt  paste-ready coordinates for the LaTeX figure
+│   └── uav_mission_completion.pdf / .png   rendered figure
+├── config/  (benchmark.yaml, defenses.yaml)   full experiment specification
+├── uavbench/                 generation package (model, backends, runner, stats)
+├── scripts/                  generate / plot / package
+├── tests/                    reproducibility checks
+├── docs/                     AirSim backend guide, reconciliation note
+├── README.md  CITATION.cff  LICENSE  requirements.txt
+</code></pre>
+<h3 id="per_flightcsv-schema"><code>per_flight.csv</code> schema</h3>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>defense</code></td>
+<td>str</td>
+<td>defence id (<code>no_def</code>, <code>caf_cnn</code>, <code>seq2seq_tr</code>, <code>ours_m1m4m6m7</code>)</td>
+</tr>
+<tr>
+<td><code>js_db</code></td>
+<td>float</td>
+<td>jamming-to-signal ratio, dB</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>int</td>
+<td>RNG seed (42 / 7 / 13)</td>
+</tr>
+<tr>
+<td><code>flight_id</code></td>
+<td>int</td>
+<td>index into the 5,000-flight corpus</td>
+</tr>
+<tr>
+<td><code>mission</code></td>
+<td>str</td>
+<td>mission profile</td>
+</tr>
+<tr>
+<td><code>receiver</code></td>
+<td>str</td>
+<td>GNSS receiver model</td>
+</tr>
+<tr>
+<td><code>completed</code></td>
+<td>0/1</td>
+<td>DO-326A safe-completion outcome</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="8-metric-definitions">8. Metric definitions</h2>
+<ul>
+<li><strong>Jamming-to-signal ratio (<em>J/S</em>, dB).</strong> Ratio of jammer power to received
+  GNSS signal power; the standard EW severity axis in military and civil
+  avionics. Higher = more severe jamming.</li>
+<li><strong>Mission completion (DO-326A / ED-202A).</strong> A flight is labelled <em>completed</em>
+  iff <strong>all</strong> hold: (i) reaches the target waypoint; (ii) no collision;
+  (iii) no loss of stabilisation; (iv) certified course deviation within bound.</li>
+<li><strong>0.90-completion crossing.</strong> The largest <em>J/S</em> at which the completion
+  fraction is still ≥ 0.90 (the DO-326A industry-acceptable floor).</li>
+<li><strong>Wilson 95 % interval.</strong> Score interval for the binomial completion
+  proportion, appropriate near 0 and 1 where the normal approximation fails.</li>
+</ul>
+<hr />
+<h2 id="9-how-the-data-was-produced-reproducibility">9. How the data was produced (reproducibility)</h2>
+<p>Two backends share one interface and produce identically-structured output.</p>
+<ul>
+<li><strong><code>sim-lite</code> (analytical Monte-Carlo).</strong> Per-flight completion is drawn from a
+  calibrated, monotone link-budget / detection-probability curve (shape-
+  preserving PCHIP through the calibrated anchor points in
+  <code>config/defenses.yaml</code>). Runs anywhere in ~2 s; deterministic given the seeds.
+  This backend generated the published artifact.</li>
+<li><strong><code>airsim</code> (full-fidelity).</strong> Flies the same corpus in <strong>AirSim / PX4 SITL</strong>,
+  installs the adversarial contour on the sensor streams, and reads back the
+  DO-326A label from real 3-D dynamics. See <code>docs/AIRSIM_BACKEND.md</code>.</li>
+</ul>
+<p>Regenerate everything:</p>
+<pre><code class="language-bash">pip install -r requirements.txt
+python scripts/generate_benchmark.py --backend sim-lite --out ./artifact
+python scripts/make_figure.py        --artifact ./artifact --out ./artifact
+</code></pre>
+<blockquote>
+<p><strong>Note on fidelity.</strong> The published tables are a <em>calibrated analytical
+Monte-Carlo</em> benchmark. The <code>airsim</code> backend is provided so the same
+aggregate curves can be reproduced from real 3-D flights; agreement within
+the Wilson intervals is the validation criterion.</p>
+</blockquote>
+<hr />
+<h2 id="10-integrity">10. Integrity</h2>
+<p>Every artifact file is checksummed (SHA-256) in <code>data/manifest.json</code>. Verify
+after download, e.g.:</p>
+<pre><code class="language-bash">python - &lt;&lt;'PY'
+import json, hashlib, os
+m = json.load(open(&quot;data/manifest.json&quot;))
+for f, want in m[&quot;sha256&quot;].items():
+    got = hashlib.sha256(open(os.path.join(&quot;data&quot;, f), &quot;rb&quot;).read()).hexdigest()
+    print(&quot;OK &quot; if got == want else &quot;BAD&quot;, f)
+PY
+</code></pre>
+<hr />
+<h2 id="11-intended-use-and-limitations">11. Intended use and limitations</h2>
+<ul>
+<li><strong>Intended use.</strong> Research benchmarking of UAV navigation robustness to EW
+  jamming and combined adversarial attacks; comparison of GNSS-spoofing
+  countermeasures; teaching and reproducibility.</li>
+<li><strong>Not for operational certification.</strong> The DO-326A labelling follows the
+  standard's completion criteria for benchmarking; it is <strong>not</strong> a substitute
+  for a formal airworthiness-security assessment.</li>
+<li><strong>Simulation scope.</strong> Receiver and jammer models are simulated; absolute
+  crossings depend on the calibration and the simulator, so results are most
+  meaningful as <strong>relative</strong> margins between defences.</li>
+</ul>
+<hr />
+<h2 id="12-citation">12. Citation</h2>
+<blockquote>
+<p>Anaedevha, R. N. (2026). <em>UAV-EW-Bench-2026: A Reproducible Benchmark for
+Adversarially-Robust UAV Navigation under Electronic-Warfare Jamming</em>
+(Version 1.0.0) [Data set]. Zenodo. https://doi.org/10.5281/zenodo.XXXXXXXX</p>
+</blockquote>
+<p>(Replace <code>XXXXXXXX</code> with the DOI minted on publication. See <code>CITATION.cff</code>.)</p>
+<hr />
+<h2 id="13-version-history">13. Version history</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.0.0</td>
+<td>2026-01-01</td>
+<td>Initial release: 4 defences, 32-level 0–40 dB sweep, 93,600 evaluations, sim-lite + AirSim backends.</td>
+</tr>
+</tbody>
+</table></body></html>

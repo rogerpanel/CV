@@ -41,7 +41,8 @@ def main() -> int:
     zip_path = os.path.join(args.out, zip_name)
 
     include_files = [
-        "README.md", "requirements.txt", "CITATION.cff", "LICENSE",
+        "README.md", "DATASET_CARD.md", "requirements.txt",
+        "CITATION.cff", "LICENSE",
         "config/benchmark.yaml", "config/defenses.yaml",
     ]
     include_dirs = ["uavbench", "scripts", "tests", "docs"]
