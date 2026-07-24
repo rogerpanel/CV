@@ -17,3 +17,7 @@ avtoreferat_v12_eng/*.pdf
 slides_v12/*.pdf
 dissertation_v12/main_RU.pdf
 dissertation_v12_eng/main_Eng.pdf
+
+# Intermediate HTML used only to render the PDF
+field_deployment/FIELD_DEPLOYMENT_KIT.html
+uav_ew_bench_2026/DATASET_CARD.html
