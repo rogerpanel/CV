@@ -211,15 +211,53 @@ $(\epsilon_T,\delta)\!\approx\!(13.6,10^{-5})$ at $T=100$ from
 the Opacus PRV accountant~\cite{gopi2021numerical}, and
 sub-second per-adapter latency on A100.
 
-The verified threats --- alignment-bypass fine-tunes, composite
-textual-trigger backdoors and instruction-following corruption ---
-are attacks on the safety of NLP systems at the PEFT layer, the
-multimodal encoder consumes model-card and contributor text, and
-\benchname\ extends NLP-safety resources; this is why we position
-the work for the ACL community rather than a general security
-venue. Sections~\ref{sec:related}--\ref{sec:conclusion} present
-related work, the ecosystem formalisation, the framework, the two
-theorems, the empirical study, and the discussion.
+\paragraph{Claim structure.}
+The paper is organised around three tiered claims. The
+\emph{primary} claim is that federated lineage-aware detection
+can identify malicious LoRA adapters without any marketplace
+sharing raw weights, landing within $1.9$ macro-F1 points of the
+centralised PEFTGuard reference on the same corpus. The
+\emph{secondary} claim is that DP-SGD combined with SecAgg can be
+incorporated at modest utility cost ($0.5$--$1.0$\,pp macro-F1)
+and at a measured ${\approx}4\%$ median per-round wall-clock
+overhead on CPU-hosted federation
+(Appendix~\ref{app:repro}). The \emph{theoretical} claim is that,
+under Definition~\ref{def:attack}, composing PixelDP stability,
+CRFL federated smoothing and R\'enyi-DP composition yields an
+integer certificate $k^*$ on the largest bounded-update coalition
+whose actions cannot flip the global verdict on a queried
+adapter. Every other result --- dynamic-graph superiority,
+multimodal gains, FLTrust robustness, lineage importance, IDS
+transfer, cross-hardware latency --- is reported as supporting
+evidence, not as a free-standing contribution.
+
+\paragraph{Why this belongs at an NLP venue.}
+LoRA is the dominant fine-tuning method for \emph{language}
+models, and the verified threats --- alignment-bypass fine-tunes,
+composite textual-trigger backdoors and instruction-following
+corruption --- are attacks on the safety of NLP systems at the
+PEFT layer. The signal separating a benign adapter from a
+backdoored one is partly linguistic: the multimodal encoder
+consumes model-card, README and contributor-profile text
+alongside the weight and usage modalities, and \benchname\
+extends NLP-safety resources (BackdoorLLM, PADBench). The
+verifier itself is task-agnostic, but the resource, the threat
+model and the deployment target (Hugging Face-style LLM adapter
+hubs) are squarely NLP-safety concerns, which is why we position
+the contribution for the ACL community rather than a general
+security venue.
+
+\paragraph{Roadmap.}
+Section~\ref{sec:related} surveys prior work on adapter security,
+federated learning with DP, dynamic GNNs and certified poisoning
+robustness. Section~\ref{sec:problem} formalises the ecosystem
+graph and the threat model. Section~\ref{sec:framework} presents
+the four-component framework. Section~\ref{sec:theory} states
+and proves the sensitivity bound and the certified coalition
+bound. Section~\ref{sec:experiments} reports the empirical
+study, including ablation, spectral analysis and IDS transfer.
+Sections~\ref{sec:discussion}--\ref{sec:conclusion} discuss
+deployment implications and conclude.
 
 % ============================================================
 %  2. RELATED WORK
@@ -558,24 +596,43 @@ $\epsilon_r$, not the accumulated $\epsilon_T$.
 \end{theorem}
 
 \begin{proof}[Sketch]
-Three ingredients (details in App.~\ref{app:proofs}). (i)~PixelDP
-Lemma~1~\cite{lecuyer2019certified}: an $(\epsilon_r,\delta)$-DP
-scoring function $f$ has
-$\Prob[\argmax f(\mathbf{x})\!\neq\!\argmax f(\mathbf{x}+\Delta)]\!\le\!
-e^{\epsilon_r} p_\Delta(\mathbf{x})+\delta$; the smoothed random
-variable is the aggregated global model $\mathbf{w}_T$.
-(ii)~Under Def.~\ref{def:attack}, one client contributes an
+The bound is obtained by composing four ingredients (full
+book-keeping in App.~\ref{app:proofs}). \textbf{(i) What is
+smoothed.} The random variable smoothed at verification time is
+the aggregated global model $\mathbf{w}_T\!\in\!\R^d$: the output
+logits on $\theta$ are averaged over an
+$(\epsilon_r,\delta)$-DP Gaussian draw applied to $\mathbf{w}_T$,
+producing the smoothed classifier studied by
+PixelDP~\cite{lecuyer2019certified} and, in the federated
+setting, by CRFL~\cite{xie2021crfl}. \textbf{(ii) From client
+coalition to parameter perturbation.} By
+Def.~\ref{def:attack}, one malicious client under SecAgg adds an
 $\ell_2$-perturbation of size $\!\le\!\epsilon_{\mathrm{wt}}$
-per round after clipping, so $k$ colluding clients contribute at
-most $k\epsilon_{\mathrm{wt}}$ (triangle); FLTrust $\beta_i\!\in\!
-[0,1]$ can only tighten, so any unweighted bound holds under
-FLTrust. (iii)~CRFL~\cite{xie2021crfl} Thm.~1 converts a
-class-margin radius into a client coalition of size $N$; combining
-with the PixelDP stability multiplier $e^{\epsilon_r}$ and the CRFL
-denominator $2$ gives Eq.~\eqref{eq:kstar}. R\'enyi-DP
+per round to the aggregate after clipping; $k$ colluding clients
+contribute at most $k\epsilon_{\mathrm{wt}}$ by triangle
+inequality. FLTrust weighting $\beta_i\!\in\![0,1]$ can only
+\emph{decrease} the effective attacker contribution, so any
+certificate under unweighted aggregation is a fortiori valid
+under FLTrust; the certificate does not rely on FLTrust
+correctness. \textbf{(iii) PixelDP stability.} PixelDP
+Lemma~1 gives, for any input perturbation $\Delta$ with bounded
+$\ell_2$ norm, $\Prob[\argmax f(\mathbf{x})\!\neq\!\argmax
+f(\mathbf{x}+\Delta)]\!\le\!e^{\epsilon_r} p_\Delta(\mathbf{x})
++\delta$, instantiated here at the per-query smoothing budget
+$\epsilon_r$ (not the cumulative training budget $\epsilon_T$).
+\textbf{(iv) CRFL client-coalition translation.} CRFL Thm.~1
+turns the class-margin radius into a client coalition of size
+$N$; the factor $2 e^{\epsilon_r}$ combines the PixelDP per-query
+stability multiplier $e^{\epsilon_r}$ with the CRFL class-margin
+denominator (two half-Gaussian tails). Substituting the per-query
+$\epsilon_r$ yields Eq.~\eqref{eq:kstar}. R\'enyi-DP
 composition~\cite{mironov2017renyi,mironov2019sampled} produces
-$\epsilon_T$ but is orthogonal to the certificate. Failure
-probability $T\delta$ is a union bound over inference draws.
+the cumulative $\epsilon_T$ that governs marketplace privacy but
+is orthogonal to the certificate. Failure probability $T\delta$
+is a union bound over inference draws (a single-draw certificate
+uses the tighter $\delta$); the extension to heterogeneous
+edge-set perturbations follows
+\citet{wang2021certgnn,scholten2022randomized}.
 \end{proof}
 
 \paragraph{Numerical instantiation.}
@@ -865,21 +922,7 @@ federation (Appendix~\ref{app:repro}), offering a deployable
 alternative to weight-sharing detectors.
 
 % ============================================================
-%  ACKNOWLEDGEMENTS
-% ============================================================
-\section*{Acknowledgements}
-This work was supported by a grant for research centres in
-Artificial Intelligence from the Ministry of Economic Development
-of the Russian Federation under subsidy agreement (identifier
-000000C313925P3Q0002). The work was carried out at the Institute
-of Cyber Intelligence Systems and the AI Research Center, NRNU
-MEPhI (Moscow). We thank the ACL Rolling Review reviewers, whose
-comments materially improved the certificate derivation, the
-spectral-only baseline, the DP-accounting disclosure, and the
-scoping of the threat model and deployment claims.
-
-% ============================================================
-%  LIMITATIONS
+%  LIMITATIONS  (immediately after Conclusion, per EMNLP 2026 order)
 % ============================================================
 \section*{Limitations}
 \label{sec:limitations}
@@ -978,6 +1021,21 @@ latency is $0.7$\,s on a single A100. LLM writing assistants
 were used only for grammar and phrasing on author-drafted text;
 no technical content, experimental design, results or analysis
 was AI-generated, and all citations were manually verified.
+
+% ============================================================
+%  ACKNOWLEDGEMENTS  (after Ethics, per EMNLP 2026 order)
+% ============================================================
+\section*{Acknowledgements}
+This work was supported by a grant for research centres in
+Artificial Intelligence from the Ministry of Economic Development
+of the Russian Federation under subsidy agreement (identifier
+000000C313925P3Q0002). The work was carried out at the Institute
+of Cyber Intelligence Systems and the AI Research Center, NRNU
+MEPhI (Moscow). We thank the ACL Rolling Review reviewers, whose
+comments materially improved the certificate derivation, the
+spectral-only baseline, the DP-accounting disclosure, and the
+scoping of the threat model and deployment claims.
+
 \begin{thebibliography}{99}
 \small
 
