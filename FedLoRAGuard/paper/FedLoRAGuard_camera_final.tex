@@ -831,8 +831,9 @@ but exposes individual updates.
 \caption{Component ablation on \benchname\ ($T\!=\!100$,
 $N\!=\!50$, mean over three seeds).}
 \label{tab:ablation}
-\small
-\setlength{\tabcolsep}{4pt}
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.1}
 \begin{tabular}{@{}lcccc@{}}
 \toprule
 Configuration & ACC & Macro-F1 & AUROC & $k^*$ \\
@@ -843,12 +844,12 @@ Configuration & ACC & Macro-F1 & AUROC & $k^*$ \\
 \;\; w/o multimodal (wt only)     & 95.6 & 94.7 & 0.972 & 22 \\
 \;\; w/o HGT attention            & 94.2 & 93.4 & 0.961 & 19 \\
 \;\; w/o DyGFormer (static GAT)   & 93.1 & 92.0 & 0.952 & 16 \\
-\;\; w/o FLTrust                & 96.3 & 95.6 & 0.978 & 19 \\
+\;\; w/o FLTrust                  & 96.3 & 95.6 & 0.978 & 19 \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{Privacy / training}}\\
-\;\; w/o DP-SGD                  & 97.4 & 96.9 & 0.987 & 0 \\
-\;\; w/o SecAgg                & 97.1 & 96.4 & 0.984 & 25 \\
-\;\; centralised oracle          & 98.3 & 98.1 & 0.991 & --- \\
+\;\; w/o DP-SGD                   & 97.4 & 96.9 & 0.987 & 0 \\
+\;\; w/o SecAgg                   & 97.1 & 96.4 & 0.984 & 25 \\
+\;\; centralised oracle           & 98.3 & 98.1 & 0.991 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
