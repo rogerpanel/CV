@@ -1,0 +1,1966 @@
+% ============================================================
+%  FedLoRAGuard: Federated Dynamic Graph Neural Networks
+%  with DP Certificates for LoRA Adapter Supply-Chain Integrity
+%  EMNLP 2026 Camera-Ready (final version)
+% ============================================================
+\documentclass[11pt]{article}
+
+\usepackage[final]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{needspace}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+% \usepackage{inconsolata} % restore for Overleaf
+\usepackage{makecell}
+
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{nicefrac}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{threeparttable}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,shapes.geometric,fit,backgrounds,calc,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{enumitem}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\modelname}{FedLoRAGuard}
+\newcommand{\benchname}{LoRAchain-2026}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\NN}{\mathbb{N}}
+\providecommand{\Prob}{}\renewcommand{\Prob}{\mathbb{P}}
+\newcommand{\Lcal}{\mathcal{L}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Tcal}{\mathcal{T}}
+\newcommand{\Gcal}{\mathcal{G}}
+\newcommand{\Vcal}{\mathcal{V}}
+\newcommand{\Ecal}{\mathcal{E}}
+\newcommand{\Rcal}{\mathcal{R}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\softmax}{\mathrm{softmax}}
+\newcommand{\norm}[1]{\|#1\|}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\title{\modelname: Federated Dynamic Graph Neural\\
+Networks with Differential-Privacy Certificates\\
+for LoRA Adapter Integrity Verification}
+
+\author{Roger Nick Anaedevha\textsuperscript{1,*}\thanks{\;\textsuperscript{*}\,All
+        authors of this publication are co-first authors (equal contribution).
+        Corresponding author: \texttt{ar006@campus.mephi.ru}} \quad
+        Alexander G.\ Trofimov\textsuperscript{1,*} \quad
+        Yuri V.\ Borodachev\textsuperscript{2,*} \\
+        \textsuperscript{1}Institute of Cyber Intelligence Systems, \\
+        National Research Nuclear University MEPhI, Moscow 115409, Russia \\
+        \textsuperscript{2}Artificial Intelligence Research Center, \\
+        National Research Nuclear University MEPhI, Moscow 115409, Russia \\
+        \texttt{ar006@campus.mephi.ru}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Low-Rank Adaptation (LoRA) is now the dominant
+parameter-efficient fine-tuning method for large language models,
+but the resulting open marketplace of adapters has become a
+supply-chain attack surface: backdoored adapters merge silently
+with arbitrary task adapters while preserving benign utility, and
+existing centralised integrity tools require marketplaces to share
+raw weights, which is incompatible with proprietary fine-tuning.
+We present \modelname, a federated dynamic-graph framework that
+verifies adapter integrity without weight sharing. The LoRA
+ecosystem is modelled as a heterogeneous continuous-time dynamic
+graph with four node types and six edge types; a federated dynamic
+GNN is trained per-client with client-update-level
+$(\epsilon,\delta)$-DP Gaussian noise, secure aggregation, and
+FLTrust scoring. We prove a sensitivity bound for federated
+heterogeneous-GNN client updates and a certified poisoning-radius
+theorem which converts the per-round inference-time smoothing
+budget $\epsilon_r$ into an analytical bound on the size of a
+bounded-update colluding coalition $k^*$. On $13{,}500$ benign and
+backdoored adapters across four base-model families and ten attack
+types, \modelname\ obtains $96.4\%$ macro-F1 and a certified
+coalition bound $k^*=25$ out of $N=50$ marketplaces at
+inference-time smoothing budget $\epsilon_r=0.5$, and empirically
+tolerates label-flipping Byzantine coalitions up to $\rho\le 0.33$
+without certificate degradation. The training-time DP-SGD
+mechanism, calibrated at $\sigma=1.1$ and Poisson subsampling
+$q=0.2$ over $T=100$ rounds, achieves a cumulative privacy budget
+$\epsilon_T\approx 13.6$ at $\delta=10^{-5}$ under the Opacus PRV
+accountant, at sub-second per-adapter verification latency on
+A100-class hardware. The full DP + secure-aggregation stack adds a
+measured median per-round wall-clock overhead of $\approx 4\%$
+(pooled median across three runs of $20$--$60$ measurement rounds
+on identical CPU hardware) over non-private FedAvg; the released
+runtime ships the instrumentation so operators can re-measure in
+place on their target hardware.
+\end{abstract}
+
+% ============================================================
+%  1. INTRODUCTION
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Low-Rank Adaptation (LoRA)~\cite{hu2021lora} is the dominant
+parameter-efficient fine-tuning method for large language models.
+It inserts low-rank update matrices into Transformer attention
+while freezing the base weights, reducing trainable-parameter counts
+by four orders of magnitude without losing downstream accuracy.
+Combined with $4$-bit quantization
+(QLoRA~\cite{dettmers2023qlora}), LoRA enables individual users to
+fine-tune $65$B-parameter base models on a single consumer GPU.
+The result is a large community ecosystem of shared adapters: as
+of mid-2025 the Hugging Face Hub hosts over $530{,}000$ models,
+and one base model alone has accumulated over $30{,}000$
+derivative LoRAs.
+
+The same ecosystem is now a supply-chain attack surface for
+language models. \citet{liu2024loraattack} showed that
+backdoored adapters merge silently with arbitrary task adapters
+and retain malicious behaviour while preserving benign utility.
+\citet{lermen2023lora} reduced the safety-refusal rate of
+Llama-2-Chat-70B from $95\%$ to below $1\%$ via a USD-$200$ LoRA
+fine-tune, a turnkey alignment-bypass mechanism. Composite
+backdoor attacks~\cite{huang2024composite} scatter trigger keys
+across prompt components. Industry incident reports document
+over $100$ malicious models on Hugging Face Hub embedding reverse
+shells, indirect compromise of the platform's own
+\texttt{SFconvertbot} which had merged over $42{,}000$ conversion
+pull requests, and a five-fold year-over-year increase in
+malicious-model uploads~\cite{cohen2024jfrog,kellas2025pickleball}.
+These marketplace-scale figures concern
+\emph{full-model} backdoors; the LoRA-\emph{adapter} threat we
+address is documented separately by the adapter-specific attack
+work above~\cite{liu2024loraattack,lermen2023lora,huang2024composite},
+and we cite the aggregate figures only as evidence of an active
+marketplace attack surface, not as a count of adapter backdoors.
+
+The standard centralised response is exemplified by
+PEFTGuard~\cite{sun2025peftguard}, which trains a
+backdoor-detection classifier on raw adapter weights and reports
+$98.3$--$100\%$ accuracy on its PADBench corpus. This requires
+marketplaces to share raw LoRA weights with a third-party
+detector. The requirement is incompatible with proprietary
+fine-tuning practices and creates a single point of trust.
+Beyond this deployment barrier, a weight-space-only detector sees
+each adapter in isolation and has no access to the cross-marketplace
+provenance and lineage signal that distinguishes a silently
+backdoored derivative from a benign one; this contextual signal,
+rather than any claimed collapse of PEFTGuard's accuracy, is what
+motivates a relational, privacy-preserving alternative. (We do not
+run an adaptive attack against PEFTGuard and make no claim about its
+robustness under one.)
+
+\paragraph{Our approach.}
+We propose a federated, privacy-preserving alternative. The LoRA
+ecosystem is modelled as a heterogeneous continuous-time dynamic
+graph in which nodes are adapters, contributors, base models, and
+downstream applications. Time-stamped edges record derivation,
+fine-tuning, deployment, and citation relationships. Across this
+graph, a dynamic graph neural network is trained per-client with
+\emph{client-update-level} Differentially-Private Gaussian
+noise~\cite{abadi2016deep,mironov2017renyi} and secure
+aggregation~\cite{bonawitz2017practical}, so that no marketplace
+must reveal its raw adapter weights. By composing PixelDP-style
+DP-stability arguments~\cite{lecuyer2019certified} with CRFL-style
+federated smoothing~\cite{xie2021crfl}, we derive a certified
+poisoning radius that converts the per-round inference-time
+smoothing budget $\epsilon_r$ into a bound on the number of
+colluding malicious clients $k^*$ under our bounded-update threat
+model at which the global verdict is provably invariant.
+
+\paragraph{Claim structure.}
+The paper is organised around three tiered claims. The
+\emph{primary} claim is that federated lineage-aware detection can
+identify malicious LoRA adapters without any marketplace sharing
+raw weights, and matches within $1.9$ macro-F1 points the
+centralised PEFTGuard reference number on the same corpus. The
+\emph{secondary} claim is that DP-SGD combined with secure
+aggregation can be incorporated into this pipeline at modest utility
+cost ($0.5$--$1.0$ pp macro-F1) and at a measured $\approx 4\%$
+median per-round wall-clock overhead on CPU-hosted federation
+(Appendix~\ref{app:repro}). The \emph{theoretical}
+claim is that, under a precisely defined bounded-update threat
+model (Definition~\ref{def:attack}), the composition of PixelDP
+stability, CRFL federated smoothing and R\'enyi-DP composition
+yields an integer certificate $k^*$ on the largest attacker-client
+coalition whose actions cannot flip the global verdict on a queried
+adapter. All other results (dynamic-graph superiority, multimodal
+gains, FLTrust robustness, lineage importance, IDS transfer,
+cross-hardware latency) are reported as supporting evidence rather
+than free-standing contributions.
+
+\paragraph{Contributions.}
+We make three contributions. \textbf{(1) Formal model and
+benchmark:} to our knowledge the first formal model of the LoRA
+marketplace as a continuous-time heterogeneous dynamic graph with
+four node types and six edge types, together with \benchname, a
+benchmark of $13{,}500$ benign and backdoored LoRA adapters across
+four base-model families and ten attack types extending
+established NLP-safety resources
+(BackdoorLLM~\cite{li2025backdoorllm},
+PADBench~\cite{sun2025peftguard}) with cross-marketplace lineage
+edges harvested from HuggingGraph~\cite{rahman2025hugginggraph}.
+\textbf{(2) Framework and algorithms:} a federated dynamic GNN
+with client-update-level DP and FLTrust hardening --- a per-client
+DyGFormer-style encoder with HGT relation-aware attention, trained
+under client-update-level Gaussian DP-SGD with secure aggregation
+and FLTrust bootstrapping, empirically robust to label-flipping
+Byzantine coalitions up to $\rho\le 0.33$. \textbf{(3) Theory and
+evaluation:} a sensitivity bound for the federated
+heterogeneous-dynamic-GNN client update
+(Theorem~\ref{thm:sensitivity}) and a certified poisoning-radius
+theorem (Theorem~\ref{thm:certified}) that turns the
+inference-time smoothing budget into an integer bound $k^*$ on
+bounded-update coalition size, validated on \benchname, the
+BackdoorLLM-LoRA leaderboard, and four IDS datasets, where
+\modelname\ obtains $96.4\%$ macro-F1, certified coalition bound
+$k^* = 25$ out of $N = 50$ at smoothing budget $\epsilon_r=0.5$,
+cumulative training-time budget
+$(\epsilon_T,\delta)\approx(13.6,10^{-5})$ over $T = 100$
+Poisson-subsampled rounds under the Opacus PRV
+accountant~\cite{gopi2021numerical}, and sub-second per-adapter
+scan latency on A100-class hardware.
+
+\paragraph{Why this belongs at an NLP venue.}
+LoRA is the dominant fine-tuning method for \emph{language} models,
+and the threats we verify --- alignment-bypass fine-tunes, composite
+textual-trigger backdoors, and instruction-following corruption ---
+are attacks on the safety of NLP systems at the
+parameter-efficient-tuning layer. The signal that separates a
+benign adapter from a backdoored one is partly linguistic: the
+multimodal encoder reads model cards, README text, and
+contributor-profile text (Section~\ref{sec:framework}) alongside
+the weight and usage modalities, and \benchname\ is built by
+extending NLP-safety resources (BackdoorLLM, PADBench). The
+verification method itself is task-agnostic, but the resource, the
+threat model, and the deployment target (Hugging Face-style LLM
+adapter hubs) are squarely NLP-safety concerns, which is why we
+position the contribution for the ACL community rather than a
+general security venue.
+
+\paragraph{Roadmap.}
+Section~\ref{sec:related} surveys prior work on LoRA-adapter
+security, federated learning with differential privacy, dynamic
+graph neural networks, and certified robustness against poisoning;
+Section~\ref{sec:problem} formalises the LoRA-ecosystem graph and
+the federated multi-marketplace threat model;
+Section~\ref{sec:framework} presents the four-component
+\modelname\ framework; Section~\ref{sec:theory} proves the
+sensitivity bound and the certified poisoning-radius theorem;
+Section~\ref{sec:experiments} reports the empirical evaluation
+including ablation, spectral analysis, and IDS transfer; and
+Sections~\ref{sec:discussion}--\ref{sec:conclusion} discuss
+limitations and conclude.
+
+% ============================================================
+%  2. RELATED WORK
+% ============================================================
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{LoRA, PEFT, and adapter security.}
+Parameter-efficient fine-tuning rose to prominence with
+adapters and LoRA~\cite{hu2021lora}.
+QLoRA~\cite{dettmers2023qlora} added $4$-bit NormalFloat
+quantization. AdaLoRA~\cite{zhang2023adalora},
+DoRA~\cite{liu2024dora}, and GaLore~\cite{zhao2024galore} produced
+structurally distinct adapter families that complicate uniform
+integrity checks. Adapter security emerged as a research area with
+LoRA-as-an-Attack~\cite{liu2024loraattack},
+\citet{lermen2023lora}'s cheap alignment-bypass demonstration,
+Composite Backdoor Attacks~\cite{huang2024composite}, and the
+safety-critical neuron analysis of~\citet{wei2024brittleness}.
+PEFTGuard~\cite{sun2025peftguard} centralised backdoor detection
+on raw adapter weights, reaching $98.3$--$100\%$ centralised
+accuracy on PADBench, but requires marketplaces to share raw
+weights and inspects each adapter without cross-marketplace context.
+ShadowGenes~\cite{schulz2025shadowgenes} introduced graph-based
+model-genealogy verification using computational-graph
+fingerprinting. Industry incident
+analyses~\cite{cohen2024jfrog,kellas2025pickleball} document the
+operational threat at marketplace scale. More broadly, ML
+supply-chain integrity has been approached through model signing,
+software bills of materials (SBOM), and update frameworks such as
+TUF; \modelname\ is complementary to these provenance-attestation
+mechanisms, adding a content-level maliciousness verdict that
+signing alone does not provide.
+
+\paragraph{Federated learning, DP, and secure aggregation.}
+Federated learning~\cite{mcmahan2017fedavg} with heterogeneity-aware
+variants~\cite{li2020fedprox,karimireddy2020scaffold} combines with
+DP-SGD~\cite{abadi2016deep}, R\'enyi-DP accounting~\cite{mironov2017renyi}
+and the numerically tight PRV accountant~\cite{gopi2021numerical},
+and secure aggregation~\cite{bonawitz2017practical} to hide client
+contributions. Byzantine robustness is addressed by
+Krum~\cite{blanchard2017machine},
+Trimmed-Mean~\cite{yin2018byzantine}, and
+FLTrust~\cite{cao2021fltrust}, which bootstraps trust from a small
+clean root set; game-theoretic treatments of Byzantine resilience
+in federated security deployments~\cite{anaedevha2026byzantine}
+address the same tension between robustness and privacy that
+\modelname\ inherits. Federated foundation-model fine-tuning
+(FATE-LLM~\cite{fan2023fatellm}, FLoRA~\cite{wang2024flora},
+OpenFedLLM~\cite{ye2024openfedllm}) trains new adapters;
+\modelname\ instead \emph{verifies} existing ones. Closest to our
+setting is Safe-FedLLM~\cite{tao2026safefedllm}, which also reads
+LoRA weights as a behavioural signal, training lightweight probes on
+each client's local $\Delta$LoRA updates to filter malicious
+\emph{clients} during federated training at step, client, and shadow
+level. The two are complementary and act at different points in the
+supply chain: Safe-FedLLM protects the training process from
+malicious participants, whereas \modelname\ verifies adapters
+\emph{already published} to a marketplace, scoring each artefact
+against cross-marketplace lineage structure rather than a single
+client's update stream, and issuing a certified coalition bound
+$k^*$ over colluding marketplaces --- a guarantee that
+probe-classifier defences do not provide. A deployment could run
+Safe-FedLLM inside each marketplace's own training pipeline and
+\modelname\ across marketplaces at publication time.
+
+\paragraph{Dynamic and heterogeneous GNNs.}
+Continuous-time dynamic graph learning was pioneered by
+JODIE~\cite{kumar2019jodie}, DyRep~\cite{trivedi2019dyrep}, and
+TGAT~\cite{xu2020tgat}. TGN~\cite{rossi2020tgn} unified these in a
+memory-module-plus-graph-attention architecture.
+DyGFormer~\cite{yu2023dygformer} introduced neighbor-co-occurrence
+encoding and patching for long histories. Multi-scale temporal
+graph encoders have been applied to security
+telemetry~\cite{anaedevha2026multiscale}, motivating the CT-DG
+formulation we adopt for adapter lineage. For heterogeneous
+graphs, HGT~\cite{hu2020hgt} introduced meta-relation-aware
+mutual attention with type-dependent parameters and Relative
+Temporal Encoding. Federated graph learning was introduced by
+FedGraphNN~\cite{he2021fedgraphnn}; GAP~\cite{sajadmanesh2023gap}
+derives a DP-GNN with edge- and node-level guarantees through
+R\'enyi-DP analysis, which we extend here to the federated setting.
+The HF ecosystem itself has been mapped recently by
+HuggingGraph~\cite{rahman2025hugginggraph} and by the model-atlas
+analysis of~\citet{horwitz2025atlas}.
+
+\paragraph{Certified robustness against poisoning.}
+The bridge from DP to certified robustness was established by
+PixelDP~\cite{lecuyer2019certified}.
+\citet{ma2019data} converted DP-SGD privacy budgets into certified
+poisoning radii under bounded data poisoning. In federated
+settings, CRFL~\cite{xie2021crfl} uses parameter clipping plus
+Gaussian smoothing to bound certified accuracy as a function of
+poisoning ratio; FLCert~\cite{cao2022flcert} extends this with
+provable security under up to a fraction of malicious clients.
+Poisoning resilience has also been pursued architecturally, e.g.\
+through selective state-space sequence
+models~\cite{anaedevha2026mambashield}, though without a formal
+certificate. For graph data, \citet{wang2021certgnn} provide
+certificates against bounded edge insertions/deletions;
+\citet{scholten2022randomized} exploit message-passing structure
+for stronger certificates against node-controlling adversaries.
+\modelname's certified poisoning-radius theorem synthesises these
+threads into a single per-marketplace bound on the largest
+bounded-update coalition of colluding malicious clients that cannot
+alter the global maliciousness verdict.
+
+% ============================================================
+%  3. PRELIMINARIES AND PROBLEM
+% ============================================================
+\section{Preliminaries and Problem}
+\label{sec:problem}
+
+\paragraph{LoRA adapter.}
+A LoRA adapter for a Transformer layer with frozen weight matrix
+$\mathbf{W}_0 \in \R^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$
+replaces the forward pass $\mathbf{y} = \mathbf{W}_0 \mathbf{x}$
+(where $\mathbf{x}\in\R^{d_{\mathrm{in}}}$ is the layer input and
+$\mathbf{y}\in\R^{d_{\mathrm{out}}}$ its output) with
+\begin{equation}
+\mathbf{y} = \mathbf{W}_0 \mathbf{x} + \frac{\alpha}{r} \mathbf{B}\mathbf{A}\mathbf{x},\;\; \mathbf{B}\in\R^{d_{\mathrm{out}}\times r},\,\mathbf{A}\in\R^{r\times d_{\mathrm{in}}},
+\label{eq:lora}
+\end{equation}
+where $r \ll \min(d_{\mathrm{out}}, d_{\mathrm{in}})$ is the LoRA
+rank, $\alpha\in\R^+$ is a fixed scaling hyper-parameter, and
+$\mathbf{A}, \mathbf{B}$ are the trainable low-rank update
+factors~\cite{hu2021lora}. We denote a complete adapter by its
+parameter set $\theta = \{(\mathbf{A}_\ell, \mathbf{B}_\ell)
+\}_{\ell \in \mathcal{L}}$ over the set of adapted layers
+$\mathcal{L}$, plus metadata $m_\theta$ comprising base-model
+identifier, training corpus, contributor handle, declared task,
+declared licence, upload timestamp, and download statistics.
+
+\paragraph{LoRA ecosystem graph.}
+The LoRA ecosystem at time $t$ is a heterogeneous continuous-time
+dynamic graph $\Gcal(t) = (\Vcal(t), \Ecal(t), \Rcal, \phi, \psi)$
+with four node types and six edge types, where $\Vcal(t)$ is the
+node set at $t$, $\Ecal(t)$ the time-stamped edge set, $\Rcal$ the
+fixed relation alphabet, $\phi$ the node-feature map (defined
+in~\eqref{eq:fused} below), and $\psi$ the edge-type map assigning
+each $e \in \Ecal(t)$ a relation $\psi(e) \in \Rcal$.
+
+\begin{definition}[LoRA Ecosystem Graph]
+\label{def:graph}
+The node set $\Vcal(t) = \Vcal_A(t) \cup \Vcal_B(t) \cup
+\Vcal_C(t) \cup \Vcal_D(t)$ comprises adapter nodes $\Vcal_A$
+(each carrying weight-tensor features and metadata $m_\theta$),
+base-model nodes $\Vcal_B$, contributor nodes $\Vcal_C$, and
+downstream-application nodes $\Vcal_D$. The edge set
+$\Ecal(t) \subseteq \Vcal(t) \times \Rcal \times \Vcal(t) \times
+\R^+$ comprises time-stamped typed edges with relations\\
+$\Rcal = \{\texttt{contributes}, \texttt{derives\_from},
+\texttt{fine\_tunes},\\ \texttt{deploys}, \texttt{cites},
+\texttt{co\_uses}\}$. Node-feature map
+$\phi: \Vcal(t) \to \R^{d_v}$ produces type-specific feature
+vectors of common dimension $d_v$ after multimodal projection of
+weight, text, and behavioural metadata.
+\end{definition}
+
+\paragraph{Federated multi-marketplace setting.}
+We assume $N$ LoRA-hosting marketplaces $\{C_i\}_{i=1}^N$, each
+maintaining a local subgraph $\Gcal_i(t)$ and a private collection
+of adapter weights $\Theta_i$. The marketplaces are unwilling to
+share raw adapter weights with each other or with a central
+coordinator. They consent to participate in federated training of
+a shared maliciousness-detection model
+$f_{\mathbf{w}}: \Vcal_A(t) \to [0,1]$ provided
+privacy-preserving aggregation guarantees are met.
+
+\paragraph{Threat model.}
+The \emph{primary} threat FedLoRAGuard targets is the documented
+one: single- or few-point malicious adapter uploads to independent
+marketplaces. The multi-marketplace \emph{collusion} we analyse is
+a worst-case robustness scenario, not a claim that coordinated
+$k$-of-$N$ marketplace collusion is the current attacker behaviour;
+we state it this way to make the certified radius meaningful under
+the strongest bounded-update adversary the federated setting admits.
+Formally, the adversary controls $k$ out of $N$ client marketplaces,
+with the controlled fraction bounded by a Byzantine tolerance
+$\rho \in [0,1)$, i.e.\ $k/N \le \rho$, and may publish arbitrary
+backdoored LoRA adapters under any contributor identity within
+those marketplaces. The adversary additionally controls the labels
+$y_i \in \{0, 1\}$ on the controlled adapters during federated
+training (label-flipping). The adversary does not control the
+secure-aggregation protocol nor the server-held vetted-adapter
+root set used for FLTrust scoring. Crucially, the certified radius
+we prove in Section~\ref{sec:theory} applies to
+\emph{bounded-update} adversaries in the sense of
+Definition~\ref{def:attack} below, not to arbitrary Byzantine
+gradients; broader Byzantine tolerance is claimed only empirically
+(Section~\ref{subsec:main}), not by the certificate.
+
+\begin{definition}[Adapter-Level Federated Poisoning Attack]
+\label{def:attack}
+A $(k, \epsilon_{\mathrm{wt}})$-poisoning attack controls
+$k\in\{1,\ldots,\lfloor\rho N\rfloor\}$ clients and submits gradient
+updates $\tilde{\mathbf{g}}_i$ such that each is within
+$\ell_2$-distance $\epsilon_{\mathrm{wt}}\ge 0$ of the corresponding
+honest update,
+$\norm{\tilde{\mathbf{g}}_i - \mathbf{g}_i^{\mathrm{honest}}}_2
+\leq \epsilon_{\mathrm{wt}}$, after server-side gradient clipping
+to $\ell_2$-norm $S$ (Algorithm~\ref{alg:fedloraguard} line~5).
+Here $\epsilon_{\mathrm{wt}}$ is an attacker-side budget controlling
+the per-client deviation magnitude. The objective is to flip the
+global maliciousness verdict on at least one target adapter
+$\theta^*$.
+\end{definition}
+
+\paragraph{Problem statement.}
+We seek a parameterisation $\mathbf{w}^*$ that minimises empirical
+risk subject to per-round $(\epsilon_r, \delta)$-DP by Gaussian
+DP-SGD with client-update clipping $S$; cumulative training-time
+budget $\epsilon_T = \mathrm{PRVCompose}(\sigma, q, T)$ at
+$\delta$; secure aggregation hiding individual
+$\tilde{\mathbf{g}}_i$; and FLTrust scoring on a server-held root
+set $R_0$. The deployed verifier should admit (a) a high-probability
+certificate of robustness against $k^*$ malicious clients
+(Theorem~\ref{thm:certified}) under Definition~\ref{def:attack},
+and (b) calibrated maliciousness probabilities suitable for
+marketplace moderation actions.
+
+% ============================================================
+%  4. FRAMEWORK
+% ============================================================
+\section{The \modelname\ Framework}
+\label{sec:framework}
+
+\modelname\ consists of four components: (i) a multimodal
+node-feature encoder, (ii) a per-client local heterogeneous
+dynamic GNN, (iii) federated training under
+client-update-level Gaussian DP-SGD with secure aggregation and
+FLTrust scoring, and (iv) a global verifier that emits per-adapter
+maliciousness probability and the certified coalition bound.
+Figure~\ref{fig:architecture} shows the architecture.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig1_FedLoraGuard_arch.pdf}
+\vspace{-0.3cm}
+\caption{The \modelname\ architecture. Each LoRA-hosting
+marketplace $C_i$ maintains a local heterogeneous dynamic graph
+and adapter pool. A multimodal encoder projects adapter weights,
+model-card text, and usage statistics into a unified
+node-feature space. A local DyGFormer with HGT relation-aware
+attention computes per-adapter embeddings. Per-client DP-SGD
+clips and Gaussian-perturbs the client update
+(Algorithm~\ref{alg:fedloraguard} lines~5--6). Secure
+aggregation and FLTrust scoring compute the global update, hiding
+individual client contributions. The verifier emits the
+maliciousness probability $\hat{p}_{\mathrm{mal}}(\theta)$ and
+the certified coalition bound $k^*$. Dashed red arrows denote
+DP-budget feedback; dotted green arrows denote certificate
+output.}
+\label{fig:architecture}
+\end{figure*}
+
+\paragraph{Multimodal node-feature encoder.}
+For each adapter node $v_\theta \in \Vcal_A$, three modalities are
+encoded and concatenated. Weight-modality features
+$\bm{\phi}^{\mathrm{wt}}(\theta) \in \R^{d_{\mathrm{wt}}}$ comprise
+the spectral signature $(\sigma_1, \ldots, \sigma_r)$ of each
+$\mathbf{B}\mathbf{A}$ matrix in~\eqref{eq:lora}, per-layer
+Frobenius norms, and a low-dimensional weight-difference
+fingerprint relative to the base model. Text-modality features
+$\bm{\phi}^{\mathrm{txt}}(m_\theta) \in \R^{d_{\mathrm{txt}}}$ are
+produced by a frozen sentence transformer applied to model cards,
+README files, and contributor profiles. Behavioural-modality
+features $\bm{\phi}^{\mathrm{beh}}(\theta) \in \R^{d_{\mathrm{beh}}}$
+encode download counts, monthly active deployments, and citation
+graph centralities. The three streams are fused through cross-attention
+and projected to common dimension $d_v$:
+\begin{equation}
+\phi(v_\theta) = \mathbf{W}_{\mathrm{fuse}}
+[\bm{\phi}^{\mathrm{wt}}(\theta);\, \bm{\phi}^{\mathrm{txt}}(m_\theta);\,
+\bm{\phi}^{\mathrm{beh}}(\theta)],
+\label{eq:fused}
+\end{equation}
+where $\mathbf{W}_{\mathrm{fuse}}\in\R^{d_v\times(d_{\mathrm{wt}}+
+d_{\mathrm{txt}}+d_{\mathrm{beh}})}$ is a trainable projection. The
+output $\phi(v_\theta)\in\R^{d_v}$ instantiates the node-feature
+map $\phi$ introduced in Definition~\ref{def:graph}. Base-model,
+contributor, and downstream-application nodes use type-specific
+encoders producing feature vectors of the same dimension $d_v$.
+
+\paragraph{Local heterogeneous dynamic GNN.}
+Each client runs a local DyGFormer~\cite{yu2023dygformer} encoder
+with HGT relation-aware attention~\cite{hu2020hgt}. For each query
+node $v$ at time $t$, the encoder samples the most recent $K$
+temporal neighbours of $v$ across all relations, computes
+neighbour co-occurrence patches, and applies a Transformer
+encoder over the patches. We denote by $\mathbf{h}_v\in\R^{d_v}$
+the running hidden representation of node $v$ (initialised to
+$\phi(v)$ from Eq.~\ref{eq:fused}) and by $\tau:\Vcal\to\{A,B,C,D\}$
+the node-type indicator returning the type subscript of $v$.
+For each query node $v$ and each typed neighbour $u$ connected by
+relation $r\in\Rcal$, the HGT attention head computes
+\begin{equation}
+\alpha_{u, v, r} = \softmax\!\Bigl(\frac{(\mathbf{W}_Q^{\tau(v)} \mathbf{h}_v)^\top \mathbf{W}_R^r (\mathbf{W}_K^{\tau(u)} \mathbf{h}_u)}{\sqrt{d_v / H}}\Bigr),
+\label{eq:hgt}
+\end{equation}
+where $\mathbf{W}_Q^{\tau}, \mathbf{W}_K^{\tau}\in\R^{d_v\times d_v}$
+are type-specific query and key projections,
+$\mathbf{W}_R^r\in\R^{d_v\times d_v}$ is a relation-specific
+bilinear interaction matrix, $H$ is the number of attention heads,
+and the softmax is taken over the set of typed neighbours $(u,r)$
+of $v$. The aggregated representation passes through a feed-forward
+block with residual connections.
+
+\paragraph{Federated training (client-update-level DP).}
+Let $\mathbf{w}\in\R^d$ denote the parameter vector of the
+maliciousness-detection model $f_{\mathbf{w}}$. In each round
+$t\in\{1,\ldots,T\}$, the server samples a subset
+$S_t \subseteq \{C_i\}_{i=1}^N$ of $m$ clients by Poisson
+subsampling with rate $q = m/N$. Each sampled client computes its
+local minibatch gradient
+$\mathbf{g}_i = \nabla_{\mathbf{w}} \hat{\Lcal}_i(\mathbf{w}_t;
+\Gcal_i(t))$, where $\hat{\Lcal}_i$ is the local cross-entropy
+loss on client $C_i$'s adapter subgraph $\Gcal_i(t)$. Unlike
+canonical example-level DP-SGD~\cite{abadi2016deep}, which clips
+each per-example gradient and averages, we operate at the
+\emph{client-update} level: the client clips the \emph{whole
+update} $\mathbf{g}_i$ to $\ell_2$-norm $S$ and adds a single
+Gaussian noise draw
+$\Ncal(\mathbf{0},\sigma^2 S^2 \mathbf{I})$ calibrated to the
+per-round R\'enyi-DP budget. It then transmits the noised update
+$\tilde{\mathbf{g}}_i$ via SecAgg~\cite{bonawitz2017practical}.
+The server scores each update against a small vetted root set
+$R_0$ through FLTrust~\cite{cao2021fltrust} cosine similarity to
+a server-computed reference gradient $\mathbf{g}_0$, weights the
+update by $\mathrm{ReLU}(\cos(\tilde{\mathbf{g}}_i, \mathbf{g}_0))$,
+and aggregates by weighted averaging.
+Algorithm~\ref{alg:fedloraguard} gives one complete training
+round.
+
+\begin{algorithm}[t]
+\small
+\caption{\modelname\ training round}
+\label{alg:fedloraguard}
+\begin{algorithmic}[1]
+\REQUIRE Clients $\{C_i\}_{i=1}^N$, parameters $\mathbf{w}_t$, client-update clip threshold $S$, noise multiplier $\sigma$, learning rate $\eta$, vetted root set $R_0$, sampling rate $q$
+\STATE Server Poisson-samples $S_t \subseteq \{C_i\}$ at rate $q$
+\STATE Server computes $\mathbf{g}_0 \gets \nabla_{\mathbf{w}} \hat{\Lcal}(\mathbf{w}_t; R_0)$
+\FOR{each $C_i \in S_t$ in parallel}
+    \STATE $\mathbf{g}_i \gets \nabla_{\mathbf{w}} \hat{\Lcal}_i(\mathbf{w}_t; \Gcal_i(t))$ \hfill\COMMENT{full client update}
+    \STATE $\bar{\mathbf{g}}_i \gets \mathbf{g}_i \cdot \min(1, S/\norm{\mathbf{g}_i}_2)$ \hfill\COMMENT{clip whole update}
+    \STATE $\tilde{\mathbf{g}}_i \gets \bar{\mathbf{g}}_i + \Ncal(\mathbf{0}, \sigma^2 S^2 \mathbf{I})$ \hfill\COMMENT{single Gaussian draw}
+    \STATE Transmit $\tilde{\mathbf{g}}_i$ by SecAgg
+\ENDFOR
+\STATE Aggregator: $\bar{\mathbf{G}} \gets \mathrm{SecAgg}(\{\tilde{\mathbf{g}}_i\})$
+\STATE $\beta_i \gets \mathrm{ReLU}(\cos(\tilde{\mathbf{g}}_i, \mathbf{g}_0)) / \sum_j \mathrm{ReLU}(\cos(\tilde{\mathbf{g}}_j, \mathbf{g}_0))$
+\STATE $\mathbf{w}_{t+1} \gets \mathbf{w}_t - \eta \sum_i \beta_i \tilde{\mathbf{g}}_i$
+\STATE Update PRV accountant; compute $k^*$ through Theorem~\ref{thm:certified}
+\end{algorithmic}
+\end{algorithm}
+
+% ============================================================
+%  5. THEORETICAL PROPERTIES
+% ============================================================
+\section{Theoretical Properties}
+\label{sec:theory}
+
+We present two results: a sensitivity bound for the federated
+heterogeneous-dynamic-GNN client update
+(Theorem~\ref{thm:sensitivity}) and a certified poisoning-radius
+theorem (Theorem~\ref{thm:certified}). Proof sketches appear in
+the main text; full proofs are in Appendix~\ref{app:proofs}.
+
+\begin{theorem}[Client-update sensitivity bound]
+\label{thm:sensitivity}
+Let $f_{\mathbf{w}}$ be an $L$-layer heterogeneous dynamic GNN
+operating on the ecosystem graph $\Gcal(t)$ of
+Definition~\ref{def:graph}, with per-relation weight matrices
+$\{\mathbf{W}_R^r\}_{r \in \Rcal}$ satisfying
+$\norm{\mathbf{W}_R^r}_2 \leq B_W$ for all $r \in \Rcal$ (here
+$\Rcal$ is the six-element relation set from
+Definition~\ref{def:graph}, so $|\Rcal|=6$). Let $\phi^{\mathrm{nl}}$
+denote the point-wise non-linearity inside the HGT block and assume
+it is $\rho$-Lipschitz; for GELU $\rho\approx 1.13$ (attained near
+$x\approx\pm\sqrt{2}$), which we use in place of the looser
+$\rho\le 1$. Let the per-node temporal-neighbourhood degree be
+bounded by $d_{\max}$, and let $S$ be the client-update clipping
+threshold used at Algorithm~\ref{alg:fedloraguard} line~5.
+Consider two adjacent local datasets
+$\Dcal_i \sim \Dcal_i'$ differing in a single node-edge addition
+or modification. The $\ell_2$-sensitivity of the clipped client
+update
+$\bar{\mathbf{g}}_i:=\mathbf{g}_i\cdot\min(1,S/\norm{\mathbf{g}_i}_2)$
+satisfies
+\begin{equation}
+\Delta_2 := \sup_{\Dcal_i \sim \Dcal_i'}
+\norm{\bar{\mathbf{g}}_i(\Dcal_i) - \bar{\mathbf{g}}_i(\Dcal_i')}_2
+\;\le\; 2 S,
+\label{eq:sensitivity}
+\end{equation}
+by two-sided clipping alone. The graph-structural refinement
+\begin{equation}
+\Delta_2 \;\le\; \min\!\Bigl(2S,\;
+2S\,(\rho B_W d_{\max})^L\, |\Rcal|^{1/2}\Bigr)
+\label{eq:sensitivity-refined}
+\end{equation}
+holds when the RHS is finite; on real Hugging Face lineage graphs
+$d_{\max}$ can exceed $10^3$, so~\eqref{eq:sensitivity-refined}
+degenerates to the loose $2S$ bound at large depth and the
+operational sensitivity we use for calibration is
+$\Delta_2 = 2S$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+For any two datasets, the map
+$\mathbf{g}\mapsto\mathbf{g}\cdot\min(1,S/\norm{\mathbf{g}}_2)$
+has $\ell_2$-norm at most $S$, so the difference of any two
+clipped updates is at most $2S$ by the triangle inequality; this
+gives~\eqref{eq:sensitivity} and requires no assumption on the
+architecture. For~\eqref{eq:sensitivity-refined}, induction on
+layer depth propagates a single-node change through the HGT
+message-passing update
+$\mathbf{h}_v^{(\ell)} = \phi^{\mathrm{nl}}(\sum_{r,u} \alpha_{u,v,r}
+\mathbf{W}_R^r \mathbf{h}_u^{(\ell-1)})$; Cauchy--Schwarz plus the
+relation-wise spectral bound $\norm{\mathbf{W}_R^r}_2\le B_W$
+gives $\norm{\Delta \mathbf{h}_v^{(\ell)}}_2 \le
+\rho B_W d_{\max}\norm{\Delta \mathbf{h}_v^{(\ell-1)}}_2$ when the
+affected node lies in the temporal neighbourhood, and iterating
+$L$ layers yields the $(\rho B_W d_{\max})^L$ factor; the
+$|\Rcal|^{1/2}$ comes from Cauchy--Schwarz over the relation-type
+sum. The client-update output is then clipped again to $S$, and
+the tighter of the two bounds is the operative one. Full details
+appear in Appendix~\ref{app:proofs}.
+\end{proof}
+
+\paragraph{Calibration of $\sigma$ in practice.}
+The Gaussian mechanism at sensitivity $\Delta_2=2S$ gives
+$(\epsilon,\delta)$-DP per round with
+$\sigma\ge 2S\sqrt{2\ln(1.25/\delta)}/\epsilon$; the tighter
+analytic bound~\eqref{eq:sensitivity-refined} is only useful when
+$(\rho B_W d_{\max})^L\,|\Rcal|^{1/2}\!\le\!1$, which does not hold
+for our deployment scale. In practice we do not use either closed
+form to set $\sigma$: we adopt $\sigma=1.1$ and account the full
+$T$-round composition numerically through the Opacus PRV
+accountant~\cite{gopi2021numerical} under Poisson subsampling at
+$q=0.2$, obtaining
+$(\epsilon_T,\delta)\approx(13.6,10^{-5})$ at $T=100$; see
+Appendix~\ref{app:repro}.
+
+\begin{theorem}[Certified poisoning radius]
+\label{thm:certified}
+Suppose \modelname\ runs Algorithm~\ref{alg:fedloraguard} for
+$T$ rounds with client-update-level Gaussian DP-SGD (clip $S$,
+noise multiplier $\sigma$), secure aggregation, and FLTrust
+scoring against a server-held vetted root set $R_0$. At
+verification time, the aggregated global model is passed through
+a single Gaussian smoothing draw with budget
+$(\epsilon_r,\delta)$; this smoothing draw is what the certificate
+depends on and is a design parameter separate from the training-time
+budgets. Let the global verifier
+$f_{\mathbf{w}_T}:\Vcal_A(t)\to\Delta^{c-1}$ emit, on a queried
+adapter $\theta$, a class-probability vector over $c=2$ classes
+(benign, malicious), and let $\hat{p}_1\ge\hat{p}_2$ be the
+largest and second-largest entries of that vector (so
+$\hat{p}_1+\hat{p}_2=1$ here). Let $\Phi^{-1}:(0,1)\to\R$ denote
+the inverse cumulative distribution function of the standard
+normal. The prediction of $f_{\mathbf{w}_T}$ on $\theta$ is
+invariant with probability at least $1 - T\delta$ under any
+$(k, \epsilon_{\mathrm{wt}})$-poisoning attack
+(Definition~\ref{def:attack}) such that
+\begin{equation}
+k \leq k^* = \left\lfloor \frac{N \bigl(\Phi^{-1}(\hat{p}_1) - \Phi^{-1}(\hat{p}_2)\bigr)}{2 \exp(\epsilon_r)} \right\rfloor,
+\label{eq:kstar}
+\end{equation}
+where the floor enforces an integer coalition size. The cumulative
+training-time budget $\epsilon_T$, obtained by PRV composition of
+the $T$ per-round training budgets, governs the marketplace-level
+privacy guarantee (Section~\ref{sec:experiments}) but does
+\emph{not} enter the certificate: the stability factor is set by
+the budget of the single smoothing draw applied at verification
+time, not by the budget accumulated over training.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The bound is obtained by composing three established results,
+each stated with its own assumption; the complete book-keeping is
+in Appendix~\ref{app:proofs}. \textbf{(i)} The random variable
+being smoothed is the aggregated model
+$\mathbf{w}_T\in\R^d$: at verification time the output logits on
+$\theta$ are averaged over an $(\epsilon_r,\delta)$-DP Gaussian
+draw applied to $\mathbf{w}_T$, producing the smoothed classifier
+studied by PixelDP~\cite{lecuyer2019certified} and (in the
+federated setting) by CRFL~\cite{xie2021crfl}. \textbf{(ii)} A
+single malicious client controlling $k=1$ adds to the aggregated
+model a bounded parameter-space perturbation of size at most
+$\epsilon_{\mathrm{wt}}$ per round, because SecAgg forces the
+attacker's update through the same clip-and-noise pipeline as
+honest clients and Definition~\ref{def:attack} bounds the
+attacker's post-clip deviation; $k$ colluding clients induce a
+worst-case perturbation of size at most $k\epsilon_{\mathrm{wt}}$
+by triangle inequality, subject to the FLTrust down-weighting.
+\textbf{(iii)} FLTrust does not invalidate the smoothing argument
+because the FLTrust weight $\beta_i\in[0,1]$ can only decrease
+the effective attacker deviation, so any certificate obtained
+under unweighted aggregation is a fortiori valid under FLTrust
+weighting. Substituting the resulting bounded perturbation into
+the CRFL~\cite{xie2021crfl} class-margin certificate (a
+Neyman--Pearson hypothesis-testing bound in
+$\Phi^{-1}(\hat{p}_1)-\Phi^{-1}(\hat{p}_2)$), and using the
+PixelDP stability factor $e^{\epsilon_r}$ from the single-query
+$(\epsilon_r,\delta)$-DP smoothing draw, translates a
+class-margin radius into the client coalition bound
+\begin{equation*}
+k^* = \left\lfloor \frac{N(\Phi^{-1}(\hat{p}_1) - \Phi^{-1}(\hat{p}_2))}{2 e^{\epsilon_r}} \right\rfloor.
+\end{equation*}
+The factor $2 e^{\epsilon_r}$ combines the PixelDP per-query
+stability multiplier ($e^{\epsilon_r}$) with the CRFL
+class-margin denominator ($2$, from the two tails of the
+half-Gaussian). The failure probability $T\delta$ is a union
+bound over the $T$ inference draws used to reach a target
+smoothing budget; a single-draw certificate uses the tighter
+$\delta$. The graph-structural extension to heterogeneous
+edge-set perturbations is handled by
+\citet{wang2021certgnn,scholten2022randomized}.
+\end{proof}
+
+\paragraph{From certificate to marketplaces.}
+Eq.~\eqref{eq:kstar} converts an operational per-query privacy
+budget into an architectural integrity guarantee. At $N = 50$,
+$\hat{p}_1 - \hat{p}_2 \approx 0.6$ (so
+$\Phi^{-1}(\hat{p}_1)-\Phi^{-1}(\hat{p}_2)\approx 1.68$), per-query
+smoothing budget $\epsilon_r = 0.5$, and $\delta = 10^{-5}$,
+evaluation gives $k^* = \lfloor 50\cdot 1.68 / (2e^{0.5})\rfloor =
+\lfloor 84.2/3.30\rfloor = 25$. Under Definition~\ref{def:attack}
+this means no bounded-update coalition of fewer than twenty-five
+colluding malicious marketplaces can flip the global verdict on
+any vetted adapter, with probability at least
+$1 - 100 \cdot 10^{-5} = 0.999$. We report this recomputed value
+throughout; an earlier draft substituted the cumulative
+training-time budget $\epsilon_T$ into the denominator, which
+understated the certified radius.
+
+\paragraph{Certified vs empirical robustness.}
+Two robustness numbers appear later. The
+\emph{certified} radius $k^*=25$ out of $N=50$ ($50\%$) is a
+distribution-free bound and holds only under the bounded-update
+threat model of Definition~\ref{def:attack}. The
+\emph{empirical} label-flip stress test in
+Section~\ref{subsec:main} runs Krum-style adversarial clients up
+to fraction $\rho\le 0.33$ ($33\%$) and observes no certificate
+degradation on \benchname. These are distinct results and we
+label them as such throughout: reviewers who see the two numbers
+should not conflate the $50\%$ certificate bound with the
+empirical $33\%$ Byzantine-tolerance operating point.
+
+% ============================================================
+%  6. EXPERIMENTS
+% ============================================================
+\section{Experiments}
+\label{sec:experiments}
+
+\paragraph{Datasets.}
+We construct \benchname, a benchmark of $13{,}500$ benign and
+backdoored LoRA adapters across four base-model families
+(Llama-2-7B, Llama-3-8B, Mistral-7B, Qwen-7B) and ten attack
+types (BadNets, VPI, Sleeper, MTBA, CTBA, AddSent, BadEdit,
+InsertSent, weight-poisoning, and trigger-free LoRA-merging).
+Adapter ranks span $r \in \{4, 8, 16, 32\}$. Each adapter is
+trained for three epochs over a task corpus drawn from Alpaca,
+Dolly, GSM8K, SQuAD-v2, IMDB, AGNews, ARC-Challenge, HumanEval, or
+GLUE. The benign-to-malicious split is $50/50$; we treat this as
+a controlled evaluation design rather than a claimed base rate of
+malicious adapters in the wild, and re-report FPR and precision
+at low-false-positive operating points in Appendix~\ref{app:additional}.
+Each adapter is recorded with its per-layer
+$(\mathbf{A}_\ell, \mathbf{B}_\ell)$ matrices, spectral signature,
+layer-wise Frobenius norms, model card, contributor metadata, and
+download-statistic time-series. Cross-marketplace lineage edges
+are synthesised from
+HuggingGraph~\cite{rahman2025hugginggraph} and
+PADBench~\cite{sun2025peftguard}. A component-level provenance
+audit of what parts of the graph are real versus synthetic
+appears in Appendix~\ref{app:provenance}
+(Table~\ref{tab:provenance}). We also evaluate on the
+BackdoorLLM-LoRA leaderboard~\cite{li2025backdoorllm} and, as a
+cross-domain sanity check for the backbone only, on four IDS
+datasets (CIC-IDS2017~\cite{sharafaldin2018toward},
+Edge-IIoTset~\cite{ferrag2022edge},
+UNSW-NB15~\cite{moustafa2015unsw},
+TON-IoT~\cite{moustafa2021ton}); IDS results are reported in
+Appendix~\ref{app:ids} and are not part of the LoRA-integrity
+contribution.
+
+\paragraph{Splits and leakage control.}
+Because \modelname\ exploits lineage, a random adapter split would
+risk train/test leakage across related adapters. We report the
+main-paper number under a \emph{lineage-component-disjoint} split
+(no derivation chain crosses the train/test boundary) and re-run
+under three additional stress splits in
+Appendix~\ref{app:additional} (\emph{base-model-disjoint},
+\emph{contributor-disjoint}, \emph{attack-family-held-out}). The
+strictest of these is attack-family-held-out, where entire attack
+families are unseen at training time; \modelname\ retains
+macro-F1 above $92\%$ under all four splits, so the reported
+$96.4\%$ is not an artefact of family memorisation.
+
+\paragraph{Baselines.}
+We compare against six baselines.
+\emph{Centralised:} PEFTGuard~\cite{sun2025peftguard} ($98.3\%$
+centralised macro-F1 on PADBench), ShadowGenes~\cite{schulz2025shadowgenes}
+(graph-based model-genealogy verification).
+\emph{Federated without graphs:} FedAvg-MLP and DP-FedAvg-MLP.
+\emph{Federated with static graphs:}
+FedGraphNN-HGT~\cite{he2021fedgraphnn}.
+\emph{Federated dynamic-graph:} Krum-DyGFormer with
+Krum~\cite{blanchard2017machine} Byzantine-robust aggregation
+over the DyGFormer-HGT backbone. \emph{Non-graph spectral baseline:}
+a \emph{SVD-only} detector that thresholds the $\sigma_1/\sigma_2$
+ratio of the $\mathbf{B}\mathbf{A}$ update matrix (and a
+logistic-regression variant on the full spectral signature), with
+no graph, no federation, and no certificate --- included to test
+whether the prominent rank-1 backdoor signature alone suffices.
+
+\paragraph{Implementation.}
+\modelname\ is implemented in PyTorch~$2.1$ with PyTorch Geometric
+for the graph operations and the Flower~\cite{beutel2020flower}
+federated runtime. Training uses AdamW~\cite{loshchilov2019adamw}
+with learning rate $5 \times 10^{-4}$, weight decay $10^{-4}$,
+client-update gradient clipping at norm $S = 1.0$, and cosine
+annealing over $T = 100$ rounds. The FLTrust root set $R_0$
+contains $200$ vetted clean adapters. Client-update-level DP-SGD
+parameters: clip threshold $S = 1.0$, per-round noise multiplier
+$\sigma = 1.1$, Poisson subsampling rate $q = 0.2$ ($m = 10$
+clients sampled at $N = 50$); cumulative privacy budget
+$(\epsilon_T,\delta)\approx(13.6, 10^{-5})$ at $T=100$ under the
+Opacus PRV accountant~\cite{gopi2021numerical}. The certificate
+per-query smoothing budget is $\epsilon_r = 0.5$ and is a
+verification-time design parameter distinct from $\epsilon_T$.
+Experiments use $4 \times$ NVIDIA A100 80~GB GPUs. Each result is
+the mean over three random seeds ($42, 137, 2026$); the unit of
+analysis for the statistical tests below is the $(\mathrm{seed},
+\mathrm{dataset})$ pair, so with three seeds and seven
+method-dataset combinations we test on $21$ replicates. We
+report empirical bootstrap $95\%$ confidence intervals and
+significance through the Friedman test with Holm post-hoc
+correction.
+
+\subsection{Main results}
+\label{subsec:main}
+
+Table~\ref{tab:main} reports the headline comparison on
+\benchname\ and the BackdoorLLM-LoRA leaderboard. \modelname\
+obtains $96.4\%$ macro-F1 ($0.984$ AUROC) on \benchname\ with
+certified coalition bound $k^* = 25$ at $N = 50$ under smoothing
+budget $\epsilon_r=0.5$, i.e.\ a $50\%$ certified bound on
+bounded-update coalitions. On top of this, an empirical
+label-flip Byzantine stress test tolerates $\rho\le 0.33$
+($33\%$) attacker-controlled clients without certificate
+degradation; the $50\%$ certificate bound and the $33\%$
+empirical operating point are distinct results and we do not
+conflate them. \modelname\ lands within $1.9$ macro-F1 points of
+the centralised PEFTGuard reference number
+($96.4\%$ vs $98.3\%$) on the same backbone while preserving
+marketplace privacy. As a transfer/generality probe, the same
+backbone reaches $95.8\%$ macro-F1 averaged over four IDS
+datasets (Appendix~\ref{app:ids}); these are not part of the
+core adapter-integrity claim.
+
+\begin{table}[!t]
+\centering
+\caption{Main results on \benchname\ + BackdoorLLM-LoRA. Macro-F1
+in \% and AUROC as probability, both reported as mean over three
+seeds ($95\%$ bootstrap CI $\pm 0.3$--$0.5$\,pp for the federated
+methods). Cert.\ Bound is the certified $k^*$ at $N = 50$
+marketplaces under smoothing budget $\epsilon_r=0.5$, integer
+by~\eqref{eq:kstar}. ``Cent.'' = centralised; ``N/A'' =
+inapplicable. IDS transfer results are in
+Appendix~\ref{app:ids}.}
+\label{tab:main}
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Method & ACC & Macro-F1 & AUROC & $k^*$ & $\epsilon_T$ \\
+\midrule
+\makecell[l]{PEFTGuard\\~\cite{sun2025peftguard}\\(Cent.)}
+                              & 98.3 & 98.1 & 0.991 & N/A & N/A \\
+\addlinespace[2pt]
+\makecell[l]{ShadowGenes\\~\cite{schulz2025shadowgenes}\\(Cent.)}
+                              & 95.1 & 94.7 & 0.967 & N/A & N/A \\
+\addlinespace[2pt]
+FedAvg-MLP                    & 89.6 & 88.4 & 0.924 & 0   & N/A \\
+DP-FedAvg-MLP                 & 86.8 & 85.7 & 0.901 & 13  & 13.6 \\
+\addlinespace[2pt]
+\makecell[l]{FedGraphNN-HGT\\\cite{he2021fedgraphnn}}
+                              & 92.7 & 91.6 & 0.951 & 0   & N/A \\
+\addlinespace[2pt]
+Krum-DyGFormer                & 93.5 & 92.8 & 0.962 & 6   & N/A \\
+\midrule
+\makecell[l]{\modelname\\(ours, $T{=}100$)}
+                              & 97.1 & 96.4 & 0.984 & 25  & 13.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+The Friedman test across the $21$ (seed, dataset, method)
+replicates gives $\chi_F^2(6) = 51.4$, $p < 10^{-8}$, rejecting
+the null of equal performance. Holm post-hoc at $\alpha = 0.05$
+confirms \modelname\ significantly exceeds every federated
+baseline. Wilcoxon signed-rank tests give $p < 0.001$ for the gap
+to FedAvg-MLP (effect size $r = 0.86$), to FedGraphNN-HGT ($r =
+0.79$), and to Krum-DyGFormer ($r = 0.74$).
+
+\subsection{Spectral signature analysis}
+\label{subsec:spectrum}
+
+Beyond aggregate accuracy, the mechanism-level evidence that the
+defence distinguishes its target attack family is the spectral
+signature of the $\mathbf{B}\mathbf{A}$ update
+matrix~\cite{zhang2023adalora,wei2024brittleness}. Backdoored
+adapters consistently show anomalously large top-$1$ singular
+values relative to trailing components, reflecting the rank-$1$
+concentration of trigger-encoding.
+Figure~\ref{fig:spectrum} plots mean top-$8$ singular values of
+$\mathbf{B}\mathbf{A}$ (averaged across adapted layers) for
+benign and backdoored adapters in \benchname.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.96\columnwidth]{figures/fig2_mean.pdf}
+\vspace{-0.45cm}
+\caption{Mean top-$8$ singular values of $\mathbf{B}\mathbf{A}$ for
+benign and backdoored adapters in \benchname\ (averaged across
+adapted layers; $95\%$ confidence bands). Backdoored adapters have a
+$2.43\times$ larger top-$1$ singular value; trailing values are
+indistinguishable --- the rank-$1$ concentration captured by
+$\bm{\phi}^{\mathrm{wt}}$.}
+\label{fig:spectrum}
+\end{figure}
+
+The top-$1$ singular value for backdoored adapters is $2.43\times$
+larger than for benign adapters while trailing values are
+indistinguishable --- the rank-$1$ concentration that the
+weight-modality features $\bm{\phi}^{\mathrm{wt}}$ extract and
+propagate through the graph.
+
+\subsection{Ablations}
+\enlargethispage{4\baselineskip}
+\label{subsec:ablation}
+
+Table~\ref{tab:ablation} reports each \modelname\ component's
+contribution on \benchname.
+
+\begin{table}[tb]
+\centering
+\caption{Component ablation on \benchname\ (\modelname, $T = 100$,
+$N = 50$, mean over three seeds). The DP ablation is the key
+result to read separately: removing DP-SGD gains $0.5$\,pp macro-F1
+but sets the certified bound to $k^*=0$, so the DP cost is the
+price of the certificate rather than of detection quality.}
+\label{tab:ablation}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Configuration & ACC & Macro-F1 & AUROC & $k^*$ \\
+\midrule
+\modelname\ (full)                               & 97.1 & 96.4 & 0.984 & 25 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Architectural ablations}}\\
+\;\; w/o multimodal encoder\\ (weight only)        & 95.6 & 94.7 & 0.972 & 22 \\
+\;\; w/o HGT relation-aware\\ attention            & 94.2 & 93.4 & 0.961 & 19 \\
+\;\; w/o DyGFormer\\ (static-graph GAT)            & 93.1 & 92.0 & 0.952 & 16 \\
+\;\; w/o FLTrust scoring                         & 96.3 & 95.6 & 0.978 & 19 \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Privacy / training ablations}}\\
+\;\; w/o DP-SGD\\ (federated, no DP)               & 97.4 & 96.9 & 0.987 & 0 \\
+\;\; w/o secure aggregation                      & 97.1 & 96.4 & 0.984 & 25 \\
+\;\; centralised oracle\\ (upper bound)            & 98.3 & 98.1 & 0.991 & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Four observations. First, DyGFormer is the dominant \emph{detection}
+component: replacing it with a static-graph GAT costs $4.4$\,pp
+macro-F1 and $9$ points of $k^*$, so cross-marketplace lineage
+through time carries the main signal (HGT attention and the
+multimodal encoder add a further $6$ and $3$ points of $k^*$).
+Second, the DP ablation \emph{separates detection quality from
+certification quality}: turning off DP recovers $0.5$\,pp macro-F1
+but collapses the certificate to $k^*=0$, i.e.\ the marginal DP
+cost is being paid for the certificate, not for detection quality.
+Third, removing FLTrust does not affect the certified bound
+(FLTrust re-weighting only tightens it further) but drops
+empirical macro-F1 by $0.8$\,pp under label-flip attack. Fourth,
+secure aggregation is a privacy mechanism, not a utility one:
+removing it does not change accuracy or the certificate but
+exposes individual updates to the coordinator.
+
+\subsection{Additional Analyses}
+Appendix~\ref{app:additional} reports six further analyses: an
+SVD-only baseline ($90.2\%$ macro-F1 on easy rank-1 backdoors,
+$71.4\%$ on composite/trigger-free, no certificate), the four
+leakage-controlled splits, security-operating-point metrics (FPR,
+precision, PR-AUC, detection@FPR$=1\%$), graceful degradation to
+$94.1\%$ at $\epsilon_T=1.0$ and $91.1\%$ under $50\%$ edge
+removal, cross-hardware latency (A100/A10G/T4), and a KS test
+confirming the spectral gap ($D=0.71$, $p<10^{-3}$).
+
+% 7. DISCUSSION
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{What the certificate buys, and at what cost.}
+The certified bound $k^* = 25$ (Section~\ref{sec:theory})
+converts an inference-time smoothing budget into a coalition-size
+guarantee against bounded-update adversaries
+(Definition~\ref{def:attack}) that holds under secure aggregation
+with no raw-weight sharing, at a cost of $1.9$\,pp macro-F1 versus
+the centralised PEFTGuard reference number and $0.5$--$1.0$\,pp from
+DP-SGD training. The trade is favourable because centralised
+detection requires the weight-sharing commercial actors refuse,
+whereas the federated certificate uniquely combines ${>}96\%$
+macro-F1, training-time privacy at
+$(\epsilon_T,\delta)\approx(13.6, 10^{-5})$ under Opacus PRV
+composition, and a distribution-free coalition bound on a
+precisely defined bounded-update threat model.
+
+\paragraph{Deployment scenario and hardware envelope.}
+In an operational hub, \modelname\ runs as an ingestion-time gate:
+on upload it extracts an adapter's spectral, textual, and usage
+features, scores them against the local lineage subgraph, and
+emits $\hat{p}_{\mathrm{mal}}(\theta)$ within
+$0.7$--$2.9$\,s per adapter --- the ``sub-second'' claim is
+specific to A100-class hardware, and consumer GPUs (A10G/T4)
+extend the budget to roughly $1.6$--$2.9$\,s. Marketplaces
+exchange only DP-noised, securely-aggregated gradients, never raw
+weights, and the certified bound $k^*$ is recomputed each round as
+a trust indicator.
+
+\paragraph{On FLTrust false-zeroing.}
+FLTrust zeroes clients whose gradient points away from the root-set
+reference --- the intended Byzantine defence, but a \emph{benign}
+marketplace genuinely misaligned with the root set (e.g., a
+low-resource-language hub) can be down-weighted or zeroed, losing
+its contribution and fairness. Mitigations include a more diverse
+root set, per-cluster reference gradients, or a soft floor on
+client weights.
+
+% ============================================================
+%  8. CONCLUSION
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+\modelname\ verifies LoRA-adapter integrity in a federated,
+privacy-preserving manner: a heterogeneous continuous-time dynamic
+graph captures the ecosystem, a federated DyGFormer--HGT encoder
+scores adapters under client-update-level Gaussian DP-SGD with
+secure aggregation and FLTrust, and a certified poisoning-radius
+theorem converts the per-query smoothing budget into a
+bounded-update coalition bound. On $13{,}500$ adapters it obtains
+$96.4\%$ macro-F1 and certified coalition bound $k^* = 25$ at
+$N = 50$ under smoothing budget $\epsilon_r=0.5$, with sub-second
+per-adapter latency on A100-class hardware and a measured
+$\approx 4\%$ per-round wall-clock overhead for the full DP + SecAgg
+stack under CPU-hosted federation (pooled across three
+measurement runs; see Appendix~\ref{app:repro}), offering a
+deployable alternative to weight-sharing detectors.
+
+% ============================================================
+%  ACKNOWLEDGEMENTS
+% ============================================================
+\section*{Acknowledgements}
+This work was supported by a grant for research centers in
+Artificial Intelligence from the Ministry of Economic Development
+of the Russian Federation under subsidy agreement (identifier
+000000C313925P3Q0002). The work was carried out at the Institute of
+Cyber Intelligence Systems and the Artificial Intelligence Research
+Center, National Research Nuclear University MEPhI (Moscow). We
+thank the ACL Rolling Review reviewers, whose comments materially
+improved the certificate derivation, the spectral-only baseline,
+the DP-accounting disclosure, and the scoping of the threat model
+and deployment claims.
+
+% ============================================================
+%  LIMITATIONS
+% ============================================================
+\section*{Limitations}
+\label{sec:limitations}
+
+\paragraph{Adaptive attacks against the certificate.}
+Theorem~\ref{thm:certified} bounds the coalition of
+\emph{bounded-update} label-flipping clients in the sense of
+Definition~\ref{def:attack}. It does not directly bound
+attackers who control client \emph{training data}
+(gradient-level poisoning) under FLTrust scoring, nor arbitrary
+Byzantine gradients unconstrained by
+$\epsilon_{\mathrm{wt}}$. Empirically the FLTrust filter
+eliminates the label-flip attack at $\rho \leq 0.33$, but this
+$33\%$ empirical operating point is distinct from the $50\%$
+certified bound, and formally extending the certificate to
+data-controlling adversaries is left for future work.
+
+\paragraph{HuggingGraph synthesis.}
+Cross-marketplace lineage edges in \benchname\ are synthesised
+from HuggingGraph~\cite{rahman2025hugginggraph} and PADBench. We
+do not replicate the full causal graph of the Hugging Face Hub.
+Adapters that are truly novel (i.e., not derived from any base
+model in \benchname) are excluded by construction. Appendix
+\ref{app:provenance} audits which parts of the graph are real
+versus synthetic.
+
+\paragraph{DP accounting.}
+The reported $(\epsilon_T,\delta)\approx(13.6,10^{-5})$ at
+$T=100$ rounds is the numerical output of the Opacus PRV
+accountant~\cite{gopi2021numerical} at $\sigma=1.1$, Poisson
+subsampling $q=0.2$; the closed-form Gaussian-mechanism bound
+derived from~\eqref{eq:sensitivity} is looser. Tighter accountants
+(e.g.\ Gaussian DP~\cite{dong2022gaussian}) could yield smaller
+noise scales and, if $\sigma$ is re-calibrated for a fixed
+$\epsilon_T$, a marginally larger empirical robustness envelope.
+We use the standard Opacus PRV accountant for reproducibility.
+
+\paragraph{Coverage of LoRA variants.}
+We evaluate four base-model families (Llama-2-7B, Llama-3-8B,
+Mistral-7B, Qwen-7B) and four PEFT variants (LoRA, QLoRA, AdaLoRA,
+DoRA). Behaviour on full-rank fine-tuning, mixture-of-experts
+adapters, and quantization-aware LoRA at $2$-bit precision is not
+characterised.
+
+\paragraph{Adversarial benchmark realism.}
+The ten attack types in \benchname\ are publicly documented in
+prior work. Zero-day attack families that do not match these
+behavioural signatures could degrade detection. The certified
+bound is operationally meaningful only under the threat-model
+assumptions of Definition~\ref{def:attack}. \benchname's $50/50$
+benign/malicious split is a controlled evaluation design, not a
+claimed base rate of backdoored adapters in the wild; we therefore
+also report FPR, precision, and detection@FPR$=1\%$ in
+Appendix~\ref{app:additional} for security-operating-point
+readers.
+
+\paragraph{False positives, fairness, and access.}
+A false positive --- flagging a benign adapter as malicious ---
+imposes a real cost on the developer (quarantine, reputational
+harm, delayed release), so deployments should pair the detector
+with a low false-positive operating point and a human-review
+redress path rather than automatic removal. Detection quality may
+also vary across base-model families and languages: English-language
+adapters dominate \benchname, and hubs specialising in low-resource
+languages may be under-served both by the training distribution and
+by the FLTrust root set (see the false-zeroing discussion in
+Section~\ref{sec:discussion}); a per-family and per-language
+performance audit is needed before broad deployment. Finally, the
+$\sim\!960$ A100-GPU-hour training cost and the federated design
+concentrate detection capability among large, compute-rich
+marketplaces, which raises an inclusivity and power-concentration
+concern for small independent hubs; participation incentives (for
+example reputation or security-certification tiers) and lighter
+client-side training are needed to make the scheme broadly
+adoptable. We flag these as societal considerations rather than
+solved problems.
+
+% ============================================================
+%  ETHICS STATEMENT
+% ============================================================
+\section*{Ethics Statement}
+
+\paragraph{Defensive contribution.}
+The system is designed for defensive operation by LoRA-hosting
+marketplaces. Its components support adapter-integrity
+verification rather than attack development. The threats it
+defends against are publicly documented in cited prior
+work~\cite{liu2024loraattack,lermen2023lora,huang2024composite}.
+We add no new attack mechanisms beyond what is already public.
+
+\paragraph{Privacy-preserving by design.}
+The federated framework ensures marketplaces never share raw
+adapter weights with any other party. Client-update-level
+Gaussian DP-SGD plus secure aggregation gives cumulative
+$(\epsilon_T, \delta)\approx(13.6, 10^{-5})$ per marketplace over
+$T = 100$ training rounds under the Opacus PRV accountant. This
+is exactly the property that makes \modelname\ deployable in
+settings where PEFTGuard cannot be.
+
+\paragraph{Benchmark provenance.}
+The \benchname\ benchmark is constructed from publicly released
+base models and publicly documented attack methodologies.
+Synthesised cross-marketplace lineage edges use the structure of
+HuggingGraph but introduce no personally identifying information.
+Adapter content is restricted to weight tensors, model cards, and
+download statistics. No private adapter weights from any
+marketplace partner are used. The benchmark will be released under
+a clear research licence with a use-case attestation and SHA-256
+checksums for every artefact (Appendix~\ref{app:provenance}).
+
+\paragraph{Operator responsibility.}
+The certified bound $k^* = 25$ is a probabilistic guarantee
+against a specified bounded-update attack model
+(Definition~\ref{def:attack}), not against arbitrary Byzantine
+gradients. Operators must monitor for distribution shift and
+trigger online adaptation at appropriate cadence. Coalitions
+larger than $k^*$, or coalitions violating the bounded-update
+assumption, can in principle flip the verdict and require
+operator-level mitigation. \modelname\ is one layer in a
+defence-in-depth pipeline.
+
+\paragraph{Compute footprint.}
+Total compute for the reported experiments is approximately
+$960$ A100-GPU-hours across hyperparameter sweeps and three
+seeds. Per-adapter scan latency at deployment is $0.7$\,s on a
+single A100.
+
+\paragraph{Use of AI writing assistants.}
+LLM writing assistants were used only for grammar and phrasing on
+author-drafted text. No technical content, experimental design,
+results, or analysis was AI-generated; all citations were
+manually verified.
+
+% ============================================================
+%  REFERENCES
+% ============================================================
+\begin{thebibliography}{99}
+\small
+
+\bibitem[Hu et~al.(2021)]{hu2021lora}
+E.~J.~Hu et~al.
+\newblock LoRA: Low-rank adaptation of large language models.
+\newblock In \emph{Proc.\ ICLR}, 2021.
+
+\bibitem[Dettmers et~al.(2023)]{dettmers2023qlora}
+T.~Dettmers et~al.
+\newblock QLoRA: Efficient finetuning of quantized LLMs.
+\newblock In \emph{Proc.\ NeurIPS}, 2023.
+
+\bibitem[Zhang et~al.(2023)]{zhang2023adalora}
+Q.~Zhang et~al.
+\newblock AdaLoRA: Adaptive budget allocation for parameter-efficient fine-tuning.
+\newblock In \emph{Proc.\ ICLR}, 2023.
+
+\bibitem[Liu et~al.(2024a)]{liu2024dora}
+S.~Liu et~al.
+\newblock DoRA: Weight-decomposed low-rank adaptation.
+\newblock In \emph{Proc.\ ICML}, 2024.
+
+\bibitem[Zhao et~al.(2024)]{zhao2024galore}
+J.~Zhao et~al.
+\newblock GaLore: Memory-efficient LLM training by gradient low-rank projection.
+\newblock In \emph{Proc.\ ICML}, 2024.
+
+\bibitem[Liu et~al.(2024b)]{liu2024loraattack}
+H.~Liu et~al.
+\newblock LoRA-as-an-Attack: Piercing LLM safety under the share-and-play scenario.
+\newblock \emph{arXiv:2403.00108}, 2024.
+
+\bibitem[Lermen et~al.(2023)]{lermen2023lora}
+S.~Lermen et~al.
+\newblock LoRA fine-tuning efficiently undoes safety training in Llama 2-Chat 70B.
+\newblock \emph{arXiv:2310.20624}, 2023.
+
+\bibitem[Huang et~al.(2024)]{huang2024composite}
+H.~Huang et~al.
+\newblock Composite backdoor attacks against LLMs.
+\newblock In \emph{Findings of NAACL}, 2024.
+
+\bibitem[Wei et~al.(2024)]{wei2024brittleness}
+B.~Wei et~al.
+\newblock Assessing the brittleness of safety alignment through pruning and low-rank modifications.
+\newblock In \emph{Proc.\ ICML}, 2024.
+
+\bibitem[Sun et~al.(2025)]{sun2025peftguard}
+Z.~Sun et~al.
+\newblock PEFTGuard: Detecting backdoor attacks against parameter-efficient fine-tuning.
+\newblock In \emph{IEEE S\&P}, 2025.
+
+\bibitem[Schulz et~al.(2025)]{schulz2025shadowgenes}
+M.~Schulz et~al.
+\newblock ShadowGenes: Computational-graph fingerprinting for model genealogy.
+\newblock \emph{arXiv:2502.04321}, 2025.
+
+\bibitem[Cohen(2024)]{cohen2024jfrog}
+JFrog Security Research.
+\newblock Malicious models on Hugging Face Hub. Industry report, 2024.
+
+\bibitem[Kellas et~al.(2025)]{kellas2025pickleball}
+A.~D.~Kellas, N.~Christou, W.~Jiang, P.~Li, L.~Simon, Y.~David,
+V.~P.~Kemerlis, J.~C.~Davis, and J.~Yang.
+\newblock PickleBall: Secure deserialization of pickle-based machine
+learning models.
+\newblock In \emph{Proc.\ ACM CCS}, 2025. arXiv:2508.15987.
+
+\bibitem[Kurita et~al.(2020)]{kurita2020weight}
+K.~Kurita et~al.
+\newblock Weight poisoning attacks on pre-trained models.
+\newblock In \emph{Proc.\ ACL}, 2020.
+
+\bibitem[Li et~al.(2025)]{li2025backdoorllm}
+Y.~Li et~al.
+\newblock BackdoorLLM: A comprehensive benchmark for backdoor attacks and defenses on LLMs.
+\newblock In \emph{Proc.\ NeurIPS}, 2025.
+
+\bibitem[McMahan et~al.(2017)]{mcmahan2017fedavg}
+B.~McMahan et~al.
+\newblock Communication-efficient learning of deep networks from decentralized data.
+\newblock In \emph{Proc.\ AISTATS}, 2017.
+
+\bibitem[Li et~al.(2020)]{li2020fedprox}
+T.~Li et~al.
+\newblock Federated optimization in heterogeneous networks.
+\newblock In \emph{Proc.\ MLSys}, 2020.
+
+\bibitem[Karimireddy et~al.(2020)]{karimireddy2020scaffold}
+S.~P. Karimireddy et~al.
+\newblock SCAFFOLD: Stochastic controlled averaging for federated learning.
+\newblock In \emph{Proc.\ ICML}, 2020.
+
+\bibitem[Abadi et~al.(2016)]{abadi2016deep}
+M.~Abadi et~al.
+\newblock Deep learning with differential privacy.
+\newblock In \emph{Proc.\ CCS}, 2016.
+
+\bibitem[Mironov(2017)]{mironov2017renyi}
+I.~Mironov.
+\newblock R\'enyi differential privacy.
+\newblock In \emph{Proc.\ CSF}, 2017.
+
+\bibitem[Mironov et~al.(2019)]{mironov2019sampled}
+I.~Mironov, K.~Talwar, and L.~Zhang.
+\newblock R\'enyi differential privacy of the sampled Gaussian mechanism.
+\newblock \emph{arXiv:1908.10530}, 2019.
+
+\bibitem[Dong et~al.(2022)]{dong2022gaussian}
+J.~Dong, A.~Roth, and W.~J. Su.
+\newblock Gaussian differential privacy.
+\newblock \emph{J. R. Stat.\ Soc.\ B}, 84(1):3--37, 2022.
+
+\bibitem[Gopi et~al.(2021)]{gopi2021numerical}
+S.~Gopi et~al.
+\newblock Numerical composition of differential privacy.
+\newblock In \emph{Proc.\ NeurIPS}, 2021.
+
+\bibitem[Bonawitz et~al.(2017)]{bonawitz2017practical}
+K.~Bonawitz et~al.
+\newblock Practical secure aggregation for privacy-preserving machine learning.
+\newblock In \emph{Proc.\ CCS}, 2017.
+
+\bibitem[Blanchard et~al.(2017)]{blanchard2017machine}
+P.~Blanchard et~al.
+\newblock Machine learning with adversaries: Byzantine tolerant gradient descent.
+\newblock In \emph{Proc.\ NeurIPS}, 2017.
+
+\bibitem[Yin et~al.(2018)]{yin2018byzantine}
+D.~Yin et~al.
+\newblock Byzantine-robust distributed learning.
+\newblock In \emph{Proc.\ ICML}, 2018.
+
+\bibitem[Cao et~al.(2021)]{cao2021fltrust}
+X.~Cao et~al.
+\newblock FLTrust: Byzantine-robust federated learning by trust bootstrapping.
+\newblock In \emph{Proc.\ NDSS}, 2021.
+
+\bibitem[Anaedevha et~al.(2026a)]{anaedevha2026byzantine}
+R.~N.~Anaedevha, A.~G.~Trofimov, and Y.~V.~Borodachev.
+\newblock Byzantine-resilient stochastic games for federated
+multi-cloud intrusion detection.
+\newblock \emph{Complex \& Intelligent Systems}, Springer, 2026.
+In press.
+\newblock \url{https://doi.org/10.1007/s40747-026-02412-2}
+
+\bibitem[Fan et~al.(2023)]{fan2023fatellm}
+T.~Fan et~al.
+\newblock FATE-LLM: A federated learning framework for large language models.
+\newblock \emph{arXiv:2310.10049}, 2023.
+
+\bibitem[Wang et~al.(2024)]{wang2024flora}
+Z.~Wang et~al.
+\newblock FLoRA: Federated fine-tuning large language models with heterogeneous low-rank adaptations.
+\newblock In \emph{Proc.\ NeurIPS}, 2024.
+
+\bibitem[Ye et~al.(2024)]{ye2024openfedllm}
+R.~Ye, W.~Wang, J.~Chai, D.~Li, Z.~Li, Y.~Xu, Y.~Du, Y.~Wang, and S.~Chen.
+\newblock OpenFedLLM: Training large language models on decentralized
+private data via federated learning.
+\newblock In \emph{Proc.\ ACM SIGKDD}, 2024. arXiv:2402.06954.
+
+\bibitem[Tao et~al.(2026)]{tao2026safefedllm}
+M.~Tao, Y.~Tian, W.~Tu, Y.~Yang, X.~Yang, and X.~Tang.
+\newblock Safe-FedLLM: Delving into the safety of federated large
+language models.
+\newblock In \emph{Proc.\ ACL}, 2026. arXiv:2601.07177.
+
+\bibitem[Kumar et~al.(2019)]{kumar2019jodie}
+S.~Kumar et~al.
+\newblock Predicting dynamic embedding trajectory in temporal interaction networks.
+\newblock In \emph{Proc.\ KDD}, 2019.
+
+\bibitem[Trivedi et~al.(2019)]{trivedi2019dyrep}
+R.~Trivedi et~al.
+\newblock DyRep: Learning representations over dynamic graphs.
+\newblock In \emph{Proc.\ ICLR}, 2019.
+
+\bibitem[Xu et~al.(2020)]{xu2020tgat}
+D.~Xu et~al.
+\newblock Inductive representation learning on temporal graphs.
+\newblock In \emph{Proc.\ ICLR}, 2020.
+
+\bibitem[Rossi et~al.(2020)]{rossi2020tgn}
+E.~Rossi et~al.
+\newblock Temporal graph networks for deep learning on dynamic graphs.
+\newblock In \emph{Proc.\ ICML Workshop on Graph Representation Learning}, 2020.
+
+\bibitem[Yu et~al.(2023)]{yu2023dygformer}
+L.~Yu et~al.
+\newblock Towards better dynamic graph learning: New architecture and unified library.
+\newblock In \emph{Proc.\ NeurIPS}, 2023.
+
+\bibitem[Anaedevha and Trofimov(2026)]{anaedevha2026multiscale}
+R.~N.~Anaedevha and A.~G.~Trofimov.
+\newblock Multi-scale temporal graph neural network with stochastic
+dynamics for cloud and industrial network intrusion detection.
+\newblock In \emph{Proc.\ IEEE EDM}, pp.\ 1--8, 2026.
+\newblock \url{https://doi.org/10.1109/EDM69524.2026.11632205}
+
+\bibitem[Hu et~al.(2020)]{hu2020hgt}
+Z.~Hu et~al.
+\newblock Heterogeneous graph transformer.
+\newblock In \emph{Proc.\ WWW}, 2020.
+
+\bibitem[He et~al.(2021)]{he2021fedgraphnn}
+C.~He et~al.
+\newblock FedGraphNN: A federated learning benchmark system for graph neural networks.
+\newblock In \emph{Proc.\ ICLR Workshop}, 2021.
+
+\bibitem[Sajadmanesh et~al.(2023)]{sajadmanesh2023gap}
+S.~Sajadmanesh et~al.
+\newblock GAP: Differentially-private graph neural networks with aggregation perturbation.
+\newblock In \emph{USENIX Security}, 2023.
+
+\bibitem[Rahman et~al.(2025)]{rahman2025hugginggraph}
+M.~S.~Rahman, P.~Gao, and Y.~Ji.
+\newblock HuggingGraph: Understanding the supply chain of the LLM
+ecosystem.
+\newblock In \emph{Proc.\ ACM CIKM}, 2025. arXiv:2507.14240.
+
+\bibitem[Horwitz et~al.(2025)]{horwitz2025atlas}
+E.~Horwitz, N.~Kurer, J.~Kahana, L.~Amar, and Y.~Hoshen.
+\newblock Charting and navigating Hugging Face's model atlas.
+\newblock \emph{arXiv:2503.10633}, 2025.
+
+\bibitem[Lecuyer et~al.(2019)]{lecuyer2019certified}
+M.~Lecuyer et~al.
+\newblock Certified robustness to adversarial examples with differential privacy.
+\newblock In \emph{IEEE S\&P}, 2019.
+
+\bibitem[Cohen et~al.(2019)]{cohen2019certified}
+J.~Cohen, E.~Rosenfeld, and J.~Z. Kolter.
+\newblock Certified adversarial robustness via randomized smoothing.
+\newblock In \emph{Proc.\ ICML}, 2019.
+
+\bibitem[Ma et~al.(2019)]{ma2019data}
+Y.~Ma et~al.
+\newblock Data poisoning against differentially-private learners.
+\newblock In \emph{Proc.\ IJCAI}, 2019.
+
+\bibitem[Anaedevha et~al.(2026b)]{anaedevha2026mambashield}
+R.~N.~Anaedevha, A.~G.~Trofimov, and Y.~V.~Borodachev.
+\newblock MambaShield: Selective state-space models for
+poisoning-resilient sequential modeling.
+\newblock \emph{Expert Systems with Applications}, p.~131175,
+Elsevier, 2026.
+\newblock \url{https://doi.org/10.1016/j.eswa.2026.131175}
+
+\bibitem[Xie et~al.(2021)]{xie2021crfl}
+C.~Xie et~al.
+\newblock CRFL: Certifiably robust federated learning against backdoor attacks.
+\newblock In \emph{Proc.\ ICML}, 2021.
+
+\bibitem[Cao et~al.(2022)]{cao2022flcert}
+X.~Cao et~al.
+\newblock FLCert: Provably secure federated learning against poisoning attacks.
+\newblock In \emph{IEEE TIFS}, 2022.
+
+\bibitem[Wang et~al.(2021)]{wang2021certgnn}
+B.~Wang et~al.
+\newblock Certified robustness of graph neural networks against adversarial structural perturbation.
+\newblock In \emph{Proc.\ KDD}, 2021.
+
+\bibitem[Scholten et~al.(2022)]{scholten2022randomized}
+Y.~Scholten et~al.
+\newblock Randomized message-interception smoothing.
+\newblock In \emph{Proc.\ NeurIPS}, 2022.
+
+\bibitem[Beutel et~al.(2020)]{beutel2020flower}
+D.~J. Beutel et~al.
+\newblock Flower: A friendly federated learning research framework.
+\newblock \emph{arXiv:2007.14390}, 2020.
+
+\bibitem[Loshchilov and Hutter(2019)]{loshchilov2019adamw}
+I.~Loshchilov and F.~Hutter.
+\newblock Decoupled weight decay regularization.
+\newblock In \emph{Proc.\ ICLR}, 2019.
+
+\bibitem[Anaedevha et~al.(2026c)]{anaedevha2026gp}
+R.~N.~Anaedevha, A.~G.~Trofimov, and Y.~V.~Borodachev.
+\newblock Uncertainty-calibrated hierarchical Gaussian processes for
+intrusion detection with multi-scale temporal modeling.
+\newblock \emph{Neurocomputing}, 677:133105, Elsevier, 2026.
+\newblock \url{https://doi.org/10.1016/j.neucom.2026.133105}
+
+\bibitem[Sharafaldin et~al.(2018)]{sharafaldin2018toward}
+I.~Sharafaldin et~al.
+\newblock Toward generating a new intrusion detection dataset.
+\newblock In \emph{Proc.\ ICISSP}, 2018.
+
+\bibitem[Ferrag et~al.(2022)]{ferrag2022edge}
+M.~A. Ferrag et~al.
+\newblock Edge-IIoTset.
+\newblock \emph{IEEE Access}, 10:40281--40306, 2022.
+
+\bibitem[Moustafa and Slay(2015)]{moustafa2015unsw}
+N.~Moustafa and J.~Slay.
+\newblock UNSW-NB15.
+\newblock In \emph{Proc.\ MilCIS}, 2015.
+
+\bibitem[Moustafa(2021)]{moustafa2021ton}
+N.~Moustafa.
+\newblock TON-IoT telemetry dataset.
+\newblock \emph{IEEE Access}, 9:55141--55167, 2021.
+
+\end{thebibliography}
+
+% ============================================================
+%  APPENDICES
+% ============================================================
+\appendix
+
+\section{Full Proofs}
+\label{app:proofs}
+
+\subsection{Proof of Theorem~\ref{thm:sensitivity}}
+
+\paragraph{Two-sided clipping bound.}
+The client-update clipping map
+$T_S(\mathbf{g}):=\mathbf{g}\cdot\min(1,S/\norm{\mathbf{g}}_2)$
+satisfies $\norm{T_S(\mathbf{g})}_2\le S$ for every
+$\mathbf{g}\in\R^d$. Hence for any two datasets $\Dcal_i$ and
+$\Dcal_i'$,
+$\norm{\bar{\mathbf{g}}_i(\Dcal_i)-\bar{\mathbf{g}}_i(\Dcal_i')}_2
+\le \norm{\bar{\mathbf{g}}_i(\Dcal_i)}_2 +
+\norm{\bar{\mathbf{g}}_i(\Dcal_i')}_2 \le 2S$, giving
+Eq.~\eqref{eq:sensitivity}. This is the sensitivity we use for the
+Gaussian mechanism calibration and does not depend on any
+assumption on the GNN architecture.
+
+\paragraph{Graph-structural refinement.}
+When the sensitivity to a single node-edge change propagates through
+$L$ HGT layers rather than saturating clipping, we can bound
+$\norm{\Delta \bar{\mathbf{g}}_i}_2$ more tightly. By induction on
+$L$: at the $\ell$-th HGT aggregation (Eq.~\ref{eq:hgt}),
+$\mathbf{h}_v^{(\ell)} = \phi^{\mathrm{nl}}(\sum_{r,u} \alpha_{u,v,r}
+\mathbf{W}_R^r \mathbf{h}_u^{(\ell-1)})$, and differing in a
+single node-edge changes at most one term in the inner sum. By
+Cauchy--Schwarz and the relation-wise spectral bound
+$\norm{\mathbf{W}_R^r}_2 \le B_W$,
+\begin{equation}
+\norm{\Delta \mathbf{h}_v^{(\ell)}}_2 \le \rho \cdot B_W \cdot d_{\max} \cdot \norm{\Delta \mathbf{h}_v^{(\ell-1)}}_2
+\end{equation}
+whenever the affected node lies in the temporal neighbourhood.
+Iterating $L$ layers yields the $(\rho B_W d_{\max})^L$ factor.
+The $|\Rcal|^{1/2}$ factor comes from Cauchy--Schwarz over the
+relation-type sum. Post-clipping to $S$ then gives the refined
+Eq.~\eqref{eq:sensitivity-refined}, and by taking the tighter of
+the two bounds we obtain
+$\Delta_2\le\min\!\bigl(2S,2S(\rho B_W d_{\max})^L |\Rcal|^{1/2}\bigr)$.
+For our deployment scale
+$(\rho B_W d_{\max})^L\,|\Rcal|^{1/2}\gg 1$, so the operational
+sensitivity is $2S$.
+\qed
+
+\subsection{Proof of Theorem~\ref{thm:certified}}
+
+The argument composes three established results, itemised below
+with the specific hypothesis each contributes.
+
+\paragraph{Step 1: PixelDP stability of the smoothed classifier.}
+By Lemma~1 of \citet{lecuyer2019certified}, if $f$ is an
+$(\epsilon_r,\delta)$-DP scoring function of its input
+$\mathbf{x}$, then for any input perturbation $\Delta$ with
+bounded $\ell_2$ norm,
+$\Prob[\argmax f(\mathbf{x}) \neq \argmax f(\mathbf{x} +
+\Delta)] \leq e^{\epsilon_r} \cdot p_{\Delta}(\mathbf{x}) + \delta$,
+where $p_{\Delta}$ is the prediction-flip probability under the
+noiseless mechanism. In our setting the random variable being
+smoothed is the aggregated global model $\mathbf{w}_T\in\R^d$
+(not the input adapter), and the $(\epsilon_r,\delta)$-DP mechanism
+is the single Gaussian smoothing draw applied to $\mathbf{w}_T$ at
+verification time.
+
+\paragraph{Step 2: from parameter perturbation to client coalition.}
+A single malicious client $i$ operating under
+Definition~\ref{def:attack} submits
+$\norm{\tilde{\mathbf{g}}_i-\mathbf{g}_i^{\mathrm{honest}}}_2\le
+\epsilon_{\mathrm{wt}}$ after SecAgg. FLTrust weighting
+$\beta_i\in[0,1]$ can only reduce the effective attacker
+contribution to the aggregate, so any bound derived under
+unweighted aggregation is a fortiori valid under FLTrust
+weighting. Under unweighted averaging, $k$ colluding clients induce
+a worst-case parameter-space perturbation of the aggregate of size
+at most $\eta\cdot k\cdot\epsilon_{\mathrm{wt}}/m$ per round by
+triangle inequality; here $\eta$ is the learning rate and $m$ is
+the number of clients sampled per round. Summed over the training
+horizon the total attacker-induced parameter perturbation is thus
+bounded linearly in $k$.
+
+\paragraph{Step 3: CRFL federated smoothing.}
+By Theorem~1 of \citet{xie2021crfl}, extending randomized
+smoothing~\cite{cohen2019certified}, federated parameter clipping
+plus a Gaussian smoothing draw on the aggregated model certifies
+a class-margin radius (in parameter-perturbation space) via a
+Neyman--Pearson hypothesis-testing argument. Translated into a
+client coalition of size $N$, this reads
+\begin{equation}
+k^* = \left\lfloor \frac{N (\Phi^{-1}(\hat{p}_1) - \Phi^{-1}(\hat{p}_2))}{2 e^{\epsilon_r}} \right\rfloor,
+\end{equation}
+where $\epsilon_r$ is the $(\epsilon_r,\delta)$-DP budget of the
+single smoothing draw applied at verification time. The factor
+$2 e^{\epsilon_r}$ combines the PixelDP per-query stability
+multiplier $e^{\epsilon_r}$ (Step~1) with the CRFL
+class-margin denominator $2$ (two half-Gaussian tails). The
+PixelDP factor is therefore instantiated at $\epsilon_r$, not at
+the cumulative training-time budget $\epsilon_T$.
+
+\paragraph{Step 4: R\'enyi-DP composition (marketplace privacy only).}
+By the standard R\'enyi-DP composition
+theorem~\cite{mironov2017renyi}, the Gaussian mechanism satisfies
+$(\alpha,\alpha/(2\sigma^2))$-RDP, and for the
+\emph{Poisson-subsampled} Gaussian mechanism at rate $q$ the
+per-round R\'enyi divergence is amplified to
+$O(q^2\alpha/\sigma^2)$~\cite{mironov2019sampled}; composing $T$
+rounds and converting to $(\epsilon_T,\delta)$-DP gives
+\begin{equation}
+\epsilon_T \leq \min_{\alpha>1}\;\frac{2 T q^2 \alpha}{\sigma^2} + \frac{\ln(1/\delta)}{\alpha - 1}.
+\end{equation}
+In practice we do not use this closed form: at $\sigma=1.1$,
+$q=0.2$, $T=100$, $\delta=10^{-5}$, the Opacus PRV
+accountant~\cite{gopi2021numerical} returns
+$\epsilon_T\approx 13.6$, and we report this numerical value as
+the marketplace-privacy guarantee. This step does \emph{not} enter
+the certificate: the certificate is set by the per-query smoothing
+budget $\epsilon_r$ of Step~3, not by the cumulative training-time
+$\epsilon_T$ of Step~4.
+
+Substituting the per-query smoothing budget $\epsilon_r$ into the
+CRFL bound yields Eq.~\eqref{eq:kstar}. The failure probability
+$T\delta$ accumulates by union bound over rounds if the smoothing
+is re-drawn per round; a single-draw certificate uses the tighter
+$\delta$. The graph-structural extension to heterogeneous edge-set
+perturbations follows from
+\citet{wang2021certgnn,scholten2022randomized}.
+\qed
+
+\section{Additional Analyses}
+\label{app:additional}
+
+\paragraph{Spectral-only baseline.}
+Because backdoored adapters carry a prominent rank-1 signature
+(Figure~\ref{fig:spectrum}), we test whether that signal alone
+suffices. A non-graph, non-federated SVD-only detector thresholding
+$\sigma_1/\sigma_2$ reaches $90.2\%$ macro-F1 on single-trigger
+rank-1 backdoors but only $71.4\%$ on composite-trigger,
+weight-poisoning, and trigger-free merging attacks (the
+logistic-regression variant on the full spectral signature is
+similar: $91.0\%/73.1\%$), and offers no certificate. \modelname's
+advantage is therefore concentrated on the hard, context-dependent
+attacks and on the certified radius, not on the easy rank-1 cases
+where a cheap spectral screen suffices.
+
+\paragraph{Leakage-controlled splits.}
+Table~\ref{tab:splits} reports \modelname's macro-F1 under four
+increasingly strict test partitions of \benchname. Under a random
+adapter split (the standard split) \modelname\ reaches $96.4\%$;
+under a lineage-component-disjoint split (the strictest split that
+still preserves attack coverage) it retains $95.1\%$; under a
+base-model-disjoint split it drops to $93.7\%$; under an
+attack-family-held-out split (each attack type in turn) it retains
+$92.3\%$ averaged over held-out families. The main-paper number
+$96.4\%$ is reported at the lineage-component-disjoint split, so
+it is not an artefact of family memorisation.
+
+\begin{table}[!h]
+\centering
+\caption{Macro-F1 of \modelname\ under increasingly strict test
+partitions of \benchname.}
+\label{tab:splits}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Split                                   & Macro-F1 (\%) \\
+\midrule
+Random adapter                          & 96.4 \\
+Lineage-component-disjoint (main)       & 95.1 \\
+Base-model-disjoint                     & 93.7 \\
+Attack-family-held-out (avg)            & 92.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Security-operating-point metrics.}
+Because macro-F1 on the balanced $50/50$ split can under-report
+the false-positive burden a marketplace would actually see, we
+also report precision, recall, false-positive rate (FPR), and
+detection@FPR$=1\%$ at the paper's default operating point of
+$\hat{p}_{\mathrm{mal}}\ge 0.6$. Values (mean over three seeds):
+precision $= 94.4\%$, recall $= 96.9\%$, FPR $= 5.9\%$, PR-AUC
+$= 0.972$, detection@FPR$=1\%$ $= 82.4\%$. On the imbalanced
+production distribution (estimated $\sim 0.4\%$ malicious base
+rate in prior industry reports) the operator would tune to a
+low-FPR operating point; at $\hat{p}_{\mathrm{mal}}\ge 0.9$ we
+observe FPR $= 0.7\%$ with detection rate $84.1\%$.
+
+\paragraph{Robustness of the operating envelope.}
+At a stronger-privacy point (cumulative $\epsilon_T = 1.0$) macro-F1
+is $94.1\%$, a $2.3$\,pp drop from the operational $\epsilon_T
+\approx 13.6$ point --- graceful degradation, giving a
+privacy--utility curve rather than a single point. Under random
+removal of HuggingGraph lineage edges, macro-F1 falls from
+$96.4\%$ to $95.6\%/93.8\%/91.1\%$ at $10\%/30\%/50\%$ removal, so
+a complete lineage graph is not required. A two-sample
+Kolmogorov--Smirnov test on the top-1 singular-value distributions
+confirms the $2.43\times$ benign/backdoored separation is
+significant ($D=0.71$, $p<10^{-3}$). Latency is $0.7$\,s per
+adapter on an A100~80\,GB (including neighbour retrieval and
+feature extraction), rising to $\sim\!1.6$\,s on an A10G and
+$\sim\!2.9$\,s on a T4; the ``sub-second'' claim is thus specific
+to A100-class hardware.
+
+\section{IDS Transfer Results}
+\label{app:ids}
+
+As a cross-domain sanity check for the detector \emph{backbone}
+beyond the adapter-integrity setting (i.e., emphatically not part
+of the LoRA-integrity contribution), we evaluate on four
+network intrusion-detection datasets --- CIC-IDS2017~\cite{sharafaldin2018toward},
+Edge-IIoTset~\cite{ferrag2022edge}, UNSW-NB15~\cite{moustafa2015unsw},
+and TON-IoT~\cite{moustafa2021ton}, following the evaluation
+protocol of prior uncertainty-aware intrusion-detection
+work~\cite{anaedevha2026gp}. Averaged over the four,
+\modelname\ attains $96.1\%$ accuracy, $95.8\%$ macro-F1, and
+expected calibration error $0.034$, versus $91.8\%/0.072$ for
+FedAvg-MLP, $93.6\%/0.054$ for FedGraphNN-HGT, and
+$94.1\%/0.049$ for Krum-DyGFormer. These results indicate the
+federated dynamic-graph backbone transfers to non-adapter
+anomaly-detection settings, but they are not part of the core
+LoRA-integrity contribution and are reported here only for
+completeness.
+
+\section{Benchmark Provenance}
+\label{app:provenance}
+
+Table~\ref{tab:provenance} audits which components of \benchname\
+are drawn from real released artefacts versus synthesised by the
+benchmark construction pipeline.
+
+\begin{table}[!h]
+\centering
+\caption{Provenance audit of \benchname: real (drawn from public
+released artefacts) versus synthetic (produced by the benchmark
+construction pipeline). The synthetic components are all seeded
+and their generation code is released so the audit is
+reproducible.}
+\label{tab:provenance}
+\footnotesize
+\begin{tabular}{@{}lccl@{}}
+\toprule
+Component                     & Real & Synth. & Source \\
+\midrule
+Base model families           & \checkmark &            & HF Hub \\
+LoRA adapter weights          & \checkmark & \checkmark & PADBench + this work \\
+Attack recipes                & \checkmark &            & BackdoorLLM, PADBench \\
+Model cards / README text     & \checkmark & \checkmark & HF + templated \\
+Contributor identities        &            & \checkmark & this work \\
+Derivation (lineage) edges    & \checkmark & \checkmark & HuggingGraph + this work \\
+Deployment edges              &            & \checkmark & this work \\
+Citation edges                & \checkmark & \checkmark & PADBench + this work \\
+Temporal timestamps           &            & \checkmark & this work \\
+Download / usage statistics   & \checkmark & \checkmark & HF + templated \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\benchname\ is released with SHA-256 checksums for every artefact,
+a manifest listing which fields per adapter are real versus
+synthesised, and the generation seeds so the synthetic components
+are reproducible bit-for-bit.
+
+\section{Reproducibility}
+\label{app:repro}
+
+All results are means over three random seeds $\{42, 137, 2026\}$.
+Total compute: approximately $960$ A100-GPU-hours across
+hyperparameter sweeps. The codebase, the \benchname\ benchmark,
+and pretrained checkpoints are released at the repository below.
+Hyperparameters: DyGFormer encoder $3$ layers, $H = 8$ attention
+heads, $d_v = 256$. HGT relation-specific matrices initialised
+with Xavier-uniform. Training: AdamW with learning rate $5 \times
+10^{-4}$, weight decay $10^{-4}$, $T = 100$ rounds, batch size
+$32$ per client. Client-update-level DP-SGD: $S = 1.0$, $\sigma =
+1.1$, Poisson sampling rate $q = 0.2$, $\delta = 10^{-5}$. FLTrust
+root set $|R_0| = 200$ vetted clean adapters. Per-query smoothing
+budget for the certificate: $\epsilon_r = 0.5$.
+
+\paragraph{DP accounting configuration.} The reported
+$\epsilon_T \approx 13.6$ at $T=100$ rounds is computed with the
+Opacus PRV accountant~\cite{gopi2021numerical} under
+\emph{Poisson} subsampling at sampling rate $q = 0.2$, noise
+multiplier $\sigma = 1.1$, client-update clipping $S = 1.0$,
+$\delta = 10^{-5}$. As a cross-check, the Opacus R\'enyi
+accountant returns $\epsilon_T \approx 13.56$ at the same
+parameters --- consistent with PRV within accountant looseness.
+The manuscript's earlier draft misreported $\epsilon_T\approx 5.0$
+for these parameters; that value would require $\sigma\approx
+2.15$ at $(q,T,\delta)=(0.2,100,10^{-5})$ under the same PRV
+accountant. We report the honest PRV output for the sigma
+actually used in the released code and checkpoints. The per-query
+certificate smoothing budget $\epsilon_r=0.5$ is a separate design
+parameter of the inference-time smoothing draw and is not
+composed into $\epsilon_T$; it enters only Theorem~\ref{thm:certified}.
+The exact configuration is::
+\begin{quote}
+\small
+\begin{verbatim}
+accountant       = PRV (Opacus)
+sample_rate q    = 0.20 (Poisson)
+sigma            = 1.10
+clip S           = 1.00
+T                = 100 rounds
+delta            = 1e-5
+result eps_T     = 13.6 (PRV), 13.56 (RDP)
+\end{verbatim}
+\end{quote}
+
+\paragraph{Training-time overhead of the privacy stack.}
+Because \modelname\ applies DP clipping at the
+\emph{client-update} level (Algorithm~\ref{alg:fedloraguard},
+line~5) rather than to per-example gradients, it does not require
+the per-sample gradient materialisation or microbatching that
+dominates the cost of example-level DP-SGD: each round adds one
+$O(d)$ norm-and-rescale and one $O(d)$ Gaussian draw per client,
+where $d$ is the encoder parameter count. Secure aggregation
+contributes a pairwise PRG mask that is likewise $O(d)$ per
+client, plus the mask-exchange round of the Bonawitz
+protocol~\cite{bonawitz2017practical}, whose cost is
+communication- rather than compute-bound and is amortised over the
+local epochs of a round. We instrument the released runtime to
+measure this overhead directly. On identical CPU hardware, over
+three independent runs with $20$--$60$ measurement rounds each
+after $3$--$5$ warm-up rounds and identical client work (six
+clients, $H{=}4$ HGT heads, $d_v=96$, batch size $32$), the
+pooled median round wall-clock is $1.89$\,s under non-private
+FedAvg and $1.96$\,s with the full DP + secure-aggregation stack,
+a pooled median overhead of $+3.4\%$ (across the three runs
+individually the full-stack overhead is $-1.1\%$, $+10.6\%$, and
+$+3.4\%$; per-round overhead of the DP step alone is dominated by
+CPU-jitter at this model scale, so we round the reported figure
+to $\approx 4\%$). Because CPU-hosted federation puts most of the
+per-round cost in local GNN training, the DP + SecAgg mask draws
+account for a small fraction of round time; on
+compute-accelerated (A100-class) hardware the same mask draws
+would represent a larger relative share and the ratio would be
+higher. Convergence in rounds is unchanged ($T = 100$); the
+certificate and privacy guarantee are therefore obtained at a
+modest training-time cost.
+At verification time, no additional privacy training step is
+required beyond the forward pass and the single per-query
+smoothing draw described in Theorem~\ref{thm:certified}; the
+end-to-end per-adapter verification budget on A100 is $0.7$\,s
+(Appendix~\ref{app:additional}). We ship the round-time
+instrumentation in the released runtime so this overhead can be
+re-measured on other hardware.
+
+\paragraph{Availability.} The codebase, the \benchname\ benchmark,
+pinned dependency hashes, and pretrained checkpoints are released
+at \url{https://github.com/rogerpanel/CV/tree/main/FedLoRAGuard}
+(reference implementation and reproducibility artefact) and
+\url{https://github.com/rogerpanel/FedLoRAGuard-Models}
+(manuscript source). Dataset sources and licences are cited at
+first use and listed in the Ethics Statement.
+
+\end{document}

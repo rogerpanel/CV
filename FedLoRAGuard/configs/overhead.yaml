@@ -1,0 +1,55 @@
+# Configuration used for the DP+SecAgg overhead measurement.  Sized so that
+# each round dominates CPU jitter but the total run finishes in a few minutes.
+defaults: default.yaml
+
+experiment:
+  name: fedloraguard_overhead
+  seed: 42
+  output_dir: runs/overhead
+
+graph:
+  feature_dims:
+    weight: 32
+    text: 32
+    behavioral: 8
+    fused: 96
+  temporal:
+    num_neighbors: 12
+    time_encoding_dim: 16
+    patch_size: 4
+
+encoder:
+  weight:
+    spectral_topk: 8
+  text:
+    cache_offline: true
+
+model:
+  hidden_dim: 96
+  num_layers: 2
+  num_heads: 4
+
+federated:
+  num_clients: 6
+  clients_per_round: 6
+  sampling_rate: 1.0
+  rounds: 30
+  local_epochs: 1
+  batch_size: 32
+  fltrust:
+    root_set_size: 24
+  secure_aggregation:
+    enabled: false
+
+privacy:
+  enabled: true
+  noise_multiplier: 1.1
+  clip_norm: 1.0
+
+benchmark:
+  num_adapters: 480
+  num_marketplaces: 6
+  base_model_families: [llama2-7b, mistral-7b]
+  attack_types: [badnets, sleeper, kurita_weight_poison, cba_lora_merge]
+  ranks: [8, 16]
+  task_corpora: [alpaca, dolly]

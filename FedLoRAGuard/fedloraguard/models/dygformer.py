@@ -99,12 +99,15 @@ class DyGFormerEncoder(nn.Module):
 
         time_codes = self.time_enc(rel_times)            # (K, time_dim)
 
-        # Patch the K neighbors into floor(K / patch_size) patches.
+        # Patch the K neighbors into floor(K / patch_size) patches, clamped
+        # so patch_size never exceeds K (otherwise the view reshapes across
+        # the feature axis and corrupts the hidden dimension).
         K = neighbor_features.shape[0]
-        n_patches = max(1, K // self.patch_size)
-        usable = n_patches * self.patch_size
+        patch_size = min(self.patch_size, K)
+        n_patches = max(1, K // patch_size)
+        usable = n_patches * patch_size
         nbr = neighbor_features[:usable]
-        nbr = nbr.view(n_patches, self.patch_size, -1).mean(dim=1)        # (P, d)
+        nbr = nbr.view(n_patches, patch_size, -1).mean(dim=1)        # (P, d)
         # Concatenate query token at position 0 to enable [CLS]-style readout.
         # query_features: (d,) -> (1, 1, d);  nbr: (P, d) -> (1, P, d)
         seq = torch.cat(
