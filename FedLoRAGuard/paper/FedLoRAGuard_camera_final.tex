@@ -15,6 +15,7 @@
 \usepackage{microtype}
 % \usepackage{inconsolata} % restore for Overleaf
 \usepackage{makecell}
+\usepackage{array}
 
 \usepackage{url}
 \usepackage{hyperref}
@@ -1592,10 +1593,12 @@ construction pipeline). The synthetic components are all seeded
 and their generation code is released so the audit is
 reproducible.}
 \label{tab:provenance}
-\footnotesize
-\begin{tabular}{@{}lccl@{}}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.4cm}cc>{\raggedright\arraybackslash}p{2.1cm}@{}}
 \toprule
-Component                     & Real & Synth. & Source \\
+Component & Real & Synth. & Source \\
 \midrule
 Base model families           & \checkmark &            & HF Hub \\
 LoRA adapter weights          & \checkmark & \checkmark & PADBench + this work \\
