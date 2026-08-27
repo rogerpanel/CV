@@ -659,9 +659,13 @@ Definition~\ref{def:graph}, so $|\Rcal|=6$). Let $\phi^{\mathrm{nl}}$
 denote the point-wise non-linearity inside the HGT block and assume
 it is $\rho$-Lipschitz; for GELU $\rho\approx 1.13$ (attained near
 $x\approx\pm\sqrt{2}$), which we use in place of the looser
-$\rho\le 1$. Let the per-node temporal-neighbourhood degree be
-bounded by $d_{\max}$, and let $S$ be the client-update clipping
-threshold used at Algorithm~\ref{alg:fedloraguard} line~5.
+$\rho\le 1$. We further treat the HGT attention coefficients
+$\alpha_{u,v,r}$ as bounded by their spectral envelope, so the
+state-dependent softmax is upper-bounded by the relation-weight
+spectral norms; a tighter, state-aware bound is left to future
+work. Let the per-node temporal-neighbourhood degree be bounded
+by $d_{\max}$, and let $S$ be the client-update clipping threshold
+used at Algorithm~\ref{alg:fedloraguard} line~5.
 Consider two adjacent local datasets
 $\Dcal_i \sim \Dcal_i'$ differing in a single node-edge addition
 or modification. The $\ell_2$-sensitivity of the clipped client
@@ -1113,6 +1117,21 @@ extend the budget to roughly $1.6$--$2.9$\,s. Marketplaces
 exchange only DP-noised, securely-aggregated gradients, never raw
 weights, and the certified bound $k^*$ is recomputed each round as
 a trust indicator.
+
+\paragraph{On the FLTrust root-set assumption.}
+FLTrust asks the coordinator to hold a small vetted root set $R_0$
+of $200$ clean adapters. This is not a paradox with the paper's
+scalability claim: $R_0$ is a \emph{static, one-time} trust anchor
+vetted at bootstrap, whereas the workload \modelname\ addresses is
+the recurring, per-upload verification of the full marketplace
+stream (hundreds of thousands of adapters, continuous ingestion),
+which manual inspection cannot cover. Bootstrapping trust from a
+small clean set to score an unbounded dynamic stream is the
+standard FLTrust operating model and does not require the operator
+to manually vet every upload. The residual assumption is that
+$R_0$ is and remains clean; rotating $R_0$ periodically and
+attesting its integrity through the marketplace's own signing
+pipeline is a straightforward operational mitigation.
 
 \paragraph{On FLTrust false-zeroing.}
 FLTrust zeroes clients whose gradient points away from the root-set
