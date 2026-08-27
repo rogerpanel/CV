@@ -89,26 +89,37 @@ EMNLP 2026 Findings, long paper, camera-ready allowance:
 * References: **unlimited**
 * Appendices / supplementary: **unlimited**
 
-The `paper/FedLoRAGuard_camera_final.tex` compile in this repo uses a
-**stub** `acl.sty` because the actual EMNLP style file is not
-distributable outside the ACL template. Our stub renders single-column
-A4, which inflates the page count to 22. In your Overleaf project with
-the **real `acl.sty`**, the paper is expected to render in two-column
-Letter and the main body will fit within the 9-page limit; verify this
-after uploading:
+The main body of `FedLoRAGuard_camera_final.tex` has been **condensed**
+to bring the page count within budget while preserving every reviewer-
+promised revision.  Pooled stats:
 
-* On Overleaf, open the compiled PDF and confirm the References section
-  starts on **page 10 or earlier** (i.e., §1–§Conclusion + Limitations
-  + Ethics ≤ 11 pages).
-* If content spills past page 9, prime candidates for trimming without
-  losing reviewer-promised content are: the "Deployment scenario"
-  paragraph in §7, the "Claim structure" paragraph in §1, and the
-  extended baseline description of the SVD-only baseline (all
-  reviewer-requested but can be tightened).
+* Old main-body (§1–Ethics): 1191 lines of TeX source
+* New main-body: 853 lines (**−28%**)
+* Stub-compile page count went from 22 → 18 pages (single-column A4)
 
-Both figures (`fig1_FedLoraGuard_arch.pdf`, `fig2_mean.pdf`) currently
-declare `figure*[t]`. Confirm on Overleaf that they land in-column and
-not pushed to the last page; if they do overflow, change to
+In the real Overleaf compile with `acl.sty` (two-column Letter, ~1.5×
+denser packing), the condensed main body is expected to occupy roughly
+**6–7 pages for §1–§Conclusion + 1 page Limitations + ~½ page Ethics**,
+well within the 11-page pre-References budget.
+
+Verify on Overleaf:
+
+* Compile with the real EMNLP 2026 `acl.sty` (two-column Letter).
+* Open the PDF and confirm References begins on **page 12 or earlier**
+  (§1–§Conclusion ≤ 9 pages, Limitations ≤ 1 page, Ethics ≤ 1 page).
+* If the compile is close to the limit, prime candidates for further
+  trimming without losing reviewer-promised content are: the
+  "Numerical instantiation" paragraph after Theorem 2, one of the two
+  centralised-baseline lines in Table 1, and the "Additional analyses"
+  overview sentence in §6.4.
+* If it exceeds by more than half a page, revert to the two-paragraph
+  form of the Introduction "Our approach" section by re-adding the
+  "Claim structure" paragraph from `git log -p paper/FedLoRAGuard_camera_final.tex`
+  (commit before this condensation).
+
+Both figures (`fig1_FedLoraGuard_arch.pdf`, `fig2_mean.pdf`) declare
+`figure*[t]`. Confirm on Overleaf that they land near their reference
+and are not pushed to the last page; if they overflow, change to
 `figure*[!ht]` or use single-column `figure[t]`.
 
 ---
