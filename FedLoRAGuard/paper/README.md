@@ -13,6 +13,7 @@ This directory holds the final camera-ready sources for
 | --- | --- |
 | `FedLoRAGuard_camera_final.tex` | Ready-to-compile Overleaf source with all reviewer fixes applied |
 | `REVIEWER_RESOLUTIONS.md` | Resolution table: reviewer point → action taken |
+| `CAMERA_READY_CHECKLIST.md` | **Pre-submission checklist mapped to the EMNLP 2026 Program-Chair notification** — reference audit, page-limit compliance on Overleaf, Responsible NLP Checklist section-number updates, presenter/visa/registration data. Open this before uploading to OpenReview. |
 | `measurements/overhead_v{2,3,4}.json` | Raw wall-clock measurements from `scripts/measure_dp_overhead.py` used to derive the ~4% overhead figure in Appendix E |
 
 ## Overleaf compile checklist
