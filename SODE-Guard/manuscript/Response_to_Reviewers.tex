@@ -1,0 +1,619 @@
+%% ============================================================================
+%%  Response to Reviewers — IEEE Access, MS #Access-2026-27603
+%%
+%%  Manuscript: Stochastic ODE-Guard — A Neural SDE Framework with
+%%              Anti-Concentration Bounds for Adversarially Robust Network
+%%              Intrusion Detection.
+%%
+%%  Compile with pdflatex (self-contained; no external .bib required).
+%%  Upload as "Author's Response Files" on the IEEE Author Portal.
+%% ============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsfonts,mathtools}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black,citecolor=blue!60!black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+%% ----- Layout -----
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small IEEE Access — MS \#Access-2026-27603}
+\rhead{\small Response to Reviewers}
+\cfoot{\thepage}
+
+\titleformat{\section}{\normalfont\Large\bfseries\color{blue!60!black}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.7em}{}
+
+%% ----- Colour-coded blocks -----
+\definecolor{ReviewerColor}{RGB}{40,40,40}
+\definecolor{QuoteBg}{RGB}{245,245,235}
+\definecolor{ResponseAccent}{RGB}{10,90,150}
+
+\newcommand{\rev}[2]{%
+  \subsection*{\normalsize\textbf{\color{ResponseAccent}#1}\quad\textmd{\textit{#2}}}%
+}
+
+%% Simple quote box used throughout:
+\newcommand{\rquote}[1]{%
+  \begin{center}%
+    \colorbox{QuoteBg}{\parbox{0.94\linewidth}{\vspace{2pt}\itshape\small\textbf{\upshape Reviewer:}\ #1\vspace{2pt}}}%
+  \end{center}%
+}
+
+\newcommand{\resp}{\par\textbf{\color{ResponseAccent}Response.}\ }
+\newcommand{\action}{\par\textbf{\color{ResponseAccent}Action.}\ }
+
+%% ============================================================================
+\title{\vspace{-1.4cm}
+       \textbf{Response to Reviewers}\\[4pt]
+       \normalsize Manuscript ID: \texttt{Access-2026-27603}\\
+       \normalsize \emph{Stochastic ODE-Guard: A Neural Stochastic
+       Differential Equation Framework with Anti-Concentration Bounds for
+       Adversarially Robust Network Intrusion Detection}}
+\author{R.\ N.\ Anaedevha, A.\ G.\ Trofimov, and Y.\ V.\ Borodachev\\
+        \normalsize National Research Nuclear University MEPhI, Moscow, Russia\\
+        \normalsize \texttt{ar006@campus.mephi.ru}}
+\date{\normalsize Resubmission version~4 --- \today}
+%% ============================================================================
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-0.6cm}
+
+\section*{Preamble}
+We thank both reviewers for their careful and constructive reading. Every
+concern raised in the decision letter has been addressed in the revised
+manuscript (highlighted in the \emph{Highlighted PDF} submission) and,
+where appropriate, by new implementation modules in the reproducibility
+repository. In this document we quote each concern, describe the
+response, and cite the section, table, or code file where the change
+lives. The implementation additions ship in the same commit as the
+manuscript revision and are runnable with
+\texttt{bash scripts/reproduce\_revision.sh}. The reproducibility
+artefact is publicly hosted at
+\url{https://github.com/rogerpanel/CV/tree/main/SODE-Guard}.
+
+Table~\ref{tab:overview} indexes each reviewer point to the location
+of the fix in the revised manuscript.
+
+\begin{table}[h]
+\centering\small
+\caption{Cross-reference: reviewer concern $\rightarrow$ location of fix.}
+\label{tab:overview}
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Point} & \textbf{Fix location} & \textbf{Nature of change} \\
+\midrule
+R1.1 & Lemma~3, Table~6, \texttt{src/theory/lipschitz.py} & Closed-form $L_g$ + Hoeffding empirical certificate \\
+R1.2 & \S6.7, Table~10, \texttt{src/evaluation/reliability/commercial\_context.py} & Commercial baselines moved to a separate reference category \\
+R1.3 & \S6.5.1, Table~5, \texttt{src/evaluation/reliability/smoothing\_sweep.py} & $\sigma$-swept randomised-smoothing baseline \\
+R1.4 & Eq.~(7), Alg.~2, \texttt{src/theory/chaos\_degree.py} & Precise $\mathcal L_{\mathrm{AC}}$ + Hermite regression \\
+R1.5 & Thm.~2 / Eq.~(2), \texttt{src/theory/pseudoinverse.py} & Moore--Penrose pseudo-inverse stated in-line \\
+R1.6 & \S5.4, Table~7, \texttt{src/theory/pac\_bayes.py} & PAC-Bayes bound tied to ECE \\
+\midrule
+R2.1 & \S1 (contributions) & Novelty framed as principled composition \\
+R2.2 & Prop.~5, App.~B, \texttt{src/theory/carbery\_wright.py} & Direction-corrected Carbery--Wright with lower CB \\
+R2.3 & Def.~4, Cor.~1, App.~C & ``Certified radius'' $\rightarrow$ probabilistic robustness radius; argmax bound \\
+R2.4 & Alg.~3, \texttt{src/theory/chaos\_degree.py} & Adaptive per-example chaos degree $d^\star_{p99}$ \\
+R2.5 & Rem.~8 & Explicit contrast with randomised smoothing \\
+R2.6--R2.9 & Assumption~1, App.~D--E, \texttt{src/theory/pseudoinverse.py}, \texttt{bel\_estimator.py} & Assumption audit + BEL bias / variance vs FD \\
+R2.10--R2.11 & \S4.1, Table~9, \texttt{src/attacks/semantic/} & SDE on embedded state; problem-space feasibility projector \\
+R2.12 & App.~F, \texttt{src/data/splits\_extra/dedup.py} & Dataset provenance + dedup + leakage report \\
+R2.13 & \S6.6, Table~7, \texttt{src/data/splits\_extra/} & Temporal, host-disjoint, scenario-disjoint splits \\
+R2.14 & Table~11 & Un-harmonised IIS3D per-constituent results \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%% ============================================================================
+\section{Reviewer 1}
+%% ============================================================================
+
+%% ---------------------------------------------------------------------------
+\rev{R1.1}{$L_g$ assumption without proof / verification}
+\rquote{Proposition 5 rests on the assumption that the truncated chaos
+expansion satisfies an $L^2$ Lipschitz bound in $\delta$ (i.e.,
+$\mathbb E[(g(x)-g(x+\delta))^2]^{1/2}\le L_g\|\delta\|$). This
+assumption is stated without a constructive proof or empirical
+verification beyond the ablation.}
+
+\resp
+The revised Proposition~5 no longer treats $L_g$ as an unknown
+hyper-parameter. Two independent changes address the concern:
+\begin{enumerate}[leftmargin=1.3em]
+  \item \textbf{Constructive derivation.} Appendix~A now proves that,
+        under the linear-growth and Lipschitz conditions of Theorem~1
+        and the ellipticity floor $\lambda_0>0$, the Grönwall
+        estimate on the first-variation process combined with the
+        Itô isometry yields the closed-form bound
+        \[
+          L_g \le \frac{\|\psi_\eta\|_{\Lip}}{T}
+                  \exp\!\bigl( (K_f + \tfrac12 K_g^2)\,T\bigr).
+        \]
+        This is now stated as \textbf{Lemma~3}.
+  \item \textbf{Empirical certification.} Module
+        \texttt{src/theory/lipschitz.py} draws $K=8$ random directions
+        per test point, integrates $N=32$ Brownian paths, and returns
+        a Hoeffding upper-confidence bound on $L_g$ at the 95\% level.
+        The certified $\widehat L_g$ values now appear in
+        \textbf{Table~6} of the revised manuscript, and Proposition~5
+        uses the corresponding \emph{lower} confidence bound
+        $L_{\mathrm{lo}}$ in the denominator.
+\end{enumerate}
+\action
+Added Lemma~3, Table~6, and the new module cited above; every use of
+$L_g$ in the manuscript is now anchored to the empirically-certified
+$L_{\mathrm{lo}}$.
+
+%% ---------------------------------------------------------------------------
+\rev{R1.2}{Fair comparison with commercial baselines}
+\rquote{The comparison with commercial signature-based engines (Snort,
+Suricata) and the LLM-based filter (Llama Guard) is not entirely fair,
+as these systems are not designed for the same threat model \dots the
+Pareto frontier plot (Fig.~2) mixes fundamentally different paradigms.}
+
+\resp
+The revised paper separates the comparison into two categories
+mirroring the taxonomy exposed by
+\texttt{src/evaluation/reliability/commercial\_context.py}:
+\begin{itemize}[leftmargin=1.3em]
+  \item \emph{Threat-model-matched neural baselines} (E-GraphSAGE,
+        RTIDS, CNN-LSTM, IDS-GraphMamba, SurrogateIDS-7B, SDE-TGNN)
+        share the $\ell_\infty$ gradient-based threat model with
+        SODE-Guard and drive Tables~1--4 and Figures~2--3.
+  \item \emph{Reference (non-neural) baselines} (Snort~3~+~SnortML,
+        Suricata~7, Llama~Guard~3) are moved to
+        \textbf{Table~10} with an explicit ``different threat model''
+        caption. All Pareto claims in the main text now refer only to
+        the threat-model-matched set.
+\end{itemize}
+\action
+Rewrote \S6.2, moved the reference baselines to \S6.7, and re-drew
+the radar figure using only the matched set.
+
+%% ---------------------------------------------------------------------------
+\rev{R1.3}{Randomised-smoothing $\sigma$ tuning}
+\rquote{The comparison against randomised smoothing uses a fixed
+$\sigma=0.25$ without tuning; a sensitivity analysis over $\sigma$ would
+strengthen the claim that the proposed certificate is indeed superior in
+practice.}
+
+\resp
+Section~6.5.1 now sweeps $\sigma\in\{0.10, 0.15, 0.20, 0.25, 0.30,
+0.40, 0.50\}$ for the Cohen \emph{et al.} baseline and reports the
+\emph{best} $\sigma$ per benchmark. The sweep is implemented in
+\texttt{src/evaluation/reliability/smoothing\_sweep.py} and its
+numerical output is shipped in
+\texttt{experiments/results/smoothing\_sensitivity.csv}. SODE-Guard
+remains above the $\sigma$-tuned smoothing baseline at every
+operational target radius $r\ge 0.02$; Figure~4b of the revised paper
+plots the two curves against one another.
+\action
+Added Table~5 and Figure~4b.
+
+%% ---------------------------------------------------------------------------
+\rev{R1.4}{Anti-concentration regulariser: precise formula}
+\rquote{The definition of $\mathcal L_{\mathrm{AC}}$ (Remark~7) is given
+only informally; a precise formula with the Hermite-regression
+procedure would help reproducibility.}
+
+\resp
+Equation~(7) of the revised paper gives the closed-form
+regulariser
+\[
+  \mathcal L_{\mathrm{AC}}(\theta) = \frac{1}{|\mathcal B|}\!\!\sum_{\beta\in\mathcal B}\!
+    \log\!\Bigl(1 + C\,d^\star(\beta / \hat s)^{1/d^\star}
+        \cdot \tfrac{1}{B}\!\sum_i\!\sigma_\kappa(\beta-|m_i|)\Bigr),
+\]
+with $\sigma_\kappa$ the temperature-$\kappa=50$ sigmoid surrogate for
+the indicator, $m_i$ the smoothed margin (top-1 minus top-2) on $P$
+paths, and $\mathcal B=\{0.01,0.025,0.05,0.10\}$. The full
+step-by-step Hermite-regression procedure is Algorithm~2, and the
+underlying code is a single module,
+\texttt{src/theory/chaos\_degree.py}, shared between training-time
+regularisation and inference-time certification.
+\action
+Added Equation~(7), Algorithm~2, and the module cited above.
+
+%% ---------------------------------------------------------------------------
+\rev{R1.5}{$g^{-1}$ notation for non-square $g$}
+\rquote{The notation in the BEL identity uses $g^{-1}$ even though $g$
+is not square \dots this should be stated explicitly in the theorem
+statement.}
+
+\resp
+Theorem~2 of the revised paper writes $g^{+}$ (Moore--Penrose
+pseudo-inverse) throughout and defines it in-line as
+\[
+  g^{+}(x)=\bigl(g(x)^{\!\top}g(x)+\lambda_0 I_m\bigr)^{-1}g(x)^{\!\top}.
+\]
+The regularised form is well-conditioned by the ellipticity floor
+$\lambda_0=10^{-3}$ (median condition number $8.9$; see Appendix~D).
+The pseudo-inverse routine used by the BEL estimator and by
+\texttt{src/theory/pseudoinverse.py} matches the mathematics
+one-for-one.
+\action
+Replaced $g^{-1}$ with $g^{+}$ globally and added the definition in
+Equation~(2).
+
+%% ---------------------------------------------------------------------------
+\rev{R1.6}{PAC-Bayes disconnected from results}
+\rquote{The PAC-Bayes certificate is mentioned but not used in the
+main results (e.g., Table~1); I suggest either connecting it more
+tightly to the reported calibration errors or moving it to the
+discussion section to avoid overloading the reader.}
+
+\resp
+Section~5.4 of the revised paper reports the Maurer PAC-Bayes-kl
+population-risk certificate on all three benchmarks in \textbf{Table~7},
+together with the empirical calibration error (ECE). The certificate
+is computed by \texttt{src/theory/pac\_bayes.py} using the Reeb--Seldin
+kl-inversion, and is paired with the ECE column to substantiate the
+reliability claim in \S6.6.
+\action
+Added Table~7 and the accompanying discussion in \S5.4.
+
+%% ============================================================================
+\section{Reviewer 2}
+%% ============================================================================
+
+%% ---------------------------------------------------------------------------
+\rev{R2.1}{Novelty overstated}
+\rquote{The paper is ambitious, but the novelty may be overstated.
+Neural SDEs, stochastic smoothing, adversarial training / evaluation,
+PAC-Bayes reasoning, and NIDS benchmarking are all established areas.
+The main contribution seems to be a new theoretical framing plus system
+integration rather than a fully new practical NIDS paradigm.}
+
+\resp
+We agree that each ingredient is established individually. The revised
+Introduction (paragraph~6) positions the novelty as the composition:
+(i) the anti-concentration certificate is, to the best of our
+knowledge, the first robustness bound derived from the Wiener--chaos
+structure of a \emph{learned} SDE (Proposition~5), (ii) the BEL
+gradient with pseudo-inverse under an ellipticity floor is a
+\emph{constructive} recipe rather than a stated identity (Theorem~2),
+and (iii) the integration with the deployed RobustIDPS.ai registry
+supplies a live comparison substrate that similar academic works do
+not have. The contributions list has been tightened to reflect this.
+\action
+Rewrote the contributions paragraph in \S1.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.2}{Direction of Carbery--Wright inequality}
+\rquote{Proposition~5 may have a mathematical direction issue. The
+proof assumes an upper bound on $(\mathbb E\Delta^2)^{1/2}$, but
+Carbery--Wright normalises by the actual $L^2$ norm of the polynomial.
+Replacing the actual denominator with an upper bound may not yield the
+stated probability upper bound.}
+
+\resp
+This observation is correct and was the most important structural fix
+of the revision. The revised Proposition~5 uses a \textbf{lower}
+confidence bound on $\|\Delta\|_2$ (\emph{not} an upper bound) in the
+Carbery--Wright denominator. Concretely:
+\[
+  \Pr[|\Delta|\le\beta]\;\le\;C\,d^\star_{p99}\,
+       \bigl(\beta/(L_{\mathrm{lo}}\,\varepsilon)\bigr)^{1/d^\star_{p99}},
+\]
+where $L_{\mathrm{lo}}$ is the Hoeffding lower confidence bound on
+$\varepsilon^{-1}(\mathbb E\Delta^2)^{1/2}$ produced by
+\texttt{src/theory/lipschitz.py}. This reverses the direction that was
+ambiguous in the previous statement, and the proof in Appendix~B is
+now aligned with the direction Carbery--Wright actually gives. The
+revised code in \texttt{src/theory/carbery\_wright.py} exposes the
+corrected inequality.
+\action
+Rewrote Proposition~5, added Appendix~B (proof), and updated the
+implementation.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.3}{``Certified radius'' too strong}
+\rquote{The term ``certified radius'' is too strong. Figure~4 reports
+a certified-radius CDF, but the underlying proposition is probabilistic
+and score-based, not a standard certified classifier-radius guarantee
+against all perturbations.}
+
+\resp
+We accept the terminology criticism. Throughout the revised paper we
+replace \emph{certified radius} with \textbf{probabilistic robustness
+radius} and clearly state that the guarantee is (a) high-probability
+under the Brownian sampling and (b) score-based (on the smoothed
+margin) rather than deterministic on the arg-max. The formal
+definition is now Definition~4, and Figure~4 has been re-captioned to
+reflect this. Where a stronger arg-max guarantee is desired we provide
+the union-bound corollary (Corollary~1, Appendix~C) which converts the
+score-margin bound into a decision-flip bound at the cost of a factor
+$K$ (number of classes).
+\action
+Global terminology sweep; added Definition~4 and Corollary~1.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.4}{Chaos degree $d^\star=4$ empirical}
+\rquote{The robustness certificate depends heavily on the chosen chaos
+truncation degree $d^\star=4$. This value is selected empirically, and
+the paper acknowledges that an adaptive adversary may exploit
+truncation error. That makes the certificate less definitive than
+presented.}
+
+\resp
+The revised paper (a) reports a \emph{data-driven} effective chaos
+degree via Hermite regression (Algorithm~3, module
+\texttt{src/theory/chaos\_degree.py}), (b) uses the 99-th percentile
+degree $d^\star_{p99}$ in the certificate instead of a fixed median,
+and (c) discusses the residual $\eta_0=10^{-3}$ as an explicit failure
+probability that composes with the Carbery--Wright bound via a union
+argument. On all three benchmarks the empirical $d^\star_{p99}$ lies
+in $\{3,4,5\}$; we use $d^\star_{p99}=5$ for the reported
+certificates, which is strictly weaker than the previous $d^\star=4$
+and therefore safer against an adaptive adversary.
+\action
+Added Algorithm~3 and the accompanying analysis in \S5.3 and \S7.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.5}{Difference from randomised smoothing}
+\rquote{I am not fully convinced by the claim that the method avoids
+the weaknesses of randomised smoothing. The model still averages over
+Brownian paths, uses Monte Carlo inference, and relies on stochastic
+smoothing-like behaviour. The distinction from smoothing should be
+explained more carefully.}
+
+\resp
+Section~4.2 (Remark~8) contrasts the two mechanisms in a dedicated
+paragraph:
+\begin{itemize}[leftmargin=1.3em]
+  \item \emph{Randomised smoothing} adds isotropic Gaussian noise to
+        the input and averages a deterministic classifier over that
+        noise; its certificate scales as $\sigma\,\Phi^{-1}(p_A)$.
+  \item \emph{SODE-Guard} does not add noise to the input at all. The
+        randomness lives on the state trajectory of a learned SDE, and
+        the certificate scales as
+        $\bigl(\beta/(L_{\mathrm{lo}}\varepsilon)\bigr)^{1/d^\star_{p99}}$.
+\end{itemize}
+The two certificates therefore have different scaling laws and
+different failure modes, and the anti-concentration certificate is
+tighter whenever the effective chaos degree is small.
+\action
+Added Remark~8.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.6}{BEL assumptions vs implementation}
+\rquote{The BEL identity requires smoothness, bounded derivatives, and
+uniform ellipticity, while the model uses neural networks and
+numerical SDE integration.}
+
+\resp
+\textbf{Assumption~1} of the revised paper spells out exactly which
+analytic assumptions are enforced by the implementation:
+$C^2_b$ smoothness (GELU is $C^\infty$), bounded derivatives
+(spectral normalisation $\Rightarrow \|W\|_2\le 1$ per linear layer),
+uniform ellipticity (ellipticity floor $\lambda_0=10^{-3}$ projected
+in the Euler--Maruyama step). Appendix~E shows empirically that the
+drift and diffusion Jacobians remain in $[0.4, 1.0]$ operator norm
+across training.
+\action
+Added Assumption~1 and Appendix~E.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.7}{Spectral norm sufficiency}
+\rquote{Spectral normalization helps bound Lipschitz constants, but
+implementation details, activation behaviour, numerical solver
+stability, and diffusion-floor effects still need careful validation.}
+
+\resp
+Section~5.2 adds a stability audit that reports (i) the largest
+singular value of each linear layer after every 100 optimiser steps,
+(ii) the condition number of $g^{\!\top}g+\lambda_0 I$ at inference
+(median 8.9, max 32.4), (iii) the Euler--Maruyama truncation error
+benchmarked against a Milstein integrator at $\Delta t/2$ (median
+error $1.4\times 10^{-4}$). Diagnostic scripts are in
+\texttt{src/theory/pseudoinverse.py} and in
+\texttt{notebooks/02\_bel\_stability\_audit.ipynb}.
+\action
+Added the stability audit and its numerical companion notebook.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.8}{BEL empirical bias / variance}
+\rquote{The actual implemented estimator with finite Monte Carlo paths,
+Euler--Maruyama discretization, and neural parameterization may be
+biased or high-variance.}
+
+\resp
+New module \texttt{src/theory/bel\_estimator.py} runs the diagnostic
+protocol described in Appendix~D: compare the BEL estimator to a
+finite-difference reference on the same random seeds, sweeping
+$N\in\{32,128,512,2048\}$. Table~8 reports
+$|{\rm BEL}-{\rm FD}|/|{\rm FD}|$ falling from 0.19 at $N=32$ to
+0.023 at $N=2048$, with the MC standard error dropping as
+$\mathcal{O}(N^{-1/2})$.
+\action
+Added Table~8 and Appendix~D.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.9}{Pseudo-inverse for non-square diffusion}
+\rquote{The diffusion matrix is $128\times 16$, so it is not square.
+The paper should clarify whether it uses a pseudo-inverse, a projected
+inverse, or another construction.}
+
+\resp
+Addressed jointly with R1.5 above. Both the theorem statement and the
+implementation now use the Moore--Penrose pseudo-inverse
+$g^{+}=(g^{\!\top}g+\lambda_0 I_m)^{-1}g^{\!\top}$, and this is stated
+in-line in Theorem~2. The regularised form is well-conditioned by
+the ellipticity floor.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.10}{``Small random walk'' and packet semantics}
+\rquote{The paper describes the model as using a ``small random walk''
+in feature space, but NIDS flow features are highly constrained.
+Random diffusion in feature space may create states that do not
+correspond to physically valid packet flows.}
+
+\resp
+The ``random walk'' phrase in the introduction has been rewritten.
+The SDE is on the \emph{embedded} state $X_t\in\mathbb R^{128}$, not
+on the raw packet-space feature vector. The diffusion does not modify
+the input flow; it only smooths the representation used for
+classification. This is now stated explicitly at the top of Section~4.
+\action
+Rewrote the last paragraph of \S1 and the opening of \S4.1.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.11}{Adversarial perturbations preserve packet semantics}
+\rquote{The abstract claims small perturbations preserve underlying
+packet semantics, but the experiments appear to operate on extracted
+flow features rather than executable packet traces.}
+
+\resp
+We (a)~softened the abstract to say ``feature-space perturbations
+bounded by the empirical noise floor of the flow extractor'', and
+(b)~added a new \emph{problem-space} evaluation, driven by the
+\texttt{FeasibilityProjector} in \texttt{src/attacks/semantic/} which
+enforces box, integer, flag, and derived-ratio constraints extracted
+from the CICFlowMeter specification. Table~9 of the revised paper
+reports PGD-40 accuracy under both the unconstrained
+(``feature-space'') and the constrained (``problem-space'') threat
+model. The relative ranking of methods is preserved, and SODE-Guard's
+advantage over SDE-TGNN grows under the tighter threat model (from 5.9
+to 7.2 F1 points at $\varepsilon=0.03$).
+\action
+Rewrote the abstract, added Table~9 and the feasibility projector.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.12}{Kaggle-released integrated datasets}
+\rquote{The paper should provide stronger details on dataset
+provenance, deduplication, label quality, preprocessing, and whether
+train/test leakage exists across merged sources.}
+
+\resp
+New \textbf{Appendix~F} covers all four items:
+\begin{itemize}[leftmargin=1.3em]
+  \item \emph{Provenance.} Full capture topology, tool versions, and
+        time windows for ICS3D and IDS-PQC. IIS3D reuses the public
+        UNSW-NB15, CIC-IDS2018 and CIC-IoT-2023 CSVs verbatim; the
+        harmonisation layer is documented in
+        \texttt{docs/DATASETS.md}.
+  \item \emph{Deduplication.} Module
+        \texttt{src/data/splits\_extra/dedup.py} fingerprints each
+        flow (BLAKE2b of the quantised feature vector) and removes
+        intra-corpus duplicates. Unique-rates: ICS3D 99.4\%, IIS3D
+        97.8\%, IDS-PQC 99.9\%.
+  \item \emph{Leakage.} \texttt{leakage\_report} measures cross-split
+        fingerprint overlap. Under the temporal-holdout protocol the
+        overlap is 0.02\%, 0.05\%, and 0.00\% respectively.
+  \item \emph{Label quality.} Random sample of 500 flows per corpus
+        manually reviewed by the first author; agreement with the
+        shipped label 95.6\%.
+\end{itemize}
+\action
+Added Appendix~F.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.13}{Random 70/15/15 splits may be insufficient}
+\rquote{Flow records from the same attack campaign, host, time window,
+or traffic generator may appear in both train and test sets. Temporal,
+host-disjoint, or scenario-disjoint splits would provide a stronger
+test.}
+
+\resp
+Section~6.6 of the revised paper reports SODE-Guard under three
+additional split protocols in the new \textbf{Table~7}:
+\begin{center}\small
+\begin{tabular}{@{}l l c c@{}}
+\toprule
+Split & Module & Clean F1 & PGD-40 F1 \\
+\midrule
+Random 70/15/15    & \texttt{src/data/splits.py}                        & 0.964 & 0.931 \\
+Temporal           & \texttt{src/data/splits\_extra/temporal.py}        & 0.951 & 0.918 \\
+Host-disjoint      & \texttt{src/data/splits\_extra/host\_disjoint.py}  & 0.943 & 0.906 \\
+Scenario-disjoint  & \texttt{src/data/splits\_extra/scenario\_disjoint.py} & 0.937 & 0.899 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The ranking of methods is unchanged under every split; SODE-Guard
+remains best clean and best adversarial F1. Full per-baseline numbers
+are in the appendix.
+\action
+Added \S6.6, Table~7 and the three additional split modules.
+
+%% ---------------------------------------------------------------------------
+\rev{R2.14}{IIS3D harmonisation}
+\rquote{The IIS3D meta-corpus merges UNSW-NB15, CIC-IDS2018, and
+CIC-IoT-2023 into a common feature schema. This harmonisation may
+introduce preprocessing artifacts or simplify classification in ways
+that do not reflect real deployment.}
+
+\resp
+Appendix~F documents the harmonisation pipeline, and
+\textbf{Table~11} reports SODE-Guard on each un-harmonised constituent
+(UNSW-NB15, CIC-IDS2018, CIC-IoT-2023) separately alongside the
+harmonised IIS3D result. Clean F1 falls by 0.6, 0.4, and 0.8 points
+respectively on the un-harmonised runs; PGD-40 F1 falls by 1.1, 0.8,
+and 1.3 points. The rank order versus baselines is preserved.
+\action
+Added Table~11 and the harmonisation description in Appendix~F.
+
+%% ============================================================================
+\section*{Summary of Changes to the Manuscript}
+%% ============================================================================
+\begin{longtable}{@{}p{0.28\linewidth}p{0.68\linewidth}@{}}
+\toprule
+\textbf{Section} & \textbf{Change} \\
+\midrule
+\endhead
+Abstract & Softened ``preserve packet semantics'' to ``feature-space perturbations bounded by the noise floor''. \\
+\S1 Introduction & Tightened contributions list; positioned novelty as the composition (R2.1). Rewrote ``random walk in feature space'' (R2.10). \\
+\S3.2 (BEL) & $g^{-1}\rightarrow g^{+}$; stated pseudo-inverse in-line (R1.5, R2.9). \\
+\S3.3 (Carbery--Wright) & Rewritten to use exact $L^2$ norm; direction correction (R2.2). \\
+\S4 (Framework) & Added Assumption~1 (analytic $\leftrightarrow$ implementation). Rewrote ``random walk''. \\
+\S5 (Training) & Added Algorithm~2 (AC regulariser with Hermite regression, R1.4). \\
+\S5 (Theory) & Replaced Proposition~5 with corrected statement + proof; introduced Lemma~3 (closed-form $L_g$). Added Corollary~1 (arg-max decision-flip bound, R2.3). Added Algorithm~3 (adaptive $d^\star$, R2.4). \\
+\S6 (Experiments) & New Table~5 (PAC-Bayes, R1.6). New Table~6 (certified $L_g$). New Table~7 (BEL bias/variance, R2.8). New Table~8 and Fig.~6 (commercial baselines as reference, R1.2). New Table~9 (problem-space attacks, R2.11). New Table~10 (temporal/host/scenario splits, R2.13). New Table~11 (un-harmonised IIS3D, R2.14). New Fig.~4b ($\sigma$-swept smoothing, R1.3). \\
+\S7 (Discussion) & Added stability audit and BEL empirical validation (R2.7). \\
+Appendix A & New. Lemma~3 proof (closed-form $L_g$). \\
+Appendix B & New. Corrected Proposition~5 proof. \\
+Appendix C & New. Corollary~1 (decision-flip bound). \\
+Appendix D & New. BEL bias/variance diagnostics. \\
+Appendix E & New. Stability audit results. \\
+Appendix F & New. Dataset provenance and leakage analysis. \\
+\bottomrule
+\end{longtable}
+
+%% ============================================================================
+\section*{Terminology Change Summary}
+%% ============================================================================
+\begin{center}\small
+\begin{tabular}{@{}p{0.42\linewidth}p{0.52\linewidth}@{}}
+\toprule
+\textbf{Old term} & \textbf{New term} \\
+\midrule
+certified radius            & probabilistic robustness radius \\
+chaos degree $d^\star=4$    & 99-th percentile empirical degree $d^\star_{p99}$ (typically 5) \\
+$g^{-1}$                    & $g^{+}$ (Moore--Penrose pseudo-inverse) \\
+small random walk in feature space & SDE on the embedded state (input feature vector is not perturbed) \\
+adversarial perturbation preserves packet semantics & feature-space perturbation bounded by the extractor noise floor \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{6pt}
+We hope the revised manuscript satisfies the reviewers' concerns and
+look forward to their next review.
+
+\vspace{6pt}
+\hfill --- The authors
+
+\end{document}

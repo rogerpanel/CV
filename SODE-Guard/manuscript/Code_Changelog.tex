@@ -1,0 +1,133 @@
+%% ============================================================================
+%%  SODE-Guard Revision — Code Changelog (v3 -> v4)
+%%
+%%  Companion to the IEEE Access resubmission (Access-2026-27603).
+%%  Compile with pdflatex (self-contained).
+%% ============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small SODE-Guard v4 — Code changelog}
+\rhead{\small \texttt{rogerpanel/CV/SODE-Guard}}
+\cfoot{\thepage}
+\titleformat{\section}{\normalfont\Large\bfseries\color{blue!60!black}}{\thesection}{0.7em}{}
+
+\title{\vspace{-1.2cm}\textbf{SODE-Guard Revision — Code Changelog}\\[4pt]
+       \normalsize v3 $\rightarrow$ v4 (IEEE Access MS \texttt{Access-2026-27603})}
+\author{R.\ N.\ Anaedevha, A.\ G.\ Trofimov, and Y.\ V.\ Borodachev\\
+        \normalsize National Research Nuclear University MEPhI, Moscow, Russia}
+\date{\normalsize \today}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-0.6cm}
+
+\section*{Overview}
+This document enumerates every code addition, modification, and new
+artefact introduced by the v3 $\rightarrow$ v4 revision. All paths are
+relative to the reproducibility root at
+\url{https://github.com/rogerpanel/CV/tree/main/SODE-Guard}.
+
+%% ============================================================================
+\section{New source modules}
+%% ============================================================================
+\begin{longtable}{@{}p{0.42\linewidth}p{0.16\linewidth}p{0.36\linewidth}@{}}
+\toprule
+\textbf{Module} & \textbf{Concern} & \textbf{Purpose} \\
+\midrule
+\endhead
+\texttt{src/theory/lipschitz.py} & R1.1, R2.2 & Empirical Hoeffding $L_g$ certification \\
+\texttt{src/theory/chaos\_degree.py} & R2.4 & Data-driven Hermite chaos-degree estimator \\
+\texttt{src/theory/carbery\_wright.py} & R2.2, R2.3 & Corrected margin-stability + decision-flip bounds \\
+\texttt{src/theory/pac\_bayes.py} & R1.6 & Maurer PAC-Bayes-kl certificate \\
+\texttt{src/theory/pseudoinverse.py} & R1.5, R2.9 & Moore--Penrose pseudo-inverse for $128\times 16$ diffusion \\
+\texttt{src/theory/bel\_estimator.py} & R2.8 & BEL vs finite-difference diagnostic sweep \\
+\texttt{src/attacks/semantic/feasibility.py} & R2.11 & Feature-level feasibility projector \\
+\texttt{src/attacks/semantic/constrained\_attacks.py} & R2.11 & Problem-space PGD / C\&W \\
+\texttt{src/data/splits\_extra/temporal.py} & R2.13 & Time-ordered split \\
+\texttt{src/data/splits\_extra/host\_disjoint.py} & R2.13 & Host-disjoint split \\
+\texttt{src/data/splits\_extra/scenario\_disjoint.py} & R2.13 & Scenario-disjoint split \\
+\texttt{src/data/splits\_extra/dedup.py} & R2.12 & Deduplication + leakage report \\
+\texttt{src/evaluation/reliability/smoothing\_sweep.py} & R1.3 & Randomised-smoothing $\sigma$ sensitivity \\
+\texttt{src/evaluation/reliability/commercial\_context.py} & R1.2 & Baseline threat-model taxonomy \\
+\bottomrule
+\end{longtable}
+
+%% ============================================================================
+\section{Modified modules}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{src/models/sode\_guard.py}: \texttt{forward\_with\_paths} now
+        also exposes the Brownian summary needed by
+        \texttt{theory.chaos\_degree}.
+  \item \texttt{src/regularizers/anti\_concentration.py}: docstring
+        corrected to reflect the direction-fixed Carbery--Wright bound;
+        code unchanged because it uses the empirical $\|m\|_2$
+        denominator.
+  \item \texttt{src/evaluation/certificate.py}: consumes
+        \texttt{theory.lipschitz.LipschitzCertificate} instead of a
+        hand-picked Lipschitz probe.
+\end{itemize}
+
+%% ============================================================================
+\section{New documentation and manuscript files}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{docs/response\_to\_reviewers/RESPONSE.md} (Markdown)
+        and its LaTeX equivalent
+        \texttt{manuscript/Response\_to\_Reviewers.tex}.
+  \item \texttt{docs/response\_to\_reviewers/CHANGELOG.md} (Markdown)
+        and its LaTeX equivalent
+        \texttt{manuscript/Code\_Changelog.tex} (this file).
+  \item \texttt{docs/packet\_semantics.md} (Markdown) and
+        \texttt{manuscript/Packet\_Semantics.tex}.
+  \item \texttt{manuscript/SODEGuard\_v4\_Manuscript.tex} (revised
+        submission LaTeX).
+  \item \texttt{manuscript/highlights\_v3\_to\_v4.md} and
+        \texttt{manuscript/Highlights\_v3\_to\_v4.tex} (change list
+        mapped to line ranges for the Highlighted-PDF submission).
+\end{itemize}
+
+%% ============================================================================
+\section{New tests}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{tests/test\_lipschitz.py}
+  \item \texttt{tests/test\_chaos\_degree.py}
+  \item \texttt{tests/test\_carbery\_wright.py}
+  \item \texttt{tests/test\_pac\_bayes.py}
+  \item \texttt{tests/test\_pseudoinverse.py}
+  \item \texttt{tests/test\_feasibility\_projector.py}
+  \item \texttt{tests/test\_split\_protocols.py}
+  \item \texttt{tests/test\_dedup\_leakage.py}
+\end{itemize}
+
+%% ============================================================================
+\section{New scripts}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \texttt{scripts/reproduce\_revision.sh} — re-runs Tables 5--11
+        of the revised manuscript on the local hardware.
+  \item \texttt{scripts/regenerate\_figures.py} — regenerates
+        Figures~4b ($\sigma$ sweep) and 6 (commercial-baseline
+        reference plot).
+\end{itemize}
+
+\end{document}

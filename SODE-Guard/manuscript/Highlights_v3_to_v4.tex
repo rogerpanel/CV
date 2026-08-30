@@ -1,0 +1,131 @@
+%% ============================================================================
+%%  Highlighted-PDF Change Map (v3 -> v4) — companion to IEEE Access
+%%  resubmission of Stochastic ODE-Guard.
+%%
+%%  Compile with pdflatex (self-contained).
+%%  Use this document as the yellow-highlight guide when preparing the
+%%  "Highlighted PDF" submission required by the IEEE Access checklist.
+%% ============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small SODE-Guard v4 — Highlight Guide}
+\rhead{\small Change map (v3 $\rightarrow$ v4)}
+\cfoot{\thepage}
+\titleformat{\section}{\normalfont\Large\bfseries\color{blue!60!black}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.7em}{}
+
+\title{\vspace{-1.2cm}\textbf{Highlighted-PDF Change Map (v3 $\rightarrow$ v4)}\\[4pt]
+       \normalsize Companion to \texttt{SODEGuard\_v4\_Manuscript.tex}\\
+       \normalsize IEEE Access MS \texttt{Access-2026-27603}}
+\author{R.\ N.\ Anaedevha, A.\ G.\ Trofimov, and Y.\ V.\ Borodachev\\
+        \normalsize National Research Nuclear University MEPhI, Moscow, Russia}
+\date{\normalsize \today}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-0.6cm}
+
+\section*{Purpose}
+This file catalogues every yellow-highlighted change the IEEE Access
+resubmission checklist expects to see in the Highlighted PDF. Line
+numbers refer to \texttt{SODEGuard\_v4\_Manuscript.tex}. Use this as a
+work-sheet while running the yellow-highlight tool over the compiled
+PDF: each row corresponds to one contiguous highlight block.
+
+%% ============================================================================
+\section{Global terminology sweeps}
+%% ============================================================================
+Highlight every occurrence of the ``from'' text.
+\begin{center}\small
+\begin{tabular}{@{}p{0.32\linewidth}p{0.34\linewidth}p{0.28\linewidth}@{}}
+\toprule
+\textbf{From} & \textbf{To} & \textbf{Where} \\
+\midrule
+certified radius & probabilistic robustness radius & Abstract, \S6.5, \S7, Fig.~4 caption \\
+chaos degree $d^\star=4$ & 99-th percentile empirical degree $d^\star_{p99}$ (typically 5) & \S4.1, \S5.3, \S6.4 \\
+$g^{-1}$ & $g^{+}$ (Moore--Penrose pseudo-inverse) & \S3.2 (Thm~2), \S4.3 (Alg.~1), \S5.3 \\
+small random walk in feature space & SDE on the embedded state (input is not perturbed) & \S1 (last paragraph), \S4.1 \\
+preserve packet semantics & feature-space perturbation bounded by the extractor noise floor & Abstract, \S1 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%% ============================================================================
+\section{Block-level additions}
+%% ============================================================================
+Highlight the entire block in each case.
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Abstract.} Added the sentence starting ``The chaos truncation degree is now selected adaptively per example \ldots'' and the last sentence describing problem-space projection.
+  \item \textbf{\S1 (Introduction).} Added the ``What is genuinely new in the composition'' paragraph after C0.
+  \item \textbf{\S3.2 (BEL identity).} Added Equation~(2) defining $g^{+}$ and re-stated Theorem~2 with the pseudo-inverse.
+  \item \textbf{\S3.3 (Carbery--Wright).} Added the sentence ``The denominator is the exact $L^2$ norm of $p$. The revised Proposition~5 uses a Hoeffding lower confidence bound \ldots''.
+  \item \textbf{\S3.4 (PAC-Bayes).} Added the reference to Reeb--Seldin kl-inversion.
+  \item \textbf{\S4 (Framework).} Added Assumption~1 (analytic $\leftrightarrow$ implementation).
+  \item \textbf{\S4.1 (Flow representation).} Added the italicised note ``The SDE evolves the embedded state $X_t$ \ldots''.
+  \item \textbf{\S4.3 (Training procedure).} Added Equation~(7) with the explicit $\mathcal L_{\mathrm{AC}}$ formula.
+  \item \textbf{\S4.} Added Algorithm~2 (adaptive chaos-degree estimator).
+  \item \textbf{\S5 (Theory).} Added Definition~4 (three robustness quantities), Lemma~3 (closed-form $L_g$), Corollary~1 (decision-flip bound), Remark~8 (why differs from randomised smoothing), Remark~9 (why $L_{\mathrm{lo}}$ not $L_g$).
+  \item \textbf{\S6.1 (Datasets).} Added the ``Provenance, deduplication, leakage'' paragraph.
+  \item \textbf{\S6.2 (Baselines).} Split into ``threat-model-matched neural'' and ``reference'' groups.
+  \item \textbf{\S6.4 (Ablation).} Added the row ``$-$ Adaptive $d^\star_{p99}$ (fix $d^\star=4$)''.
+  \item \textbf{\S6.5.1 ($\sigma$ sweep).} New Table~6.
+  \item \textbf{\S6.6 (Split-Protocol Audit).} New \S6.6, new Tables~7 and~8, new Table~9.
+  \item \textbf{\S6.7 (Reference baselines).} Moved commercial + LLM-policy comparison into its own subsection with Table~10.
+  \item \textbf{\S6.8 (Diagnostics).} New subsection with Tables~11 (certified $L_g$), 12 (PAC-Bayes + ECE), 13 (BEL bias / variance).
+  \item \textbf{Appendices A--F.} All new.
+\end{itemize}
+
+%% ============================================================================
+\section{Row-level table edits}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Table~1 (formerly Table~I: aggregate F1).} Commercial rows moved to Table~10.
+  \item \textbf{Table~3 (formerly Table~III: ablation).} Added the ``$-$ Adaptive $d^\star_{p99}$'' row.
+  \item \textbf{Table~4 (efficiency).} Unchanged.
+  \item \textbf{New Tables~5 ($\sigma$ sweep), 6 (Lipschitz certificate), 7 (PAC-Bayes)}, etc.
+\end{itemize}
+
+%% ============================================================================
+\section{Figure updates}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Fig.~2 (radar).} Recomputed using only threat-model-matched baselines.
+  \item \textbf{Fig.~4 (CDF).} Added the ``randomised smoothing at best $\sigma$ per benchmark'' curve.
+\end{itemize}
+
+%% ============================================================================
+\section{Bibliography}
+%% ============================================================================
+\begin{itemize}[leftmargin=1.4em]
+  \item Added: \texttt{reeb2014klinv}.
+  \item No entries removed; no entries reordered.
+\end{itemize}
+
+%% ============================================================================
+\section{Version banner}
+%% ============================================================================
+The pre-title \verb|%% Version| header block was updated to ``v3
+$\rightarrow$ v4 --- IEEE Access resubmission'' with a note pointing
+to \texttt{docs/response\_to\_reviewers/RESPONSE.md}.
+
+\vspace{6pt}\hfill --- The authors
+\end{document}

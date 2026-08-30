@@ -1,0 +1,131 @@
+%% ============================================================================
+%%  Packet-Semantic Constraints for Problem-Space Adversarial Attacks
+%%  Companion note to the IEEE Access resubmission (v4) of Stochastic ODE-Guard.
+%%  Compile with pdflatex (self-contained).
+%% ============================================================================
+\documentclass[11pt,letterpaper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!60!black]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small SODE-Guard — v4 companion note}
+\rhead{\small Packet Semantics}
+\cfoot{\thepage}
+\titleformat{\section}{\normalfont\Large\bfseries\color{blue!60!black}}{\thesection}{0.7em}{}
+
+\title{\vspace{-1.2cm}\textbf{Packet-Semantic Constraints for
+       Problem-Space Adversarial Attacks}\\[4pt]
+       \normalsize Companion note to the SODE-Guard v4 manuscript
+       (IEEE Access MS \texttt{Access-2026-27603})}
+\author{R.\ N.\ Anaedevha, A.\ G.\ Trofimov, and Y.\ V.\ Borodachev\\
+        \normalsize National Research Nuclear University MEPhI, Moscow, Russia}
+\date{\normalsize \today}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-0.5cm}
+
+\section*{Purpose}
+Reviewer~2 (concern R2.11) asked whether adversarial perturbations that
+live in the 83-dimensional flow feature space can actually be realised
+by network traffic. The short answer is: not all of them. Certain
+features are \emph{constrained} by the packet grammar; others are
+\emph{derived} from raw counts and must remain consistent with them.
+
+This note lists the constraint families implemented by
+\texttt{src/attacks/semantic/feasibility.py} in the reproducibility
+repository. All constraints are applied at every step of the PGD-40 /
+Carlini--Wagner adversary so that the ``problem-space'' robust
+accuracy in Table~9 of the v4 manuscript uses only \emph{feasible}
+perturbations.
+
+%% ============================================================================
+\section{Constraint families}
+%% ============================================================================
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Box constraints.} Every feature has a natural
+        non-negative lower bound (byte counts, packet counts,
+        durations, TLS extension counts) or a flag-bit domain
+        $\{0,1\}$.
+  \item \textbf{Integer constraints.} Packet counts, byte totals, and
+        TLS enum indices (\texttt{cipher\_suite\_id},
+        \texttt{pqc\_kx\_id}, \texttt{alpn\_id}, \ldots) round to the
+        nearest non-negative integer.
+  \item \textbf{Flag constraints.} All \texttt{flag\_*} features
+        (\texttt{flag\_psh}, \texttt{flag\_syn}, \texttt{flag\_ack},
+        \texttt{flag\_fin}, \ldots) are Bernoulli --- clipped and
+        rounded.
+  \item \textbf{Derived-ratio recomputation.} Whenever both numerator
+        and denominator of a derived ratio
+        (\texttt{fwd\_bwd\_byte\_ratio}, \texttt{fwd\_bwd\_pkt\_ratio},
+        \texttt{down\_up\_ratio}) are present, the ratio is recomputed
+        from the projected raw counts so the adversary cannot
+        desynchronise it.
+  \item \textbf{Protocol-structural constraints.}
+        $\texttt{min\_seg\_size\_fwd}\le \texttt{avg\_fwd\_seg\_size}\le \texttt{fwd\_pkt\_len\_max}$;
+        $\texttt{total\_pkts}=\texttt{fwd\_packets}+\texttt{bwd\_packets}$;
+        $\texttt{handshake\_rtt}\ge 0$;
+        TLS / PQC identifiers $\ge 0$.
+\end{enumerate}
+
+%% ============================================================================
+\section{What the projector does not enforce}
+%% ============================================================================
+The projector is \emph{conservative}: it is permissive of features
+that cannot be tied to a single raw value by the CICFlowMeter grammar,
+such as \texttt{entropy\_payload} or the JA4 hash bucket. These are
+allowed to move freely inside their box because a real attacker can,
+in principle, manipulate them via payload crafting. Table~9 of the
+revised manuscript reports both the unconstrained
+(``feature-space'') and the constrained (``problem-space'') attack
+results so the reader can see the delta.
+
+%% ============================================================================
+\section{Empirical impact}
+%% ============================================================================
+Under PGD-40 at $\varepsilon=0.03$ on the ICS3D test partition:
+
+\begin{center}\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Threat model} & \textbf{SDE-TGNN F1} & \textbf{SODE-Guard F1} & \textbf{Gap} \\
+\midrule
+Feature-space  & 0.858 & 0.922 & $+6.4$ \\
+Problem-space  & 0.842 & 0.914 & $+7.2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+SODE-Guard's advantage \emph{widens} under the tighter constraints,
+which is consistent with the anti-concentration argument: the
+effective chaos degree of the smoothed margin is unchanged by
+projecting to a smaller feasibility set, so the certificate's
+$\varepsilon^{1/d^\star}$ tail decay still applies. See Proposition~5
+and Corollary~1 of the v4 manuscript for the analytical statement.
+
+%% ============================================================================
+\section*{Availability}
+%% ============================================================================
+Implementation:
+\url{https://github.com/rogerpanel/CV/tree/main/SODE-Guard/src/attacks/semantic}.
+
+Unit tests: \texttt{tests/test\_feasibility\_projector.py} exercises
+each constraint family on synthetic inputs and verifies that the
+projector is idempotent.
+
+\end{document}
