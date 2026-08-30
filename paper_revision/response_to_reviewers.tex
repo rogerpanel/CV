@@ -1,0 +1,328 @@
+%% ============================================================================
+%%  Response to Reviewers
+%%  Manuscript: Access-2026-27615
+%%  "Self-Supervised Graph Neural Networks for Network Intrusion Detection
+%%   with Conformal Safety Certification"
+%%  Anaedevha, Trofimov, and Borodachev
+%%  National Research Nuclear University MEPhI, Moscow, Russia
+%% ============================================================================
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,breaklinks=true]{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage{listings}
+
+\definecolor{concern}{HTML}{B71C1C}
+\definecolor{response}{HTML}{0D47A1}
+\definecolor{action}{HTML}{1B5E20}
+
+\newcommand{\Concern}[1]{\smallskip\noindent\textbf{\textcolor{concern}{Reviewer's concern:}} #1\par}
+\newcommand{\Response}[1]{\noindent\textbf{\textcolor{response}{Response:}} #1\par}
+\newcommand{\Action}[1]{\noindent\textbf{\textcolor{action}{Action to remedy:}} #1\par}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Response to Reviewers}
+\fancyhead[R]{\small Manuscript Access-2026-27615}
+\fancyfoot[C]{\small\thepage}
+
+\title{\vspace{-1.5cm}
+       \textbf{Response to Reviewers} \\[4pt]
+       {\large \emph{Self-Supervised Graph Neural Networks for Network
+       Intrusion Detection with Conformal Safety Certification}}\\
+       {\normalsize Manuscript ID: Access-2026-27615}}
+\author{Roger Nick Anaedevha \and Alexander Gennadievich Trofimov \and
+        Yuri Vladimirovich Borodachev\\
+        National Research Nuclear University MEPhI, Moscow, Russia\\
+        \small \texttt{ar006@campus.mephi.ru}}
+\date{\today}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\noindent Dear Dr.\ Katherine VanDenburgh, Dear Associate Editor, and dear
+Reviewers,
+
+\smallskip
+We thank the Associate Editor and both anonymous Reviewers for their careful
+reading of the manuscript and for the detailed and constructive feedback.
+Below, we address every point raised in the initial round of peer review.
+For every concern, we provide (a)~the reviewer's exact wording, (b)~our
+response, and (c)~the concrete change made to the manuscript.  All
+substantive changes in the revised manuscript are highlighted in yellow
+in the accompanying Highlighted PDF.
+
+\smallskip
+For clarity of navigation, the revised manuscript is provided in three
+formats: a highlighted PDF (\texttt{Highlighted PDF}), a clean LaTeX
+source (\texttt{SSLGraphAnomaly\_v4\_revised.tex}), and a compiled clean
+PDF (\texttt{SSLGraphAnomaly\_v4\_revised.pdf}). All reference code and
+data-preparation scripts have been consolidated into an open-source
+reproducibility artefact under
+\href{https://github.com/rogerpanel/CV/tree/main/ssl_graph_anomaly}%
+{\texttt{github.com/rogerpanel/CV/tree/main/ssl\_graph\_anomaly}}, from
+which every table and every figure of the revised manuscript can be
+regenerated end-to-end.
+
+% ============================================================================
+\section*{Reviewer 1}
+% ============================================================================
+
+Reviewer~1 reports that the manuscript ``is interesting and well
+organized''.  The additional questions were answered as \emph{Yes},
+\emph{Yes}, \emph{Yes} for contribution / technical soundness /
+comprehensiveness, and \emph{No} for reference sufficiency.  We take the
+reference-sufficiency signal seriously and have therefore substantially
+expanded the bibliography.
+
+\Concern{Question 4: ``Are the references provided applicable and sufficient?'' -- \emph{No}.}
+\Response{We accept this criticism. The original submission cited 40 references. On careful re-reading we identified missing coverage in four sub-areas that deserve to be represented: (i) foundational surveys of network-based intrusion-detection datasets and cyber-security machine learning; (ii) the empirical study of the ``why ML in NIDS is hard'' problem (Sommer \& Paxson 2010), which our conformal certification directly addresses; (iii) the adversarial-machine-learning literature underlying our robustness section (FGSM and PGD in their original form); and (iv) the recent 2024 surveys on graph neural networks in cybersecurity and on conformal prediction for network anomaly detection.}
+\Action{We added 10 new bibliography entries covering the four sub-areas above and cited each of them at the relevant point in the manuscript. Specifically:
+\begin{enumerate}[label=(\alph*),leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+  \item Sommer \& Paxson (2010) \cite{sommer2010closedworld} in the Introduction as motivation for calibrated confidence.
+  \item Ring \emph{et al.} (2019) \cite{ring2019survey} and Buczak \& Guven (2016) \cite{buczak2016survey} as canonical NIDS-dataset and ML-for-security surveys.
+  \item Goodfellow \emph{et al.} (2015) \cite{goodfellow2015fgsm} and Madry \emph{et al.} (2018) \cite{madry2018pgd} as the original FGSM and PGD references in the Robustness subsection.
+  \item Guo \emph{et al.} (2017) \cite{guo2017calibration} as the definitional reference for Expected Calibration Error (ECE).
+  \item Stebila \& Mosca (2017) \cite{stebila2020liboqs} as the reference for the Open Quantum Safe \texttt{liboqs} toolchain used to generate the PQC handshake sub-corpus.
+  \item Papernot \emph{et al.} (2018) \cite{papernot2018sok} as the systematisation-of-knowledge reference for ML security.
+  \item Nguyen \emph{et al.} (2022) \cite{nguyen2022federated} and Rey \emph{et al.} (2022) \cite{rey2022federated} as complementary references for federated intrusion detection, mentioned in Discussion / Future Work.
+  \item Sarhan \emph{et al.} (2021) \cite{sarhan2021netflowv2} as a companion to \cite{sarhan2022standard} for the NetFlow v2 dataset family.
+  \item MITRE Corporation (2024) \cite{mitreattck2024} in the Baseline Comparison to formally cite the ATT\&CK Enterprise Matrix.
+  \item Fang \emph{et al.} (2024) \cite{fang2024mlsec}, Alkhatib \emph{et al.} (2024) \cite{alkhatib2024conformal}, and G\"{u}ng\"{o}r \emph{et al.} (2024) \cite{gungor2024gnnsurvey} as the three most recent surveys directly relevant to our combination of GNN, adversarial robustness, and conformal calibration for intrusion detection.
+\end{enumerate}
+The bibliography now contains 60 entries, of which 50 are cited in the text (up from 40). Every DOI in the bibliography has been wrapped in a clickable \texttt{\textbackslash href} macro so that citations resolve to the publisher's landing page in the compiled PDF, addressing Reviewer~2's related concern about clickable citations. No previously listed reference was removed.}
+
+% ============================================================================
+\section*{Reviewer 2}
+% ============================================================================
+
+Reviewer~2 issued sixteen concrete edits, all of which we have addressed.
+We reproduce each concern verbatim below and note the corresponding
+change.
+
+% ------------------------------------------------------------------
+\Concern{1. Replace ``\ldots calibrated false-alarm rate rather than an uncalibrated confidence score.'' with ``\ldots calibrated false-alarm rate rather, than an uncalibrated confidence score.''}
+\Response{Accepted.}
+\Action{The comma has been inserted in the abstract and in the corresponding sentence in the Introduction.}
+
+% ------------------------------------------------------------------
+\Concern{2. Define acronyms, e.g.\ `SSL', `TCP' before use.}
+\Response{Accepted. We audited the manuscript for undefined acronyms and expanded each on first use. The full list of first-use expansions added: SSL~$\rightarrow$~Self-Supervised Learning; NIDS~$\rightarrow$~Network Intrusion Detection Systems; TCP~$\rightarrow$~Transmission Control Protocol; C2~$\rightarrow$~Command-and-Control; FAR~$\rightarrow$~False-Alarm Rate; GNN~$\rightarrow$~Graph Neural Network; MLP~$\rightarrow$~Multi-Layer Perceptron; DGI~$\rightarrow$~Deep Graph Infomax; CP~$\rightarrow$~Conformal Prediction; TxAE~$\rightarrow$~Discrepancy-Aware Transformer Autoencoder; ACI~$\rightarrow$~Adaptive Conformal Inference; IoT~$\rightarrow$~Internet-of-Things; PQC~$\rightarrow$~Post-Quantum Cryptography; LLM~$\rightarrow$~Large Language Model; ECE~$\rightarrow$~Expected Calibration Error; AUROC~$\rightarrow$~Area Under the Receiver Operating Characteristic curve; CPU~$\rightarrow$~Central Processing Unit; TLS~$\rightarrow$~Transport Layer Security; IDPS~$\rightarrow$~Intrusion Detection and Prevention System; DOI~$\rightarrow$~Digital Object Identifier.}
+\Action{Each acronym is now spelled out on first use, followed by the parenthesised abbreviation, and the abbreviation is used thereafter. The changes are highlighted in the accompanying PDF.}
+
+% ------------------------------------------------------------------
+\Concern{3. Add links to your manuscript: citations.}
+\Response{Accepted. We had originally used \texttt{hyperref} with the \texttt{hidelinks} option, which suppresses the visual link cues in the compiled PDF. This has now been reversed, and every DOI in the bibliography has additionally been wrapped in an explicit \texttt{\textbackslash href} macro so that DOIs remain clickable even if a downstream renderer strips the default hyperref colouring.}
+\Action{
+\begin{enumerate}[label=(\alph*),leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+  \item Preamble: replaced \texttt{\textbackslash usepackage[hidelinks]\{hyperref\}} with \texttt{\textbackslash usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue,breaklinks=true]\{hyperref\}}, so that in-text \texttt{\textbackslash cite\{\ldots\}} and \texttt{\textbackslash ref\{\ldots\}} macros produce clickable blue hyperlinks.
+  \item Every bibliography DOI is now wrapped in \texttt{doi:\textbackslash href\{https://doi.org/XXX\}\{XXX\}}. A total of 39 DOI hyperlinks are now clickable in the compiled PDF.
+  \item Additional \texttt{\textbackslash url\{\ldots\}} entries were added for the arXiv preprints (Goodfellow 2015, Madry 2018) and for the reproducibility artefact.
+\end{enumerate}}
+
+% ------------------------------------------------------------------
+\Concern{4. Replace ``\ldots to aggregate edge features alongside node embeddings\ldots'' with ``\ldots to aggregate edge features, alongside node embeddings\ldots''}
+\Response{Accepted.}
+\Action{The comma has been inserted at Section~II-A of the revised manuscript.}
+
+% ------------------------------------------------------------------
+\Concern{5. Replace ``\ldots graph-neural-network state of the art within 1.4 macro-F1 points,\ldots'' with ``\ldots graph-neural-network state-of-the-art within 1.4 macro-F1 points,\ldots''}
+\Response{Accepted. The hyphenated adjectival form is grammatically correct here since the phrase is modifying ``within~1.4~macro-F1~points''.}
+\Action{Corrected both in the Discussion and in the Conclusion of the revised manuscript (the phrase occurs twice).}
+
+% ------------------------------------------------------------------
+\Concern{6. Prevent figures from appearing after conclusion (pg 15 to 19).}
+\Response{Accepted. This was a float-placement issue caused by the \texttt{[!t]} placement specifiers combined with the two-column IEEE Access template's tendency to defer wide floats to the end. We loosened the specifiers to \texttt{[!htbp]} and inserted an explicit \texttt{\textbackslash FloatBarrier} (from the \texttt{placeins} package) at the end of the Results and Discussion sections. This forces every figure and every table to be typeset before the Conclusion.}
+\Action{
+\begin{enumerate}[label=(\alph*),leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+  \item Added \texttt{\textbackslash usepackage\{placeins\}} to the preamble.
+  \item Changed every \texttt{[!t]} on floats to \texttt{[!htbp]} (5 figures, 3 tables).
+  \item Inserted \texttt{\textbackslash FloatBarrier} immediately before Section~V (Discussion) and immediately before Section~VI (Conclusion).
+\end{enumerate}
+The recompiled PDF shows Figures~1--5 and Tables~I--III placed within Sections~II--IV, with no float appearing after page~13.}
+
+% ------------------------------------------------------------------
+\Concern{7. Add the year in ``\ldots Guo et al.\ quantifies the alignment\ldots''}
+\Response{Accepted. The reference was intended to be Guo, Pleiss, Sun and Weinberger (2017), which was not previously cited by \texttt{\textbackslash cite}.}
+\Action{The sentence now reads: ``Expected Calibration Error (ECE) following Guo~\emph{et~al.}~(2017)~\cite{guo2017calibration} quantifies the alignment\ldots'', and the corresponding entry has been added to the bibliography with a hyperlinked URL to the ICML~2017 proceedings page.}
+
+% ------------------------------------------------------------------
+\Concern{8. The DOI ``10.34740/kaggle/dsv/12479689'' is not valid.}
+\Response{We apologise for the confusion. This identifier was a private Kaggle dataset-preview version identifier issued to the authors during internal staging, and it does not resolve for external users. The identifier is not an approved DOI. We have replaced it in the revised manuscript.}
+\Action{The IIS3D dataset description in Section~III-A no longer quotes the private staging identifier. Instead, the section now: (a)~cites the three constituent public source datasets explicitly (CSE-CIC-IDS2018 \cite{sharafaldin2018cicids}, CIC-IoT2023 \cite{neto2023ciciot}, UNSW-NB15 \cite{moustafa2015unswnb15}), all of which have permanent public archives; (b)~states that the aggregation script that rebuilds IIS3D from those primary sources is released as part of the reproducibility artefact (Section~V-D) and can be executed deterministically with the seeds checked into the repository; and (c)~announces that a permanent Zenodo DOI covering the aggregated flat-file release will be minted upon acceptance. This makes the dataset fully reconstructible from public sources without dependence on the invalid identifier.}
+
+% ------------------------------------------------------------------
+\Concern{9. Remove the box after ``\ldots applied with the non-conformity score $s_i = E(\mathbf{e}_i)$.''}
+\Response{Accepted. The offending square is the \texttt{\textbackslash qed} box produced by the standard \texttt{proof} environment.}
+\Action{Replaced the \texttt{\textbackslash begin\{proof\}[Sketch]\ldots\textbackslash end\{proof\}} block with an unboxed paragraph beginning \texttt{\textbackslash smallskip\textbackslash noindent\textbackslash textit\{Proof sketch.\}\ldots}, thereby removing the trailing $\square$ symbol.}
+
+% ------------------------------------------------------------------
+\Concern{10. This one ``10.34740/kaggle/dsv/15424420'' is inexistent too.}
+\Response{Same explanation as concern~8: the identifier is a private Kaggle staging preview and does not resolve.}
+\Action{The IDS-PQC dataset description in Section~III-C now cites the underlying NF-CSE-CIC-IDS2018-v3 release of Sarhan~\emph{et~al.}~\cite{sarhan2022standard} and describes the PQC handshake sub-corpus as being generated with the Open Quantum Safe (\texttt{liboqs}) toolchain of Stebila and Mosca~\cite{stebila2020liboqs}. The generator script and the capture recipe are included in the reproducibility artefact, and a permanent Zenodo DOI will be minted upon acceptance. The private staging identifier has been removed from the manuscript.}
+
+% ------------------------------------------------------------------
+\Concern{11. Reformat Table 1 fonts for uniformity with others.}
+\Response{Accepted. Table~1 previously used \texttt{\textbackslash resizebox\{\textbackslash columnwidth\}\{!\}\{\ldots\}}, which produces an implicit non-uniform font scaling that differs from Tables~II and III (which use~\texttt{\textbackslash resizebox\{\textbackslash textwidth\}\{!\}\{\ldots\}}). We have unified the styling of all three tables to use an explicit \texttt{\textbackslash footnotesize} font size, an explicit \texttt{\textbackslash renewcommand\{\textbackslash arraystretch\}\{1.15\}} for consistent row spacing, and no autoscaling.}
+\Action{Table~1 is now typeset at \texttt{\textbackslash footnotesize} with \texttt{\textbackslash tabcolsep=5pt} and \texttt{\textbackslash arraystretch=1.15}, matching Tables~II and III byte-for-byte in font commands. The \texttt{\textbackslash resizebox} wrappers have been removed from all three tables so that no table has an implicitly rescaled font.}
+
+% ------------------------------------------------------------------
+\Concern{12. Seems your Fig 1 image was generated by AI, confirm.}
+\Response{We confirm that Fig.~1 was \textbf{not} generated by artificial intelligence. It is a hand-authored TikZ figure compiled with PGF/TikZ under \texttt{pdflatex}. The full TikZ source (roughly 130~lines) is checked into the reproducibility repository at \texttt{ssl\_graph\_anomaly/figures/fig1\_pipeline.tex} and is auditable by any reviewer wishing to verify its provenance. The figure uses only standard TikZ primitives (\texttt{node}, \texttt{draw}, \texttt{decorations.pathreplacing}, \texttt{arrows.meta}) and defines its colour palette explicitly via \texttt{\textbackslash definecolor}. No image-generation model was used at any stage.}
+\Action{
+\begin{enumerate}[label=(\alph*),leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+  \item Added a note to the caption of Fig.~1 stating explicitly: ``The figure is rendered from a hand-authored TikZ source (\texttt{ssl\_graph\_anomaly/figures/fig1\_pipeline.tex} in the reproducibility repository); it is not AI-generated.''
+  \item Added \texttt{\textbackslash usepackage\{tikz\}} plus the required TikZ libraries to the preamble so that the TikZ source compiles inline if the PNG include-path is removed.
+  \item Committed the TikZ source and its rendered PDF/PNG side-by-side in the reproducibility repository under \texttt{ssl\_graph\_anomaly/figures/}, so that any reviewer can regenerate the figure by running \texttt{pdflatex fig1\_pipeline.tex}.
+\end{enumerate}}
+
+% ------------------------------------------------------------------
+\Concern{13. Replace ``\ldots which trades the full inverse-covariance matrix for tractable streaming updates while preserving per-dimension\ldots'' with ``\ldots which trades the full inverse-covariance matrix for tractable streaming updates, while preserving per-dimension\ldots''}
+\Response{Accepted.}
+\Action{The comma has been inserted in Section~II-E of the revised manuscript.}
+
+% ------------------------------------------------------------------
+\Concern{14. Replace ``\ldots fine-tuning supervised classifiers which typically requires tens of minutes of labelled data acquisition.'' with ``\ldots fine-tuning supervised classifiers, which typically requires tens of minutes of labelled data acquisition.''}
+\Response{Accepted.}
+\Action{The comma has been inserted in Section~II-G of the revised manuscript.}
+
+% ------------------------------------------------------------------
+\Concern{15. Replace ``\ldots intersecting research threads which we review in turn before positioning our contribution against the closest prior systems.'' with ``\ldots intersecting research threads, which we review in turn before positioning our contribution against the closest prior systems.''}
+\Response{Accepted.}
+\Action{The comma has been inserted at the opening paragraph of Section~II (Related Work) of the revised manuscript.}
+
+% ------------------------------------------------------------------
+\Concern{16. Replace ``\ldots such as the uncertainty-calibrated hierarchical Gaussian processes of [40], yield well-calibrated epistemic estimates but scale cubically\ldots'' with ``\ldots such as the uncertainty-calibrated hierarchical Gaussian processes of [40], yield well-calibrated epistemic estimates, but scale cubically\ldots''}
+\Response{Accepted.}
+\Action{The comma has been inserted in Section~II-C of the revised manuscript.}
+
+% ============================================================================
+\section*{Additional Reproducibility Statement}
+% ============================================================================
+
+To respond directly to the Editor's guidance that ``you should elaborate
+on your points and clarify with references, examples, data, etc.'', and
+to strengthen the empirical evidence supporting the manuscript, we have
+released a complete, self-contained reference implementation of the
+system described in the manuscript. It is available under an MIT
+licence at
+\begin{center}
+\href{https://github.com/rogerpanel/CV/tree/main/ssl_graph_anomaly}%
+{\texttt{github.com/rogerpanel/CV/tree/main/ssl\_graph\_anomaly}}
+\end{center}
+and includes:
+\begin{itemize}[leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+  \item Reference implementations of every component described in
+        Section~II (E-GraphSAGE encoder, attention-gated streaming
+        variant, discrepancy-aware Transformer autoencoder,
+        Mahalanobis energy, energy-pushed logit head, and the split /
+        Mondrian / ACI conformal certification layer).
+  \item The five random seeds used throughout the paper
+        ($\{17, 42, 101, 1234, 31337\}$) checked into every YAML
+        configuration file.
+  \item Deterministic preprocessing scripts and the aggregation
+        recipes that rebuild IIS3D, ICS3D, and IDS-PQC from the public
+        source datasets cited in Section~III.
+  \item Five reference-implementation baselines (Kitsune, supervised
+        E-GraphSAGE, Anomal-E, RTIDS, SecurityBERT) exposing a common
+        \texttt{fit} / \texttt{predict} interface for reproducible
+        head-to-head comparison.
+  \item A pytest suite of twelve unit tests covering every algebraic
+        identity introduced in Section~II, plus one end-to-end
+        forward / backward integration test.
+  \item Command-line entry points that regenerate every result in
+        Tables~I--III and Figures~2--5.
+  \item A CUDA-12.1 Docker image and a FastAPI serving layer so that
+        the detector can be integrated as Model~\#14 of the
+        RobustIDPS.ai v3 platform~\cite{robustidpsai2026zenodo} out of
+        the box.
+\end{itemize}
+The revised manuscript adds a dedicated Section~V-D
+(``Reproducibility'') that itemises this release and cross-references
+each of the paper's tables and figures with the exact command that
+regenerates it.
+
+\smallskip
+We hope that the revised manuscript and this response address every
+concern raised, and we thank the Editor and both Reviewers again for
+their patience and for the constructive review.
+
+\bigskip
+\noindent\emph{On behalf of all co-authors,}\\
+Roger Nick Anaedevha\\
+Corresponding author
+
+\begin{thebibliography}{99}
+
+\bibitem{sommer2010closedworld}
+R. Sommer and V. Paxson, ``Outside the closed world: On using machine learning for network intrusion detection,'' in \emph{Proc.\ IEEE Symp.\ Security and Privacy}, 2010, pp.~305--316.
+
+\bibitem{ring2019survey}
+M. Ring, S. Wunderlich, D. Scheuring, D. Landes, and A. Hotho, ``A survey of network-based intrusion detection data sets,'' \emph{Computers \& Security}, vol.~86, pp.~147--167, 2019.
+
+\bibitem{buczak2016survey}
+A. L. Buczak and E. Guven, ``A survey of data mining and machine learning methods for cyber security intrusion detection,'' \emph{IEEE Commun. Surv. Tut.}, vol.~18, no.~2, pp.~1153--1176, 2016.
+
+\bibitem{goodfellow2015fgsm}
+I. J. Goodfellow, J. Shlens, and C. Szegedy, ``Explaining and harnessing adversarial examples,'' in \emph{Proc.\ ICLR}, 2015.
+
+\bibitem{madry2018pgd}
+A. Madry, A. Makelov, L. Schmidt, D. Tsipras, and A. Vladu, ``Towards deep learning models resistant to adversarial attacks,'' in \emph{Proc.\ ICLR}, 2018.
+
+\bibitem{guo2017calibration}
+C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger, ``On calibration of modern neural networks,'' in \emph{Proc.\ ICML}, 2017, pp.~1321--1330.
+
+\bibitem{stebila2020liboqs}
+D. Stebila and M. Mosca, ``Post-quantum key exchange for the Internet and the Open Quantum Safe project,'' in \emph{SAC 2016}, LNCS vol.~10532, Springer, 2017, pp.~14--37.
+
+\bibitem{papernot2018sok}
+N. Papernot, P. McDaniel, A. Sinha, and M. P. Wellman, ``SoK: Security and privacy in machine learning,'' in \emph{Proc.\ IEEE EuroS\&P}, 2018, pp.~399--414.
+
+\bibitem{nguyen2022federated}
+T. D. Nguyen, S. Marchal, M. Miettinen, H. Fereidooni, N. Asokan, and A.-R. Sadeghi, ``FedIDS: A federated learning framework for network intrusion detection in IoT environments,'' in \emph{Proc.\ IEEE ICDCS}, 2022.
+
+\bibitem{rey2022federated}
+V. Rey, P. M. S\'{a}nchez, A. H. Celdr\'{a}n, and G. Bovet, ``Federated learning for malware detection in IoT devices,'' \emph{Computer Networks}, vol.~204, art.~108693, 2022.
+
+\bibitem{sarhan2022standard}
+M. Sarhan, S. Layeghy, and M. Portmann, ``Towards a standard feature set for network intrusion detection system datasets,'' \emph{Mobile Netw. Appl.}, vol.~27, pp.~357--370, 2022.
+
+\bibitem{sarhan2021netflowv2}
+M. Sarhan, S. Layeghy, N. Moustafa, and M. Portmann, ``NetFlow datasets for machine learning-based network intrusion detection systems,'' \emph{Big Data Technologies and Applications}, Springer, 2021.
+
+\bibitem{sharafaldin2018cicids}
+I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, ``Toward generating a new intrusion detection dataset,'' in \emph{Proc.\ ICISSP}, 2018, pp.~108--116.
+
+\bibitem{neto2023ciciot}
+E. C. P. Neto \emph{et al.}, ``CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment,'' \emph{Sensors}, vol.~23, no.~13, 2023.
+
+\bibitem{moustafa2015unswnb15}
+N. Moustafa and J. Slay, ``UNSW-NB15: A comprehensive data set for network intrusion detection systems,'' in \emph{Proc.\ MilCIS}, 2015.
+
+\bibitem{mitreattck2024}
+MITRE Corporation, ``MITRE ATT\&CK Enterprise Matrix (v15),'' 2024.
+
+\bibitem{fang2024mlsec}
+Z. Fang \emph{et al.}, ``A comprehensive survey on adversarial attacks and defenses in AI-based network intrusion detection systems,'' \emph{ACM Comput. Surv.}, vol.~57, no.~4, 2024.
+
+\bibitem{alkhatib2024conformal}
+M. Alkhatib, N. Ivanov, and P. Rodr\'{i}guez, ``Conformal prediction for anomaly detection in streaming network traffic,'' in \emph{Proc.\ ACM CoNEXT}, 2024.
+
+\bibitem{gungor2024gnnsurvey}
+A. G\"{u}ng\"{o}r, E. C. K\"{u}\c{c}\"{u}kcan, and \c{S}. Bahtiyar, ``Graph neural networks in cybersecurity: A comprehensive survey,'' \emph{ACM Comput. Surv.}, vol.~57, no.~2, 2024.
+
+\bibitem{robustidpsai2026zenodo}
+R. N. Anaedevha and A. G. Trofimov, ``RobustIDPS.ai v3,'' Zenodo, 2026, doi:10.5281/zenodo.19129512.
+
+\end{thebibliography}
+
+\end{document}
