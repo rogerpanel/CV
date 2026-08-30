@@ -1,0 +1,170 @@
+%% ============================================================================
+%%  Response to Reviewers  --  IEEE Access Manuscript Access-2026-27623
+%%  MambaGuard: Certified Selective State-Space Detection for
+%%  Multi-Protocol LLM Agent Security
+%% ============================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+\newcommand{\concern}[1]{\noindent\textbf{Reviewer concern.}\quad #1\par\vspace{0.3em}}
+\newcommand{\response}[1]{\noindent\textbf{Response.}\quad #1\par\vspace{0.3em}}
+\newcommand{\action}[1]{\noindent\textbf{Action taken.}\quad #1\par\vspace{0.8em}}
+
+\title{Response to Reviewers\\
+\large IEEE Access Manuscript Access-2026-27623\\
+\emph{MambaGuard: Certified Selective State-Space Detection for Multi-Protocol LLM Agent Security}}
+\author{Roger Nick Anaedevha \and Alexander G.\ Trofimov \and Yuri V.\ Borodachev}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section*{Overview}
+We thank both reviewers for their careful reading and for the constructive feedback that has substantially improved the article. Reviewer~1 recommended acceptance without changes. Reviewer~2 raised twenty-seven substantive points; each is reproduced verbatim below together with our response and a description of the exact change made to the manuscript. All changes to the manuscript are highlighted in yellow in the accompanying \texttt{Highlighted PDF}.
+
+\section*{Reviewer 1}
+Reviewer 1 found the article well designed, well executed, well written, and a good fit for publication. We thank the reviewer for the positive assessment; no action was required.
+
+\section*{Reviewer 2}
+
+\subsection*{Comment 1 --- Acronym density in the abstract}
+\concern{Try to avoid using too many acronyms in the abstract. The abstract contains many protocol names and technical abbreviations, which makes it difficult to follow for readers not already familiar with this area.}
+\response{Agreed. The revised abstract now introduces at most one acronym (LLM) on first mention and expresses the protocol families and threat surface descriptively rather than by abbreviation.}
+\action{Abstract fully rewritten. See the yellow-highlighted lines around lines 78--91 of the highlighted PDF.}
+
+\subsection*{Comment 2 --- Clearer statement of the research gap}
+\concern{The research gap should be emphasized more clearly in the Introduction. The authors motivate the emergence of protocol-layer LLM-agent attacks, but the exact gap between existing IDS methods, LLM-agent security monitors, graph-based models, and certified robustness methods should be stated more explicitly.}
+\response{We agree. The revised Introduction now includes a dedicated ``Research Gap'' subsection that states the three-way gap explicitly: no unified multi-protocol representation, no composition of linear-time sequence backbone with temporal graph attention that admits a robustness proof, and no quantitative certificate that combines a perturbation-margin bound with a game-theoretic guarantee for the online defensive policy.}
+\action{Added Section~I.A ``Research Gap''.}
+
+\subsection*{Comment 3 --- Bulleted contributions}
+\concern{The main contributions are currently presented in a dense paragraph. I strongly suggest listing them as a clear bulleted list in the Introduction.}
+\response{Adopted.}
+\action{Contributions now appear as an itemised list in Section~I.C, with each item annotated with its target section.}
+
+\subsection*{Comment 4 --- Paper structure at end of Introduction}
+\concern{Provide a more complete paper structure at the end of the Introduction. The current roadmap is brief and should clearly explain what is covered in each subsequent section.}
+\response{Adopted.}
+\action{Section~I.D ``Paper Roadmap'' now describes every subsequent section by name.}
+
+\subsection*{Comment 5 --- Separate Related Works section}
+\concern{Related works are partly merged into the Introduction and Background sections. I would strongly suggest separating them into a distinctive Section II, ``Related Works,'' and moving the technical preliminaries into a later section.}
+\response{Adopted. Related work is now a standalone Section~II. Technical preliminaries have been moved to a later Section~IV.}
+\action{New Section~II ``Related Works'' with four subsections: agent-protocol security monitors, graph-based network intrusion detection, certified robustness for sequence and graph models, and metaheuristic-tuned classical detectors. New Section~IV ``Preliminaries'' collects the mathematical foundations that were previously scattered.}
+
+\subsection*{Comment 6 --- Expanded related-work coverage}
+\concern{The related works section should be significantly expanded. The paper should discuss more recent studies on intrusion detection and cybersecurity [\dots the reviewer listed five metaheuristic-tuned IDS papers \dots]. The manuscript relies heavily on the authors' previous RobustIDPS.ai-related works.}
+\response{Adopted. All five suggested references have been added to a dedicated Section~II.D on metaheuristic-tuned classical detectors, positioned as complementary work that operates on flat feature vectors rather than the protocol graph. Reliance on the authors' own prior work has been reduced by moving references to a single implementation-note paragraph and by adding independent external references throughout Section~II.}
+\action{Added references \cite{Salb2023SCACloud,Bacanin2024MetaverseIDS,Zivkovic2023IoTSoftware,Zivkovic2023CatBoostReptile,Zivkovic2022BoostingSmartCity}.}
+
+\subsection*{Comment 7 --- ``First'' claims}
+\concern{The claim of being the ``first'' system to provide certain Lipschitz or certification results should be treated carefully. Such claims require a much stronger positioning against existing certified robustness literature for sequence models, graph neural networks, and intrusion detection.}
+\response{Adopted. All unqualified ``first'' claims have been removed. The certification analysis now explicitly cites the closest prior work at each step (Tsuzuku et al.\ for Lipschitz-margin, LipschitzNorm for graph attention, LipSDP for tighter bounds, randomised smoothing for probabilistic certificates), and states precisely what the composed bound covers relative to those pieces.}
+\action{See Sections~II.C and VI.A.}
+
+\subsection*{Comment 8 --- Threat model elaboration}
+\concern{The threat model should be elaborated in more detail. The paper should clearly state what the attacker knows, what the attacker can perturb, whether the attacker has white-box or black-box access, and how these assumptions map to real LLM-agent deployments.}
+\response{Adopted. A dedicated Section~III ``Threat Model'' now covers attacker knowledge (grey-box), attacker capabilities (crafting/modifying messages, altering tool descriptions, replay within a bounded window, coerced insider), attacker action space (seven documented families), and perturbation budget (continuous $\ell_{2}$ plus discrete graph-edit).}
+\action{New Section~III.}
+
+\subsection*{Comment 9 --- Justification of the $\ell_{2}$ perturbation model}
+\concern{The perturbation model used for the Lipschitz certificate should be better justified. It is not fully clear how an $\ell_{2}$ perturbation over embedded protocol messages corresponds to realistic protocol-layer attacks such as tool poisoning, Agent Card impersonation, OAuth confused-deputy attacks, or memory poisoning.}
+\response{Agreed. Section~III.D now provides an explicit two-part justification. Wording-level attacks correspond to bounded $\ell_{2}$ perturbations at the sentence-transformer embedding via the encoder's Lipschitz constant, and the Lipschitz certificate transports back to the raw payload. Structural attacks such as Agent Card impersonation are not naturally $\ell_{2}$ and are covered instead by a complementary discrete graph-edit budget, evaluated in Section~VII.}
+\action{See Section~III.D.}
+
+\subsection*{Comment 10 --- Spectral radius versus spectral norm}
+\concern{The mathematical derivation of the Lipschitz bound requires more rigor. For example, spectral radius below one does not automatically imply contraction in the spectral norm unless additional assumptions are satisfied. This point should be clarified.}
+\response{Agreed and this was the single most important correction the reviewer identified. Assumption~1 now adopts the S4D-Lin diagonal parameterisation of Gu et al.\ (2022), for which the state matrix is diagonal and the spectral radius therefore equals the spectral (operator-2) norm. This closes the gap and makes the contraction argument in Lemma~1 rigorous without requiring an ad-hoc similarity transformation.}
+\action{See Assumption~1 in Section~VI.A and the paragraph immediately following, and the new reference \cite{Gu2022S4D}.}
+
+\subsection*{Comment 11 --- SiLU Lipschitz constant}
+\concern{The statement that SiLU has Lipschitz constant equal to $1$ should be checked carefully. The derivative of SiLU can exceed $1$, so the authors should either correct the bound or justify the exact constant used.}
+\response{Corrected. The exact Lipschitz constant of SiLU, computed by solving $\mathrm{SiLU}''(u)=0$ numerically, is $L_{\sigma}\approx 1.0998$, attained at $u^{*}\approx 2.399$. The revised Lemma~1 uses this constant explicitly, and the derivation is provided in a new Appendix. Our reproducibility script \texttt{scripts/run\_v4\_experiments.py} computes $L_{\sigma}$ numerically to double precision (returned value: $1.0998393189966653$, argmax: $2.3992$).}
+\action{Corrected Lemma~1 and added the Appendix ``Exact SiLU Lipschitz Constant''.}
+
+\subsection*{Comment 12 --- Time-encoding Lipschitz}
+\concern{The treatment of the time encoding in the GATv2 Lipschitz bound should be expanded. Since the time encoding depends on learnable frequencies, the bound should account for the frequency magnitudes if time perturbations are part of the input.}
+\response{Adopted. Lemma~2 now states \emph{two} bounds: one for perturbations in the node features $z$ and one for perturbations in the time deltas $\Delta t$, with the second bound scaling as $\sqrt{(2/d_{T})\sum_{k}\omega_{k}^{2}}$ where $\omega_{k}$ are the learnable Bochner frequencies. Numerical values for our default configuration ($\omega_{\max}=10$, $d_{T}=64$, theoretical $L_{\Phi}\approx 3.735$, empirical maximum $1.68$) are reported in the reproducibility artefact.}
+\action{See the new equation~(4) and the surrounding paragraph in Section~VI.A.}
+
+\subsection*{Comment 13 --- Concrete Stackelberg description}
+\concern{The Stackelberg game component should be described more concretely. The defender action set, attacker action set, utility function, loss estimation, and online feedback mechanism should be specified in a way that can be reproduced.}
+\response{Adopted. Section~VI.B now includes Table~II listing the full five-action defender set and the seven-family attacker set, together with the utility-function definition (negative expected loss bounded in $[0,B]$, augmented with a fixed cost term for disruptive actions) and the loss-estimation mechanism (observed change in detector score before/after the defender's action). The Hedge feedback loop is stated as Algorithm~1.}
+\action{See Section~VI.B and Table~II.}
+
+\subsection*{Comment 14 --- Operational meaning of the certificate}
+\concern{The practical meaning of the three-layer certificate should be explained more clearly. The certificate is theoretically interesting, but readers need to understand what it guarantees in an operational LLM-agent security system and what it does not guarantee.}
+\response{Adopted. A new Section~VI.E ``Operational Meaning and Non-Guarantees'' states in plain language what the certificate guarantees (lower bound on long-run expected defender utility against any bounded-$\ell_{2}$ adversary) and enumerates three explicit non-guarantees (out-of-budget graph edits, cryptographic-signature compromise, zero-day implementation flaws).}
+\action{Added Section~VI.E.}
+
+\subsection*{Comment 15 --- Dataset construction details}
+\concern{Dataset construction requires more detail. The paper uses composite datasets from multiple sources, but the exact preprocessing pipeline, feature extraction, label mapping, temporal split procedure, and integration of agent-protocol scenarios should be described more thoroughly.}
+\response{Adopted. Section~VII.A ``Datasets, Preprocessing and Splits'' now describes the full pipeline: 83-dimensional NetFlow-v3 descriptors per Sarhan et al.\ 2021, z-score standardisation on training only, deterministic 34-class label mapping table, temporal 70/15/15 split with duplicate flow collapse, and agent-protocol message canonicalisation into the six-tuple $(\tau,s,d,p,\mu,t_{m})$.}
+\action{See Section~VII.A.}
+
+\subsection*{Comment 16 --- Data leakage}
+\concern{The paper should address possible data leakage more explicitly. Since cybersecurity datasets often contain duplicated flows, temporal correlations, or artifacts caused by preprocessing, the authors should explain how leakage was prevented.}
+\response{Adopted. The same Section~VII.A explicitly notes: (i) strict temporal splitting with no random shuffling at any stage, (ii) duplicate flow collapse before splitting to prevent the temporal-duplication leakage documented on the original CIC-IDS2018 corpus, and (iii) z-score fitting on the training partition only to prevent statistical leakage.}
+\action{See Section~VII.A.}
+
+\subsection*{Comment 17 --- Fair baseline comparison}
+\concern{The comparison with baselines should be strengthened. It is not fully clear whether all baselines were retrained under identical splits, tuned equally, and evaluated under the same threat model.}
+\response{Adopted. Section~VII.B ``Baselines and Fair-Comparison Protocol'' now states that every baseline was re-trained by us under the identical temporal split, identical 34-class label mapping, identical optimiser/schedule/budget, with baseline-specific hyper-parameters left at their published values. All baselines were evaluated under the same white-box perturbation model, with a compatible sentence-transformer front-end inserted where necessary so that the perturbation space is identical.}
+\action{See Section~VII.B.}
+
+\subsection*{Comment 18 --- Statistical significance}
+\concern{Statistical significance should be reported. The paper would benefit from standard deviations, confidence intervals, or repeated-run results, especially because the reported improvements over some baselines are relatively small.}
+\response{Adopted. All entries in Table~I are now reported as mean $\pm$ sample standard deviation across five independently seeded runs (seeds 0--4), and the paragraph following Table~I reports a paired two-sided Wilcoxon signed-rank test over the five-seed by three-dataset grid, which yields $p<10^{-3}$ against both NetMamba and IDS-INT.}
+\action{See Table~I and the following paragraph in Section~VII.D.}
+
+\subsection*{Comment 19 --- Latency decomposition}
+\concern{The runtime claims should be clarified. The paper reports sub-five-millisecond latency and throughput above one million messages per second. These two numbers may be possible under batching, but the authors should clearly distinguish batch latency, per-message latency, streaming latency, and end-to-end deployment latency.}
+\response{Adopted. Section~VII.E introduces Table~III with a full latency decomposition on A100 and CPU across batch sizes 1, 32 and 128, together with an end-to-end row that includes protocol canonicalisation.}
+\action{See Table~III.}
+
+\subsection*{Comment 20 --- Computational efficiency}
+\concern{Computational efficiency should be discussed quantitatively in more detail. The authors should report training time, inference memory, parameter count, GPU utilization, online-controller overhead, and, if possible, CPU/edge-device performance.}
+\response{Adopted. Section~VII.F introduces Table~IV reporting parameter counts, peak GPU memory during training, per-epoch wall-clock training time on one A100, and Hedge controller overhead (measured at 4~\textmu s per round). CPU numbers are included in Table~III as the CPU rows of the latency decomposition.}
+\action{See Tables~III and IV.}
+
+\subsection*{Comment 21 --- Expanded ablation}
+\concern{The ablation study is useful but should be expanded. Additional variants such as Mamba-only, GATv2-only, transformer-only, non-certified MambaGuard, alternative controllers, and alternative time encodings would make the architectural contribution clearer.}
+\response{Adopted. Table~V now contains eight configurations: full, no Lipschitz penalty (i.e.\ non-certified), no Stackelberg controller, Mamba-only, GATv2-only, selective-scan replaced by softmax attention, no time encoding, and multi-protocol graph collapsed to a flat sequence. Parameter counts are reported per row.}
+\action{See Table~V.}
+
+\subsection*{Comment 22 --- Quantitative certification details}
+\concern{The certification analysis should include more quantitative details. The authors should report the actual Lipschitz constants, margin distributions, certified accuracy at multiple perturbation levels, and the effect of the Lipschitz regularization coefficient.}
+\response{Adopted. Section~VII.G introduces Table~VI reporting the measured $L_{f}$ decomposition into $L_{\text{ssm}},L_{\text{gat}},L_{\text{head}}$ under six effective spectral caps corresponding to different $\lambda_{L}$ values, together with the certified fraction of test examples at $\varepsilon=0.05$ under each cap. Figure~3 plots certified accuracy against $\varepsilon$. The numbers were produced by running \texttt{scripts/run\_v4\_experiments.py} on the released implementation.}
+\action{See Table~VI and Figure~3.}
+
+\subsection*{Comment 23 --- Limitations}
+\concern{The discussion of limitations is currently too short. The authors should elaborate on limitations related to worst-case looseness of the Lipschitz bound, finite defender action sets, unrealistic attacker assumptions, dataset representativeness, false positives, encrypted traffic, privacy, and deployment cost.}
+\response{Adopted. Section~VIII now contains a dedicated ``Limitations'' paragraph enumerating seven specific limitations: worst-case looseness, finite action sets, capability-set completeness, dataset representativeness, encrypted-traffic coverage, deployment cost scaling, and privacy of the frozen sentence-transformer embedding.}
+\action{See Section~VIII, Limitations paragraph.}
+
+\subsection*{Comment 24 --- RobustIDPS.ai integration wording}
+\concern{The integration with RobustIDPS.ai should be presented more neutrally. Repeated statements that MambaGuard is the fourteenth registered detector inside the platform sound somewhat promotional and should be reduced or moved to an implementation subsection.}
+\response{Adopted. The ``fourteenth registered detector'' phrasing has been removed everywhere except a single neutral mention in Section~V.D ``Implementation Notes'' and in the Data and Code Availability statement. The abstract and the Conclusion no longer refer to the deployment count.}
+\action{See Section~V.D.}
+
+\subsection*{Comment 25 --- Figure captions and numerical detail}
+\concern{The figures are useful, especially the architecture diagram and the performance plots, but some of them should include clearer numerical values and more detailed explanations so that readers can interpret the results without relying only on the captions.}
+\response{Adopted. Figure captions have been expanded to include numerical values (Figures 3, 4, 5), and the corresponding tables (Tables I--VI) provide the exhaustive numerical detail.}
+\action{Revised Figure 3, 4, 5 captions.}
+
+\subsection*{Comment 26 --- False-positive and operational cost}
+\concern{The paper should discuss false positives and operational consequences. In practical security monitoring, aggressive blocking, session termination, or agent isolation may cause disruption, so the cost of incorrect defense actions should be analyzed.}
+\response{Adopted. Section~VII.H introduces Table~VII with per-defender-action false-positive rates and operator-hour cost estimates using the incident-cost model of the RobustIDPS.ai platform (fifteen operator-minutes per false session termination for review and reinstatement).}
+\action{See Table~VII.}
+
+\subsection*{Comment 27 --- Proofreading and style}
+\concern{Thorough proofreading is highly recommended, as there are style issues, overly long sentences, dense technical constructions, and some promotional wording throughout the manuscript. A more concise writing style would improve readability significantly.}
+\response{The manuscript has been proof-read end-to-end, long sentences broken, promotional wording removed (see also Comment~24), and technical constructions simplified where possible without sacrificing precision.}
+\action{Global copy-edit; specific instances flagged in the highlighted PDF.}
+
+\end{document}
