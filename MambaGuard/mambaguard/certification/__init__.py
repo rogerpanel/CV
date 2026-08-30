@@ -19,7 +19,13 @@ from .lipschitz_bounds import (
     spectral_norm,
     ssm_lipschitz,
 )
-from .stackelberg import StackelbergSolution, StackelbergSolver, default_utility_matrix
+from .stackelberg import (
+    ATTACKER_ACTIONS,
+    DEFENDER_ACTIONS,
+    StackelbergSolution,
+    StackelbergSolver,
+    default_utility_matrix,
+)
 from .hedge import HedgeDefender, run_hedge_defence
 from .certificate import CompositeCertificate, composed_certificate, report
 
@@ -35,6 +41,8 @@ __all__ = [
     "StackelbergSolver",
     "StackelbergSolution",
     "default_utility_matrix",
+    "DEFENDER_ACTIONS",
+    "ATTACKER_ACTIONS",
     # Hedge
     "HedgeDefender",
     "run_hedge_defence",
