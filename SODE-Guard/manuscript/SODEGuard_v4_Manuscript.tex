@@ -1,0 +1,1688 @@
+%% ============================================================================
+%%  Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework
+%%  with Anti-Concentration Bounds for Adversarially Robust Network Intrusion
+%%  Detection
+%%
+%%  Version v4 — IEEE Access resubmission (revised after peer review).
+%%  Target venue : IEEE Access
+%%  Authors      : R. N. Anaedevha, A. G. Trofimov, Y. V. Borodachev
+%%  Affiliation  : National Research Nuclear University MEPhI, Moscow, Russia
+%%  Compile with : pdflatex on Overleaf using the IEEE Access template
+%%                 (ieeeaccess.cls is bundled with that Overleaf template)
+%%
+%%  Every change from v3 → v4 is intended to address a specific reviewer
+%%  concern from the IEEE Access decision letter (2026-08). The full
+%%  point-by-point response is in
+%%  docs/response_to_reviewers/RESPONSE.md in the reproducibility repo.
+%% ============================================================================
+
+\documentclass{ieeeaccess}
+
+%%%% PACKAGES
+\usepackage[nocompress]{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{graphicx}
+\graphicspath{{./}{figures/}{stochastic_odeguard_figures/}}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage[hyphens]{url}
+\usepackage[hidelinks]{hyperref}
+
+%%%% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{remark}[theorem]{Remark}
+
+%%%% Math shortcuts
+\newcommand{\Real}{\mathbb{R}}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\KL}{\mathrm{KL}}
+\newcommand{\Lip}{\mathrm{Lip}}
+\newcommand{\Brn}{\mathrm{B}}
+\newcommand{\Fcal}{\mathcal{F}}
+\newcommand{\Gcal}{\mathcal{G}}
+\newcommand{\Xcal}{\mathcal{X}}
+\newcommand{\Ycal}{\mathcal{Y}}
+\newcommand{\Hcal}{\mathcal{H}}
+\newcommand{\Ncal}{\mathcal{N}}
+\newcommand{\Acal}{\mathcal{A}}
+\newcommand{\Dcal}{\mathcal{D}}
+\newcommand{\Lcal}{\mathcal{L}}
+\newcommand{\Zcal}{\mathcal{Z}}
+\newcommand{\pinv}{{+}}   % Moore--Penrose pseudo-inverse superscript
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+\hypersetup{pdfauthor={Roger Nick Anaedevha}, pdftitle={Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework with Anti-Concentration Bounds for Adversarially Robust Network Intrusion Detection}}
+
+\begin{document}
+
+\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\doi{10.1109/ACCESS.2026.DOI}
+
+\title{Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework with Anti-Concentration Bounds for Adversarially Robust Network Intrusion Detection}
+
+\author{Roger Nick Anaedevha\authorrefmark{1},
+Alexander Gennadevich Trofimov\authorrefmark{1},
+and Yuri Vladimirovich Borodachev\authorrefmark{2}}
+
+\address[1]{National Research Nuclear University MEPhI (Moscow Engineering Physics Institute), Moscow 115409, Russia (e-mail: ar006@campus.mephi.ru)}
+\address[2]{Artificial Intelligence Research Center, National Research Nuclear University MEPhI, Moscow 115409, Russia}
+
+\tfootnote{This work was supported by a grant for research centers in Artificial Intelligence from the Ministry of Economic Development of the Russian Federation under subsidy agreement (identifier 000000C313925P3Q0002). All authors of this publication are co-first authors.}
+
+\markboth{Anaedevha \headeretal: Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework for Adversarially Robust Network Intrusion Detection}{Anaedevha \headeretal: Stochastic ODE-Guard: A Neural Stochastic Differential Equation Framework for Adversarially Robust Network Intrusion Detection}
+
+\corresp{Corresponding author: Roger Nick Anaedevha (e-mail: ar006@campus.mephi.ru).}
+
+\begin{abstract}
+Adversarially robust network intrusion detection remains an open problem
+because per-flow neural classifiers degrade catastrophically under small
+feature-space perturbations that lie within the empirical noise floor of
+production flow extractors. Existing certified defences such as
+Lipschitz-bounded networks and randomised smoothing trade clean
+accuracy against certificate radius and rarely transfer to the
+long-tailed, high-dimensional flow-feature spaces that production
+intrusion detection and prevention systems must handle. We introduce
+\textbf{Stochastic ODE-Guard}, a neural stochastic differential equation
+(NSDE) framework that treats the embedded flow representation as the
+terminal state of an It\^o diffusion whose drift and diffusion
+coefficients are jointly learned. The framework admits three
+theoretical guarantees: an \emph{empirically certified} $L^{2}$
+Lipschitz bound on the smoothed margin (Lemma~\ref{lem:closed-lg}), a
+Bismut--Elworthy--Li identity with a Moore--Penrose pseudo-inverse
+diffusion that yields stable gradient estimators for non-square
+diffusion parameters (Theorem~\ref{thm:bel}), and---as our principal
+contribution---a \emph{probabilistic robustness proposition}
+(Proposition~\ref{prop:robust}) that follows from the Carbery--Wright
+anti-concentration inequality applied to the Wiener-chaos expansion of
+the smoothed score. The chaos truncation degree is now selected
+adaptively per example via Hermite regression rather than fixed a
+priori, and the certificate uses a Hoeffding \emph{lower} confidence
+bound on the margin $L^{2}$ norm in the Carbery--Wright denominator,
+which restores the direction of the inequality. We rename the resulting
+quantity a \emph{probabilistic robustness radius} to distinguish it
+from deterministic $\arg\max$ certificates; the corresponding
+$\arg\max$ decision-flip bound is derived by a union argument
+(Corollary~\ref{cor:argmax}). Empirical validation uses three
+Kaggle-released benchmark suites (ICS3D, IIS3D, IDS-PQC) totalling
+$1.84{\times}10^{7}$ flows, with new provenance, deduplication and
+leakage-analysis appendices; the framework is evaluated under random,
+temporal, host-disjoint and scenario-disjoint splits, and against
+threat-model-matched neural baselines with commercial signature engines
+and LLM-safety filters reported separately as \emph{reference
+baselines}. Stochastic ODE-Guard achieves $96.4\%$ clean F1 and
+$93.1\%$ F1 under PGD-40 at $\epsilon{=}0.03$ (random splits),
+$91.8\%$ under the temporal-holdout protocol, and $90.6\%$ under the
+host-disjoint protocol; the strongest deployed baseline (SDE-TGNN)
+reaches $87.2\%$, $84.5\%$, and $82.8\%$ respectively. Under the
+problem-space projection that enforces packet-grammar feasibility,
+SODE-Guard's lead grows to $+7.2$ F1 points at $\epsilon{=}0.03$.
+Median inference latency is $1.7$~ms on a single A100 GPU.
+\end{abstract}
+
+\begin{keywords}
+Adversarial robustness, anti-concentration inequalities, network intrusion
+detection, neural stochastic differential equations, probabilistic
+robustness radius, uncertainty quantification.
+\end{keywords}
+
+\titlepgskip=-21pt
+
+\maketitle
+
+\section{Introduction}\label{sec:intro}
+%% =====================================================================
+\IEEEPARstart{N}{etwork} intrusion detection and prevention systems
+(IDPS) have become the principal line of defence against the escalating
+volume of cyber-physical threats targeting cloud, edge, and
+Internet-of-Things deployments. Modern neural IDPS deliver clean-traffic
+F1 scores exceeding $0.97$ on canonical benchmarks such as UNSW-NB15
+and CIC-IDS2017~\cite{wu2022rtids,halbouni2022cnnlstm}, yet the same
+models routinely lose more than fifteen F1 points under
+projected-gradient adversarial perturbations whose $\ell_\infty$ budget
+is smaller than the empirical noise floor of the underlying flow
+extractor~\cite{ennaji2024advsurvey,vitorino2024advbench}. The
+vulnerability is not merely academic: structural adversarial attacks on
+graph-neural-network IDPS have been demonstrated to evade
+production-grade detectors at line rate~\cite{venturi2024structural}.
+
+The dominant certified-robustness strategies---Lipschitz-bounded
+networks~\cite{tsuzuku2018lipschitz,anil2019sorting,araujo2023sll}
+and randomised smoothing~\cite{cohen2019smoothing,salman2019smoothadv,yang2020smoothing}---deliver
+formal guarantees but suffer two structural limitations when
+transplanted into IDPS. First, Lipschitz certificates degrade linearly
+with input dimension, which is punishing for the $83$-dimensional flow
+vectors produced by modern extractors~\cite{anil2019sorting}. Second,
+randomised smoothing inflates inference latency by the Monte-Carlo
+sample budget required for tight Clopper--Pearson certificates, which
+is incompatible with the sub-millisecond per-flow envelope of production
+sensors~\cite{cohen2019smoothing}. Both families also assume the
+classifier is a deterministic map, ignoring the natural stochasticity
+of continuous-time network dynamics.
+
+A complementary line of work has shown that continuous-time neural
+dynamics---neural ordinary differential equations
+(NODEs)~\cite{kang2021sodef,guglielmi2025minimal}---inherit beneficial
+robustness from the Gr\"onwall--Bellman inequality on their flow map.
+Extending the framework from NODEs to neural stochastic differential
+equations (NSDEs)~\cite{tzen2019nsde,li2020scalable,kidger2021nsdegan}
+introduces an explicit diffusion term whose role under adversarial
+perturbation has, until now, been left implicit. Recently the
+\emph{stable Neural SDE} family~\cite{oh2024stablesde} established
+existence and uniqueness conditions on the irregular-time-series
+setting, and applications to graph uncertainty~\cite{bergna2024lgnsde}
+confirm that the diffusion channel carries calibrated epistemic
+information. What has been missing is a tractable robustness theory
+that links the SDE diffusion coefficient to a finite-sample
+adversarial certificate.
+
+This paper closes that gap. We introduce \textbf{Stochastic ODE-Guard},
+a neural stochastic differential equation framework whose drift and
+diffusion are jointly learned on the embedded flow representation,
+whose gradients are estimated through a Bismut--Elworthy--Li identity
+with a Moore--Penrose pseudo-inverse~\cite{bismut1981martingales,elworthy1994formulae},
+and whose adversarial robustness derives from an anti-concentration
+argument on the Wiener-chaos expansion of the smoothed score. The
+framework was prototyped inside the deployed \texttt{RobustIDPS.ai}
+open-source platform whose registry of fourteen detectors provides
+both infrastructure and threat-model-matched competitive baselines,
+and was validated on three Kaggle-released benchmark suites totalling
+$1.84\times 10^7$ flows.
+
+\medskip\noindent\textbf{What is genuinely new in the composition.}
+Neural SDEs, stochastic smoothing, PAC-Bayes bounds and NIDS
+benchmarking are all established individually; our contribution is
+their principled composition together with three technical results
+that, to the best of our knowledge, are new. Specifically:
+
+\emph{(C1)~The anti-concentration probabilistic robustness proposition.}
+Section~\ref{sec:theory} proves that the smoothed-score gap between a
+clean input and an adversarial perturbation is anti-concentrated in
+the sense of Carbery and Wright~\cite{carbery2001anticonc}. The bound
+is polynomial in the perturbation budget and identifies the effective
+Wiener-chaos degree $d^\star$ as the controlling parameter. We
+rebuilt this proposition in the present revision so that
+Carbery--Wright is applied with a Hoeffding \emph{lower} confidence
+bound on the polynomial $L^{2}$ norm rather than an upper bound
+(Section~\ref{sec:theory}; Appendix~B). To our knowledge this is the
+first robustness certificate that follows from the algebraic structure
+of the diffusion rather than from Lipschitz contraction or
+Gaussian-noise smoothing, and the corresponding
+$\arg\max$-decision-flip bound is derived by a union argument in
+Corollary~\ref{cor:argmax}.
+
+\emph{(C2)~A Bismut--Elworthy--Li estimator for a non-square diffusion.}
+Section~\ref{sec:framework} derives the gradient of the expected loss
+with respect to the diffusion coefficient using the Bismut--Elworthy--Li
+formula~\cite{bismut1981martingales,elworthy1994formulae,hsu2002}
+adapted to the $d\times m$ diffusion setting with $m<d$. The novelty is
+the constructive use of the Moore--Penrose pseudo-inverse
+$g_\theta^{\pinv} = (g_\theta^\top g_\theta + \lambda_0 I_m)^{-1}
+g_\theta^\top$, whose bounded condition number is guaranteed by the
+ellipticity floor $\lambda_0 = 10^{-3}$. Appendix~D reports its
+empirical bias and variance against a finite-difference reference.
+
+\emph{(C3)~An integrated, split-robust ablation across three Kaggle
+benchmarks and the deployed platform.} Section~\ref{sec:exp} reports
+the first unified evaluation of Stochastic ODE-Guard against six
+threat-model-matched neural baselines and three commercial /
+LLM-policy reference baselines on ICS3D~\cite{ds_ics3d},
+IIS3D~\cite{ds_iis3d}, and the encrypted post-quantum-cryptography
+traffic corpus~\cite{ds_pqcids}. Every experiment is repeated under
+four split protocols (random, temporal, host-disjoint,
+scenario-disjoint) and under two threat models (feature-space and
+problem-space with packet-grammar feasibility projection).
+
+\emph{(C4)~A production-grade reproducibility artefact.} The entire
+codebase, including the new $L^{2}$-Lipschitz certifier, the adaptive
+chaos-degree estimator, the pseudo-inverse-based BEL estimator, the
+PAC-Bayes-kl certificate, the four split protocols, the feasibility
+projector, and the sensitivity-swept randomised-smoothing baseline, is
+released under MIT license and is described module-by-module in the
+reproducibility index at
+\url{https://github.com/rogerpanel/CV/tree/main/SODE-Guard}.
+
+The remainder is organised as follows. Section~\ref{sec:related}
+surveys related work in four threads. Section~\ref{sec:prelim} states
+the mathematical preliminaries. Section~\ref{sec:framework} presents
+the Stochastic ODE-Guard architecture and training procedure.
+Section~\ref{sec:theory} proves the principal anti-concentration
+robustness result together with its arg-max corollary.
+Section~\ref{sec:exp} reports the experimental setup, the integrated
+ablation, and the industry comparison. Section~\ref{sec:disc}
+discusses limitations and threats to validity, and
+Section~\ref{sec:conc} concludes.
+
+\medskip\noindent\textbf{Intuition.} A network flow is a sequence of
+packet-level statistics that a deployed sensor extracts in real time.
+A classical neural classifier treats this flow as a fixed vector and
+predicts a label deterministically. Stochastic ODE-Guard does not
+perturb the input; instead, it \emph{embeds} the flow into a
+$128$-dimensional feature representation and evolves that embedded
+representation forward in continuous time under a learned It\^o
+diffusion. The final classification averages the softmax head over a
+small number of Brownian samples of the embedded trajectory. The
+diffusion is what gives the framework its adversarial robustness,
+because a small perturbation of the input has limited ability to
+change the \emph{averaged} terminal state when the average is over a
+non-degenerate Brownian ensemble. The theoretical contribution
+quantifies exactly how limited that ability is.
+
+%% =====================================================================
+\section{Related Work}\label{sec:related}
+%% =====================================================================
+Four bodies of literature converge on this work.
+
+\emph{Certified adversarial robustness.} The Lipschitz-bounded family
+established by Tsuzuku \textit{et~al.}~\cite{tsuzuku2018lipschitz}
+and refined by Anil \textit{et~al.}'s
+GroupSort~\cite{anil2019sorting}, Wang and Manchester's
+Lipschitz-bounded deep networks~\cite{wang2023lbdn}, and Araujo
+\textit{et~al.}'s SLL parameterisation~\cite{araujo2023sll}, provides
+certificates whose radius scales as the inverse network-Lipschitz
+constant. Randomised smoothing~\cite{cohen2019smoothing} and its
+anisotropic extensions~\cite{yang2020smoothing,eiras2022ancer} convert
+non-robust base classifiers into smoothed classifiers with
+high-probability $\ell_2$ certificates. PixelDP~\cite{lecuyer2019pixeldp}
+established the differential-privacy connection that grounds the
+Gaussian-smoothing analysis. Section~\ref{sec:theory} contributes a
+certificate that is neither Lipschitz nor smoothing-based: it exploits
+the anti-concentration of the polynomial-chaos representation induced
+by the SDE diffusion. The closest neighbour theoretically is the
+Carbery--Wright bound~\cite{carbery2001anticonc} as developed by Meka,
+Nguyen, and Vu~\cite{meka2016anticonc}, but neither was previously
+applied to deep-learning robustness. In particular, our derivation
+uses the exact $L^{2}$ norm of the chaos-truncated polynomial as the
+Carbery--Wright denominator (Appendix~B), replacing an upper bound
+that would reverse the inequality's direction.
+
+\emph{Neural ODEs and SDEs for robustness.} Kang \textit{et~al.}'s
+SODEF~\cite{kang2021sodef} showed that Lyapunov-stable equilibrium
+points in a neural ODE confer adversarial robustness. Guglielmi
+\textit{et~al.}~\cite{guglielmi2025minimal} quantified the minimal
+weight perturbation under which a neural ODE loses robustness.
+Stable Neural SDEs~\cite{oh2024stablesde} established well-posed
+extensions to irregular time series, while Bergna \textit{et~al.}'s
+latent graph neural SDE~\cite{bergna2024lgnsde} carried these ideas
+into the graph setting. The stochastic-adjoint sensitivity method of
+Li \textit{et~al.}~\cite{li2020scalable} provided the practical
+training algorithm. Our work treats the diffusion as a robustness
+mechanism rather than a generative-modelling tool (the latter is the
+focus of score-based SDEs~\cite{song2021score}) and derives a
+non-trivial certificate from its algebraic structure, extended
+constructively to a non-square diffusion coefficient via the
+Moore--Penrose pseudo-inverse.
+
+\emph{Network intrusion detection.} Lo \textit{et~al.}'s
+E-GraphSAGE~\cite{lo2022egraphsage} brought edge-feature graph neural
+networks to NIDS. Wu \textit{et~al.}'s RTIDS~\cite{wu2022rtids} adapted
+the transformer to encrypted-flow classification. Halbouni
+\textit{et~al.}'s hybrid CNN-LSTM~\cite{halbouni2022cnnlstm}
+established the spatio-temporal template subsequently refined by
+Mosaiyebzadeh \textit{et~al.}'s
+IDS-GraphMamba~\cite{mosaiyebzadeh2025graphmamba}. Our previous work
+contributed three building blocks to this line: a temporal-adaptive
+neural ODE with deep spatio-temporal point processes for real-time
+NIDS~\cite{anaedevha2026ode}, a stochastic multimodal transformer
+with uncertainty quantification~\cite{anaedevha2025stochtx}, and a
+robust-adversarial defence formulation~\cite{anaedevha2024ram}. In
+addition we examined device-identification baselines on wireless
+intrusion traffic~\cite{anaedevha2024elcon}.
+
+\emph{Stochastic neural networks and uncertainty.} The Bayesian
+neural network literature beginning with MacKay~\cite{mackay1992bnn}
+and extended in the adversarial setting by Liu \textit{et~al.}'s
+Adv-BNN~\cite{liu2019advbnn} demonstrated that posterior weight
+uncertainty confers some adversarial robustness, an effect quantified
+by He \textit{et~al.}'s parametric noise injection~\cite{he2019pni}.
+The PAC-Bayes school~\cite{mcallester1999pacbayes,dziugaite2017pacbayes,
+perezortiz2021pacbayes} provides generalisation certificates for
+stochastic networks that we use in Section~\ref{sec:theory} as a
+complement to the anti-concentration argument and connect explicitly
+to the empirical calibration error in Section~\ref{subsec:pacbayes-emp}.
+Our prior work on MambaShield extended selective state-space modelling
+to the poisoning-resilient setting~\cite{anaedevha2026mambashield},
+and our uncertainty-calibrated hierarchical Gaussian
+processes~\cite{anaedevha2026uchgp} furnished the multi-scale temporal
+calibration we adopt here in Section~\ref{subsec:training}.
+
+%% =====================================================================
+\section{Mathematical Preliminaries}\label{sec:prelim}
+%% =====================================================================
+Throughout, $\Real^d$ denotes the $d$-dimensional Euclidean space,
+$W=(W_t)_{t\geq 0}$ denotes an $m$-dimensional standard Brownian motion
+on a filtered probability space
+$(\Omega,\Fcal,\{\Fcal_t\}_{t\geq 0},\Prob)$ satisfying the usual
+conditions, $\|\cdot\|$ is the Euclidean norm, $I_d$ the $d\times d$
+identity matrix, and $A\succeq B$ for symmetric matrices means $A-B$
+is positive semi-definite.
+
+\subsection{Neural Stochastic Differential Equations}\label{subsec:nsde}
+A neural stochastic differential equation on $[0,T]$ is the It\^o SDE
+\begin{equation}\label{eq:nsde}
+  dX_t = f_\theta(X_t,t)\,dt + g_\theta(X_t,t)\,dW_t,\qquad X_0=x_0,
+\end{equation}
+with $f_\theta:\Real^d\!\times\![0,T]\!\to\!\Real^d$ and
+$g_\theta:\Real^d\!\times\![0,T]\!\to\!\Real^{d\times m}$ neural
+networks parameterised by $\theta$.
+
+\begin{theorem}[Existence and uniqueness; {\protect\cite[Thm.~5.2.1]{oksendal2003}}]\label{thm:eu}
+If the drift $f_\theta$ and diffusion $g_\theta$ are Borel-measurable
+and satisfy, uniformly in $t\in[0,T]$, the linear-growth condition
+$\|f_\theta(x,t)\|+\|g_\theta(x,t)\|\leq C(1+\|x\|)$
+and the Lipschitz condition
+$\|f_\theta(x,t)-f_\theta(y,t)\|+\|g_\theta(x,t)-g_\theta(y,t)\|\leq
+C\|x-y\|$ for a constant $C>0$, and if $\Exp\|X_0\|^2<\infty$, then
+\eqref{eq:nsde} admits a unique $\Fcal_t$-adapted strong solution.
+\end{theorem}
+
+In practice the linear-growth and Lipschitz conditions are enforced by
+spectral normalisation of the neural-network weights of $f_\theta$ and
+$g_\theta$ as in Anil \textit{et~al.}~\cite{anil2019sorting}; the
+implementation-level audit is deferred to Assumption~\ref{ass:impl}.
+
+\subsection{Bismut--Elworthy--Li Identity for Non-Square Diffusion}
+\label{subsec:bel}
+
+We adapt the classical BEL formula~\cite{bismut1981martingales,
+elworthy1994formulae,hsu2002} to the non-square diffusion case
+$g:\Real^d\!\to\!\Real^{d\times m}$ with $m\leq d$. Let $g^{\pinv}$
+denote the Moore--Penrose pseudo-inverse
+\begin{equation}\label{eq:pinv}
+   g^{\pinv}(x) \;=\; \bigl(g(x)^\top g(x) + \lambda_0 I_m\bigr)^{\!-1}
+                       g(x)^\top,
+\end{equation}
+regularised by the ellipticity floor $\lambda_0>0$ so that the
+inversion in~\eqref{eq:pinv} is well-conditioned.
+
+\begin{theorem}[BEL identity with pseudo-inverse]\label{thm:bel}
+Assume $f\in C^2_b(\Real^d,\Real^d)$ and
+$g\in C^2_b(\Real^d,\Real^{d\times m})$ with the regularised
+Gram matrix $g^\top g + \lambda_0 I_m$ uniformly positive-definite
+in $x$. Let $X^x$ solve $dX_t=f(X_t)\,dt+g(X_t)\,dW_t$ with
+$X_0=x$ and let $J^x_t=\partial X^x_t/\partial x$ denote the
+first-variation process. Then for every bounded measurable
+$\phi:\Real^d\!\to\!\Real$ and every $t>0$,
+\begin{equation}\label{eq:bel}
+  \nabla_x\,\Exp[\phi(X^x_t)]
+  = \Exp\!\left[\phi(X^x_t)\,\frac{1}{t}\!\int_0^t\!
+      \!\bigl(g^{\pinv}(X^x_s)\,J^x_s\bigr)^{\!\top}\!dW_s\right].
+\end{equation}
+\end{theorem}
+
+In~\eqref{eq:bel} the pseudo-inverse $g^{\pinv}$ replaces the (undefined
+in the non-square setting) matrix inverse used in the classical
+statement, and the ellipticity floor $\lambda_0$ bounds the condition
+number of $g^\top g + \lambda_0 I_m$ (empirical median $8.9$, worst-case
+$32.4$ in our runs; see Appendix~D). The right-hand side of
+\eqref{eq:bel} contains no derivative of $\phi$ and therefore extends
+to discontinuous safety thresholds; this is essential because the IDPS
+decision boundary is a step function of the terminal-state classifier
+score.
+
+\subsection{Carbery--Wright Anti-Concentration}\label{subsec:cw}
+\begin{theorem}[Carbery--Wright, 2001~\cite{carbery2001anticonc}]\label{thm:cw}
+There exists an absolute constant $C>0$ such that for every
+$n,d\in\mathbb{N}$, every polynomial $p:\Real^n\!\to\!\Real$ of degree
+at most $d$, and every $\varepsilon>0$,
+\begin{equation}\label{eq:cw}
+  \Prob_{Z\sim\Ncal(0,I_n)}\!\left[\,|p(Z)|\le
+   \varepsilon\,\bigl(\Exp\,p(Z)^2\bigr)^{1/2}\right]
+   \leq C\,d\,\varepsilon^{1/d}.
+\end{equation}
+\end{theorem}
+
+The denominator is the \emph{exact} $L^{2}$ norm of $p$. The revised
+Proposition~\ref{prop:robust} uses a Hoeffding lower confidence bound
+on this quantity, not an upper bound, so that the direction of the
+inequality is preserved (see Appendix~B).
+
+\subsection{PAC-Bayes Generalisation for Stochastic Predictors}
+\label{subsec:pacbayes}
+\begin{theorem}[PAC-Bayes-kl; Maurer~\cite{maurer2004pacbayes}]\label{thm:pacbayes}
+Let $\ell:\Hcal\times\Zcal\!\to\![0,1]$ be a loss bounded in $[0,1]$,
+let $P$ be a data-independent prior on $\Hcal$, let $S\sim\Dcal^n$ be
+an i.i.d.\ sample, and let $\delta\in(0,1)$. With probability at least
+$1-\delta$ over the draw of $S$, simultaneously for every posterior
+$Q$,
+\begin{equation}\label{eq:pacbayes}
+ \mathrm{kl}\!\left(\widehat{R}_S(Q)\,\big\|\,R(Q)\right)
+   \leq \frac{\KL(Q\|P)+\log(2\sqrt{n}/\delta)}{n},
+\end{equation}
+where $\widehat R_S(Q)=\Exp_{h\sim Q}\widehat R_S(h)$ and
+$R(Q)=\Exp_{h\sim Q}R(h)$.
+\end{theorem}
+
+We use the kl-inversion of~\eqref{eq:pacbayes} (Reeb \& Seldin,
+2014~\cite{reeb2014klinv}) implemented in
+\texttt{src/theory/pac\_bayes.py} of the reproducibility repository.
+Section~\ref{subsec:pacbayes-emp} pairs the returned bound with the
+empirical calibration error for each benchmark.
+
+%% =====================================================================
+\section{The Stochastic ODE-Guard Framework}\label{sec:framework}
+%% =====================================================================
+Section~\ref{sec:prelim} furnished the theoretical building blocks;
+we now assemble them into the operational framework. The architectural
+pipeline is summarised in Fig.~\ref{fig:architecture} and detailed in
+three subsections: flow representation (\ref{subsec:flowrep}), the
+SDE-based dynamics (\ref{subsec:sde}), and the training procedure with
+the BEL gradient estimator (\ref{subsec:training}).
+
+\begin{assumption}[Analytic $\leftrightarrow$ implementation]\label{ass:impl}
+Throughout, $f_\theta$ and $g_\theta$ are three-layer MLPs with GELU
+activations ($C^{\infty}$ smooth). Each linear layer $W\in\Real^{h\times h'}$
+is spectral-normalised so $\|W\|_{2}\leq 1$; the resulting drift and
+diffusion Lipschitz constants are bounded by
+$K_f, K_g \leq \prod_\ell \|W_\ell\|_2 \cdot \|\phi\|_\Lip \leq 1$
+where $\|\phi\|_\Lip$ is the GELU Lipschitz constant. The diffusion is
+projected at every integration step through
+$g_\theta(x,t)\to g_\theta(x,t)+\sqrt{\lambda_0}\,I_{d\wedge m}$ with
+$\lambda_0=10^{-3}$, so $g_\theta^\top g_\theta \succeq \lambda_0 I_m$
+uniformly and $g_\theta^{\pinv}$ from~\eqref{eq:pinv} is well-defined.
+\end{assumption}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig1_SODEGuard_arch.png}
+\caption{Stochastic ODE-Guard architecture (unchanged from v3, retained
+for orientation). The forward path (solid arrows) ingests the three
+Kaggle benchmark suites, extracts $83$-dimensional flow features and
+edge representations, propagates the embedded state through the It\^o
+SDE of \eqref{eq:nsde} whose drift $f_\theta$ and diffusion $g_\theta$
+are jointly learned, and emits a $34$-class allow/block verdict at the
+terminal time $T$. The theorem-backed gradient path (dashed) exposes
+the two analytical guarantees that distinguish the framework: the
+Bismut--Elworthy--Li identity of Theorem~\ref{thm:bel} supplies a
+gradient estimator that is unbiased under Assumption~\ref{ass:impl}
+and uses the Moore--Penrose pseudo-inverse of~\eqref{eq:pinv}, while
+the Carbery--Wright anti-concentration argument
+(Proposition~\ref{prop:robust}) certifies the adversarial robustness
+of the smoothed classification.}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection{Flow Representation}\label{subsec:flowrep}
+Each network flow is represented by a feature vector
+$x\in\Real^{83}$ extracted from the deployed RobustIDPS.ai pipeline,
+augmented with edge-feature embeddings computed by an
+E-GraphSAGE-style aggregator~\cite{lo2022egraphsage} over a sliding
+micro-graph of size $B$ flows. The graph view encodes inter-flow
+relationships that bare per-flow vectors miss. Letting
+$h(x)\in\Real^{128}$ denote the concatenation of the per-flow features
+and the edge-aggregated embedding, we set $X_0=h(x)$ in the SDE
+\eqref{eq:nsde}. \emph{The SDE evolves the embedded state $X_t$; the
+raw input feature vector $x$ is never perturbed by the diffusion. Any
+adversarial perturbation in this paper is applied to the input side
+$x$, and the certificate quantifies its effect after propagation
+through the network and the SDE.}
+
+\subsection{SDE Dynamics}\label{subsec:sde}
+The dynamics are governed by the It\^o SDE
+\begin{equation}\label{eq:sde-train}
+\begin{aligned}
+  dX_t &= f_\theta(X_t,t)\,dt + g_\theta(X_t,t)\,dW_t,\\
+  X_0  &= h(x),\quad t\in[0,1],
+\end{aligned}
+\end{equation}
+where the drift $f_\theta:\Real^{128}\!\times\![0,1]\!\to\!\Real^{128}$
+and diffusion $g_\theta:\Real^{128}\!\times\![0,1]\!\to\!\Real^{128\times 16}$
+are realised as 3-layer MLPs (hidden width $256$, GELU) with spectral
+normalisation (Assumption~\ref{ass:impl}). The diffusion image
+dimension $m=16$ keeps the Brownian-motion cost low while enabling the
+polynomial-chaos expansion of Section~\ref{sec:theory}. We use a
+fixed-step Euler--Maruyama integrator with $\Delta t = 0.05$ (20 steps)
+at inference and the virtual-Brownian-tree variance-reduction scheme
+of Li \textit{et~al.}~\cite{li2020scalable} during training. Under
+Assumption~\ref{ass:impl} the Milstein correction at $\Delta t/2$
+introduces a median $1.4\times 10^{-4}$ discrepancy on the terminal
+state (Appendix~E), justifying the Euler--Maruyama choice at inference.
+
+The terminal state $X_T$ feeds a linear classification head
+$\psi_\eta:\Real^{128}\!\to\!\Real^{34}$ whose output is the
+$34$-dimensional logit vector. The predictor is
+\begin{equation}\label{eq:predictor}
+  \hat y(x) \;=\; \mathrm{softmax}\!\bigl(\Exp[\psi_\eta(X_T)\mid X_0=h(x)]\bigr),
+\end{equation}
+where the expectation is realised by Monte-Carlo averaging over
+$N_{\mathrm{mc}}=8$ Brownian paths at inference. The choice
+$N_{\mathrm{mc}}=8$ is calibrated in Section~\ref{sec:exp} to keep
+latency below $2$\,ms while controlling the variance of the smoothed
+score.
+
+\subsection{Training Procedure}\label{subsec:training}
+The optimisation objective combines cross-entropy
+$\Lcal_{\mathrm{CE}}$ with an anti-concentration regulariser
+$\Lcal_{\mathrm{AC}}$ that we now define precisely (Reviewer~1 concern).
+Let $m_i(\theta) := \psi_\eta^{(1)}(X_T^{(i)}) - \psi_\eta^{(2)}(X_T^{(i)})$
+denote the top-1 minus top-2 logit gap for example $i$ averaged over
+$P$ Brownian paths, let
+$\hat s_i := \bigl(\tfrac{1}{P}\sum_{p=1}^P m_i^{(p)}(\theta)^2\bigr)^{1/2}$
+be its empirical $L^{2}$ norm, and let
+$\sigma_\kappa(u) := (1+\exp(-\kappa u))^{-1}$ be a temperature-$\kappa$
+sigmoid surrogate for the indicator. The regulariser is
+\begin{equation}\label{eq:ac-loss}
+  \Lcal_{\mathrm{AC}}(\theta) \;=\; \frac{1}{|\mathcal B|}\!\sum_{\beta\in\mathcal B}\!
+   \log\!\Bigl(1 + C\,d^\star\,(\beta / \hat s)^{1/d^\star}\,
+                 \tfrac{1}{B}\!\sum_{i=1}^B\!\sigma_\kappa(\beta-|m_i|)\Bigr),
+\end{equation}
+with $\mathcal B=\{0.01,0.025,0.05,0.10\}$, $\kappa=50$, and
+$d^\star=4$ during training (the certificate at inference uses the
+adaptive $d^\star_{p99}$ of Algorithm~\ref{alg:chaos}). The complete
+composite loss is
+\begin{equation}\label{eq:loss}
+  \Lcal(\theta,\eta) \;=\; \Lcal_{\mathrm{CE}}(\theta,\eta) \;+\;
+   \lambda\,\Lcal_{\mathrm{AC}}(\theta),
+\end{equation}
+with $\lambda=0.1$ chosen on the IIS3D validation split.
+
+Gradients with respect to the drift $\theta_f$ are computed through the
+stochastic-adjoint sensitivity method~\cite{li2020scalable}. Gradients
+with respect to the diffusion $\theta_g$ use the BEL identity
+\eqref{eq:bel} of Theorem~\ref{thm:bel}, instantiated as
+\begin{equation}\label{eq:bel-grad}
+  \nabla_{\theta_g}\,\Exp[\psi_\eta(X_T)]
+   \,=\,\Exp\!\left[\psi_\eta(X_T)\,M_T(\theta_g)\right],
+\end{equation}
+where $M_T(\theta_g) = \tfrac{1}{T}\int_0^T
+(g_\theta^{\pinv} J_s)^\top dW_s$ is the Malliavin weight with
+$g_\theta^{\pinv}$ from \eqref{eq:pinv}. The Adam optimiser is run
+with learning rate $5\!\times\!10^{-4}$, weight decay $10^{-5}$, batch
+size $128$, and cosine annealing across $40$ epochs. All experiments
+use five random seeds $\{42,137,271,1729,2026\}$.
+Algorithm~\ref{alg:train} summarises the complete training loop.
+
+\begin{algorithm}[!t]
+\caption{Stochastic ODE-Guard Training}
+\label{alg:train}
+\small
+\begin{algorithmic}[1]
+\REQUIRE $\Dcal_\mathrm{tr}$, horizon $T{=}1$, step $\Delta t$, paths
+   $N_\mathrm{mc}$, floor $\lambda_0$, regulariser weight $\lambda$
+\STATE Initialise $\theta_f,\theta_g,\eta$; spectral-normalise weights
+\FOR{epoch $=1,\dots,40$}
+  \FOR{mini-batch $\{(x_i,y_i)\}_{i=1}^B\sim\Dcal_\mathrm{tr}$}
+    \STATE $X_0^{(i)}=h(x_i)$ via E-GraphSAGE
+    \STATE Sample Brownian paths via virtual-Brownian tree
+    \STATE Integrate \eqref{eq:sde-train} via Euler--Maruyama with
+            floor $\lambda_0$
+    \STATE Compute $\hat y(x_i)$ from \eqref{eq:predictor}
+            with $N_\mathrm{mc}$ paths
+    \STATE Compute $\Lcal=\Lcal_{\mathrm{CE}}+\lambda\Lcal_{\mathrm{AC}}$
+            with $\Lcal_{\mathrm{AC}}$ from \eqref{eq:ac-loss}
+    \STATE Backpropagate: stochastic adjoint for $\theta_f,\eta$;
+            BEL estimator \eqref{eq:bel-grad} with $g_\theta^{\pinv}$
+            from \eqref{eq:pinv} for $\theta_g$
+    \STATE Adam step with cosine annealing; re-impose spectral norm
+  \ENDFOR
+\ENDFOR
+\STATE \textbf{return} $(\theta_f,\theta_g,\eta)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[!t]
+\caption{Adaptive Chaos-Degree Estimator (inference-time)}
+\label{alg:chaos}
+\small
+\begin{algorithmic}[1]
+\REQUIRE Test example $x$, MC paths $N$, max degree $d_{\max}$,
+         residual tolerance $\eta_0$
+\STATE Sample $N$ Brownian paths and compute margins
+       $m^{(1)},\dots,m^{(N)}$
+\STATE Standardise: $z^{(k)}=(m^{(k)}-\bar m)/\hat\sigma_m$
+\FOR{$D = 0,\dots,d_{\max}$}
+  \STATE Fit Hermite regression $m \approx \sum_{k\leq D} c_k H_k(z)$
+  \STATE $\rho(D)\leftarrow$ residual mass $\|m-\hat m_D\|^2/\|m\|^2$
+\ENDFOR
+\STATE $d^{\star}(x)\leftarrow\min\{D:\rho(D)\leq\eta_0\}$
+\STATE Aggregate across the validation split:
+       $d^\star_{p99}\leftarrow\mathrm{Percentile}_{99}\{d^\star(x)\}$
+\STATE \textbf{return} $d^\star_{p99}$
+\end{algorithmic}
+\end{algorithm}
+
+%% =====================================================================
+\section{Theoretical Properties}\label{sec:theory}
+%% =====================================================================
+With the architecture and training procedure in place we state and prove
+the central theoretical results. Three quantities need to be
+distinguished at the outset (Reviewer~2 request):
+\begin{definition}[Three robustness quantities]\label{def:rq}
+For a smoothed classifier $g$ and perturbation budget $\varepsilon$:
+\begin{itemize}[leftmargin=1.2em,itemsep=0.2em,topsep=0.2em]
+  \item the \emph{margin gap} is $\Delta(\delta)\!:=\!g(x{+}\delta){-}g(x)$;
+  \item the \emph{margin-stability probability} at $\beta$ is
+        $\pi_{\mathrm{ms}}(\beta,\varepsilon)\!:=\!\Prob[|\Delta(\delta)|\!\leq\!\beta]$;
+  \item the \emph{decision-flip probability} at $\varepsilon$ is
+        $\pi_{\mathrm{df}}(\varepsilon)\!:=\!
+         \Prob[\arg\max g(x{+}\delta)\neq\arg\max g(x)]$.
+\end{itemize}
+Proposition~\ref{prop:robust} bounds $\pi_{\mathrm{ms}}$;
+Corollary~\ref{cor:argmax} translates it into a bound on
+$\pi_{\mathrm{df}}$.
+\end{definition}
+
+\subsection{Polynomial-Chaos Expansion of the Smoothed Score}
+Fix an input $x\in\Real^p$ and let
+$g(x)=\Exp[\psi_\eta^{(1)}(X_T)-\psi_\eta^{(2)}(X_T)\mid X_0=h(x)]$
+denote the smoothed \emph{margin} (top-1 minus top-2 output of
+\eqref{eq:predictor}). Under Assumption~\ref{ass:impl} the It\^o map
+$x\mapsto X_T(x)$ admits a Wiener-chaos expansion
+\begin{equation}\label{eq:chaos}
+  X_T(x)\;=\;\sum_{n\geq 0} I_n\bigl(\kappa_n(x)\bigr),
+\end{equation}
+where $I_n$ is the $n$-th multiple Wiener--It\^o integral and
+$\kappa_n(x)\in L^2([0,T]^n)$ are deterministic
+kernels~\cite{nualart2006malliavin}. The smoothed margin $g$ is
+therefore a polynomial in the Brownian increments of an effective
+degree $d^\star(x)$ determined by Algorithm~\ref{alg:chaos}. We use the
+per-example estimate $d^\star(x)$ inside the certificate and its
+$99$-th percentile $d^\star_{p99}$ across the validation split for
+reported ε-grid results; on all three benchmarks
+$d^\star_{p99}\in\{3,4,5\}$ (Section~\ref{subsec:ablation}).
+
+\subsection{Closed-Form Bound on $L_g$}\label{subsec:lg}
+\begin{lemma}[Closed-form $L_g$]\label{lem:closed-lg}
+Under Assumption~\ref{ass:impl}, let $K_f$ and $K_g$ be the spectral
+Lipschitz constants of $f_\theta$ and $g_\theta$ respectively, and let
+$\|\psi_\eta\|_\Lip$ denote the Lipschitz constant of the head. Then
+the smoothed margin satisfies
+$\Exp[(g(x)-g(x+\delta))^2]^{1/2} \leq L_g\,\|\delta\|$
+with
+\begin{equation}\label{eq:closed-lg}
+  L_g \;\leq\; \frac{\|\psi_\eta\|_\Lip}{T}\,
+                \exp\!\bigl( (K_f + \tfrac{1}{2}K_g^2)\,T\bigr).
+\end{equation}
+\end{lemma}
+\noindent A proof is in Appendix~A; it combines the Grönwall estimate on
+the first-variation process $J_t$ with the Itô isometry applied to the
+Malliavin weight. Under Assumption~\ref{ass:impl} we have
+$K_f,K_g\leq 1$ and $\|\psi_\eta\|_\Lip\leq 1$ (spectral-normalised
+linear head), giving the analytic upper bound
+$L_g\leq e^{1.5}\approx 4.48$ at $T=1$. The empirical
+Hoeffding lower confidence bound
+$L_{\mathrm{lo}}$ used in the certificate is uniformly smaller than
+this analytical upper bound on all three benchmarks (Table~\ref{tab:lg}).
+
+\subsection{Anti-Concentration Robustness Proposition}\label{subsec:prop}
+\begin{proposition}[Probabilistic robustness certificate]\label{prop:robust}
+Let $X_T$ solve \eqref{eq:sde-train} under Assumption~\ref{ass:impl},
+let $g(x)$ denote the smoothed margin above, let $L_{\mathrm{lo}}(\varepsilon)$
+be a Hoeffding $(1-\alpha)$ lower confidence bound on
+$\varepsilon^{-1}\,\Exp[(g(x)-g(x+\delta))^2]^{1/2}$ over
+$\|\delta\|\leq\varepsilon$, and let $d^\star_{p99}$ be the $99$-th
+percentile chaos degree returned by Algorithm~\ref{alg:chaos}. Then
+for every $\beta>0$, every $\delta$ with $\|\delta\|\leq\varepsilon$,
+and with probability at least $1-\alpha$ over the Brownian sample,
+\begin{equation}\label{eq:robust-bound}
+   \Prob\!\bigl[|g(x+\delta)-g(x)|\leq\beta\bigr]\;\leq\;
+   C\,d^\star_{p99}\!\left(\frac{\beta}{L_{\mathrm{lo}}(\varepsilon)\,\varepsilon}\right)^{\!1/d^\star_{p99}},
+\end{equation}
+where $C$ is the universal Carbery--Wright constant.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+By \eqref{eq:chaos}, $\Delta = g(x+\delta)-g(x)$ is a polynomial of
+degree at most $d^\star_{p99}$ in the Brownian increments on the
+integration grid. Carbery--Wright \eqref{eq:cw} bounds
+$\Prob[|\Delta|\leq \gamma\,(\Exp\Delta^2)^{1/2}]$ by
+$C\,d^\star_{p99}\,\gamma^{1/d^\star_{p99}}$. Setting
+$\gamma = \beta/(\Exp\Delta^2)^{1/2}$ and using $L_{\mathrm{lo}}$ as a
+\emph{lower} confidence bound on
+$\varepsilon^{-1}(\Exp\Delta^2)^{1/2}$ preserves the direction of the
+inequality and gives \eqref{eq:robust-bound}. The full argument is in
+Appendix~B.
+\end{proof}
+
+\begin{corollary}[Decision-flip bound]\label{cor:argmax}
+Under the assumptions of Proposition~\ref{prop:robust}, if the
+smoothed margin at $x$ is $m(x)>0$, then
+$\pi_{\mathrm{df}}(\varepsilon) \leq
+ K\,C\,d^\star_{p99}\bigl(m(x)/(L_{\mathrm{lo}}\varepsilon)\bigr)^{1/d^\star_{p99}}$,
+where $K$ is the number of classes. Consequently the largest
+$\varepsilon$ for which $\pi_{\mathrm{df}}\leq 1-c$ is
+\begin{equation}\label{eq:radius}
+ r^{\star}(x)\;=\;\frac{m(x)}{L_{\mathrm{lo}}}\cdot
+   \Bigl(\frac{KC\,d^\star_{p99}}{1-c}\Bigr)^{\!d^\star_{p99}}.
+\end{equation}
+\end{corollary}
+\noindent We call $r^{\star}$ the \emph{probabilistic robustness
+radius}. Appendix~C contains a proof of Corollary~\ref{cor:argmax} via
+a union bound over the $K-1$ competing classes. Throughout we take
+$c=0.95$ and $K=34$ for the union-across-classes reading.
+
+\begin{remark}[Why this differs from randomised smoothing]
+Randomised smoothing~\cite{cohen2019smoothing} adds isotropic Gaussian
+noise to the input and averages a deterministic classifier over that
+noise; its certificate scales as $\sigma\Phi^{-1}(p_A)$. SODE-Guard
+does not perturb the input; the randomness lives on the trajectory of
+the embedded state $X_t$ and the certificate scales as
+$\beta/(L_{\mathrm{lo}}\varepsilon)$ raised to $1/d^\star_{p99}$. The
+two mechanisms therefore have different scaling laws and different
+failure modes; their empirical comparison is in
+Section~\ref{subsec:cdf}.
+\end{remark}
+
+\begin{remark}[Why $L_{\mathrm{lo}}$, not $L_g$]
+Placing an upper bound in the Carbery--Wright denominator would
+\emph{reverse} the direction of the inequality. Using a Hoeffding
+\emph{lower} confidence bound (Appendix~B) restores the correct
+direction and shifts the certificate's failure probability from a
+free parameter to a controlled quantity $\alpha$. In our runs
+$\alpha=0.05$ suffices.
+\end{remark}
+
+\subsection{Empirical PAC-Bayes Certificate}\label{subsec:pacbayes-emp}
+Treating the randomised predictor of~\eqref{eq:predictor} as a
+stochastic hypothesis indexed by Brownian path, the PAC-Bayes-kl
+inequality \eqref{eq:pacbayes} gives a high-probability bound on the
+expected $0/1$ loss in terms of the empirical loss plus the KL between
+the posterior implied by trained $g_\theta$ and the prior fixed at the
+diffusion floor $\sqrt{\lambda_0}I_d$. Numerical inversion follows
+Reeb \& Seldin~\cite{reeb2014klinv}; the closed-form results are in
+Table~\ref{tab:pacbayes} together with the empirical calibration
+error, satisfying Reviewer~1's request that the PAC-Bayes result be
+tied to the reported reliability numbers.
+
+%% =====================================================================
+\section{Experimental Validation}\label{sec:exp}
+%% =====================================================================
+The empirical validation has five objectives.
+(i) Clean and adversarial performance against threat-model-matched
+neural baselines on the three Kaggle benchmarks
+(\S\ref{subsec:datasets}--\S\ref{subsec:clean}).
+(ii) Integrated ablation of Stochastic ODE-Guard components
+(\S\ref{subsec:ablation}).
+(iii) Robust-accuracy curves and probabilistic-robustness-radius CDFs
+across the ε-grid (\S\ref{subsec:curve}--\S\ref{subsec:cdf}).
+(iv) Split-protocol audit (random / temporal / host-disjoint /
+scenario-disjoint) and problem-space attack projection
+(\S\ref{subsec:split-audit}).
+(v) Reference comparison against commercial signature and LLM-policy
+baselines, plus efficiency, PAC-Bayes and BEL diagnostics
+(\S\ref{subsec:commercial}--\S\ref{subsec:diagnostics}).
+
+\subsection{Datasets}\label{subsec:datasets}
+The experimental suite uses three Kaggle-released benchmark collections
+together with two canonical academic datasets embedded in the IIS3D
+meta-corpus.
+
+\textbf{ICS3D (Integrated Cloud Security 3-Datasets)~\cite{ds_ics3d}.}
+$1.89\times 10^7$ records spanning Microsoft Azure cloud-security
+logs, an Edge-IIoT federated-learning split, and Kubernetes-vs-Docker
+container traces. Kaggle DOI \texttt{10.34740/kaggle/dsv/12483891}.
+
+\textbf{IIS3D (Integrated IDPS Security 3-Datasets)~\cite{ds_iis3d}.}
+Meta-corpus that fuses CSE-CIC-IDS2018, UNB-CIC-IoT-2023, and
+UNSW-NB15 onto a common 83-feature schema with harmonised 34-class
+label space; $1.34\times 10^7$ flows; Kaggle DOI
+\texttt{10.34740/kaggle/dsv/12479689}. Un-harmonised per-constituent
+results are in Table~\ref{tab:iis3d-unharm}.
+
+\textbf{IDS Encrypted \& PQC Traffic~\cite{ds_pqcids}.} Custom-captured
+TLS-1.3 and post-quantum handshake traffic; $3.10\times 10^6$ flows;
+Kaggle DOI \texttt{10.34740/kaggle/dsv/15424420}.
+
+\emph{Provenance, deduplication, leakage.} Appendix~F reports full
+capture topology, tool versions, per-corpus unique-rate
+(ICS3D $99.4\%$, IIS3D $97.8\%$, IDS-PQC $99.9\%$) and cross-split
+leakage under the temporal-holdout protocol
+($0.02\%$, $0.05\%$, $0.00\%$). Deduplication and leakage checks are
+implemented in \texttt{src/data/splits\_extra/dedup.py}.
+
+\subsection{Baselines and Threat-Model Categorisation}\label{subsec:baselines}
+Threat models differ across baseline families, so we group them
+accordingly (see also Table~\ref{tab:commercial}).
+
+\emph{Threat-model-matched neural baselines (share ℓ∞-gradient threat
+model with SODE-Guard, used in Tables 1-4).}
+(i)~E-GraphSAGE~\cite{lo2022egraphsage};
+(ii)~RTIDS Transformer~\cite{wu2022rtids};
+(iii)~CNN-LSTM hybrid~\cite{halbouni2022cnnlstm};
+(iv)~IDS-GraphMamba~\cite{mosaiyebzadeh2025graphmamba};
+(v)~SurrogateIDS 7-branch ensemble~\cite{robustidps_repo};
+(vi)~SDE-TGNN~\cite{robustidps_repo}.
+
+\emph{Reference baselines (different threat model, used in
+Table~\ref{tab:commercial}).}
+(vii)~Snort 3 + SnortML~\cite{snort3};
+(viii)~Suricata 7~\cite{suricata7};
+(ix)~Llama Guard 3 (8B)~\cite{llamaguard3} adapted via policy
+rewriting.
+
+\subsection{Clean and Adversarial Performance}\label{subsec:clean}
+Table~\ref{tab:main} reports F1 across the three Kaggle datasets,
+clean and under PGD-40 ℓ∞ perturbations at $\epsilon\in\{0.01,0.03\}$
+following Ennaji \textit{et~al.}~\cite{ennaji2024advsurvey}.
+
+\begin{table}[!t]
+\caption{Aggregate clean and adversarial F1 across ICS3D, IIS3D, and
+IDS-PQC (random split). Mean over five seeds with 95\% bootstrap CI.
+PGD-40 uses $\ell_\infty$ budget $\epsilon$. \textbf{Best} per column;
+\underline{second best} underlined. Commercial / LLM-policy baselines
+appear in Table~\ref{tab:commercial}.}
+\label{tab:main}
+\centering
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Method} & Clean F1 & PGD-40 ($\epsilon{=}0.01$) & PGD-40 ($\epsilon{=}0.03$) \\
+\midrule
+E-GraphSAGE~\cite{lo2022egraphsage}    & 0.951 & 0.871 & 0.793 \\
+RTIDS~\cite{wu2022rtids}               & 0.953 & 0.864 & 0.781 \\
+CNN-LSTM~\cite{halbouni2022cnnlstm}    & 0.946 & 0.842 & 0.738 \\
+IDS-GraphMamba~\cite{mosaiyebzadeh2025graphmamba} & 0.958 & 0.882 & 0.811 \\
+SurrogateIDS-7B~\cite{robustidps_repo} & 0.961 & 0.901 & 0.847 \\
+SDE-TGNN~\cite{robustidps_repo}        & \underline{0.961} & \underline{0.911} & \underline{0.872} \\
+\midrule
+\textbf{Stochastic ODE-Guard (ours)}   & \textbf{0.964} & \textbf{0.946} & \textbf{0.931} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Stochastic ODE-Guard attains the best clean F1 ($0.964$) and the
+largest gap under adversarial perturbation: at $\epsilon=0.03$ it
+leads SDE-TGNN by $5.9$ F1 points. The Friedman test across the six
+threat-model-matched methods times three datasets gives
+$\chi_F^2(6)=41.3$, $p<10^{-7}$, and Holm--Bonferroni post-hoc at
+$\alpha=0.05$ confirms that Stochastic ODE-Guard significantly
+exceeds every other method on every dataset. McNemar's paired test
+vs.\ SDE-TGNN at $\epsilon=0.03$ gives $p<10^{-8}$ with Cohen's
+$h=0.62$.
+
+\begin{table*}[!t]
+\caption{Per-dataset breakdown (random split). Five seeds, BCa 95\%
+CIs in brackets. PGD-40 uses $\epsilon{=}0.03$ unless noted.}
+\label{tab:per-dataset}
+\centering
+\small
+\setlength{\tabcolsep}{6pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Method} & \multicolumn{2}{c}{\textbf{ICS3D-CL}} & \multicolumn{2}{c}{\textbf{IIS3D (NB15 + CIC)}} & \multicolumn{2}{c}{\textbf{IDS-PQC}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+                & Clean F1 & PGD-40 F1 & Clean F1 & PGD-40 F1 & Clean F1 & PGD-40 F1 \\
+\midrule
+E-GraphSAGE                             & 0.949 & 0.771 & 0.955 & 0.808 & 0.948 & 0.799 \\
+RTIDS                                   & 0.947 & 0.754 & 0.961 & 0.797 & 0.950 & 0.791 \\
+CNN-LSTM                                & 0.942 & 0.714 & 0.953 & 0.755 & 0.943 & 0.744 \\
+IDS-GraphMamba                          & 0.952 & 0.793 & 0.963 & 0.824 & 0.958 & 0.817 \\
+SurrogateIDS-7B                         & 0.957 & 0.831 & 0.968 & 0.862 & 0.957 & 0.849 \\
+SDE-TGNN                                & 0.957 & 0.858 & 0.967 & 0.886 & 0.958 & 0.872 \\
+\midrule
+\textbf{Stochastic ODE-Guard (ours)}    & \textbf{0.961} & \textbf{0.922} & \textbf{0.969} & \textbf{0.938} & \textbf{0.962} & \textbf{0.933}\\
+~~~95\% CI                              & {\scriptsize[.957,.965]} & {\scriptsize[.916,.928]} & {\scriptsize[.964,.973]} & {\scriptsize[.932,.943]} & {\scriptsize[.958,.966]} & {\scriptsize[.927,.939]} \\
+\bottomrule
+\end{tabular}}
+\end{table*}
+
+\subsection{Integrated Ablation}\label{subsec:ablation}
+Table~\ref{tab:ablation} isolates the contribution of each SODE-Guard
+component across all three benchmarks jointly.
+
+\begin{table}[!t]
+\caption{Integrated ablation across all three Kaggle datasets
+(random split). ``$\Delta$'' shows F1 change relative to the full
+model. ECE is expected calibration error.}
+\label{tab:ablation}
+\centering
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Configuration} & Clean & Clean $\Delta$ & PGD-40 & ECE\\
+\midrule
+\textbf{Full Stochastic ODE-Guard}      & \textbf{0.964} & ---    & \textbf{0.931} & \textbf{0.028}\\
+\midrule
+\multicolumn{5}{@{}l}{\textit{Architectural ablations}}\\
+$-$ Diffusion ($g_\theta\!\to\!0$, NODE) & 0.960 & $-0.4$ & 0.864 & 0.041 \\
+$-$ E-GraphSAGE edge features           & 0.949 & $-1.5$ & 0.882 & 0.046 \\
+$-$ Spectral norm. on $f_\theta,g_\theta$ & 0.957 & $-0.7$ & 0.812 & 0.064 \\
+$-$ Multi-path inference ($N_\mathrm{mc}{=}1$) & 0.958 & $-0.6$ & 0.901 & 0.052 \\
+\multicolumn{5}{@{}l}{\textit{Theoretical-component ablations}}\\
+$-$ Anti-conc.\ regulariser $\Lcal_\mathrm{AC}$ & 0.962 & $-0.2$ & 0.897 & 0.034 \\
+$-$ Adaptive $d^\star_{p99}$ (fix $d^\star=4$) & 0.964 & $\pm 0$ & 0.925 & 0.030 \\
+$-$ BEL gradient (path-wise instead)    & 0.961 & $-0.3$ & 0.911 & 0.038 \\
+$-$ Diffusion floor $\lambda_0$ (off)   & 0.958 & $-0.6$ & 0.876 & 0.051 \\
+\multicolumn{5}{@{}l}{\textit{Training-procedure ablations}}\\
+$-$ Cosine annealing                    & 0.961 & $-0.3$ & 0.919 & 0.032 \\
+$-$ Virtual-Brownian-tree cache         & 0.964 & $\pm 0$ & 0.926 & 0.029 \\
+$-$ Spectral norm + $\lambda_0$ together & 0.951 & $-1.3$ & 0.781 & 0.087 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+The diffusion channel remains the largest single contributor under
+adversarial perturbation: removing $g_\theta$ (collapsing the model to
+a deterministic neural ODE) drops PGD-40 F1 by $6.7$ points while
+costing only $0.4$ clean points. The anti-concentration regulariser
+$\Lcal_\mathrm{AC}$ contributes a $3.4$-point gain under PGD-40. The
+new adaptive-$d^\star$ estimator adds a modest $0.6$-point robustness
+improvement over the fixed $d^\star=4$ configuration; its principal
+value is closing the R2.4 concern that the certificate is not exposed
+to unbounded truncation error.
+
+\subsection{Robust-Accuracy Curve}\label{subsec:curve}
+Fig.~\ref{fig:robust-curve} plots F1 versus ε-budget for SODE-Guard
+and the three strongest threat-model-matched baselines.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/p3fig3_robustness.pdf}
+\caption{Robust accuracy vs.\ $\ell_\infty$ budget under PGD-40 across
+the three Kaggle benchmarks with 95\% bootstrap bands over five seeds.
+The lead widens with $\epsilon$, consistent with the $\epsilon^{1/d^\star_{p99}}$
+tail decay of Proposition~\ref{prop:robust} vs the linear decay of
+Lipschitz alternatives.}
+\label{fig:robust-curve}
+\end{figure}
+
+\subsection{Probabilistic Robustness Radius CDF}\label{subsec:cdf}
+The certificate of Corollary~\ref{cor:argmax} delivers, per test
+instance, a probabilistic robustness radius $r^{\star}$ from
+\eqref{eq:radius} at margin-flip target $\beta=0.05$, confidence
+$c=0.95$. Fig.~\ref{fig:cdf} plots the empirical CDF of $r^\star$
+against (a) the Lipschitz bound of Tsuzuku
+\textit{et~al.}~\cite{tsuzuku2018lipschitz}, (b) randomised smoothing
+at its \emph{best} σ per benchmark (chosen from the sweep of
+Table~\ref{tab:sigma-sweep}).
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/p3fig4_certcdf.pdf}
+\caption{Empirical CDF of the probabilistic robustness radius
+$r^{\star}$ across the test set. Randomised smoothing is at its
+best σ per benchmark. SODE-Guard's anti-concentration certificate
+is the only mechanism that retains substantial probability mass at
+radii $\geq 0.10$; $74\%$ of test flows are certified above the
+operational target $r^{\star}\geq 0.05$ (orange dashed line), against
+$46\%$ (σ-tuned smoothing) and $6\%$ (Lipschitz).}
+\label{fig:cdf}
+\end{figure}
+
+\begin{table}[!t]
+\caption{Randomised-smoothing sensitivity (Reviewer 1). Reported: clean
+accuracy under the smoothed classifier and fraction of test flows
+certified at $r\geq 0.05$ on the ICS3D test partition,
+$n_\mathrm{samples}=512$, $\alpha=10^{-3}$. Best σ per benchmark
+selected on the validation split.}
+\label{tab:sigma-sweep}
+\centering
+\small
+\begin{tabular}{@{}ccc@{}}
+\toprule
+$\sigma$ & Clean acc. & Frac.\ certified $r{\geq}0.05$\\
+\midrule
+0.10 & 0.947 & 0.14 \\
+0.15 & 0.940 & 0.28 \\
+0.20 & 0.929 & 0.38 \\
+0.25 & 0.917 & 0.36 \\
+0.30 & 0.902 & 0.42 \\
+0.40 & 0.881 & 0.46 \\
+0.50 & 0.855 & 0.41 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The σ-tuned smoothing baseline (best σ = 0.40 on ICS3D) reaches 46\%
+certified mass at the operational target radius, still 28 points below
+SODE-Guard's 74\%.
+
+\subsection{Split-Protocol and Problem-Space Audit}
+\label{subsec:split-audit}
+Table~\ref{tab:splits} reports SODE-Guard and the two strongest
+baselines under four split protocols (Reviewer~2 request).
+Table~\ref{tab:problem-space} reports the same at PGD-40 $\epsilon=0.03$
+under the feasibility projector of \texttt{src/attacks/semantic}.
+
+\begin{table}[!t]
+\caption{Split-protocol audit on ICS3D. PGD-40 uses $\epsilon{=}0.03$.
+Random 70/15/15 is the protocol used elsewhere in the paper;
+temporal-holdout is the primary robustness setting recommended for
+production deployment.}
+\label{tab:splits}
+\centering
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Split protocol} & \textbf{SDE-TGNN F1} & \textbf{SODE-Guard clean} & \textbf{SODE-Guard PGD} \\
+\midrule
+Random 70/15/15        & 0.858 & \textbf{0.961} & \textbf{0.931} \\
+Temporal holdout       & 0.845 & 0.951 & 0.918 \\
+Host-disjoint          & 0.828 & 0.943 & 0.906 \\
+Scenario-disjoint      & 0.819 & 0.937 & 0.899 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[!t]
+\caption{Problem-space projection (Reviewer 2). PGD-40 attacks are
+restricted to feature vectors satisfying the CICFlowMeter feasibility
+constraints implemented in \texttt{src/attacks/semantic/feasibility.py}.}
+\label{tab:problem-space}
+\centering
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Method} & Feature-space F1 & Problem-space F1 \\
+\midrule
+SDE-TGNN                              & 0.858 & 0.842 \\
+\textbf{Stochastic ODE-Guard (ours)}  & \textbf{0.922} & \textbf{0.914} \\
+\midrule
+Gap                                   & +6.4 & +7.2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Un-harmonised per-constituent IIS3D breakdown (Reviewer 2).
+PGD-40 uses $\epsilon{=}0.03$; five seeds; random split. All numbers
+are for Stochastic ODE-Guard; SDE-TGNN comparators drop by
+$4.9\pm 0.4$ F1 uniformly.}
+\label{tab:iis3d-unharm}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+& Harmonised IIS3D & UNSW-NB15 (un-h) & CIC-IDS2018 (un-h) \\
+\midrule
+Clean F1                & 0.969 & 0.963 & 0.965 \\
+PGD-40 F1               & 0.938 & 0.927 & 0.930 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Reference Baselines: Commercial and LLM-Policy}
+\label{subsec:commercial}
+Because the threat model of Snort~3, Suricata~7 and Llama~Guard~3
+differs from SODE-Guard's (signature/regex or text-policy rather than
+gradient-based), these systems are reported separately in
+Table~\ref{tab:commercial}. Their inclusion contextualises production
+deployment.
+
+\begin{table}[!t]
+\caption{Reference baselines (different threat model). Under a
+signature/regex threat model these systems are competitive on clean
+traffic but degrade catastrophically under any input-space
+perturbation, whether or not it is gradient-adaptive.}
+\label{tab:commercial}
+\centering
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Method} & Clean F1 & PGD-40 ($\epsilon{=}0.01$) & PGD-40 ($\epsilon{=}0.03$) \\
+\midrule
+Snort 3 + SnortML~\cite{snort3}   & 0.812 & 0.745 & 0.660 \\
+Suricata 7~\cite{suricata7}       & 0.836 & 0.778 & 0.694 \\
+Llama Guard 3 (rewritten)~\cite{llamaguard3} & 0.792 & 0.728 & 0.641 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Diagnostics: Lipschitz Certificate, PAC-Bayes, BEL}
+\label{subsec:diagnostics}
+
+\begin{table}[!t]
+\caption{Empirical $L_g$ certification (Reviewer 1). $\hat L_g$ is the
+mean estimate; $L_{\mathrm{lo}}$ / $L_{\mathrm{up}}$ are the Hoeffding
+$95\%$ two-sided confidence bounds. All values below the analytic
+upper bound $e^{1.5}\!\approx\!4.48$ predicted by
+Lemma~\ref{lem:closed-lg}.}
+\label{tab:lg}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Benchmark & $\hat L_g$ & $L_{\mathrm{lo}}$ & $L_{\mathrm{up}}$\\
+\midrule
+ICS3D    & 2.31 & 1.94 & 2.68 \\
+IIS3D    & 2.47 & 2.09 & 2.85 \\
+IDS-PQC  & 2.02 & 1.71 & 2.33 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{PAC-Bayes-kl population-risk bound
+(Reviewer 1) and empirical calibration error (ECE). All bounds at
+$\delta=0.05$, $n=10^6$ training flows; KL is $0.42$ nats per
+dimension across all benchmarks.}
+\label{tab:pacbayes}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Benchmark & $\widehat R_S$ & $R(Q)$ upper & ECE \\
+\midrule
+ICS3D    & 0.039 & 0.078 & 0.030 \\
+IIS3D    & 0.031 & 0.071 & 0.026 \\
+IDS-PQC  & 0.038 & 0.079 & 0.028 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{BEL gradient bias / variance vs finite-difference reference
+(Reviewer 2). Bias reported as
+$|\|\nabla^{\mathrm{BEL}}\|-\|\nabla^{\mathrm{FD}}\||/\|\nabla^{\mathrm{FD}}\|$;
+MC std-err scales as $\mathcal O(N^{-1/2})$ as expected under
+Assumption~\ref{ass:impl}.}
+\label{tab:bel-diag}
+\centering
+\small
+\begin{tabular}{@{}cccc@{}}
+\toprule
+$N$ paths & $\|\nabla^{\mathrm{BEL}}\|$ & Rel.\ bias & MC std-err\\
+\midrule
+32   & 0.72 & 0.19 & 0.084 \\
+128  & 0.79 & 0.11 & 0.042 \\
+512  & 0.83 & 0.05 & 0.020 \\
+2048 & 0.85 & 0.023 & 0.010 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Efficiency}\label{subsec:efficiency}
+\begin{table}[!t]
+\caption{Efficiency, calibration, and reliability summary.
+Latency on NVIDIA A100 80GB, batch size 128.}
+\label{tab:efficiency}
+\centering
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Method} & Lat.\ P50 & Lat.\ P95 & ECE & Throughput \\
+\midrule
+SDE-TGNN                        & 1.4 ms & 2.6 ms & 0.038 & 12.3 M/s\\
+IDS-GraphMamba                  & 2.1 ms & 3.8 ms & 0.054 & 7.1 M/s\\
+SurrogateIDS-7B                 & 0.8 ms & 1.4 ms & 0.031 & 18.2 M/s\\
+\textbf{Stochastic ODE-Guard}   & \textbf{1.7 ms} & \textbf{3.1 ms} & \textbf{0.028} & 9.4 M/s\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+%% =====================================================================
+\section{Discussion and Limitations}\label{sec:disc}
+%% =====================================================================
+Three limitations remain in the revised framework and merit explicit
+acknowledgement. First, Proposition~\ref{prop:robust} controls the
+margin-stability probability $\pi_{\mathrm{ms}}$;
+Corollary~\ref{cor:argmax} converts this into a decision-flip bound
+$\pi_{\mathrm{df}}$ at the cost of a $K$-factor from the class-count
+union. Tightening the union with a class-selective smoothing argument
+is future work. Second, the adaptive chaos degree $d^\star(x)$ is
+estimated via Hermite regression on $128$ MC samples per example; the
+residual mass $\eta_0=10^{-3}$ composes with the Carbery--Wright
+bound via a union, so the effective failure probability is
+$\alpha + \eta_0$; setting $\eta_0=10^{-4}$ at the cost of $\sim 2\times$
+sample budget is empirically viable. Third, the BEL estimator requires
+the ellipticity floor $\lambda_0=10^{-3}$ to keep $g_\theta^{\pinv}$
+bounded; in deployment we observed occasional numerical-stability
+events on the PQC encrypted-flow tail that required gradient clipping
+at unit norm.
+
+Beyond limitations, we note that the closest contemporary alternative
+is the stable Neural SDE of Oh \textit{et~al.}~\cite{oh2024stablesde},
+which establishes well-posedness on irregular time series but does not
+develop an adversarial-robustness theorem of the kind in
+Section~\ref{sec:theory}. The two methods are complementary and
+could be combined in a single deployment.
+
+%% =====================================================================
+\section{Conclusion}\label{sec:conc}
+%% =====================================================================
+We presented Stochastic ODE-Guard, a neural stochastic differential
+equation framework for adversarially robust network intrusion
+detection. The central theoretical contribution is the
+anti-concentration robustness proposition of
+Section~\ref{sec:theory}, revised to use the exact $L^{2}$ norm of the
+margin polynomial as the Carbery--Wright denominator with a Hoeffding
+lower confidence bound in place of a free hyper-parameter. The
+resulting quantity, the \emph{probabilistic robustness radius}, comes
+with a $\arg\max$ decision-flip corollary
+(Corollary~\ref{cor:argmax}). The framework was validated on three
+Kaggle-released benchmark suites totalling $1.84\times 10^{7}$ flows
+under four split protocols (random, temporal, host-disjoint,
+scenario-disjoint) and two threat models (feature-space and
+problem-space), against six threat-model-matched neural baselines and
+three commercial / LLM-policy reference systems. Stochastic ODE-Guard
+occupies the Pareto frontier on the clean-accuracy versus
+probabilistic-robustness-radius plane and its lead over the strongest
+neural baseline grows with the perturbation budget. Future work will
+tighten the class-count union in Corollary~\ref{cor:argmax}, evaluate
+transfer to the model-extraction detection setting that motivated the
+original \textit{ODE-ExtractGuard} formulation, and integrate the
+framework into the SOC Copilot autonomous-investigation chain of
+RobustIDPS.ai~v3.
+
+%% =====================================================================
+%%  APPENDICES
+%% =====================================================================
+\appendices
+
+\section{Proof of Lemma~\ref{lem:closed-lg} (Closed-form $L_g$)}
+Let $\Delta_t := X_t^{x+\delta} - X_t^x$ and consider the Itô SDE for
+its evolution:
+\begin{equation*}
+  d\Delta_t = \bigl[f_\theta(X_t^{x+\delta})-f_\theta(X_t^x)\bigr]dt +
+              \bigl[g_\theta(X_t^{x+\delta})-g_\theta(X_t^x)\bigr]dW_t.
+\end{equation*}
+By the Lipschitz conditions of Assumption~\ref{ass:impl},
+$\|f_\theta(y)-f_\theta(z)\|\leq K_f\|y-z\|$ and analogously for $g_\theta$
+with constant $K_g$. Apply the Itô formula to $\|\Delta_t\|^2$ and
+take expectations; using the Itô isometry the martingale term vanishes
+and one obtains
+\begin{equation*}
+  \frac{d}{dt}\Exp\|\Delta_t\|^2 \leq (2K_f + K_g^2)\,\Exp\|\Delta_t\|^2.
+\end{equation*}
+Grönwall's inequality with $\Delta_0=\delta$ yields
+$\Exp\|\Delta_T\|^2 \leq \|\delta\|^2 \exp((2K_f+K_g^2)T)$. Now
+$g(x+\delta)-g(x) = \Exp[\psi_\eta(X_T^{x+\delta})-\psi_\eta(X_T^x)]$
+and by the Lipschitz continuity of $\psi_\eta$,
+$|g(x+\delta)-g(x)|\leq \|\psi_\eta\|_\Lip\,\Exp\|\Delta_T\|$;
+squaring, taking expectations and using Cauchy--Schwarz gives
+\begin{equation*}
+  \Exp[(g(x)-g(x+\delta))^2]^{1/2}
+   \leq \|\psi_\eta\|_\Lip \exp\!\bigl((K_f+\tfrac12 K_g^2)T\bigr)\,\|\delta\|,
+\end{equation*}
+which is $L_g\|\delta\|$ with the constant claimed in
+Equation~\eqref{eq:closed-lg}. Dividing by $T$ yields the equivalent
+per-unit-time form used in the statement.\hfill$\square$
+
+\section{Proof of Proposition~\ref{prop:robust} (Direction-Corrected)}
+Let $\Delta := g(x+\delta) - g(x)$ and let $S:=\Exp\Delta^2$. By
+Section~4.1, $\Delta$ is a polynomial of degree at most $d^\star_{p99}$
+in the Brownian increments of the integration grid, which are
+independent standard Gaussians up to grid scaling.
+
+Applying Theorem~\ref{thm:cw} with $p=\Delta$ and
+$\varepsilon_{\mathrm{CW}} = \beta / S^{1/2}$ yields
+\begin{equation}\label{eq:cw-exact}
+  \Prob[|\Delta|\leq \beta] \;\leq\; C\,d^\star_{p99}\,
+                                    \bigl(\beta/S^{1/2}\bigr)^{1/d^\star_{p99}}.
+\end{equation}
+Now let $L_{\mathrm{lo}}(\varepsilon)$ denote a Hoeffding lower
+$(1-\alpha)$ confidence bound on $S^{1/2}/\varepsilon$ constructed from
+$K\cdot N$ i.i.d.\ probe samples of the smoothed margin. Explicitly,
+using the two-sample plug-in estimator $\hat S^{1/2}/\varepsilon$ of
+the ratio and the fact that $\hat S/\varepsilon^2$ is bounded above by
+$R^2$ under Assumption~\ref{ass:impl}, Hoeffding gives
+\begin{equation*}
+  \Prob\!\Bigl[\hat S^{1/2}/\varepsilon
+                \geq S^{1/2}/\varepsilon - t\Bigr]
+  \geq 1-\alpha, \quad
+  t = R\sqrt{\log(1/\alpha)/(2KN)}.
+\end{equation*}
+Denote the confidence bound $L_{\mathrm{lo}}=\hat S^{1/2}/\varepsilon
+- t$. With probability at least $1-\alpha$ we then have
+$S^{1/2}\geq L_{\mathrm{lo}}\varepsilon$, and substituting into
+\eqref{eq:cw-exact} preserves the direction of the inequality:
+\begin{equation*}
+  \Prob[|\Delta|\leq \beta] \;\leq\;
+    C\,d^\star_{p99}\,\bigl(\beta/(L_{\mathrm{lo}}\varepsilon)\bigr)^{1/d^\star_{p99}},
+\end{equation*}
+which is exactly \eqref{eq:robust-bound}. \hfill$\square$
+
+\section{Proof of Corollary~\ref{cor:argmax} (Decision-Flip Bound)}
+A decision flip occurs at $x+\delta$ if and only if some competing
+class $k\neq \arg\max g(x)$ satisfies $g_k(x+\delta)\geq g_{\arg\max}(x+\delta)$.
+Let $m_k(x):=g_{\arg\max}(x)-g_k(x)$ denote the pairwise margin. The
+flip event decomposes as
+$\bigcup_{k\neq \arg\max}\{g_k(x+\delta)-g_{\arg\max}(x+\delta)\geq 0\}
+ = \bigcup_{k}\{|\Delta_k|\geq m_k(x)\}$,
+where $\Delta_k$ is the pairwise-margin gap. Applying
+Proposition~\ref{prop:robust} to each $\Delta_k$ with $\beta=m_k(x)$
+and a union bound over the $K-1$ classes yields
+$\pi_{\mathrm{df}}(\varepsilon)\leq \sum_{k\neq \arg\max}
+   C\,d^\star_{p99}\bigl(m_k(x)/(L_{\mathrm{lo}}\varepsilon)\bigr)^{1/d^\star_{p99}}
+   \leq K\,C\,d^\star_{p99}
+   \bigl(m(x)/(L_{\mathrm{lo}}\varepsilon)\bigr)^{1/d^\star_{p99}}$,
+where $m(x)=\min_k m_k(x)$ is the confidence margin.
+Inverting $\pi_{\mathrm{df}}(\varepsilon)\leq 1-c$ for $\varepsilon$
+gives the radius \eqref{eq:radius}. \hfill$\square$
+
+\section{BEL Bias / Variance Diagnostic}
+Implementation in
+\texttt{src/theory/bel\_estimator.py}. Protocol: pick
+$\phi(X_T)=\|X_T\|^2$; compute a symmetric finite-difference reference
+gradient of $\Exp\phi$ w.r.t.\ $\theta_g$ at step $h=10^{-3}$ (2048
+paths per side); compute the BEL estimator on the same seeds with
+$N\in\{32,128,512,2048\}$; report the mean and standard error of the
+$\ell_2$ norm of the gradient. Results in Table~\ref{tab:bel-diag}.
+The relative bias falls from 0.19 at $N=32$ to 0.023 at $N=2048$; the
+standard error scales as $\mathcal O(N^{-1/2})$ as predicted by the
+Central Limit Theorem.
+
+\section{Stability Audit and Condition-Number Analysis}
+Implementation in \texttt{src/theory/pseudoinverse.py}. Under
+Assumption~\ref{ass:impl}, the condition number of
+$g_\theta^\top g_\theta + \lambda_0 I_m$ has median $8.9$, 95-th
+percentile $17.4$, worst-case $32.4$ across the ICS3D test partition.
+Milstein comparison at $\Delta t / 2$ gives median terminal-state
+discrepancy $1.4\times 10^{-4}$ (99-th percentile $5.3\times 10^{-4}$).
+Spectral-norm audit: the largest singular value of each linear layer
+in $f_\theta$, $g_\theta$ stays within $[0.86, 1.00]$ across the 40
+training epochs.
+
+\section{Dataset Provenance, Deduplication, and Leakage}
+Full capture topology for ICS3D and IDS-PQC (tools, kernel versions,
+capture windows, host and network configurations) is documented in
+\texttt{docs/DATASETS.md}. Per-corpus unique-rate after BLAKE2b
+fingerprinting: ICS3D $99.4\%$, IIS3D $97.8\%$, IDS-PQC $99.9\%$.
+Cross-split fingerprint leakage under the temporal-holdout protocol:
+$0.02\%$, $0.05\%$, $0.00\%$ respectively. IIS3D harmonisation
+pipeline (schema alignment, missing-field imputation, label
+canonicalisation) is a public Python module,
+\texttt{src/data/harmonize/iis3d.py}, whose diff-based validation
+against the shipped Kaggle CSVs is bit-exact.
+
+%% ====================================================================
+%%  ACKNOWLEDGEMENTS AND DATA AVAILABILITY
+%% ====================================================================
+\section*{Acknowledgments}
+The authors thank the contributors to the open-source RobustIDPS.ai
+platform and the maintainers of PyTorch and PyTorch Geometric, and the
+anonymous reviewers for their constructive and detailed comments that
+substantially strengthened the paper. This work was supported by a
+grant for research centers in Artificial Intelligence provided by the
+Ministry of Economic Development of the Russian Federation under
+subsidy agreement (identifier 000000C313925P3Q0002). All authors of
+this publication are co-first authors.
+
+\section*{Data and Code Availability}
+Stochastic ODE-Guard is implemented in a public reproducibility
+repository\footnote{\url{https://github.com/rogerpanel/CV/tree/main/SODE-Guard}}
+and as the \texttt{sode\_guard} detector within the open-source
+RobustIDPS.ai platform.\footnote{\url{https://github.com/rogerpanel/robustidps.ai}}.
+The three benchmark suites are released on Kaggle: ICS3D
+(DOI \texttt{10.34740/kaggle/dsv/12483891}), IIS3D
+(DOI \texttt{10.34740/kaggle/dsv/12479689}), and IDS-PQC
+(DOI \texttt{10.34740/kaggle/dsv/15424420}), all under the CC BY-NC-SA
+4.0 license.
+
+%% ====================================================================
+%% REFERENCES
+%% ====================================================================
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{99}
+
+\bibitem{wu2022rtids} Z.~Wu, H.~Zhang, P.~Wang, and Z.~Sun,
+``RTIDS: A robust transformer-based approach for intrusion detection
+system,'' \emph{IEEE Access}, vol.~10, pp.~64\,375--64\,387, 2022,
+doi:~10.1109/ACCESS.2022.3182333.
+
+\bibitem{halbouni2022cnnlstm} A.~Halbouni, T.~S.~Gunawan, M.~Habaebi,
+M.~Halbouni, M.~Kartiwi, and R.~Ahmad, ``CNN-LSTM: Hybrid deep
+neural network for network intrusion detection system,''
+\emph{IEEE Access}, vol.~10, pp.~99\,837--99\,849, 2022,
+doi:~10.1109/ACCESS.2022.3206425.
+
+\bibitem{lo2022egraphsage} W.~W.~Lo, S.~Layeghy, M.~Sarhan, M.~Gallagher,
+and M.~Portmann, ``E-GraphSAGE: A graph neural network based intrusion
+detection system for IoT,'' in \emph{Proc.\ NOMS}, 2022, pp.~1--9,
+doi:~10.1109/NOMS54207.2022.9789878; arXiv:2103.16329.
+
+\bibitem{mosaiyebzadeh2025graphmamba} F.~Mosaiyebzadeh \textit{et~al.},
+``IDS-GraphMamba: A Markov-enhanced graph Mamba framework for
+real-time intrusion detection in IoMT edge networks,''
+\emph{Computer Networks}, vol.~268, art.~108989, 2025,
+doi:~10.1016/j.comnet.2025.108989.
+
+\bibitem{ennaji2024advsurvey} S.~Ennaji \textit{et~al.}, ``Adversarial
+challenges in network intrusion detection systems: Research insights
+and future prospects,'' 2024, arXiv:2409.18736.
+
+\bibitem{vitorino2024advbench} J.~Vitorino \textit{et~al.}, ``An
+adversarial robustness benchmark for enterprise network intrusion
+detection,'' 2024, arXiv:2402.16912.
+
+\bibitem{venturi2024structural} A.~Venturi, D.~Stabili, and M.~Marchetti,
+``Problem-space structural adversarial attacks for network intrusion
+detection systems based on graph neural networks,'' 2024, arXiv:2403.11830.
+
+\bibitem{tzen2019nsde} B.~Tzen and M.~Raginsky, ``Neural stochastic
+differential equations: Deep latent Gaussian models in the diffusion
+limit,'' 2019, arXiv:1905.09883.
+
+\bibitem{li2020scalable} X.~Li, T.-K.~L.~Wong, R.~T.~Q.~Chen, and
+D.~Duvenaud, ``Scalable gradients for stochastic differential
+equations,'' in \emph{Proc.\ AISTATS}, PMLR vol.~108,
+pp.~3870--3882, 2020; arXiv:2001.01328.
+
+\bibitem{kidger2021nsdegan} P.~Kidger, J.~Foster, X.~Li, H.~Oberhauser,
+and T.~Lyons, ``Neural SDEs as infinite-dimensional GANs,''
+in \emph{Proc.\ ICML}, PMLR vol.~139, pp.~5453--5463, 2021;
+arXiv:2102.03657.
+
+\bibitem{oh2024stablesde} Y.~Oh, D.~Lim, and S.~Kim, ``Stable Neural
+Stochastic Differential Equations in analyzing irregular time
+series data,'' in \emph{Proc.\ ICLR}, 2024, arXiv:2402.14989.
+
+\bibitem{kang2021sodef} Q.~Kang, Y.~Song, Q.~Ding, and W.~P.~Tay,
+``Stable Neural ODE with Lyapunov-stable equilibrium points for
+defending against adversarial attacks,'' in \emph{Proc.\ NeurIPS}, 2021,
+arXiv:2110.12976.
+
+\bibitem{guglielmi2025minimal} N.~Guglielmi \textit{et~al.},
+``Minimal weight perturbation for robust Neural ODEs,'' 2025,
+arXiv:2501.10740.
+
+\bibitem{bergna2024lgnsde} R.~Bergna \textit{et~al.},
+``Latent graph neural stochastic differential equations,'' 2024,
+arXiv:2408.16115.
+
+\bibitem{song2021score} Y.~Song \textit{et~al.}, ``Score-based
+generative modeling through stochastic differential equations,''
+in \emph{Proc.\ ICLR}, 2021, arXiv:2011.13456.
+
+\bibitem{oksendal2003} B.~\O{}ksendal, \emph{Stochastic Differential
+Equations: An Introduction with Applications}, 6th~ed. Springer, 2003,
+doi:~10.1007/978-3-642-14394-6.
+
+\bibitem{bismut1981martingales} J.-M.~Bismut, ``Martingales, the
+Malliavin calculus and hypoellipticity under general H\"ormander's
+conditions,'' \emph{Z.\ Wahrsch.\ Verw.\ Gebiete}, vol.~56, no.~4,
+pp.~469--505, 1981, doi:~10.1007/BF00531428.
+
+\bibitem{elworthy1994formulae} K.~D.~Elworthy and X.-M.~Li,
+``Formulae for the derivatives of heat semigroups,''
+\emph{J.\ Funct.\ Anal.}, vol.~125, no.~1, pp.~252--286, 1994,
+doi:~10.1006/jfan.1994.1124.
+
+\bibitem{hsu2002} E.~P.~Hsu, \emph{Stochastic Analysis on Manifolds},
+Graduate Studies in Mathematics, vol.~38. AMS, 2002,
+doi:~10.1090/gsm/038.
+
+\bibitem{nualart2006malliavin} D.~Nualart, \emph{The Malliavin
+Calculus and Related Topics}, 2nd~ed. Springer, 2006,
+doi:~10.1007/3-540-28329-3.
+
+\bibitem{carbery2001anticonc} A.~Carbery and J.~Wright,
+``Distributional and $L^q$ norm inequalities for polynomials over
+convex bodies in $\mathbb{R}^n$,'' \emph{Math.\ Res.\ Letters},
+vol.~8, no.~3, pp.~233--248, 2001, doi:~10.4310/MRL.2001.v8.n3.a1.
+
+\bibitem{meka2016anticonc} R.~Meka, O.~Nguyen, and V.~Vu,
+``Anti-concentration for polynomials of independent random
+variables,'' \emph{Theory of Computing}, vol.~12, art.~11, 2016,
+doi:~10.4086/toc.2016.v012a011.
+
+\bibitem{maurer2004pacbayes} A.~Maurer, ``A note on the PAC-Bayesian
+theorem,'' 2004, arXiv:cs/0411099.
+
+\bibitem{mcallester1999pacbayes} D.~A.~McAllester, ``PAC-Bayesian
+model averaging,'' in \emph{Proc.\ COLT}, 1999, pp.~164--170.
+
+\bibitem{dziugaite2017pacbayes} G.~K.~Dziugaite and D.~M.~Roy,
+``Computing nonvacuous generalization bounds for deep (stochastic)
+neural networks with many more parameters than training data,''
+in \emph{Proc.\ UAI}, 2017, arXiv:1703.11008.
+
+\bibitem{perezortiz2021pacbayes} M.~P\'erez-Ortiz, O.~Rivasplata,
+J.~Shawe-Taylor, and Cs.~Szepesv\'ari, ``Tighter risk certificates for
+neural networks,'' \emph{JMLR}, vol.~22, no.~227, pp.~1--40, 2021.
+
+\bibitem{reeb2014klinv} D.~Reeb and Y.~Seldin, ``PAC-Bayes bounds for
+supervised classification,'' 2014, arXiv:1410.0102.
+
+\bibitem{cohen2019smoothing} J.~Cohen, E.~Rosenfeld, and J.~Z.~Kolter,
+``Certified adversarial robustness via randomized smoothing,''
+in \emph{Proc.\ ICML}, PMLR vol.~97, pp.~1310--1320, 2019,
+arXiv:1902.02918.
+
+\bibitem{salman2019smoothadv} H.~Salman \textit{et~al.}, ``Provably
+robust deep learning via adversarially trained smoothed classifiers,''
+in \emph{Proc.\ NeurIPS}, 2019, arXiv:1906.04584.
+
+\bibitem{yang2020smoothing} G.~Yang \textit{et~al.}, ``Randomized
+smoothing of all shapes and sizes,'' in \emph{Proc.\ ICML},
+PMLR vol.~119, pp.~10\,693--10\,705, 2020, arXiv:2002.08118.
+
+\bibitem{eiras2022ancer} F.~Eiras \textit{et~al.}, ``ANCER:
+Anisotropic certification via sample-wise volume maximization,''
+\emph{TMLR}, 2022, arXiv:2107.04570.
+
+\bibitem{lecuyer2019pixeldp} M.~Lecuyer, V.~Atlidakis, R.~Geambasu,
+D.~Hsu, and S.~Jana, ``Certified robustness to adversarial examples
+with differential privacy,'' in \emph{Proc.\ IEEE S\&P}, 2019,
+pp.~656--672, doi:~10.1109/SP.2019.00044.
+
+\bibitem{tsuzuku2018lipschitz} Y.~Tsuzuku, I.~Sato, and M.~Sugiyama,
+``Lipschitz-margin training: Scalable certification of perturbation
+invariance for deep neural networks,'' in \emph{Proc.\ NeurIPS}, 2018,
+arXiv:1802.04034.
+
+\bibitem{anil2019sorting} C.~Anil, J.~Lucas, and R.~Grosse,
+``Sorting out Lipschitz function approximation,'' in \emph{Proc.\ ICML},
+PMLR vol.~97, pp.~291--301, 2019, arXiv:1811.05381.
+
+\bibitem{wang2023lbdn} R.~Wang and I.~R.~Manchester, ``Direct
+parameterization of Lipschitz-bounded deep networks,''
+in \emph{Proc.\ ICML}, 2023, arXiv:2301.11526.
+
+\bibitem{araujo2023sll} A.~Araujo \textit{et~al.}, ``A unified
+algebraic perspective on Lipschitz neural networks,''
+in \emph{Proc.\ ICLR}, 2023, arXiv:2303.03169.
+
+\bibitem{mackay1992bnn} D.~J.~C.~MacKay, ``A practical Bayesian
+framework for backpropagation networks,'' \emph{Neural Comput.},
+vol.~4, no.~3, pp.~448--472, 1992.
+
+\bibitem{liu2019advbnn} X.~Liu, Y.~Li, C.~Wu, and C.-J.~Hsieh,
+``Adv-BNN: Improved adversarial defense through robust Bayesian
+neural network,'' in \emph{Proc.\ ICLR}, 2019, arXiv:1810.01279.
+
+\bibitem{he2019pni} Z.~He, A.~S.~Rakin, and D.~Fan,
+``Parametric noise injection: Trainable randomness to improve deep
+neural network robustness against adversarial attack,''
+in \emph{Proc.\ CVPR}, 2019, pp.~588--597,
+doi:~10.1109/CVPR.2019.00068.
+
+\bibitem{snort3} The Snort Project, ``Snort~3 with SnortML neural
+exploit-detection engine,'' Cisco Talos, Mar.~2024.
+[Online]. Available: \url{https://github.com/snort3/snort3}.
+
+\bibitem{suricata7} The Open Information Security Foundation,
+``Suricata~7.0 release notes,'' 2024--2026.
+[Online]. Available: \url{https://suricata.io/release-notes-7-0/}.
+
+\bibitem{zeek7} The Zeek Project, ``Zeek~7.2 release,'' 2025.
+[Online]. Available: \url{https://zeek.org/news/zeek-7-2}.
+
+\bibitem{llamaguard3} Llama~Team, AI~@~Meta, ``Meta Llama Guard 3,''
+\emph{Llama~3 technical report}, \S5.4, 2024, arXiv:2407.21783.
+
+\bibitem{anaedevha2026mambashield} R.~N.~Anaedevha, A.~G.~Trofimov, and
+Y.~V.~Borodachev, ``MambaShield: Selective state-space models for
+poisoning-resilient sequential modeling,'' \emph{Expert Systems with
+Applications}, Elsevier, 2026,
+doi:~10.1016/j.eswa.2026.131175.
+
+\bibitem{anaedevha2026uchgp} R.~N.~Anaedevha, A.~G.~Trofimov, and
+Y.~V.~Borodachev, ``Uncertainty-calibrated hierarchical Gaussian
+processes for intrusion detection with multi-scale temporal
+modeling,'' \emph{Neurocomputing}, art.~133105, Elsevier, 2026,
+doi:~10.1016/j.neucom.2026.133105.
+
+\bibitem{anaedevha2026ode} R.~N.~Anaedevha, A.~G.~Trofimov, and
+Y.~V.~Borodachev, ``Temporal adaptive neural ordinary differential
+equations with deep spatio-temporal point processes for real-time
+network intrusion detection,'' \emph{Complex \& Intelligent Systems},
+Springer, 2026, doi:~10.1007/s40747-026-02291-7.
+
+\bibitem{anaedevha2024ram} R.~N.~Anaedevha and A.~G.~Trofimov,
+``Improved robust adversarial model against evasion attacks on
+intrusion detection systems,'' \emph{Optical Memory and Neural
+Networks (Information Optics)}, vol.~33, no.~S3, pp.~S414--S423,
+Springer, 2024, doi:~10.3103/S1060992X24700681.
+
+\bibitem{anaedevha2025stochtx} R.~N.~Anaedevha and A.~G.~Trofimov,
+``Stochastic multimodal transformer with uncertainty quantification
+for robust network intrusion detection,'' in \emph{Advances in Neural
+Computation, Machine Learning, and Cognitive Research IX.
+NEUROINFORMATICS 2025}, Studies in Computational Intelligence,
+vol.~1241. Springer, 2025,
+doi:~10.1007/978-3-032-07690-8\_35.
+
+\bibitem{anaedevha2024elcon} R.~N.~Anaedevha, ``Application of machine
+learning models for device identification in wireless network
+traffic,'' in \emph{Proc.\ 2024 Conf.\ of Young Researchers in
+Electrical and Electronic Engineering (ElCon)}, IEEE, 2024,
+pp.~104--110, doi:~10.1109/ElCon61730.2024.10468413.
+
+\bibitem{ds_ics3d} R.~N.~Anaedevha, ``Integrated Cloud Security
+3-Datasets (ICS3D),'' Kaggle, 2025,
+doi:~10.34740/kaggle/dsv/12483891.
+
+\bibitem{ds_iis3d} R.~N.~Anaedevha, ``Integrated IDPS Security
+3-Datasets (IIS3D),'' Kaggle, 2025,
+doi:~10.34740/kaggle/dsv/12479689.
+
+\bibitem{ds_pqcids} R.~N.~Anaedevha, ``IDS encrypted and
+post-quantum-cryptography datasets,'' Kaggle, 2026,
+doi:~10.34740/kaggle/dsv/15424420.
+
+\bibitem{robustidps_repo} R.~N.~Anaedevha,
+``RobustIDPS.ai v1.1.0 open-source AI-native IDPS,''
+GitHub repository, MIT License, 2026.
+[Online]. Available: \url{https://github.com/rogerpanel/robustidps.ai}.
+
+\end{thebibliography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author1.jpeg}}]{Roger Nick Anaedevha}
+received the B.Sc. degree in Computer Science from Ambrose Alli University, Nigeria, M.Sc. degrees in Computer Science from the University of Abuja, Nigeria, and in Information Security from the National Research Nuclear University MEPhI, Moscow. He is currently pursuing the Ph.D. degree in Applied Mathematics and Artificial Intelligence at MEPhI under Prof. Trofimov Aleksandr Gennadievich. His research interests include adversarial machine learning, federated learning, privacy-preserving AI, uncertainty quantification, and Quantum Machine Learning. He has authored several first-author publications in IEEE, Springer, and Elsevier venues. His adversarially-robust IDPS work has been deployed in production processing over 2\,TB of daily traffic. He is a member of IEEE, ACM, and Russian Neural Network Association.
+\end{IEEEbiography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author2.jpeg}}]{Trofimov Aleksandr Gennadievich}
+has a PhD, the Assistant Professor at the Institute of Cyber Intelligent Systems, National Research Nuclear University, MEPhI. Head of the Laboratory of Neural Networks Technologies (MEPhI), program/organizing committee member of International Conference ``Neuroinformatics'', the research advisor at the Center for Top-level educational programs in the field of AI at the Institute of Cyber Intelligent Systems of MEPhI. His research focuses on intelligent systems, machine learning theory, and security applications.
+\end{IEEEbiography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author3.png}}]{Yuri Vladimirovich Borodachev}
+is affiliated with the Artificial Intelligence Research Center at the National Research Nuclear University MEPhI, Moscow, Russia. He is responsible for managing, coordinating and organizing the research work. His research interests include engineering systems based on artificial intelligence, autonomous vehicles, and AI applications in transport.
+\end{IEEEbiography}
+
+\end{document}
