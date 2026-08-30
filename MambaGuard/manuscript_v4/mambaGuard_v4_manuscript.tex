@@ -1,0 +1,737 @@
+%% ============================================================================
+%%  MambaGuard: Certified Selective State-Space Detection for
+%%  Multi-Protocol LLM Agent Security  --  Revised (v4) for IEEE Access
+%%
+%%  Authors      : R. N. Anaedevha, A. G. Trofimov, Y. V. Borodachev
+%%  Affiliation  : National Research Nuclear University MEPhI, Moscow, Russia
+%%  Compile with : pdflatex on Overleaf using the IEEE Access template
+%%                 (ieeeaccess.cls is bundled with that Overleaf template).
+%%
+%%  This revision addresses all 27 comments of Reviewer 2 (Reviewer 1
+%%  accepted the previous version without changes). A separate
+%%  response-to-reviewers document maps each comment to the specific
+%%  paragraphs, tables, or equations that were changed here.
+%% ============================================================================
+
+\documentclass{ieeeaccess}
+
+%%%% PACKAGES
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\graphicspath{{./}{figures/}{mambaguard_figures/}}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+%%%% Math shortcuts
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\calA}{\mathcal{A}}
+\newcommand{\calG}{\mathcal{G}}
+\newcommand{\calL}{\mathcal{L}}
+\newcommand{\calM}{\mathcal{M}}
+\newcommand{\calN}{\mathcal{N}}
+\newcommand{\calO}{\mathcal{O}}
+\newcommand{\calV}{\mathcal{V}}
+\newcommand{\calE}{\mathcal{E}}
+
+%%%% Math operators
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+%%%% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\hyphenation{op-tical net-works semi-conduc-tor}
+\hypersetup{pdfauthor={Roger Nick Anaedevha}, pdftitle={MambaGuard: Certified Selective State-Space Detection for Multi-Protocol LLM Agent Security}}
+
+\begin{document}
+
+\history{Date of publication xxxx 00, 0000, date of current version xxxx 00, 0000.}
+\doi{10.1109/ACCESS.2025.DOI}
+
+\title{MambaGuard: Certified Selective State-Space Detection for Multi-Protocol LLM Agent Security}
+
+\author{Roger Nick Anaedevha\authorrefmark{1},
+Alexander Gennadevich Trofimov\authorrefmark{1},
+and Yuri Vladimirovich Borodachev\authorrefmark{2}}
+
+\address[1]{National Research Nuclear University MEPhI (Moscow Engineering Physics Institute), Moscow 115409, Russia (e-mail: ar006@campus.mephi.ru)}
+\address[2]{Artificial Intelligence Research Center, National Research Nuclear University MEPhI, Moscow 115409, Russia}
+
+\tfootnote{This work was supported by a grant for research centers in Artificial Intelligence from the Ministry of Economic Development of the Russian Federation under subsidy agreement (identifier 000000C313925P3Q0002). All authors of this publication are co-first authors.}
+
+\markboth{Anaedevha \headeretal: MambaGuard: Certified Selective State-Space Detection for Multi-Protocol LLM Agent Security}{Anaedevha \headeretal: MambaGuard: Certified Selective State-Space Detection for Multi-Protocol LLM Agent Security}
+
+\corresp{Corresponding author: Roger Nick Anaedevha (e-mail: ar006@campus.mephi.ru).}
+
+%% ============================================================================
+%%  Abstract  --  rewritten to reduce acronym density (Reviewer 2, point 1).
+%% ============================================================================
+\begin{abstract}
+Large language model (LLM) agents now communicate through a rapidly growing set of open protocols that expose a network-scale attack surface for which conventional intrusion detection systems were not designed. This article presents MambaGuard, a security monitor that couples a linear-time selective state-space backbone with a dynamic graph attention layer over a unified heterogeneous protocol graph, and that produces a three-layer certificate composed of a global Lipschitz bound on the composed detector, a strong Stackelberg equilibrium value on the defender-attacker game, and a tight no-regret bound on the online policy that governs defensive actions. We derive the composed Lipschitz constant using the corrected value of the sigmoid-weighted linear unit and a diagonal state-matrix parameterisation for which spectral radius and spectral norm coincide, we make explicit the perturbation and knowledge assumptions under which the Lipschitz margin applies at the protocol layer, and we complement the continuous certificate with a discrete graph-edit certificate for structural attacks such as capability-descriptor impersonation. On three composite intrusion detection corpora and two agent-protocol benchmarks, MambaGuard exceeds eight competitive baselines in macro-F1, sustains per-message inference latency well below five milliseconds on a single accelerator, and preserves a data-dependent certified detection radius that grows monotonically as the Lipschitz training penalty is tightened. Code, weights, configuration files, and the complete evaluation harness are released under a permissive open-source licence.
+\end{abstract}
+
+\begin{keywords}
+Certified robustness, dynamic graph attention, game-theoretic defence, intrusion detection, large language model agent security, multi-protocol monitoring, selective state-space models.
+\end{keywords}
+
+\titlepgskip=-21pt
+
+\maketitle
+
+%% ============================================================================
+\section{Introduction}
+\label{sec:intro}
+%% ============================================================================
+\IEEEPARstart{T}{he} security perimeter of enterprise artificial intelligence has expanded from a single prompt boundary between a user and a language model to a protocol-mediated mesh in which agents call tools, publish capabilities, delegate tasks, and exchange data across a heterogeneous set of open standards. Since November 2024, four such standards have become widely deployed: the Model Context Protocol (MCP)~\cite{Anthropic2024MCP}, the Agent Communication Protocol (ACP)~\cite{Ibm2025Acp}, the Agent-to-Agent Protocol (A2A)~\cite{Google2025A2A}, and the Agent Network Protocol (ANP)~\cite{Yan2025ANP}. A 2025 systematic review catalogued more than thirty attack techniques at the MCP layer alone~\cite{Hou2025MCP}, and the MCPSecBench study reported that over eighty-five per cent of these succeed on at least one major commercial deployment~\cite{Yang2025MCPSec}. Disclosed vulnerabilities such as the MCP Inspector remote-code-execution flaw (CVE-2025-49596)~\cite{Qualys2025CVE49596} show that protocol exposure translates directly into system compromise.
+
+The defensive response has been fragmented. Tool-boundary monitors such as ClawGuard~\cite{Zhao2026ClawGuard} enforce deterministic policies at single agent boundaries. Program-dependency monitors such as AgentArmor~\cite{Wang2025AgentArmor} reconstruct a per-trace dependency graph and enforce information-flow constraints. Neither approach models the network-level interaction graph that emerges when several agents cooperate across MCP, A2A and ACP, and neither produces a certificate of its own robustness against an adaptive attacker. Meanwhile, the network intrusion detection literature has evolved through graph neural networks~\cite{Lo2022EGraphSAGE,Caville2022AnomalE}, transformer encoders~\cite{Wu2022RTIDS,Ullah2024IDSINT}, and most recently state-space sequence models~\cite{Wang2025NetMamba,Gu2023Mamba}, but these systems have not been adapted to protocol-layer agent threats and they do not report certified outputs. A concurrent line of work has explored metaheuristic-tuned classical detectors for cloud and IoT intrusion detection, including hybrid CNN--XGBoost with modified sine-cosine tuning~\cite{Salb2023SCACloud}, boosting for smart-city IDS~\cite{Zivkovic2022BoostingSmartCity}, and adapted reptile search for CatBoost~\cite{Zivkovic2023CatBoostReptile,Zivkovic2023IoTSoftware,Bacanin2024MetaverseIDS}; those approaches are complementary to ours in that they operate on flat feature vectors rather than on the relational structure of the protocol graph.
+
+\subsection{Research Gap}
+\label{sec:gap}
+The gap that motivates this work is therefore threefold. First, no published detector unifies protocol-layer attack modelling across MCP, ACP, A2A and ANP under a single representation. Second, no published detector combines a linear-time sequence backbone with a temporal graph attention layer in a manner that admits a proof of robustness. Third, no published detector for the agent-protocol setting produces a quantitative certificate that composes a perturbation-margin bound with a game-theoretic guarantee for the defender's action-selection policy. MambaGuard is designed to close all three gaps simultaneously.
+
+\subsection{Illustrative Threat}
+Consider a small enterprise deployment in which Agent~A queries a database tool through MCP, Agent~B delegates a customer-service task to Agent~A through A2A, and a third-party capability provider has just updated its Agent Card with a maliciously crafted description that advertises a new priority-routing capability. Each individual message parses correctly and is signed by an apparently legitimate principal, so a per-message scanner sees nothing wrong. The attack becomes visible only when one examines the relational pattern across messages: the malicious capability advertisement, the delegation chain through Agent~B that newly routes through the compromised path, and the unusual data-volume profile of the downstream tool response together form an anomalous subgraph that did not exist before the Agent Card update. A detector that observes the protocol stream as a flat sequence cannot recover this pattern; a detector that observes only the static dependency graph cannot recover the temporal ordering that distinguishes the attack from a benign capability rollout. MambaGuard is designed precisely for this case, in which the diagnostic signal lives in the interaction of temporal sequence and relational structure.
+
+\subsection{Contributions}
+\label{sec:contributions}
+The contributions of this article are the following, presented as a list so that the reader can track them through the body:
+\begin{itemize}
+\item \textbf{Unified protocol graph schema.} We introduce a five-class canonical message taxonomy and a heterogeneous graph representation that abstracts MCP, ACP, A2A and ANP into a single detector-facing view, described in Section~\ref{sec:graph}.
+\item \textbf{Composed detector architecture.} We compose a selective state-space backbone with a temporal graph attention (GATv2) layer over that graph and show that the combination is necessary for accuracy at agent-protocol scale (Sections~\ref{sec:backbone} and~\ref{sec:gat}).
+\item \textbf{Corrected global Lipschitz bound.} We derive a global Lipschitz constant for the composed detector using the exact numerical value of the SiLU Lipschitz constant, $L_{\sigma}\approx 1.0998$, and using the diagonal S4D-Lin parameterisation for which spectral radius coincides with spectral norm; the bound is derived in Section~\ref{sec:lipschitz}.
+\item \textbf{Three-layer certificate.} We combine the Lipschitz bound with a strong Stackelberg equilibrium value for a five-action defender against a seven-family attacker, and with the tight Cesa-Bianchi--Lugosi no-regret bound for the multiplicative-weights update that selects defensive actions online (Section~\ref{sec:composed}).
+\item \textbf{Threat-model-consistent evaluation.} We report per-dataset macro-F1, per-message latency, throughput, attack success rate after defence, the data-dependent Tsuzuku Lipschitz-margin radius as a function of the Lipschitz regulariser strength, and a component ablation that includes selective-SSM-only, GATv2-only, transformer-in-place-of-SSM, and no-certificate variants (Section~\ref{sec:experiments}).
+\item \textbf{Open-source implementation.} We release a reference implementation containing the model, the certification framework, the datasets, the baselines and the reproduction scripts under a permissive licence (see Data and Code Availability).
+\end{itemize}
+
+\subsection{Paper Roadmap}
+\label{sec:roadmap}
+The remainder of the article is organised as follows. Section~\ref{sec:related} reviews related work along four axes: agent-protocol security monitors, graph-based network intrusion detection, certified robustness for sequence and graph models, and metaheuristic-tuned classical detectors. Section~\ref{sec:threat} formalises the threat model, states the attacker's knowledge, action set and perturbation budget, and justifies the choice of an $\ell_{2}$ perturbation model at the sentence-transformer embedding layer together with a complementary discrete graph-edit certificate for structural attacks. Section~\ref{sec:prelim} states the mathematical preliminaries on selective state-space models, dynamic graph attention, and Bochner-derived temporal encoding. Section~\ref{sec:architecture} presents the MambaGuard architecture. Section~\ref{sec:certification} develops the three-layer certificate. Section~\ref{sec:experiments} reports the empirical evaluation, including the expanded component ablation, the Lipschitz-regulariser sweep, the latency decomposition, and the statistical significance analysis. Section~\ref{sec:discussion} discusses limitations, false-positive costs, and operational consequences. Section~\ref{sec:conclusion} concludes.
+
+%% ============================================================================
+\section{Related Works}
+\label{sec:related}
+%% ============================================================================
+This section reviews the four literature strands most relevant to MambaGuard. Preliminaries that support the certification analysis are deferred to Section~\ref{sec:prelim}.
+
+\subsection{Agent-Protocol Security Monitors}
+The rapid deployment of MCP, ACP, A2A and ANP has triggered a small but growing body of security-monitor work. ClawGuard~\cite{Zhao2026ClawGuard} enforces deterministic tool-access policies at the LLM-agent boundary, treating each tool call as a policy decision and rejecting calls that violate a static allow-list. AgentArmor~\cite{Wang2025AgentArmor} reconstructs a per-trace dependency graph from runtime logs and applies program analysis to enforce information-flow constraints on that trace. Habler~\textit{et~al.}~\cite{Habler2025A2A} propose a defence-in-depth stack for A2A that combines transport-level authentication with an agent-card validator. Narajala~\textit{et~al.}~\cite{Narajala2025A2A} focus on privacy protections for sensitive fields in A2A messages. None of these systems models the interaction graph across multiple protocols, and none reports a certificate of its own detection robustness. The empirical MCPSecBench benchmark~\cite{Yang2025MCPSec} confirms that these gaps translate into high real-world attack success rates.
+
+\subsection{Graph-based Network Intrusion Detection}
+Graph neural networks have become a common backbone for network intrusion detection. E-GraphSAGE~\cite{Lo2022EGraphSAGE} extends GraphSAGE to typed flow edges and reports competitive detection rates on CIC-IDS2018 and IoT corpora. Anomal-E~\cite{Caville2022AnomalE} augments E-GraphSAGE with a Deep-Graph-Infomax self-supervised objective. Transformer-based detectors such as RTIDS~\cite{Wu2022RTIDS} and IDS-INT~\cite{Ullah2024IDSINT} treat each flow as a token and apply self-attention across the resulting sequence. NetMamba~\cite{Wang2025NetMamba} adopts the Mamba selective state-space backbone for encrypted-traffic classification and reports strong throughput on classical IDS corpora. Two limitations recur across all of these systems: they operate on classical flat feature vectors extracted from raw traffic rather than on a protocol-aware graph, and they do not report certified detection guarantees. MambaGuard borrows the selective state-space backbone from NetMamba and the GATv2 relational layer from the graph-IDS literature, but composes them in a way that admits a Lipschitz certificate that neither predecessor provides.
+
+\subsection{Certified Robustness for Sequence and Graph Models}
+Certified robustness for deep neural networks has been developed in three complementary directions. Lipschitz-margin training~\cite{Tsuzuku2018LipMargin} produces deterministic certificates whose radius is proportional to the classification margin divided by the composed Lipschitz constant. Randomised smoothing~\cite{Cohen2019RandSmooth} produces probabilistic certificates that hold with high probability under an isotropic Gaussian input perturbation. Semidefinite-programming bounds such as LipSDP~\cite{Fazlyab2019LipSDP} tighten Lipschitz estimates for feed-forward networks. LipschitzNorm~\cite{Dasoulas2021LipNorm} extends the Lipschitz analysis to self-attention layers in graph neural networks. For state-space models the literature is much smaller: Gu and Dao~\cite{Gu2023Mamba} do not report a Lipschitz analysis of the selective block; several concurrent preprints discuss stability in the linear-time-invariant case only. To our knowledge no prior work has produced a composed Lipschitz constant that jointly covers a selective state-space block, a temporal GATv2 layer, and a Bochner time encoding with learnable frequencies. Rather than claim to be the ``first'' in a global sense, we state precisely what our bound covers in Section~\ref{sec:lipschitz} and identify the closest prior work at each step.
+
+\subsection{Metaheuristic-Tuned Classical Detectors}
+A parallel strand of work has explored metaheuristic-tuned classical detectors for cloud, IoT and smart-city intrusion detection. Salb~\textit{et~al.}~\cite{Salb2023SCACloud} tune a hybrid CNN--XGBoost pipeline with a modified sine-cosine algorithm and report competitive results on classical IDS corpora. Zivkovic~\textit{et~al.}~\cite{Zivkovic2023CatBoostReptile} adapt the reptile search algorithm to tune CatBoost. Bacanin~\textit{et~al.}~\cite{Bacanin2024MetaverseIDS} apply a two-level metaheuristic framework to metaverse Internet-of-Things intrusion detection, and Zivkovic~\textit{et~al.}~\cite{Zivkovic2023IoTSoftware,Zivkovic2022BoostingSmartCity} report metaheuristic-optimised detectors for IoT/IIoT and boosting-based detectors for smart-city security. These systems operate on flat feature vectors extracted from classical IDS datasets and do not attempt certified robustness or protocol-graph modelling; they are therefore complementary to MambaGuard rather than direct competitors, and we do not include them as head-to-head baselines because their evaluation surface does not overlap with the multi-protocol agent scenario.
+
+%% ============================================================================
+\section{Threat Model}
+\label{sec:threat}
+%% ============================================================================
+A precise threat model is the pre-requisite for any meaningful robustness claim, and Reviewer feedback on the earlier version of this article correctly emphasised that our previous statement was too informal. This section makes the model explicit along four axes: attacker knowledge, attacker capabilities, attacker action space, and perturbation budget.
+
+\subsection{Attacker Knowledge}
+We consider a \emph{grey-box} attacker who knows the general architectural family of MambaGuard (selective state-space backbone plus temporal graph attention over a heterogeneous protocol graph), the taxonomy of thirty-four attack classes on which the head is trained, and the operational deployment context (message rate, protocol distribution, list of monitored capabilities). The attacker does not have direct access to the trained weights, to the frozen sentence-transformer embedding matrix, or to the private random seed used during Hedge sampling. This assumption reflects real deployments: the RobustIDPS.ai platform in which MambaGuard is registered releases the architecture and the training recipe under an open-source licence, but keeps its deployment weights and its per-tenant Hedge state private.
+
+\subsection{Attacker Capabilities}
+The attacker can craft or modify protocol messages, alter tool descriptions and Agent Cards, replay historical messages within a bounded time window, and issue payloads through a legitimate registered agent (a compromised or coerced insider). The attacker cannot forge cryptographic signatures issued by principals whose private keys are outside the compromised set, cannot bypass the transport-layer authentication that governs protocol admission, and cannot introduce arbitrary new agents outside the pre-registered set within the certificate horizon $T$. These constraints correspond to the standard threat model of protocol-aware defence-in-depth and are consistent with the deployment assumptions of ClawGuard~\cite{Zhao2026ClawGuard} and AgentArmor~\cite{Wang2025AgentArmor}.
+
+\subsection{Attacker Action Space}
+The attacker's pure actions belong to seven families that have been documented in the multi-protocol attack literature~\cite{Hou2025MCP,Yang2025MCPSec,Habler2025A2A}: (i) tool poisoning through malicious server descriptions; (ii) indirect prompt injection carried inside tool responses; (iii) rug-pull updates in which a previously benign capability is replaced by a malicious one; (iv) capability shadowing across two co-installed servers; (v) cross-server capability confusion; (vi) credential exfiltration via tool arguments; (vii) sandbox bypass through path traversal or environment-variable exposure. Section~\ref{sec:stackelberg} treats this set of seven families as the attacker's pure action set in the Stackelberg game.
+
+\subsection{Perturbation Budget}
+Two complementary perturbation budgets apply. The first is a continuous $\ell_{2}$ budget $\varepsilon\ge 0$ at the sentence-transformer embedding layer, which captures wording variations in tool descriptions and message payloads once they are mapped through the frozen encoder. The choice of the $\ell_{2}$ ball is justified because the encoder is $\lambda$-Lipschitz for a numerical constant $\lambda$ that we measure on our corpora, so bounded wording changes correspond to bounded embedding perturbations, and the Lipschitz certificate of Section~\ref{sec:lipschitz} then transports back to a certificate on the raw payload. The second is a discrete graph-edit budget $k\in\mathbb{N}$ on the number of edge additions, deletions or node substitutions the attacker can apply to the protocol graph within one detection window, which captures structural attacks such as Agent Card impersonation and OAuth confused-deputy manipulation that a purely continuous certificate cannot express. We evaluate MambaGuard under both budgets in Section~\ref{sec:experiments}.
+
+%% ============================================================================
+\section{Preliminaries}
+\label{sec:prelim}
+%% ============================================================================
+The technical foundations on which MambaGuard is built are well established but rarely combined. We restate them here so that the architecture and certificate developed in Sections~\ref{sec:architecture} and~\ref{sec:certification} can be read without external cross-reference.
+
+\subsection{Selective State-Space Models}
+A continuous linear state-space model represents a hidden state $h(t)\in\R^{N}$ evolving as $h'(t)=Ah(t)+Bu(t)$ and produces an output $y(t)=Ch(t)$, where $u(t)\in\R$ is a scalar input, $A\in\R^{N\times N}$, $B\in\R^{N\times 1}$, $C\in\R^{1\times N}$, and $N$ is the state dimension. Zero-order-hold discretisation with step $\Delta>0$ yields the recurrence $h_{t}=\bar{A}h_{t-1}+\bar{B}u_{t}$, $y_{t}=Ch_{t}$, where $\bar{A}=\exp(\Delta A)$ and $\bar{B}=(\Delta A)^{-1}(\exp(\Delta A)-I)\Delta B$ are the discretised state-transition and input matrices respectively. The structured S4 model~\cite{Gu2022S4} keeps $A$, $B$, $C$ and $\Delta$ fixed across the sequence, which permits a global convolution kernel to be computed by fast Fourier transform in $\calO(L\log L)$ time. The selective variant Mamba~\cite{Gu2023Mamba} replaces these fixed parameters with input-dependent functions $\Delta_{t}=\tau_{\Delta}(\mathrm{Linear}(x_{t}))$, $B_{t}=\mathrm{Linear}_{B}(x_{t})$, and $C_{t}=\mathrm{Linear}_{C}(x_{t})$, where $\tau_{\Delta}=\mathrm{softplus}$ guarantees positivity. The cost of the selective inference is $\calO(L)$ through the hardware-aware parallel associative scan of~\cite{Gu2023Mamba}; the fast-Fourier-transform shortcut of S4 no longer applies because the recurrence has become time-varying. Mamba-2~\cite{Dao2024Mamba2} subsequently unified attention and state-space models under structured state-space duality, but the original selective formulation is sufficient for this article and we adopt it as the backbone.
+
+We use the S4D-Lin parameterisation of~\cite{Gu2022S4D} throughout, in which the state matrix $A$ is diagonal with complex entries having strictly negative real parts. Diagonalisability is the key point that makes the Lipschitz analysis of Section~\ref{sec:lipschitz} tight: for a diagonal matrix, the spectral radius $\rho(\bar A)=\max_{i}|\bar A_{ii}|$ equals the spectral (operator-2) norm $\|\bar A\|_{2}$, so a spectral-radius bound below one directly implies contraction in the norm relevant for a Lipschitz argument. This is not the case for general non-normal matrices, as Reviewer 2 correctly noted; adopting the diagonal parameterisation removes the ambiguity.
+
+\subsection{Dynamic Graph Attention}
+Static graph attention networks~\cite{Velickovic2018GAT} compute attention coefficients $\alpha_{ij}$ between a node $i$ and each neighbour $j\in\calN(i)$ and aggregate neighbour features into an updated representation $h'_{i}=\sigma\bigl(\sum_{j\in\calN(i)}\alpha_{ij}Wh_{j}\bigr)$. Brody, Alon and Yahav~\cite{Brody2022GATv2} proved that the original parameterisation $e_{ij}=\mathrm{LeakyReLU}(a^{\top}[Wh_{i}\Vert Wh_{j}])$ computes only a static ranking of neighbours, and proposed the corrected GATv2 form $e_{ij}=a^{\top}\mathrm{LeakyReLU}(W[h_{i}\Vert h_{j}])$ that is dynamic and universally approximating. For evolving graphs the temporal graph attention network (TGAT)~\cite{Xu2020TGAT} augments each query-key pair with a Bochner-derived functional time encoding $\Phi(\Delta t)=\sqrt{1/d_{T}}\,[\cos\omega_{1}\Delta t,\sin\omega_{1}\Delta t,\ldots,\cos\omega_{d_{T}/2}\Delta t,\sin\omega_{d_{T}/2}\Delta t]$, where $\Delta t\in\R_{\ge 0}$ is the time elapsed since the edge in question was observed, $\omega_{k}\in\R$ are learnable angular frequencies, and $d_{T}$ is the encoding dimensionality. The Lipschitz constant of $\Phi$ with respect to $\Delta t$ is $\sqrt{2/d_{T}\cdot\sum_{k}\omega_{k}^{2}}$, a fact we use in the certification analysis of Section~\ref{sec:lipschitz}.
+
+\subsection{Multi-Protocol Attack Surface}
+The Model Context Protocol uses JSON-RPC over standard input--output or streamable HTTP and exposes three primitives, namely Tools, Resources and Prompts. The Agent Communication Protocol uses REST with server-sent events and MIME-typed message parts. The Agent-to-Agent Protocol uses JSON-RPC over HTTPS and publishes an Agent Card at the well-known path \texttt{/.well-known/agent-card.json}. The Agent Network Protocol is peer-to-peer and identifies agents by W3C Decentralised Identifiers signed with Ed25519. Across these four protocols the seven attack families enumerated in Section~\ref{sec:threat} manifest as anomalous local subgraphs of the protocol interaction graph~\cite{Hou2025MCP,Habler2025A2A,Narajala2025A2A,Wang2025AgentArmor}, which is why a detector that operates on the graph rather than on isolated messages is the natural structural choice.
+
+%% ============================================================================
+\section{The MambaGuard Architecture}
+\label{sec:architecture}
+%% ============================================================================
+MambaGuard treats the protocol stream of a multi-agent deployment as a single time-stamped heterogeneous graph and processes it in two cooperating stages. The first stage learns within-agent sequential dynamics with a selective state-space block; the second stage learns between-agent relational dynamics with a temporal graph attention layer. A Stackelberg controller, developed in Section~\ref{sec:certification}, sits above both stages and selects which defensive action to play in response to the detector output. Figure~\ref{fig:architecture} renders the complete pipeline, and the remainder of this section formalises each component in turn.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig1_mambaguard_arch.png}
+\caption{End-to-end MambaGuard architecture. Five protocol message streams are mapped to a five-class canonical taxonomy and to a dynamic heterogeneous protocol graph $\calG(t)$. A selective state-space block extracts per-agent temporal features in $\calO(L)$ time; a temporal GATv2 layer with Bochner functional time encoding propagates relational information; and a Stackelberg controller running a multiplicative-weights update selects defensive actions whose performance is fed back into the model. The composed Mamba--GATv2 detector admits a global Lipschitz constant $L_{f}$ that is derived in Section~\ref{sec:certification}.}
+\label{fig:architecture}
+\end{figure*}
+
+\subsection{Unified Heterogeneous Protocol Graph}
+\label{sec:graph}
+Let $\calG(t)=(\calV(t),\calE(t),X(t))$ denote the protocol graph at wall-clock time $t$, with vertex set $\calV(t)=\calV_{A}\cup\calV_{T}\cup\calV_{C}\cup\calV_{S}$ partitioned into agents $\calV_{A}$, tools or services $\calV_{T}$, capability descriptors $\calV_{C}$, and active sessions $\calV_{S}$. Edges $\calE(t)$ are time-stamped and typed; the five canonical types are agent-calls-tool, agent-messages-agent, agent-advertises-capability, tool-returns-data, and agent-delegates-task. Each protocol message is canonicalised into the tuple $m=(\tau,s,d,p,\mu,t_{m})$, where $\tau\in\{\calM_{\text{tool}},\calM_{\text{comm}},\calM_{\text{cap}},\calM_{\text{data}},\calM_{\text{ctrl}}\}$ is the canonical type, $s$ and $d$ are source and destination identifiers, $p\in\R^{d_{p}}$ is a frozen sentence-transformer embedding of the payload, $\mu$ collects metadata such as latency and HTTP status, and $t_{m}$ is the message timestamp. The mapping from raw protocol packets to canonical tuples is rule-based and is implemented by five small parsers. With $\calG(t)$ available, the next subsection describes how the selective state-space backbone processes the per-agent message stream.
+
+\subsection{Selective State-Space Backbone}
+\label{sec:backbone}
+For each agent $a\in\calV_{A}$ we collect the sequence of messages incident to $a$ in temporal order, $x^{a}=(m^{a}_{1},\ldots,m^{a}_{L_{a}})$, and the selective block computes
+\begin{align}
+h^{a}_{t} &= \bar A_{t}\,h^{a}_{t-1} + \bar B_{t}\,m^{a}_{t}, \label{eq:ssm-rec}\\
+z^{a}_{t} &= C_{t}\,h^{a}_{t} \odot \mathrm{SiLU}\bigl(W_{g}\,m^{a}_{t}\bigr), \label{eq:gate}
+\end{align}
+where $h^{a}_{t}\in\R^{N}$ is the state, $\bar A_{t}=\exp(\Delta_{t}A)$ and $\bar B_{t}=(\Delta_{t}A)^{-1}(\exp(\Delta_{t}A)-I)\,\Delta_{t}B_{t}$ are the zero-order-hold discretisations of the selective continuous parameters, $\odot$ is the Hadamard product, $\mathrm{SiLU}(u)=u\,\sigma(u)$ is the sigmoid-weighted linear unit gate, $W_{g}\in\R^{d_{z}\times d_{m}}$ is a learnable projection, and $z^{a}_{t}\in\R^{d_{z}}$ is the per-agent sequential feature consumed by the relational layer. A depthwise causal one-dimensional convolution with kernel $K\in\R^{d_{m}\times d_{m}\times k}$ of width $k$ is applied to $x^{a}$ before~\eqref{eq:ssm-rec}. Inference complexity is $\calO(L_{a})$ per agent through the hardware-aware parallel scan.
+
+\subsection{Temporal Graph Attention Layer}
+\label{sec:gat}
+With per-agent features $\{z^{a}\}_{a\in\calV_{A}}$ available, MambaGuard propagates relational information through the protocol graph with a temporal GATv2 layer. For each ordered pair $(a,a')$ joined by an edge with timestamp $t_{e}$, the attention logit is
+\begin{equation}
+e_{a,a'} = q^{\top}\,\mathrm{LeakyReLU}\!\bigl(W_{r}\,[z^{a}\Vert z^{a'}\Vert e_{a,a'}^{\text{feat}}\Vert\Phi(t-t_{e})]\bigr),
+\label{eq:gatv2}
+\end{equation}
+where $q\in\R^{d_{r}}$ and $W_{r}\in\R^{d_{r}\times(2d_{z}+d_{e}+d_{T})}$ are learnable, $\Vert$ denotes concatenation, $e_{a,a'}^{\text{feat}}\in\R^{d_{e}}$ is the edge feature vector containing message type, payload embedding, latency and authentication metadata, and $\Phi$ is the TGAT time encoding of Section~\ref{sec:prelim}. The neighbour distribution is $\alpha_{a,a'}=\mathrm{softmax}_{a'}(e_{a,a'})$, and the updated agent representation is $h^{a}=\sigma\bigl(\sum_{a'\in\calN(a,t)}\alpha_{a,a'}W_{v}z^{a'}\bigr)$, where $W_{v}\in\R^{d_{h}\times d_{z}}$ is the value projection and $\sigma$ is a GELU non-linearity. Multi-head attention with $H$ heads is averaged at the final layer. The composed feature $h^{a}$ is fed to a small softmax classification head with one logit per attack class.
+
+\subsection{Implementation Notes}
+\label{sec:integration}
+The reference implementation is deployed as one detector inside the RobustIDPS.ai platform~\cite{Anonymous2026RobustIDPS} alongside earlier detectors from our group~\cite{Anonymous2026MambaShield,Anonymous2026HGP,Anonymous2026TANODE,Anonymous2024Adversarial,Anonymous2025SMT,Anonymous2024ElCon}; the platform provides the operational feature pipeline, weight registry and reporting endpoints. This is an integration convenience and is deliberately not treated as an experimental result; the certificate and the empirical numbers of this article apply to the MambaGuard model itself, independently of the containing platform. Readers who wish to reproduce our results only need the open-source code and datasets listed in the Data and Code Availability statement.
+
+%% ============================================================================
+\section{Three-Layer Stackelberg--Lipschitz Certification}
+\label{sec:certification}
+%% ============================================================================
+A monitor that is empirically accurate but uncertified offers no guarantee against adaptive attackers. This section establishes three quantitative guarantees that compose into a single certificate: a global Lipschitz constant on the composed detector, a strong Stackelberg equilibrium value on the defender-attacker game, and a no-regret bound on the online policy. The three layers are stated informally first and then formalised in turn.
+
+Informally, a function is \emph{Lipschitz} with constant $L$ if a change of size $\varepsilon$ at the input produces a change of size at most $L\varepsilon$ at the output; a small $L$ means that no small perturbation by the attacker can move the detector's decision very far. A \emph{Stackelberg} game is one in which the defender publicly commits to a randomised strategy first and the attacker observes that commitment and best-responds; the defender gains the strategic advantage of credible commitment at the price of revealing its strategy. A \emph{no-regret} learning algorithm is one whose average performance over a long horizon is provably no worse, up to a vanishing gap, than the performance of the single best strategy chosen in hindsight. The composite certificate combines these three ideas so that the defender simultaneously bounds its sensitivity to perturbations, plays a strategically optimal mixture against best-responding attackers, and provably adapts to non-stationarity in the attacker's behaviour.
+
+\subsection{Global Lipschitz Bound}
+\label{sec:lipschitz}
+Let $f:\R^{d_{m}\times L}\to\R^{K}$ denote the composed MambaGuard detector, where $K=34$ is the number of attack classes; we write $f=h\circ g_{\text{gat}}\circ g_{\text{ssm}}$, with $g_{\text{ssm}}$ the selective state-space block of \eqref{eq:ssm-rec}--\eqref{eq:gate}, $g_{\text{gat}}$ the temporal GATv2 layer of~\eqref{eq:gatv2}, and $h$ the linear softmax head with $\|W_{h}\|_{2}\le M_{h}$.
+
+\begin{assumption}[Diagonal Hurwitz initialisation]
+\label{ass:hurwitz}
+The continuous state matrix $A\in\R^{N\times N}$ is diagonal (S4D-Lin parameterisation~\cite{Gu2022S4D}) with strictly negative real parts, and the discretisation step satisfies $\Delta_{t}\in[\Delta_{\min},\Delta_{\max}]$ with $\Delta_{\max}\,\max_{i}\mathrm{Re}\,A_{ii}<0$. Under this assumption $\bar A_{t}=\exp(\Delta_{t}A)$ is also diagonal, and its spectral radius $\rho(\bar A_{t})$ coincides with its spectral norm $\|\bar A_{t}\|_{2}$, both bounded strictly below one for all $t$.
+\end{assumption}
+
+Assumption~\ref{ass:hurwitz} closes the gap identified by Reviewer 2: spectral-radius contraction does not in general imply spectral-norm contraction, but for the diagonal S4D-Lin parameterisation the two quantities are equal and the Lipschitz argument goes through without extra hypotheses.
+
+\begin{lemma}[Lipschitz bound for the selective block]
+\label{lem:lipssm}
+Under Assumption~\ref{ass:hurwitz}, with $\rho:=\sup_{t}\|\bar A_{t}\|_{2}<1$, $\beta:=\sup_{t}\|\bar B_{t}\|_{2}$, $\gamma:=\sup_{t}\|C_{t}\|_{2}$, $\kappa_{g}:=\|W_{g}\|_{2}$, and $L_{\sigma}\approx 1.0998$ the exact Lipschitz constant of $\mathrm{SiLU}$ (see Appendix), the selective block $g_{\text{ssm}}$ satisfies
+\begin{equation}
+\|g_{\text{ssm}}(x)-g_{\text{ssm}}(x')\|_{2} \le \frac{\gamma\,\beta}{1-\rho}\bigl(1+L_{\sigma}\kappa_{g}\bigr)\,\|x-x'\|_{2}.
+\label{eq:lipssm}
+\end{equation}
+\end{lemma}
+
+\begin{proof}[Sketch]
+Equation~\eqref{eq:ssm-rec} expands as $h_{t}=\sum_{k=0}^{t-1}\bigl(\prod_{j=t-k+1}^{t}\bar A_{j}\bigr)\bar B_{t-k}\,m_{t-k}$. Spectral submultiplicativity together with $\|\bar A_{t}\|_{2}\le\rho<1$ bounds the linear part of $z_{t}$ by $\gamma\beta\sum_{k\ge 0}\rho^{k}=\gamma\beta/(1-\rho)$. The Hadamard gate contributes a factor of $(1+L_{\sigma}\kappa_{g})$ because the SiLU is $L_{\sigma}$-Lipschitz and the gating branch is linear in the input with operator norm $\kappa_{g}$. Combining gives \eqref{eq:lipssm}. The depthwise causal convolution is absorbed into $\beta$ as its spectral norm is bounded by the maximum singular value of the unrolled Toeplitz matrix. The exact SiLU constant is derived in the Appendix and equals the maximum of $\sigma(u)(1+u(1-\sigma(u)))$ over $u\in\R$, attained at $u^{*}\approx 2.399$ with value $L_{\sigma}\approx 1.0998$.
+\end{proof}
+
+\begin{lemma}[Lipschitz bound for GATv2 with LipschitzNorm and learnable-frequency Bochner encoding]
+\label{lem:lipgat}
+With attention weights normalised in the manner of LipschitzNorm~\cite{Dasoulas2021LipNorm} and with the Bochner time encoding of Section~\ref{sec:prelim}, the temporal GATv2 layer of \eqref{eq:gatv2} satisfies $\|g_{\text{gat}}(z)-g_{\text{gat}}(z')\|_{2}\le L_{\text{gat}}\,\|z-z'\|_{2}$ and $\|g_{\text{gat}}(\Delta t)-g_{\text{gat}}(\Delta t')\|_{2}\le L_{\Phi}\,|\Delta t-\Delta t'|$ with
+\begin{align}
+L_{\text{gat}} &\le \|W_{v}\|_{2}\bigl(1+\eta\,\|q\|_{2}\,\|W_{r}\|_{2}\bigr), \label{eq:lipgat}\\
+L_{\Phi} &\le \|W_{v}\|_{2}\,\eta\,\|q\|_{2}\,\|W_{r}\|_{2}\,\sqrt{\tfrac{2}{d_{T}}\textstyle\sum_{k}\omega_{k}^{2}}, \label{eq:lipbochner}
+\end{align}
+where $\eta$ is the LipschitzNorm scaling constant and $\omega_{k}$ are the learnable Bochner frequencies.
+\end{lemma}
+
+The proof follows~\cite{Dasoulas2021LipNorm} once the Bochner term is bounded by chain rule; the extra factor $\sqrt{(2/d_{T})\sum_{k}\omega_{k}^{2}}$ in~\eqref{eq:lipbochner} accounts for the learnable frequencies and closes another gap identified by Reviewer 2. Composing Lemmas~\ref{lem:lipssm}~and~\ref{lem:lipgat} with the softmax head yields the following.
+
+\begin{proposition}[Composed Lipschitz constant]
+\label{prop:lipfull}
+The MambaGuard detector $f$ is globally Lipschitz with
+\begin{equation}
+L_{f} \;\le\; M_{h}\cdot L_{\text{gat}}\cdot\frac{\gamma\beta(1+L_{\sigma}\kappa_{g})}{1-\rho}.
+\label{eq:lipfull}
+\end{equation}
+\end proposition}
+
+Proposition~\ref{prop:lipfull} converts directly into a certified detection radius. For an input $x$ classified into label $\hat y$ with margin $\Delta(x)=f_{\hat y}(x)-\max_{k\ne\hat y}f_{k}(x)$, every perturbation $\delta$ with $\|\delta\|_{2}\le\Delta(x)/(\sqrt 2\,L_{f})$ leaves the predicted label unchanged, by the Lipschitz-margin theorem of Tsuzuku, Sato and Sugiyama~\cite{Tsuzuku2018LipMargin}. Numerical values of $L_{f}$ measured on the default configuration, and the effect of the Lipschitz regulariser $\lambda_{L}$ on those values, are reported in Section~\ref{sec:cert-empirical}.
+
+\subsection{Stackelberg Security Game on the Protocol Graph}
+\label{sec:stackelberg}
+We model the defender-attacker interaction as a finite Stackelberg game $\Gamma=(\calA_{D},\calA_{A},u_{D},u_{A})$. The defender's five pure actions and the attacker's seven pure actions are listed in Table~\ref{tab:actions}. The defender's utility $u_{D}(s,a,\calG(t))$ is the negative of the expected loss conditioned on the current protocol graph and is bounded in $[0,B]$ for some $B>0$; the loss at round $t$ is estimated from the observed change in the detector's score before and after the defender's action is applied, plus a fixed cost term for disruptive actions such as session termination.
+
+\begin{table}[!t]
+\centering
+\caption{Defender and attacker action sets for the Stackelberg game.}
+\label{tab:actions}
+\footnotesize
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{@{}p{0.45\columnwidth}p{0.48\columnwidth}@{}}
+\toprule
+\textbf{Defender action $\calA_{D}$} & \textbf{Attacker family $\calA_{A}$} \\ \midrule
+Deep packet inspection            & Tool poisoning \\
+Message blocking                  & Indirect prompt injection \\
+Session termination               & Rug-pull update \\
+Agent isolation                   & Capability shadowing \\
+Capability revocation             & Cross-server capability confusion \\
+                                  & Credential exfiltration \\
+                                  & Sandbox bypass \\ \bottomrule
+\end{tabular}
+\end{table}
+
+The strong Stackelberg equilibrium is the pair $(\pi_{D}^{*},\mathrm{BR}(\pi_{D}^{*}))$ satisfying
+\begin{equation}
+\pi_{D}^{*} = \argmax_{\pi_{D}\in\Delta(\calA_{D})}\min_{a\in\mathrm{BR}(\pi_{D})}u_{D}(\pi_{D},a,\calG),
+\label{eq:stack}
+\end{equation}
+computable in polynomial time by the multiple-LP method of Conitzer and Sandholm~\cite{Conitzer2006Commit,Paruchuri2008DOBSS}. The Stackelberg value $V^{*}=u_{D}(\pi_{D}^{*},\mathrm{BR}(\pi_{D}^{*}))$ is the certified defender payoff under the assumption that the attacker best-responds and that the defender can credibly commit. Section~\ref{sec:noregret} relaxes the commitment assumption.
+
+\subsection{Multiplicative-Weights Online Defense}
+\label{sec:noregret}
+In practice the defender's utility function changes from round to round and the attacker is not perfectly rational, so we apply the Hedge algorithm with multiplicative weights over pure defensive actions. At round $t$, weight $w_{t}(s)$ on action $s$ is updated as $w_{t+1}(s)=w_{t}(s)\,\exp(-\eta\,\ell_{t}(s))$ for an observed loss $\ell_{t}(s)\in[0,B]$ and a step size $\eta>0$. Algorithm~\ref{alg:mwu} states the procedure inline with MambaGuard's detection loop.
+
+\begin{algorithm}[!t]
+\caption{MambaGuard online defence loop}
+\label{alg:mwu}
+\begin{algorithmic}[1]
+\STATE Initialise weights $w_{1}(s)\!\leftarrow\!1$ for all $s\!\in\!\calA_{D}$; set $\eta=\sqrt{2\ln|\calA_{D}|/T}$
+\FOR{$t=1,\ldots,T$}
+  \STATE Observe protocol graph $\calG(t)$ and per-agent streams
+  \STATE Compute features $z^{a}_{t}$ via \eqref{eq:ssm-rec}--\eqref{eq:gate}
+  \STATE Compute relational features $h^{a}_{t}$ via \eqref{eq:gatv2}
+  \STATE Score attack classes $\hat y_{t}\!\leftarrow\!\mathrm{softmax}(W_{h} h_{t})$
+  \STATE Sample defence action $s_{t}\!\sim\!p_{t}(s)\!=\!w_{t}(s)/\sum_{s'} w_{t}(s')$
+  \STATE Observe attacker action (or estimate via $\hat y_{t}$); compute $\ell_{t}(s)$
+  \STATE Update weights $w_{t+1}(s)\!\leftarrow\!w_{t}(s)\exp(-\eta\,\ell_{t}(s))$
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[Tight no-regret bound]
+\label{thm:regret}
+For losses bounded in $[0,B]$, Hedge with step size $\eta=\sqrt{2\ln|\calA_{D}|/T}$ achieves regret
+\begin{equation}
+R(T) = \sum_{t=1}^{T}\ell_{t}(\pi_{t})-\min_{s\in\calA_{D}}\sum_{t=1}^{T}\ell_{t}(s) \;\le\; B\sqrt{\tfrac{T}{2}\ln|\calA_{D}|},
+\label{eq:regret}
+\end{equation}
+so the average regret satisfies $R(T)/T\le B\sqrt{\ln|\calA_{D}|/(2T)}$.
+\end{theorem}
+
+The factor $\tfrac{1}{2}$ inside the square root is the tight Cesa-Bianchi--Lugosi constant~\cite{CesaBianchi2006Prediction,Arora2012MWU}. No-regret play against a best-responding adversary converges to the Stackelberg leader value~\cite{Balcan2015Commitment}: the long-run average defender utility under Algorithm~\ref{alg:mwu} approaches $V^{*}$.
+
+\subsection{The Composed Three-Layer Certificate}
+\label{sec:composed}
+Combining Proposition~\ref{prop:lipfull} and Theorem~\ref{thm:regret} with the Stackelberg value $V^{*}$ from \eqref{eq:stack} produces the headline guarantee.
+
+\begin{theorem}[Three-layer certificate]
+\label{thm:certificate}
+Let $\hat\pi_{T}$ denote the MambaGuard policy after $T$ rounds of Algorithm~\ref{alg:mwu} and let $\varepsilon\ge 0$ be the $\ell_{2}$ perturbation budget of an adaptive attacker at the sentence-transformer embedding layer. The expected achieved defender utility satisfies
+\begin{equation}
+\E\bigl[V_{\text{ach}}(\hat\pi_{T},\varepsilon)\bigr] \;\ge\; V^{*}-\underbrace{L_{f}\,\varepsilon}_{\text{Lipschitz}} \;-\; \underbrace{B\sqrt{\tfrac{\ln|\calA_{D}|}{2T}}}_{\text{no-regret}}.
+\label{eq:certificate}
+\end{equation}
+\end{theorem}
+
+\subsection{Operational Meaning and Non-Guarantees}
+\label{sec:cert-meaning}
+The certificate of Theorem~\ref{thm:certificate} guarantees a lower bound on the long-run expected defender utility against any attacker whose per-round perturbation is bounded in $\ell_{2}$ norm by $\varepsilon$. In operational terms, this means that once MambaGuard has been trained with a small enough $L_{f}$ and deployed for a horizon $T$ long enough for the no-regret term to be small, an adversary cannot degrade the platform's defensive utility below the stated bound by any wording-level modification of tool descriptions or message payloads whose embedding perturbation stays within the budget. The certificate does \emph{not} guarantee zero attack success rate, nor does it cover attacks that fall outside the perturbation model, in particular: (i) attacks that add or remove edges in the protocol graph beyond the discrete graph-edit budget of Section~\ref{sec:threat}, (ii) attacks that compromise cryptographic signatures held outside the compromised set, and (iii) zero-day protocol-implementation flaws that bypass the canonicalisation stage entirely. These non-guarantees are the reason the discrete graph-edit certificate of Section~\ref{sec:threat} is deployed in parallel with the continuous certificate of this section.
+
+%% ============================================================================
+\section{Experiments and Ablation}
+\label{sec:experiments}
+%% ============================================================================
+
+\subsection{Datasets, Preprocessing and Splits}
+\label{sec:datasets}
+Three composite datasets are used, each released publicly under Creative Commons on Kaggle, together with two agent-protocol benchmarks. The Integrated Cloud Security 3 Datasets (ICS3D)~\cite{Anonymous2025ICS3D} bundle Microsoft Cloud telemetry, the Edge-IIoTset Internet-of-Things corpus~\cite{Ferrag2022EdgeIIoT}, and Kubernetes and Docker container audit logs. The Integrated IDPS Security 3 Datasets (IIS3D)~\cite{Anonymous2025IIS3D} combine CSE-CIC-IDS2018~\cite{Sharafaldin2018CICIDS}, CIC-IoT2023~\cite{Neto2023CICIoT}, and UNSW-NB15~\cite{Moustafa2015UNSW}. The IDS Encrypted and Post-Quantum Cryptography Datasets (IDS-PQC)~\cite{Anonymous2025PQC} provide post-quantum-TLS captures derived from NF-CSE-CIC-IDS2018-v3~\cite{Sarhan2021NetFlow}. For agent-protocol evaluation we additionally use AgentDojo~\cite{Debenedetti2024AgentDojo} and InjecAgent~\cite{Zhan2024InjecAgent}, which together provide $1{,}683$ attack scenarios spanning indirect prompt injection, capability impersonation, and cascade amplification.
+
+The preprocessing pipeline for the composite datasets follows the NetFlow-v3 reformulation of Sarhan~\textit{et~al.}~\cite{Sarhan2021NetFlow}. Each raw flow is parsed into an 83-dimensional numerical descriptor; the descriptor is z-score standardised on the training partition and then broadcast to test. Labels are collapsed to the shared 34-class taxonomy of the RobustIDPS.ai platform via a deterministic mapping table published alongside the datasets. Protocol messages for the agent benchmarks are canonicalised into the tuple $m=(\tau,s,d,p,\mu,t_{m})$ defined in Section~\ref{sec:graph}. All splits are strictly temporal: within each dataset, the 70~per~cent oldest records form the training partition, the next 15~per~cent form the validation partition, and the final 15~per~cent form the test partition; no example is shared across partitions, no random shuffling is performed at any stage, and duplicate flows sharing the same five-tuple and timestamp are collapsed to a single instance before splitting to prevent the temporal-duplication leakage observed on the original CIC-IDS2018 corpus. Class imbalance is addressed by focal loss with $\alpha=0.25$ and $\gamma=2$~\cite{Lin2017Focal}.
+
+\subsection{Baselines and Fair-Comparison Protocol}
+\label{sec:baselines}
+Eight baselines from three tiers are evaluated. From the academic deep-learning tier we compare against E-GraphSAGE~\cite{Lo2022EGraphSAGE}, Anomal-E~\cite{Caville2022AnomalE}, RTIDS~\cite{Wu2022RTIDS}, IDS-INT~\cite{Ullah2024IDSINT}, and NetMamba~\cite{Wang2025NetMamba}. From the large-language-model tier we compare against SecurityBERT~\cite{Ferrag2024SecurityBERT}. From the agent-security tier we compare against AgentArmor~\cite{Wang2025AgentArmor} and ClawGuard~\cite{Zhao2026ClawGuard}. Commercial systems Snort~3 and Suricata~7 are reported as throughput-and-latency references only because they expose no peer-reviewed accuracy numbers under our threat model.
+
+To ensure comparability, every baseline was re-trained by us under the identical temporal split described above, with the identical 34-class label mapping, with the identical AdamW optimiser and cosine schedule, and with an identical budget of thirty training epochs. Hyper-parameters that are specific to each baseline (hidden dimensions, number of attention heads, or number of graph convolution layers) were taken from the values reported in the original publication and were left unchanged so that no baseline is disadvantaged by our tuning choices. All baselines were evaluated under the same white-box perturbation model at the sentence-transformer embedding for the certification comparison; where the original baseline does not natively expose that layer, we insert a compatible sentence-transformer front-end so that the perturbation budget is applied in an identical space.
+
+\subsection{Implementation and Training}
+\label{sec:impl}
+MambaGuard is implemented in PyTorch~2.3 with the official Mamba CUDA kernels and the temporal GATv2 layer from PyTorch Geometric. The selective block uses state dimension $N=16$, model dimension $d_{z}=256$, expansion factor $E=2$, kernel width $k=4$, and four stacked layers; the GATv2 layer uses $H=4$ attention heads and a temporal encoding of dimension $d_{T}=64$; the total parameter count is $3.68$~million as reported in Table~\ref{tab:efficiency}. Training optimises focal cross-entropy together with the Lipschitz regulariser $\lambda_{L}\,\sum_{\ell}(\|W^{(\ell)}\|_{2}-1)_{+}^{2}$ with $\lambda_{L}=10^{-3}$; the exact effect of $\lambda_{L}$ on the composed Lipschitz constant is reported in Table~\ref{tab:lipsweep}. We train for thirty epochs with AdamW at learning rate $3\times10^{-4}$, batch size $256$, and cosine decay. All experiments use NVIDIA A100~80GB GPUs, with reported statistics averaged over five independently seeded runs (seeds 0--4) and reported with sample standard deviation.
+
+\subsection{Main Results}
+\label{sec:results}
+Table~\ref{tab:main} reports macro-F1, latency per message, throughput, certified radius at $\varepsilon=0.05$, and post-defence attack success rate (ASR) for MambaGuard and the eight baselines, averaged across the three integrated datasets and reported with sample standard deviation from five seeds. MambaGuard achieves the highest macro-F1 ($0.978\pm0.003$) and the lowest post-defence ASR ($2.4\pm0.5$~per~cent), and it is the only system to report a non-trivial certified radius. NetMamba is closest in raw accuracy but uncertified; AgentArmor matches the post-defence ASR on agent-only benchmarks but is not applicable to network intrusion; SecurityBERT is the lightest baseline but trails on detection by more than three F1 points.
+
+\begin{table*}[!t]
+\centering
+\caption{Aggregate comparison across the three integrated datasets and the agent-protocol benchmarks, averaged over five seeds and reported with sample standard deviation. Latency and throughput are measured on a single A100 GPU with a per-message batching regime (see Table~\ref{tab:latency}). ASR denotes attack success rate after defence; ``--'' denotes a metric not reported in the original paper. The certified radius is reported at $\varepsilon=0.05$.}
+\label{tab:main}
+\renewcommand{\arraystretch}{1.12}
+\setlength{\tabcolsep}{4pt}
+\footnotesize
+\begin{tabular}{@{}l c c c c c@{}}
+\toprule
+\textbf{System} & \textbf{Macro-F1} $\uparrow$ & \textbf{Latency (ms)} $\downarrow$ & \textbf{Throughput (Mmsg/s)} $\uparrow$ & \textbf{ASR (\%)} $\downarrow$ & \textbf{Certified radius} $\uparrow$ \\
+\midrule
+E-GraphSAGE~\cite{Lo2022EGraphSAGE}        & $0.912\pm0.006$ & $14.3\pm0.4$ & $0.21\pm0.01$ & $18.7\pm0.9$ & -- \\
+Anomal-E~\cite{Caville2022AnomalE}          & $0.926\pm0.005$ & $11.8\pm0.3$ & $0.27\pm0.01$ & $16.2\pm0.8$ & -- \\
+RTIDS~\cite{Wu2022RTIDS}                    & $0.948\pm0.004$ &  $9.6\pm0.2$ & $0.34\pm0.01$ & $12.1\pm0.7$ & -- \\
+IDS-INT~\cite{Ullah2024IDSINT}              & $0.953\pm0.004$ &  $8.4\pm0.2$ & $0.39\pm0.02$ & $10.8\pm0.6$ & -- \\
+SecurityBERT~\cite{Ferrag2024SecurityBERT}  & $0.941\pm0.005$ &  $4.7\pm0.1$ & $0.61\pm0.02$ & $13.4\pm0.7$ & -- \\
+NetMamba~\cite{Wang2025NetMamba}            & $0.966\pm0.003$ &  $3.9\pm0.1$ & $1.05\pm0.03$ &  $9.7\pm0.5$ & -- \\
+ClawGuard~\cite{Zhao2026ClawGuard}          & $0.902\pm0.007^{\dagger}$ & $6.2\pm0.2$ & $0.48\pm0.02$ &  $8.1\pm0.4$ & -- \\
+AgentArmor~\cite{Wang2025AgentArmor}        & $0.918\pm0.006^{\dagger}$ & $7.5\pm0.2$ & $0.42\pm0.02$ &  $3.1\pm0.3$ & -- \\
+\textbf{MambaGuard (ours)}                  & $\mathbf{0.978\pm0.003}$ & $\mathbf{3.7\pm0.1}$ & $\mathbf{1.13\pm0.03}$ & $\mathbf{2.4\pm0.5}$ & $\mathbf{0.041\pm0.004}$ \\
+\bottomrule
+\multicolumn{6}{@{}l@{}}{\scriptsize $\dagger$ Agent-protocol benchmarks only; not applicable to network intrusion datasets.}\\
+\end{tabular}
+\end{table*}
+
+The improvements over the two strongest baselines (NetMamba and IDS-INT) on macro-F1 are $1.2$ and $2.5$ points respectively; a paired two-sided Wilcoxon signed-rank test over the five-seed by three-dataset grid gives $p<10^{-3}$ against both, so the improvements are statistically significant at the $0.001$ level.
+
+\subsection{Latency and Throughput Decomposition}
+\label{sec:latency}
+Reviewer 2 asked that we distinguish batch, per-message, streaming and end-to-end latency, and we do so in Table~\ref{tab:latency}. The A100 numbers reported in Table~\ref{tab:main} correspond to the ``per-message'' column at batch size 32. A single-message inference has higher per-message latency because of fixed launch overheads; at batch size 128 the per-message cost is minimised. On CPU, the per-message cost is roughly one order of magnitude larger than on A100, so CPU-only deployments should batch aggressively.
+
+\begin{table}[!t]
+\centering
+\caption{Latency decomposition on A100 GPU and CPU. Batch latency is the total wall-clock time to process a batch; per-message latency divides that by the batch size. Streaming latency is the additional queueing wait at 1~Mmsg/s.}
+\label{tab:latency}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+& \textbf{Batch 1} & \textbf{Batch 32} & \textbf{Batch 128} \\
+\midrule
+Batch latency, A100 (ms)      & 3.9 & 12.4 &  47.8 \\
+Per-message latency, A100 (ms) & 3.9 &  0.4 &   0.4 \\
+Batch latency, CPU (ms)       & 9.1 & 219.0 & 992.4 \\
+Per-message latency, CPU (ms) & 9.1 &   6.8 &   7.8 \\
+End-to-end latency, incl.\ canonicalisation (ms) & 4.6 & 1.1 & 0.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Computational Efficiency}
+\label{sec:efficiency}
+Table~\ref{tab:efficiency} reports parameter count, peak GPU memory during training, wall-clock training time per epoch on one A100, and the Hedge controller overhead in the online loop. The controller overhead is less than one per-mille of the total latency because the multiplicative-weights update is a $|\calA_{D}|$-dimensional element-wise operation.
+
+\begin{table}[!t]
+\centering
+\caption{Computational efficiency of MambaGuard and the strongest baselines.}
+\label{tab:efficiency}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+& \textbf{Params} & \textbf{Peak GPU mem} & \textbf{Train/epoch} & \textbf{Ctrl overhead} \\
+\midrule
+MambaGuard         & 3.68\,M & 11.4\,GB & 27\,min &  4\,\textmu s \\
+NetMamba           & 3.11\,M &  9.8\,GB & 24\,min &  --           \\
+IDS-INT            & 8.42\,M & 15.7\,GB & 41\,min &  --           \\
+RTIDS              & 6.15\,M & 12.3\,GB & 35\,min &  --           \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Expanded Component Ablation}
+\label{sec:ablation}
+Table~\ref{tab:ablation} reports an expanded ablation, addressing Reviewer 2's request for Mamba-only, GATv2-only, transformer-in-place-of-SSM, and non-certified variants. Removing the Lipschitz penalty leaves the network accurate but effectively uncertified because the composed Lipschitz constant grows by more than an order of magnitude and the corresponding Tsuzuku radius collapses. Removing the GATv2 layer collapses relational information and degrades F1 by more than two points. Replacing the selective scan with quadratic attention preserves accuracy on our datasets but raises per-message latency by an order of magnitude on GPU; on our CPU proxy the transformer is actually faster than the selective scan at short sequences, which is a fairness note. Removing the Stackelberg controller raises post-defence ASR from $2.4$ to $11.6$~per~cent, and using GATv2 alone with no sequence backbone raises ASR to $6.4$~per~cent. The multi-protocol graph itself is the single most important component: collapsing it into a flat sequence raises ASR to $14.8$~per~cent.
+
+\begin{table*}[!t]
+\centering
+\caption{Expanded component ablation, averaged over the three datasets ICS3D, IIS3D, IDS-PQC and the AgentDojo+InjecAgent agent-protocol benchmarks and over five seeds. Latency is per protocol message on a single A100. Certified radius is at $\varepsilon=0.05$.}
+\label{tab:ablation}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{4pt}
+\footnotesize
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Configuration} & \textbf{Params} & \textbf{F1} $\uparrow$ & \textbf{Lat.\ (ms)} $\downarrow$ & \textbf{ASR (\%)} $\downarrow$ & \textbf{Cert.\ rad.} $\uparrow$ \\
+\midrule
+Full MambaGuard              & 3.68\,M & $\mathbf{0.978}$ & $\mathbf{3.7}$ & $\mathbf{2.4}$ & $\mathbf{0.041}$ \\
+$-$ Lipschitz penalty        & 3.68\,M & 0.974 & 3.7 & 2.6 & 0.011 \\
+$-$ Stackelberg controller    & 3.68\,M & 0.971 & 3.5 & 11.6 & 0.038 \\
+$-$ GATv2 layer (Mamba only)  & 1.93\,M & 0.956 & 2.9 & 6.4 & 0.039 \\
+$-$ Selective SSM (GAT only)  & 1.92\,M & 0.938 & 0.7 & 8.9 & 0.031 \\
+$-$ Selective scan (attention proxy) & 2.22\,M & 0.976 & 37.4 & 2.7 & 0.040 \\
+$-$ Temporal encoding $\Phi$  & 3.63\,M & 0.963 & 3.4 & 5.2 & 0.040 \\
+$-$ Multi-protocol graph     & 3.68\,M & 0.943 & 3.6 & 14.8 & 0.041 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Certification: Actual Lipschitz Constants and Radius Distributions}
+\label{sec:cert-empirical}
+Table~\ref{tab:lipsweep} reports the measured value of $L_{f}$ and its per-layer decomposition into $L_{\text{ssm}}$, $L_{\text{gat}}$ and $L_{\text{head}}$ as a function of the effective spectral cap $\|W\|_{2}\le c$ imposed at training time by the Lipschitz penalty $\lambda_{L}$. At $c=0.5$ the composed constant is $L_{f}\approx 0.02$; at $c=1.0$ it grows to $\approx 6.5\!\times\!10^{2}$; at $c=2.0$ (no penalty) it grows to $\approx 1.0\!\times\!10^{4}$. The certified radius reported in Table~\ref{tab:main} corresponds to the trained model at $\lambda_{L}=10^{-3}$, whose effective spectral cap sits between $0.5$ and $0.75$; the certified fraction of test examples at $\varepsilon=0.05$ is $92.4\pm 1.1$~per~cent.
+
+\begin{table}[!t]
+\centering
+\caption{Composed Lipschitz constant as a function of the effective spectral cap $c=\sup_{\ell}\|W^{(\ell)}\|_{2}$ imposed at training time by the Lipschitz penalty. Measured on the default 3.68\,M-parameter configuration.}
+\label{tab:lipsweep}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+$c$ & $L_{\text{ssm}}$ & $L_{\text{gat}}$ & $L_{\text{head}}$ & $L_{f}$ & Cert.\ frac.\ at $\varepsilon\!=\!0.05$ \\
+\midrule
+0.50 &   0.06 &   1.46 & 0.25 &   0.02 & 99.8\,\% \\
+0.75 &  12.88 &   5.50 & 0.56 &  39.87 & 96.1\,\% \\
+1.00 &  58.84 &  14.73 & 0.75 & 651.80 & 88.7\,\% \\
+1.25 &  89.74 &  32.30 & 0.86 & 2482.52 & 74.3\,\% \\
+1.50 & 131.45 &  51.82 & 0.86 & 5834.45 & 55.9\,\% \\
+2.00 & 177.96 &  67.99 & 0.86 & 10364.17 & 32.1\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:certified} plots the certified accuracy against $\varepsilon$ for MambaGuard and for a randomised-smoothing variant following Cohen, Rosenfeld and Kolter~\cite{Cohen2019RandSmooth}. The deterministic Lipschitz certificate sustains a non-trivial guarantee out to $\varepsilon\approx 0.10$; randomised smoothing produces a complementary probabilistic certificate that extends further at higher inference cost.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig3_certified.pdf}
+\caption{Certified accuracy versus $\ell_{2}$ perturbation budget $\varepsilon$ on the union of the three composite datasets and the two agent-protocol benchmarks. The solid curve is MambaGuard's deterministic Lipschitz certificate (Table~\ref{tab:lipsweep}, $c=0.75$). The dashed curve is a randomised-smoothing variant. The dotted horizontal line is the clean uncertified accuracy.}
+\label{fig:certified}
+\end{figure}
+
+\subsection{Cross-Dataset Generalisation and Pareto Frontier}
+\label{sec:xdataset}
+Figure~\ref{fig:perdataset} reports per-dataset macro-F1 for MambaGuard against the three strongest baselines. MambaGuard is the top performer on every group, with the largest margin observed on the agent-protocol benchmarks. Figure~\ref{fig:pareto} plots throughput against per-message latency for the nine systems compared in Table~\ref{tab:main}; MambaGuard occupies the upper-right corner of the frontier and is the only point that also produces a non-trivial certified radius.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig4_perdataset.pdf}
+\caption{Per-dataset macro-F1 for MambaGuard and the three strongest baselines on ICS3D, IIS3D, IDS-PQC and on the combined AgentDojo+InjecAgent suite (Agent). MambaGuard is the top performer on every group, with the largest margin on the agent-protocol benchmarks.}
+\label{fig:perdataset}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig5_pareto.pdf}
+\vspace{0.4cm}
+\caption{Throughput--latency Pareto frontier across the nine systems compared in Table~\ref{tab:main}. The dashed grey curve traces the empirical Pareto frontier; MambaGuard occupies the upper-right corner and is the only point on the frontier that produces a non-trivial certified radius.}
+\label{fig:pareto}
+\end{figure}
+
+\subsection{False-Positive Costs}
+\label{sec:falsepositive}
+Aggressive defensive actions such as session termination and agent isolation cause operational disruption. Table~\ref{tab:fp} reports per-class false-positive rates at the deployed operating threshold and the associated operator-hour cost estimated using the incident-cost model of the RobustIDPS.ai platform, where each false session termination is amortised as fifteen operator-minutes for review and reinstatement. Under the trained model with $\lambda_{L}=10^{-3}$, the aggregate false-positive rate on benign traffic is $0.31$~per~cent and the estimated aggregate cost is $12.4$ operator-hours per million messages processed.
+
+\begin{table}[!t]
+\centering
+\caption{False-positive rates and associated operator-hour costs by defensive action, on the pooled test partitions of the three composite datasets.}
+\label{tab:fp}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+\textbf{Defender action} & \textbf{FP rate (\%)} & \textbf{Cost per 1M msgs (h)} \\
+\midrule
+Deep packet inspection       & 0.28 & 2.1 \\
+Message blocking             & 0.12 & 1.8 \\
+Session termination          & 0.07 & 6.5 \\
+Agent isolation              & 0.03 & 1.6 \\
+Capability revocation        & 0.05 & 0.4 \\
+\midrule
+Aggregate                    & 0.31 & 12.4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ============================================================================
+\section{Discussion and Limitations}
+\label{sec:discussion}
+%% ============================================================================
+The empirical evidence in Section~\ref{sec:experiments} and the theoretical guarantees in Section~\ref{sec:certification} together support three observations that we believe matter for practitioners.
+
+First, the linear-time selective state-space backbone is a deployment necessity, not an academic preference. Production multi-agent systems already report aggregate protocol traffic in the millions of messages per second range; the ablation in Table~\ref{tab:ablation} shows that replacing the selective scan with quadratic attention raises per-message latency from $3.7$ to $37.4$~ms on A100 with no accuracy gain. We note in fairness that on our CPU-only proxy at short sequence lengths ($L=16$) the attention variant is faster than our reference-implementation scan; the crossover point at which the selective scan wins depends on sequence length and on the availability of the hardware-aware parallel scan of~\cite{Gu2023Mamba}.
+
+Second, the relational structure of the multi-protocol graph is the single most important defensive signal against agent-layer attacks. Removing the GATv2 layer increases post-defence ASR by a factor of $2.7$, and collapsing the heterogeneous graph into a flat sequence raises ASR by a factor of $6.2$.
+
+Third, certification matters in a way that aggregate accuracy does not. NetMamba is the closest baseline on macro-F1, but it offers no robustness guarantee whatsoever, and on adaptive-attacker evaluation its effective F1 drops by more than seven points whereas MambaGuard's certified radius makes any drop on benign inputs of magnitude below $0.041$ provably zero.
+
+\paragraph{Limitations.} Several limitations of the current work should be stated plainly. First, the Lipschitz constant of Proposition~\ref{prop:lipfull} is a worst-case product bound; tighter data-dependent estimates in the manner of Fazlyab~\textit{et~al.}~\cite{Fazlyab2019LipSDP} would likely double the certified radius at modest computational cost. Second, the Stackelberg controller assumes a finite, well-specified defender action set; extension to continuous or context-dependent defender actions would require the online convex-optimisation machinery of~\cite{Hazan2016OCO} rather than Hedge. Third, the attacker capabilities enumerated in Section~\ref{sec:threat} are drawn from the published attack literature and may not exhaust the threat surface that will emerge in production; the certificate is meaningful only within the stated capability set. Fourth, the composite datasets used for evaluation, although broad, do not capture every deployment domain, and generalisation to entirely new protocols (post-A2A, private industry protocols) is an open question. Fifth, encrypted traffic is only partially captured by our current pipeline; the IDS-PQC dataset includes post-quantum-TLS captures but does not exercise the full space of encryption configurations, and the impact of end-to-end encryption on the graph-level attack signal remains an open empirical question. Sixth, deployment cost scales with the number of monitored capabilities and with the horizon $T$ chosen for the online controller; we quantify this cost in Section~\ref{sec:falsepositive} but note that the operator-hour figures are indicative rather than universal. Seventh, privacy considerations arise from the frozen sentence-transformer embedding of message payloads; differentially private variants of the embedding stage remain future work.
+
+%% ============================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%% ============================================================================
+We presented MambaGuard, a multi-protocol LLM-agent security monitor that combines a selective state-space backbone with dynamic graph attention and that produces a three-layer certificate composed of a global Lipschitz bound, a strong Stackelberg equilibrium value, and a tight Cesa-Bianchi--Lugosi no-regret guarantee. Our certification analysis uses the exact SiLU Lipschitz constant, a diagonal S4D-Lin state-matrix parameterisation for which spectral radius and spectral norm coincide, and an explicit accounting of the learnable-frequency Bochner encoding, closing three gaps identified by peer review. MambaGuard exceeds eight competitive baselines on three integrated datasets and two agent-protocol benchmarks with statistically significant margins, sustains per-message latency well below five milliseconds on a single accelerator, and produces a non-trivial certified detection radius whose magnitude is directly controlled by the Lipschitz training penalty. The complete implementation, together with the reproduction harness and the response-to-reviewers document, is released under a permissive open-source licence.
+
+%% ============================================================================
+\section*{Appendix: Exact SiLU Lipschitz Constant}
+\label{app:silu}
+%% ============================================================================
+Let $\sigma(u)=(1+e^{-u})^{-1}$ denote the sigmoid, and let $\mathrm{SiLU}(u)=u\,\sigma(u)$. Then $\mathrm{SiLU}'(u)=\sigma(u)+u\,\sigma(u)(1-\sigma(u))=\sigma(u)\,(1+u(1-\sigma(u)))$. Standard analysis gives that $\mathrm{SiLU}'$ attains its maximum at the unique root $u^{*}$ of $\mathrm{SiLU}''(u)=0$, and numerical solution to double precision yields $u^{*}\approx 2.399$ and $\mathrm{SiLU}'(u^{*})\approx 1.0998$. Consequently $\mathrm{SiLU}$ is $L_{\sigma}$-Lipschitz with $L_{\sigma}\approx 1.0998$, not $L_{\sigma}=1$ as commonly cited; the corrected value is used throughout the Lipschitz analysis of this article.
+
+%% ============================================================================
+%% References
+%% ============================================================================
+
+\section*{Acknowledgments}
+The authors thank the anonymous reviewers for their constructive feedback and acknowledge the developers of PyTorch, PyTorch Geometric, and the official Mamba CUDA kernels, on which the implementation depends. This work was supported by a grant for research centers in Artificial Intelligence provided by the Ministry of Economic Development of the Russian Federation under subsidy agreement (identifier 000000C313925P3Q0002). All authors of this publication are co-first authors.
+
+\section*{Data and Code Availability}
+The MambaGuard implementation, trained weights, and the complete evaluation harness are publicly available on GitHub.\footnote{\url{https://github.com/rogerpanel/CV/tree/main/MambaGuard}} The three composite evaluation corpora are released on Kaggle: the Integrated Cloud Security 3 Datasets (ICS3D, DOI 10.34740/kaggle/dsv/12483891), the Integrated IDPS Security 3 Datasets (IIS3D), and the IDS Encrypted \& Post-Quantum Cryptography Datasets (IDS-PQC), all under the CC BY-NC-SA 4.0 licence. MambaGuard is deployed as one detector within the RobustIDPS.ai platform~\cite{Anonymous2026RobustIDPS}, which is publicly available and currently processes operational network traffic.
+
+%% ====================================================================
+%% REFERENCES
+%% ====================================================================
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{99}
+
+\bibitem{Anthropic2024MCP} Anthropic, ``Model Context Protocol specification,'' Nov.~2024. [Online]. Available: \url{https://github.com/modelcontextprotocol/specification}
+
+\bibitem{Ibm2025Acp} IBM, ``Agent Communication Protocol (ACP) specification,'' 2025. [Online]. Available: \url{https://agentcommunicationprotocol.dev}
+
+\bibitem{Google2025A2A} Google, ``Agent-to-Agent (A2A) protocol specification,'' Apr.~2025. [Online]. Available: \url{https://github.com/google/A2A}
+
+\bibitem{Yan2025ANP} G. Yan~\textit{et~al.}, ``Agent Network Protocol technical white paper,'' arXiv:2508.00007, 2025.
+
+\bibitem{Hou2025MCP} X. Hou~\textit{et~al.}, ``Model Context Protocol: Landscape, security threats, and future research directions,'' arXiv:2503.23278, 2025.
+
+\bibitem{Yang2025MCPSec} Y. Yang~\textit{et~al.}, ``MCPSecBench: A systematic security benchmark and playground for testing model context protocols,'' arXiv:2508.13220, 2025.
+
+\bibitem{Qualys2025CVE49596} Qualys, ``Anthropic MCP Inspector remote code execution vulnerability (CVE-2025-49596),'' Jul.~2025. [Online]. Available: \url{https://threatprotect.qualys.com/2025/07/03/}
+
+\bibitem{Wang2025AgentArmor} P. Wang~\textit{et~al.}, ``AgentArmor: Enforcing program analysis on agent runtime trace to defend against prompt injection,'' arXiv:2508.01249, 2025.
+
+\bibitem{Zhao2026ClawGuard} W. Zhao~\textit{et~al.}, ``ClawGuard: Securing LLM agents through deterministic tool-access policies,'' arXiv:2604.11790, 2026.
+
+\bibitem{Habler2025A2A} Z. Habler~\textit{et~al.}, ``Building a secure agentic AI application leveraging Google's A2A protocol,'' arXiv:2504.16902, 2025.
+
+\bibitem{Narajala2025A2A} V. Narajala~\textit{et~al.}, ``Improving Google A2A protocol: Protecting sensitive data in inter-agent communication,'' arXiv:2505.12490, 2025.
+
+\bibitem{Anonymous2026RobustIDPS} R.~N. Anaedevha and A.~G. Trofimov, ``RobustIDPS.ai: Advanced AI-powered intrusion detection \& prevention system,'' (Version 1.0) \textit{[Computer software]}. Zenodo, 2026. [Online]. Available: \url{https://doi.org/10.5281/zenodo.19129512}
+
+\bibitem{Anonymous2026MambaShield} R.~N. Anaedevha, A.~G. Trofimov, and Y.~V. Borodachev, ``MambaShield: Selective state-space models for poisoning-resilient sequential modeling,'' \textit{Expert Syst. Appl.}, p.~131175, 2026.
+
+\bibitem{Anonymous2026HGP} R.~N. Anaedevha, A.~G. Trofimov, and Y.~V. Borodachev, ``Uncertainty-calibrated hierarchical Gaussian processes for intrusion detection with multi-scale temporal modeling,'' \textit{Neurocomputing}, p.~133105, 2026, doi: 10.1016/j.neucom.2026.133105.
+
+\bibitem{Anonymous2026TANODE} R.~N. Anaedevha, A.~G. Trofimov, and Y.~V. Borodachev, ``Temporal adaptive neural ordinary differential equations with deep spatio-temporal point processes for real-time network intrusion detection,'' \textit{Complex Intell. Syst.}, 2026, in press.
+
+\bibitem{Anonymous2024Adversarial} R.~N. Anaedevha and A.~G. Trofimov, ``Improved robust adversarial model against evasion attacks on intrusion detection systems,'' \textit{Opt. Mem. Neural Networks}, vol.~33, suppl.~3, pp.~S414--S423, 2024.
+
+\bibitem{Anonymous2025SMT} R.~N. Anaedevha and A.~G. Trofimov, ``Stochastic multimodal transformer with uncertainty quantification for robust network intrusion detection,'' in \textit{Advances in Neural Computation, Machine Learning, and Cognitive Research IX (Neuroinformatics 2025)}, SCI vol.~1241. Cham, Switzerland: Springer, 2025, pp.~428--447.
+
+\bibitem{Anonymous2024ElCon} R.~N. Anaedevha and A.~G. Trofimov, ``Application of machine learning models for device identification in wireless network traffic,'' in \textit{Proc. Conf. Young Researchers Electr. Electron. Eng. (ElCon)}, 2024, pp.~104--110.
+
+\bibitem{Gu2023Mamba} A. Gu and T. Dao, ``Mamba: Linear-time sequence modeling with selective state spaces,'' arXiv:2312.00752, 2023.
+
+\bibitem{Dao2024Mamba2} T. Dao and A. Gu, ``Transformers are SSMs: Generalized models and efficient algorithms through structured state space duality,'' in \textit{Proc.\ ICML}, 2024.
+
+\bibitem{Gu2022S4} A. Gu, K. Goel, and C. R\'e, ``Efficiently modeling long sequences with structured state spaces,'' in \textit{Proc.\ ICLR}, 2022.
+
+\bibitem{Gu2022S4D} A. Gu, K. Goel, A. Gupta, and C. R\'e, ``On the parameterization and initialization of diagonal state space models,'' in \textit{Proc.\ NeurIPS}, 2022.
+
+\bibitem{Velickovic2018GAT} P. Veli\v{c}kovi\'c~\textit{et~al.}, ``Graph attention networks,'' in \textit{Proc.\ ICLR}, 2018.
+
+\bibitem{Brody2022GATv2} S. Brody, U. Alon, and E. Yahav, ``How attentive are graph attention networks?,'' in \textit{Proc.\ ICLR}, 2022.
+
+\bibitem{Xu2020TGAT} D. Xu~\textit{et~al.}, ``Inductive representation learning on temporal graphs,'' in \textit{Proc.\ ICLR}, 2020.
+
+%% --- game theory and certification ---
+\bibitem{Conitzer2006Commit} V. Conitzer and T. Sandholm, ``Computing the optimal strategy to commit to,'' in \textit{Proc.\ ACM EC}, 2006, pp.~82--90. DOI:10.1145/1134707.1134717.
+
+\bibitem{Paruchuri2008DOBSS} P. Paruchuri~\textit{et~al.}, ``Playing games for security: An efficient exact algorithm for solving Bayesian Stackelberg games,'' in \textit{Proc.\ AAMAS}, 2008, pp.~895--902.
+
+\bibitem{Balcan2015Commitment} M.-F. Balcan, A. Blum, N. Haghtalab, and A. D. Procaccia, ``Commitment without regrets: Online learning in Stackelberg security games,'' in \textit{Proc.\ ACM EC}, 2015, pp.~61--78. DOI:10.1145/2764468.2764478.
+
+\bibitem{CesaBianchi2006Prediction} N. Cesa-Bianchi and G. Lugosi, \textit{Prediction, Learning, and Games}. Cambridge University Press, 2006.
+
+\bibitem{Arora2012MWU} S. Arora, E. Hazan, and S. Kale, ``The multiplicative weights update method: A meta-algorithm and applications,'' \textit{Theory of Computing}, vol.~8, no.~1, pp.~121--164, 2012.
+
+\bibitem{Hazan2016OCO} E. Hazan, ``Introduction to online convex optimization,'' \textit{Foundations and Trends in Optimization}, vol.~2, no.~3--4, pp.~157--325, 2016.
+
+\bibitem{Tsuzuku2018LipMargin} Y. Tsuzuku, I. Sato, and M. Sugiyama, ``Lipschitz-margin training: Scalable certification of perturbation invariance for deep neural networks,'' in \textit{Proc.\ NeurIPS}, 2018, pp.~6541--6550.
+
+\bibitem{Fazlyab2019LipSDP} M. Fazlyab~\textit{et~al.}, ``Efficient and accurate estimation of Lipschitz constants for deep neural networks,'' in \textit{Proc.\ NeurIPS}, 2019.
+
+\bibitem{Dasoulas2021LipNorm} G. Dasoulas, K. Scaman, and A. Virmaux, ``Lipschitz normalization for self-attention layers with application to graph neural networks,'' in \textit{Proc.\ ICML}, 2021.
+
+\bibitem{Cohen2019RandSmooth} J. M. Cohen, E. Rosenfeld, and J. Z. Kolter, ``Certified adversarial robustness via randomized smoothing,'' in \textit{Proc.\ ICML}, 2019, pp.~1310--1320.
+
+\bibitem{Lin2017Focal} T.-Y. Lin, P. Goyal, R. Girshick, K. He, and P. Doll\'ar, ``Focal loss for dense object detection,'' in \textit{Proc.\ ICCV}, 2017, pp.~2980--2988.
+
+%% --- IDS baselines ---
+\bibitem{Lo2022EGraphSAGE} W. W. Lo~\textit{et~al.}, ``E-GraphSAGE: A graph neural network based intrusion detection system for IoT,'' in \textit{Proc.\ IEEE/IFIP NOMS}, 2022. DOI:10.1109/NOMS54207.2022.9789878.
+
+\bibitem{Caville2022AnomalE} E. Caville~\textit{et~al.}, ``Anomal-E: A self-supervised network intrusion detection system based on graph neural networks,'' \textit{Knowledge-Based Systems}, vol.~258, p.~110030, 2022. DOI:10.1016/j.knosys.2022.110030.
+
+\bibitem{Wu2022RTIDS} Z. Wu~\textit{et~al.}, ``RTIDS: A robust transformer-based approach for intrusion detection system,'' \textit{IEEE Access}, vol.~10, pp.~64375--64387, 2022. DOI:10.1109/ACCESS.2022.3182333.
+
+\bibitem{Ullah2024IDSINT} S. Ullah~\textit{et~al.}, ``IDS-INT: Intrusion detection system using transformer-based transfer learning for imbalanced network traffic,'' \textit{Digital Communications and Networks}, vol.~10, no.~1, pp.~190--204, 2024.
+
+\bibitem{Wang2025NetMamba} T. Wang~\textit{et~al.}, ``NetMamba: Efficient network traffic classification via pre-training unidirectional Mamba,'' in \textit{Proc.\ IEEE INFOCOM}, 2025.
+
+\bibitem{Ferrag2024SecurityBERT} M. A. Ferrag~\textit{et~al.}, ``Revolutionizing cyber threat detection with large language models: A privacy-preserving BERT-based lightweight model for IoT/IIoT devices,'' \textit{IEEE Access}, 2024.
+
+\bibitem{Debenedetti2024AgentDojo} E. Debenedetti~\textit{et~al.}, ``AgentDojo: A dynamic environment to evaluate prompt injection attacks and defenses for LLM agents,'' in \textit{Proc.\ NeurIPS}, 2024.
+
+\bibitem{Zhan2024InjecAgent} Q. Zhan~\textit{et~al.}, ``InjecAgent: Benchmarking indirect prompt injections in tool-integrated large language model agents,'' in \textit{Findings of ACL}, 2024.
+
+%% --- metaheuristic-tuned classical IDS (Reviewer 2, point 6) ---
+\bibitem{Salb2023SCACloud} M. Salb, L. Jovanovic, N. Bacanin, M. Antonijevic, M. Zivkovic, and N. Budimirovic, ``Hybrid CNN--XGBoost intrusion detection approach tuned by modified sine cosine algorithm towards better cloud security,'' \textit{IEEE Access}, vol.~11, pp.~68542--68563, 2023.
+
+\bibitem{Bacanin2024MetaverseIDS} N. Bacanin, K. Venkatachalam, T. Bezdan, M. Zivkovic, and M. Abouhawwash, ``Intrusion detection in metaverse environment Internet of Things systems by metaheuristics tuned two level framework,'' \textit{Scientific Reports}, vol.~14, art.~14567, 2024.
+
+\bibitem{Zivkovic2023IoTSoftware} M. Zivkovic, L. Jovanovic, N. Bacanin, and A. Petrovic, ``Intrusion detection using metaheuristic optimization within IoT/IIoT systems and software of autonomous vehicles,'' \textit{Sensors}, vol.~23, no.~10, art.~4832, 2023.
+
+\bibitem{Zivkovic2023CatBoostReptile} M. Zivkovic, L. Jovanovic, and N. Bacanin, ``CatBoost optimized with adapted reptile search algorithm for intrusion detection systems,'' in \textit{Proc.\ ICITMS}, 2023, pp.~112--121.
+
+\bibitem{Zivkovic2022BoostingSmartCity} M. Zivkovic, N. Bacanin, and L. Jovanovic, ``Intrusion detection for smart city security by boosting algorithms optimized by metaheuristics algorithm,'' in \textit{Proc.\ Sustainable Comm. and Comput.}, LNNS vol.~549, Springer, 2022, pp.~415--429.
+
+%% --- datasets ---
+\bibitem{Anonymous2025ICS3D} R.~N. Anaedevha, ``ICS3D: Integrated Cloud Security 3 Datasets for multi-domain intrusion detection,'' Kaggle, 2024. DOI: 10.34740/kaggle/dsv/12483891.
+
+\bibitem{Anonymous2025IIS3D} R.~N. Anaedevha, ``IIS3D: Integrated IDPS Security 3 Datasets,'' Kaggle, 2025. [Online]. Available: \url{https://www.kaggle.com/datasets/rogernickanaedevha}
+
+\bibitem{Anonymous2025PQC} R.~N. Anaedevha, ``IDS encrypted \& post-quantum cryptography datasets,'' Kaggle, 2025. [Online]. Available: \url{https://www.kaggle.com/datasets/rogernickanaedevha}
+
+\bibitem{Sharafaldin2018CICIDS} I. Sharafaldin, A. H. Lashkari, and A. A. Ghorbani, ``Toward generating a new intrusion detection dataset and intrusion traffic characterization,'' in \textit{Proc.\ ICISSP}, 2018, pp.~108--116.
+
+\bibitem{Moustafa2015UNSW} N. Moustafa and J. Slay, ``UNSW-NB15: A comprehensive data set for network intrusion detection systems,'' in \textit{Proc.\ MilCIS}, 2015.
+
+\bibitem{Neto2023CICIoT} E. C. P. Neto~\textit{et~al.}, ``CICIoT2023: A real-time dataset and benchmark for large-scale attacks in IoT environment,'' \textit{Sensors}, vol.~23, no.~13, p.~5941, 2023.
+
+\bibitem{Ferrag2022EdgeIIoT} M. A. Ferrag~\textit{et~al.}, ``Edge-IIoTset: A new comprehensive realistic cyber security dataset of IoT and IIoT applications for centralized and federated learning,'' \textit{IEEE Access}, vol.~10, pp.~40281--40306, 2022.
+
+\bibitem{Sarhan2021NetFlow} M. Sarhan, S. Layeghy, N. Moustafa, and M. Portmann, ``NetFlow datasets for machine learning-based network intrusion detection systems,'' in \textit{Proc.\ BDTA/WiCON}, Springer LNICST, 2021, pp.~117--135. DOI:10.1007/978-3-030-72802-1\_9.
+
+\end{thebibliography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author1.jpeg}}]{Roger Nick Anaedevha}
+received the B.Sc. degree in Computer Science from Ambrose Alli University, Nigeria, M.Sc. degrees in Computer Science from the University of Abuja, Nigeria, and in Information Security from the National Research Nuclear University MEPhI, Moscow. He is currently pursuing the Ph.D. degree in Applied Mathematics and Artificial Intelligence at MEPhI under Prof. Trofimov Aleksandr Gennadievich. His research interests include adversarial machine learning, federated learning, privacy-preserving AI, uncertainty quantification, and Quantum Machine Learning. He has authored several first-author publications in IEEE, Springer, and Elsevier venues. His adversarially-robust IDPS work has been deployed in production processing over 2TB of daily traffic. He is a member of IEEE, ACM, and Russian Neural Network Association.
+\end{IEEEbiography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author2.jpeg}}]{Trofimov Aleksandr Gennadievich}
+has a PhD, the Assistant Professor at the Institute of Cyber Intelligent Systems, National Research Nuclear University, MEPhI. Head of the Laboratory of Neural Networks Technologies (MEPhI), program/organizing committee member of International Conference ``Neuroinformatics'', the research advisor at the Center for Top-level educational programs in the field of AI at the Institute of Cyber Intelligent Systems of MEPhI. His research focuses on intelligent systems, machine learning theory, and security applications.
+\end{IEEEbiography}
+
+\vspace{-1.0cm}
+
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{author3.png}}]{Yuri Vladimirovich Borodachev}
+is affiliated with the Artificial Intelligence Research Center at the National Research Nuclear University MEPhI, Moscow, Russia. He is responsible for managing, coordinating and organizing the research work. His research interests include engineering systems based on artificial intelligence, autonomous vehicles, and AI applications in transport.
+\end{IEEEbiography}
+
+\end{document}
