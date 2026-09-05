@@ -385,8 +385,10 @@ def run_e3(cfg: dict) -> pd.DataFrame:
     base = out.parent
     rows, curves = [], {}
     for path in sorted(base.glob("E1*/predictions/*.subject_wise.csv")) + sorted((base / "E2" / "predictions").glob("*.csv")):
-        pred = seed_averaged(pd.read_csv(path))
         name = path.stem
+        if ".majority." in name:
+            continue  # calibration of a constant predictor is not informative
+        pred = seed_averaged(pd.read_csv(path))
         m = binary_metrics(pred["y"], pred["p"])
         rows.append({"source": path.parent.parent.name, "run": name, "level": "window", **m})
         s = subject_level(pred)
@@ -397,6 +399,8 @@ def run_e3(cfg: dict) -> pd.DataFrame:
         for ext in sorted((base / "E2" / "predictions").glob("*.external.csv")):
             stem = ext.stem  # a-to-b.model.external
             a_to_b, model, _ = stem.split(".")
+            if model == "majority":
+                continue
             a = a_to_b.split("-to-")[0]
             internal = base / "E2" / "predictions" / f"{a}.{model}.internal.csv"
             if not internal.exists():

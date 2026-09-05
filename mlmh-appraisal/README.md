@@ -120,7 +120,93 @@ Outputs: `results/<real|synthetic>/E*/` (CSV summaries, per-window predictions, 
 ## Current results
 
 <!-- RESULTS:START -->
-_No results yet._
+_Last refreshed by `scripts/update_readme.py` from `results/synthetic`._
+
+> **These numbers come from the SYNTHETIC fixture** (`python -m mlmh synth`). They demonstrate that the pipeline runs end to end and show the *mechanism* of leakage inflation on fingerprinted data. They are not results and must not be quoted.
+
+#### E1: leakage inflation (record-wise minus subject-wise)
+
+| Cohort | Model | AUROC subject-wise (window) | AUROC record-wise (window) | Inflation (paired, window) | AUROC subject-wise (subject-level) | AUROC record-wise (subject-level) |
+|---|---|---|---|---|---|---|
+| depresjon | Majority class | 0.455 [0.239, 0.546] | 0.496 [0.431, 0.535] | 0.100 [-0.047, 0.261] | 0.455 [0.279, 0.498] | 0.487 [0.330, 0.587] |
+| depresjon | Logistic regression | 0.625 [0.467, 0.761] | 0.788 [0.656, 0.879] | 0.158 [0.106, 0.211] | 0.631 [0.515, 0.741] | 0.789 [0.690, 0.868] |
+| depresjon | Random forest | 0.669 [0.531, 0.794] | 0.988 [0.976, 0.997] | 0.310 [0.199, 0.444] | 0.679 [0.581, 0.786] | 0.999 [1.000, 1.000] |
+| depresjon | XGBoost | 0.640 [0.507, 0.782] | 0.983 [0.971, 0.995] | 0.332 [0.214, 0.464] | 0.640 [0.549, 0.760] | 1.000 [1.000, 1.000] |
+| psykose | Majority class | 0.455 [0.252, 0.557] | 0.496 [0.456, 0.555] | 0.079 [-0.096, 0.250] | 0.455 [0.275, 0.532] | 0.479 [0.351, 0.603] |
+| psykose | Logistic regression | 0.687 [0.535, 0.819] | 0.828 [0.703, 0.922] | 0.132 [0.082, 0.186] | 0.705 [0.589, 0.822] | 0.848 [0.761, 0.926] |
+| psykose | Random forest | 0.734 [0.586, 0.868] | 0.991 [0.981, 0.997] | 0.249 [0.134, 0.404] | 0.744 [0.627, 0.862] | 1.000 [1.000, 1.000] |
+| psykose | XGBoost | 0.709 [0.546, 0.833] | 0.987 [0.976, 0.995] | 0.268 [0.147, 0.405] | 0.714 [0.614, 0.828] | 1.000 [1.000, 1.000] |
+| hyperaktiv | Majority class | 0.481 [0.340, 0.556] | 0.495 [0.422, 0.527] | 0.029 [-0.096, 0.159] | 0.481 [0.361, 0.545] | 0.483 [0.385, 0.567] |
+| hyperaktiv | Logistic regression | 0.683 [0.570, 0.769] | 0.795 [0.696, 0.860] | 0.108 [0.075, 0.145] | 0.701 [0.622, 0.778] | 0.818 [0.755, 0.881] |
+| hyperaktiv | Random forest | 0.581 [0.475, 0.687] | 0.916 [0.873, 0.958] | 0.341 [0.257, 0.416] | 0.584 [0.502, 0.682] | 0.938 [0.910, 0.970] |
+| hyperaktiv | XGBoost | 0.578 [0.465, 0.685] | 0.909 [0.864, 0.958] | 0.338 [0.255, 0.416] | 0.582 [0.508, 0.673] | 0.942 [0.909, 0.975] |
+
+#### E2: internal versus external validation
+
+| Train -> Test | Model | EPV (train) | Internal AUROC | External AUROC | Delta | Ext. cal. slope | Ext. cal. intercept | Ext. Brier |
+|---|---|---|---|---|---|---|---|---|
+| depresjon -> psykose | Majority class | 0.6 | 0.450 [0.217, 0.554] | 0.500 [0.500, 0.500] | +0.050 | 0.10 | -0.04 | 0.244 |
+| depresjon -> psykose | Logistic regression | 0.6 | 0.638 [0.410, 0.775] | 0.771 [0.583, 0.885] | +0.133 | 0.49 | -0.09 | 0.204 |
+| depresjon -> psykose | Random forest | 0.6 | 0.709 [0.551, 0.860] | 0.660 [0.472, 0.813] | -0.049 | 0.40 | -0.43 | 0.243 |
+| depresjon -> psykose | XGBoost | 0.6 | 0.722 [0.539, 0.861] | 0.664 [0.478, 0.822] | -0.059 | 0.19 | -1.42 | 0.298 |
+| psykose -> depresjon | Majority class | 0.6 | 0.449 [0.175, 0.529] | 0.500 [0.500, 0.500] | +0.051 | 0.10 | 0.04 | 0.242 |
+| psykose -> depresjon | Logistic regression | 0.6 | 0.712 [0.555, 0.864] | 0.671 [0.451, 0.818] | -0.041 | 0.36 | 0.42 | 0.247 |
+| psykose -> depresjon | Random forest | 0.6 | 0.746 [0.593, 0.888] | 0.706 [0.516, 0.850] | -0.040 | 0.61 | 0.08 | 0.216 |
+| psykose -> depresjon | XGBoost | 0.6 | 0.761 [0.607, 0.882] | 0.674 [0.457, 0.822] | -0.087 | 0.20 | -0.62 | 0.298 |
+| depresjon -> hyperaktiv | Majority class | 0.8 | 0.455 [0.239, 0.546] | 0.500 [0.500, 0.500] | +0.045 | -0.02 | 0.40 | 0.260 |
+| depresjon -> hyperaktiv | Logistic regression | 0.8 | 0.625 [0.467, 0.761] | 0.629 [0.509, 0.724] | +0.003 | 0.30 | 0.26 | 0.265 |
+| depresjon -> hyperaktiv | Random forest | 0.8 | 0.669 [0.531, 0.794] | 0.652 [0.539, 0.757] | -0.017 | 0.40 | 0.60 | 0.261 |
+| depresjon -> hyperaktiv | XGBoost | 0.8 | 0.640 [0.507, 0.782] | 0.642 [0.528, 0.752] | +0.002 | 0.18 | 0.88 | 0.306 |
+
+#### E3: calibration alongside discrimination
+
+| Exp. | Run | AUROC | Brier | Cal. slope | Cal. intercept | ECE |
+|---|---|---|---|---|---|---|
+| E1 | `depresjon.logreg.subject_wise` | 0.631 | 0.259 | 0.34 | -0.28 | 0.201 |
+| E1 | `depresjon.rf.subject_wise` | 0.681 | 0.233 | 0.43 | 0.01 | 0.143 |
+| E1 | `depresjon.xgboost.subject_wise` | 0.655 | 0.279 | 0.20 | 0.12 | 0.199 |
+| E1 | `hyperaktiv.logreg.subject_wise` | 0.691 | 0.232 | 0.40 | 0.05 | 0.119 |
+| E1 | `hyperaktiv.rf.subject_wise` | 0.585 | 0.263 | 0.30 | -0.03 | 0.181 |
+| E1 | `hyperaktiv.xgboost.subject_wise` | 0.585 | 0.304 | 0.14 | -0.15 | 0.226 |
+| E1 | `psykose.logreg.subject_wise` | 0.699 | 0.238 | 0.37 | -0.41 | 0.159 |
+| E1 | `psykose.rf.subject_wise` | 0.743 | 0.196 | 0.63 | -0.06 | 0.100 |
+| E1 | `psykose.xgboost.subject_wise` | 0.722 | 0.227 | 0.30 | 0.10 | 0.154 |
+| E1_cnn | `depresjon.cnn1d.subject_wise` | 0.586 | 0.267 | 0.12 | -0.08 | 0.141 |
+| E1_cnn | `hyperaktiv.cnn1d.subject_wise` | 0.523 | 0.346 | 0.01 | 0.31 | 0.260 |
+| E1_cnn | `psykose.cnn1d.subject_wise` | 0.561 | 0.340 | 0.06 | -1.03 | 0.266 |
+| E2 | `depresjon-to-hyperaktiv.logreg.external` | 0.629 | 0.265 | 0.30 | 0.26 | 0.157 |
+| E2 | `depresjon-to-hyperaktiv.rf.external` | 0.653 | 0.260 | 0.41 | 0.60 | 0.163 |
+| E2 | `depresjon-to-hyperaktiv.xgboost.external` | 0.643 | 0.305 | 0.18 | 0.87 | 0.259 |
+| E2 | `depresjon-to-psykose.logreg.external` | 0.771 | 0.204 | 0.49 | -0.09 | 0.127 |
+| E2 | `depresjon-to-psykose.rf.external` | 0.660 | 0.243 | 0.40 | -0.42 | 0.165 |
+| E2 | `depresjon-to-psykose.xgboost.external` | 0.663 | 0.298 | 0.19 | -1.41 | 0.272 |
+| E2 | `depresjon.logreg.internal` | 0.631 | 0.259 | 0.34 | -0.28 | 0.201 |
+| E2 | `depresjon.rf.internal` | 0.681 | 0.233 | 0.43 | 0.01 | 0.143 |
+| E2 | `depresjon.xgboost.internal` | 0.655 | 0.279 | 0.20 | 0.12 | 0.199 |
+| E2 | `psykose-to-depresjon.logreg.external` | 0.671 | 0.247 | 0.36 | 0.42 | 0.209 |
+| E2 | `psykose-to-depresjon.rf.external` | 0.706 | 0.216 | 0.62 | 0.08 | 0.136 |
+| E2 | `psykose-to-depresjon.xgboost.external` | 0.675 | 0.297 | 0.20 | -0.61 | 0.271 |
+| E2 | `psykose.logreg.internal` | 0.729 | 0.227 | 0.34 | 0.12 | 0.121 |
+| E2 | `psykose.rf.internal` | 0.762 | 0.203 | 0.74 | -0.09 | 0.121 |
+| E2 | `psykose.xgboost.internal` | 0.761 | 0.227 | 0.37 | -0.51 | 0.177 |
+| E2 | `depresjon-to-hyperaktiv.logreg.external+recal` | 0.629 | 0.246 | 0.88 | 0.40 | 0.094 |
+| E2 | `depresjon-to-hyperaktiv.rf.external+recal` | 0.653 | 0.242 | 0.95 | 0.45 | 0.122 |
+| E2 | `depresjon-to-hyperaktiv.xgboost.external+recal` | 0.643 | 0.245 | 0.92 | 0.43 | 0.112 |
+| E2 | `depresjon-to-psykose.logreg.external+recal` | 0.771 | 0.200 | 1.43 | 0.48 | 0.148 |
+| E2 | `depresjon-to-psykose.rf.external+recal` | 0.660 | 0.221 | 0.93 | 0.11 | 0.129 |
+| E2 | `depresjon-to-psykose.xgboost.external+recal` | 0.663 | 0.223 | 0.96 | 0.16 | 0.097 |
+| E2 | `psykose-to-depresjon.logreg.external+recal` | 0.671 | 0.211 | 1.05 | 0.14 | 0.156 |
+| E2 | `psykose-to-depresjon.rf.external+recal` | 0.706 | 0.210 | 0.84 | 0.13 | 0.111 |
+| E2 | `psykose-to-depresjon.xgboost.external+recal` | 0.675 | 0.232 | 0.53 | 0.04 | 0.116 |
+
+#### Run manifests
+
+| Exp. | git | config hash | seeds | bootstrap | created (UTC) | synthetic |
+|---|---|---|---|---|---|---|
+| E1 | `9bb891b908` (dirty) | `58955ed9b797a0a1` | [0, 1, 2, 3, 4] | 300 | 2026-09-05T18:18:50 | yes |
+| E1_cnn | `ef78278aeb` (dirty) | `727797a16647ccf8` | [0, 1] | 100 | 2026-09-05T18:40:06 | yes |
+| E2 | `23f3001a4f` (dirty) | `3d86339d63d7390d` | [0, 1, 2, 3, 4] | 300 | 2026-09-05T18:28:06 | yes |
+| E3 | `ef78278aeb` (dirty) | `4593148d5bedc11c` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-05T18:41:20 | yes |
 <!-- RESULTS:END -->
 
 ## Roadmap

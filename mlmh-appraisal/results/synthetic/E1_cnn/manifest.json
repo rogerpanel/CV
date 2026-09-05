@@ -1,8 +1,8 @@
 {
-  "created_utc": "2026-09-05T18:41:20.104993+00:00",
+  "created_utc": "2026-09-05T18:40:06.265839+00:00",
   "git_sha": "ef78278aebbe7a548f1e40989486ddf9ca72a274",
   "git_dirty": true,
-  "config_hash": "4593148d5bedc11c",
+  "config_hash": "727797a16647ccf8",
   "config": {
     "data_root": "data/raw",
     "synthetic_root": "data/synthetic",
@@ -29,19 +29,11 @@
     ],
     "seeds": [
       0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9
+      1
     ],
     "n_splits": 5,
     "resample": null,
-    "n_boot": 1000,
+    "n_boot": 100,
     "ci_method": "bca",
     "ci_metrics": [
       "auroc",
@@ -51,17 +43,17 @@
       "calibration_slope"
     ],
     "models": [
-      "majority",
-      "logreg",
-      "rf",
-      "xgboost"
+      "cnn1d"
     ],
     "inherit": "base.yaml",
-    "experiment": "E3",
-    "description": "The calibration blind spot. Reads every stored prediction set from E1 (subject-wise arm) and E2 and reports Brier score, calibration slope and intercept, ECE and reliability curves next to AUROC. Adds a logistic recalibration arm for the external predictions.\n",
-    "splitter": "subject_wise",
-    "recalibrate": true,
-    "_config_path": "/home/user/CV/mlmh-appraisal/configs/e3_calibration.yaml"
+    "experiment": "E1",
+    "run_name": "E1_cnn",
+    "description": "E1 with the 1D-CNN on the raw 1440-minute series (requires torch and `representations: [engineered, raw]` at prepare time).\n",
+    "splitters": [
+      "subject_wise",
+      "record_wise"
+    ],
+    "_config_path": "/home/user/CV/mlmh-appraisal/configs/e1_cnn_raw.yaml"
   },
   "python": "3.11.15",
   "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
@@ -274,6 +266,6 @@
     "hyperaktiv/patient_info.csv": "25ad95bbd37220ba1537760b770b09b4a8464386ff0e693a62d2b393ee9ae3d5"
   },
   "synthetic": true,
-  "experiment": "E3",
-  "n_rows": 63
+  "experiment": "E1_cnn",
+  "n_rows": 24
 }
