@@ -1,0 +1,548 @@
+%% ===========================================================================
+%%  Project brief: paired systematic review + empirical companion study
+%%  Prepared for Dr. Aminat Abiola Ajibola
+%%  Doubles as (a) a research protocol and (b) a kickoff spec for Claude Code
+%% ===========================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{charter}
+\usepackage[scaled=0.88]{helvet}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.2cm,top=2.4cm,bottom=2.4cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\tcbuselibrary{skins,breakable}
+
+\definecolor{ink}{HTML}{1A1A1A}
+\definecolor{accent}{HTML}{8C2F1E}
+\definecolor{rule}{HTML}{C9C2B8}
+\definecolor{panelbg}{HTML}{F4F1EC}
+\definecolor{softgrey}{HTML}{5C5851}
+\definecolor{codebg}{HTML}{F7F5F2}
+\definecolor{codekey}{HTML}{1F4E5F}
+
+\color{ink}
+
+\titleformat{\section}
+  {\normalfont\sffamily\bfseries\large\color{accent}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\sffamily\bfseries\normalsize\color{ink}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}
+  {\normalfont\sffamily\bfseries\small\color{softgrey}}{\thesubsubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{2.4ex plus 1ex}{1.1ex}
+\titlespacing*{\subsection}{0pt}{1.9ex plus 1ex}{0.7ex}
+
+\setlist[enumerate,1]{leftmargin=1.7em,itemsep=0.45em,topsep=0.5em}
+\setlist[itemize,1]{leftmargin=1.4em,itemsep=0.3em,topsep=0.4em,
+  label=\textcolor{accent}{\textbullet}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancyhead[L]{\footnotesize\sffamily\color{softgrey}Paired review + empirical study}
+\fancyhead[R]{\footnotesize\sffamily\color{softgrey}Project brief}
+\fancyfoot[C]{\footnotesize\sffamily\color{softgrey}\thepage}
+
+\setlength{\parskip}{0.55em}
+\setlength{\parindent}{0pt}
+
+\newtcolorbox{panel}{breakable,enhanced,colback=panelbg,colframe=rule,
+  boxrule=0.4pt,left=10pt,right=10pt,top=8pt,bottom=8pt,arc=1pt,
+  before skip=10pt,after skip=12pt}
+\newtcolorbox{keybox}{breakable,enhanced,colback=white,colframe=accent,
+  boxrule=0.9pt,left=10pt,right=10pt,top=8pt,bottom=8pt,arc=1pt,
+  before skip=10pt,after skip=12pt}
+
+\lstdefinestyle{plain}{
+  basicstyle=\ttfamily\scriptsize,
+  backgroundcolor=\color{codebg},
+  frame=single, rulecolor=\color{rule},
+  breaklines=true, breakatwhitespace=false,
+  columns=fullflexible, keepspaces=true,
+  showstringspaces=false,
+  xleftmargin=6pt, xrightmargin=0pt,
+  framexleftmargin=6pt,
+  aboveskip=10pt, belowskip=10pt,
+  literate={─}{{-}}1 {│}{{|}}1 {├}{{|}}1 {└}{{\textbackslash}}1
+}
+\lstset{style=plain}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\footnotesize\color{softgrey}\MakeUppercase{Project brief}}\\[0.9em]
+  {\sffamily\LARGE\bfseries Machine Learning for Mental Health Prediction:\\[0.3em]
+   A Systematic Appraisal and an Empirical Demonstration}\\[0.7em]
+  {\sffamily\normalsize\color{softgrey} Paired-paper design, dataset plan, and
+   repository specification}\\[0.9em]
+  {\footnotesize\color{softgrey} Prepared for Dr.\ Aminat Abiola Ajibola \quad\textbullet\quad
+   Includes a kickoff prompt for Claude Code}
+\end{center}
+\vspace{0.3em}
+{\color{rule}\hrule height 0.6pt}
+\vspace{1.2em}
+
+% =====================================================================
+\section{The argument in one page}
+
+\begin{keybox}
+\textbf{Paper A (review)} establishes that the field systematically fails to
+externally validate, fails to report calibration, and frequently reports
+performance inflated by subject-level data leakage.
+
+\smallskip
+\textbf{Paper B (empirical)} takes public mental-health datasets and
+\emph{quantifies} each of those three failures on real data --- showing how
+much accuracy inflates under leaky splitting, how far performance falls
+under genuine external validation, and how badly miscalibrated the resulting
+models are.
+
+\smallskip
+Neither paper is remarkable alone. The review restates a concern that
+methodologists already voice; the empirical study is one more model on
+familiar datasets. \textbf{Together they are a complete argument}: the review
+measures how widespread the problem is, and the companion measures how much
+it costs. That pairing is uncommon and is what makes this Q1-competitive.
+\end{keybox}
+
+\subsection{Why not the review alone}
+
+Four directly competing reviews already exist, the most recent published in
+January 2026 (Hasan et al., \emph{Frontiers in Digital Health}, 3{,}320
+records screened). A descriptive review at this scope will be rejected on
+novelty. Reframing to a methodological appraisal fixes that --- but an
+appraisal that only counts deficiencies invites the reply
+\emph{``so what?''} The companion study answers it with numbers.
+
+\subsection{Why not the empirical study alone}
+
+Primary ML-on-mental-health-data papers are abundant and the marginal one is
+not publishable at Q1. What makes Paper~B defensible is that its research
+questions are \emph{derived from} Paper~A rather than chosen arbitrarily.
+The review licenses the experiment.
+
+% =====================================================================
+\section{Paper A --- the systematic review}
+
+\subsection{Research question}
+
+How methodologically sound and completely reported are machine learning
+models developed to predict mental health disorders across populations?
+A systematic review and critical appraisal using PROBAST and TRIPOD+AI.
+
+\subsection{Design summary}
+
+\begin{itemize}
+  \item \textbf{Registration:} PROSPERO, before the searches are run.
+  \item \textbf{Databases:} PubMed, Scopus, Web of Science, IEEE Xplore.
+        PsycINFO if access can be obtained; declare its absence if not.
+  \item \textbf{Window:} 2018--2026, English, peer-reviewed.
+  \item \textbf{Population:} any, any setting. \textbf{Condition:} any mental
+        health disorder. \textbf{Index model:} supervised ML/DL predicting a
+        mental health outcome.
+  \item \textbf{Appraisal:} PROBAST (20 signalling questions, 4 domains) and
+        TRIPOD+AI adherence, dual independent reviewers, Cohen's $\kappa$.
+  \item \textbf{Expected yield:} 5{,}000--9{,}000 records after
+        deduplication; 80--200 included studies.
+\end{itemize}
+
+\subsection{Primary outcomes --- these become Paper B's hypotheses}
+
+\begin{enumerate}
+  \item Proportion of studies performing \textbf{any external validation}
+  \item Proportion reporting \textbf{calibration}
+  \item Proportion reporting \textbf{AUC} rather than accuracy alone
+  \item Proportion with \textbf{leakage-prone evaluation design} --- notably
+        record-wise rather than subject-wise splitting of repeated measures
+  \item Proportion meeting the \textbf{EPV $\geq$ 200} expectation for ML
+        models (Moons et al., 2025)
+  \item Proportion releasing \textbf{code} or \textbf{data}
+\end{enumerate}
+
+Full protocol, PICOS criteria table and the four database search strings are
+in \texttt{P1\_review\_protocol.md}. The extraction and appraisal workbook is
+\texttt{P1\_extraction\_appraisal.xlsx}.
+
+% =====================================================================
+\section{Paper B --- the empirical companion}
+
+\subsection{Three experiments, each answering one review finding}
+
+\begin{panel}
+\textbf{E1 --- The cost of leaky splitting.}
+Train the same model on the same data under (a) record-wise splitting, where
+windows from one participant may appear in both train and test, and
+(b) subject-wise splitting, where no participant crosses the boundary.
+Report the difference.
+
+\smallskip
+\emph{Why this matters:} actigraphy and sensor studies produce many windows
+per participant. Splitting by window rather than by person is a common and
+often unremarked practice, and it inflates accuracy substantially. E1 puts a
+number on that inflation.
+
+\medskip
+\textbf{E2 --- The cost of skipping external validation.}
+Train on cohort~1, evaluate unchanged on cohort~2 with no refitting.
+Contrast with the internally cross-validated estimate on cohort~1.
+
+\smallskip
+\emph{Why this matters:} the review will show most studies report only
+internal validation. E2 measures the optimism that entails.
+
+\medskip
+\textbf{E3 --- The calibration blind spot.}
+For every model in E1 and E2, report calibration slope, intercept, Brier
+score and a reliability curve alongside discrimination.
+
+\smallskip
+\emph{Why this matters:} a model can discriminate well and still produce
+probability estimates that are useless for clinical decisions. The review
+will show this is almost never reported.
+\end{panel}
+
+\subsection{Datasets}
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}p{0.15\linewidth}p{0.33\linewidth}p{0.14\linewidth}p{0.29\linewidth}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Content} & \textbf{Access} & \textbf{Link}\\
+\midrule
+Depresjon & Actigraphy; 23 unipolar/bipolar depressed + 32 controls; MADRS &
+  Open, cite req. & \url{https://datasets.simula.no/depresjon/}\\
+Psykose & Actigraphy; 22 schizophrenia + 32 controls; BPRS &
+  Open, cite req. & \url{https://datasets.simula.no/psykose/}\\
+HYPERAKTIV & Actigraphy; ADHD patients &
+  Open, cite req. & \url{https://datasets.simula.no/hyperaktiv/}\\
+OBF-Psychiatric & Aggregates the three above; \emph{Sci Data} 2025 &
+  Open & \url{https://www.nature.com/articles/s41597-025-04384-3}\\
+DAIC-WOZ / E-DAIC & 189 clinical interviews; audio, transcripts, facial
+  features; PHQ-8 & EULA required &
+  \url{https://dcapswoz.ict.usc.edu/}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\smallskip
+Simula dataset index: \url{https://github.com/simula/datasets.simula.no}
+
+\subsubsection*{Candidates to verify before committing}
+
+Named here for completeness; confirm access terms before building against
+them. \textbf{NHANES} (CDC; PHQ-9 depression module; large, population
+representative, fully open). \textbf{StudentLife} (Dartmouth; smartphone
+sensing in university students). \textbf{MODMA} (Lanzhou University; EEG,
+depression). \textbf{WESAD} (wearable stress). \textbf{CLPsych} and
+\textbf{eRisk} shared-task corpora (social media text; signed agreements
+required, and note the ethical debate around scraped clinical inference).
+
+\subsection{The design rule that makes this work}
+
+\begin{keybox}
+\textbf{Do not pool the datasets into one training corpus.}
+
+\smallskip
+Pooling Depresjon, Psykose, DAIC and NHANES and reporting cross-validated
+accuracy would commit exactly the error Paper~A criticises: different
+populations, instruments, label definitions and prevalences, silently merged.
+A reviewer who has read your own review would reject it.
+
+\smallskip
+\textbf{Use them as separate cohorts.} Train on one, validate unchanged on
+another. The actigraphy family is well suited because the modality is
+constant while the populations differ, so the comparison isolates cohort
+shift rather than measurement shift.
+
+\smallskip
+The expected result --- substantial performance degradation out of sample,
+with calibration degrading faster than discrimination --- \emph{is} the
+paper.
+\end{keybox}
+
+\subsection{Reporting standard}
+
+Paper~B follows \textbf{TRIPOD+AI} as an author, not as an appraiser. Every
+item the review scores other studies against must be satisfied here. Anything
+less would be indefensible given the paper's argument.
+
+% =====================================================================
+\section{Repository specification}
+
+\subsection{Proposed structure}
+
+\begin{lstlisting}
+mlmh-appraisal/
+├── README.md
+├── pyproject.toml              # uv or poetry; pin every version
+├── LICENSE                     # MIT for code
+├── .gitignore                  # MUST exclude data/raw/ entirely
+├── configs/
+│   ├── base.yaml               # seeds, CV scheme, metrics
+│   ├── e1_split_leakage.yaml
+│   ├── e2_external_val.yaml
+│   └── e3_calibration.yaml
+├── data/
+│   ├── raw/                    # gitignored. Never committed.
+│   ├── interim/                # gitignored
+│   ├── processed/              # gitignored
+│   └── README.md               # how to obtain each dataset + checksums
+├── src/mlmh/
+│   ├── data/
+│   │   ├── loaders.py          # one loader per dataset -> common schema
+│   │   ├── schema.py           # subject_id, window_id, features, label, cohort
+│   │   └── windowing.py        # segmentation; carries subject_id through
+│   ├── features/
+│   │   └── actigraphy.py       # statistical + circadian features
+│   ├── models/
+│   │   ├── registry.py         # baseline, logreg, RF, XGBoost, 1D-CNN
+│   │   └── pipelines.py        # sklearn Pipelines only; no manual prefit
+│   ├── evaluation/
+│   │   ├── splitters.py        # SubjectWiseSplit vs RecordWiseSplit
+│   │   ├── metrics.py          # AUC, macro-F1, Brier, calib slope/intercept
+│   │   ├── bootstrap.py        # BCa CIs, subject-level resampling
+│   │   └── external.py         # train-on-A, test-on-B runner
+│   ├── reporting/
+│   │   ├── tables.py           # emits LaTeX tables directly
+│   │   ├── figures.py          # reliability curves, forest plots
+│   │   └── tripod.py           # TRIPOD+AI self-audit checklist
+│   └── cli.py                  # entry point: python -m mlmh run <config>
+├── scripts/
+│   ├── prepare_data.py
+│   ├── run_e1.py
+│   ├── run_e2.py
+│   └── run_e3.py
+├── tests/
+│   ├── test_no_subject_leakage.py   # THE critical test; see below
+│   ├── test_pipeline_fit_order.py
+│   └── test_metrics.py
+├── results/                    # committed: tables, figures, run manifests
+└── paper/
+    ├── review/                 # Paper A sources
+    └── empirical/              # Paper B sources
+\end{lstlisting}
+
+\subsection{Non-negotiable engineering rules}
+
+These exist because the paper's credibility depends on them. Each should be
+enforced by a test, not by discipline.
+
+\begin{enumerate}
+
+  \item \textbf{Subject-wise splitting is the default everywhere.} Record-wise
+        splitting exists \emph{only} inside the E1 experiment, where it is the
+        object of study. \texttt{test\_no\_subject\_leakage.py} must assert
+        that no \texttt{subject\_id} appears in both train and test index sets
+        for any fold of any non-E1 run, and must fail the build if one does.
+
+  \item \textbf{All preprocessing lives inside the \texttt{Pipeline}.}
+        Scaling, imputation and any resampling are fitted on training folds
+        only. No \texttt{fit\_transform} on the full dataset before splitting,
+        ever. \texttt{test\_pipeline\_fit\_order.py} guards this.
+
+  \item \textbf{Resampling (SMOTE or otherwise) inside CV folds only},
+        using \texttt{imblearn.pipeline.Pipeline} rather than the sklearn one,
+        which will silently resample the validation fold.
+
+  \item \textbf{Bootstrap at the subject level, not the window level.}
+        Resampling windows treats correlated observations as independent and
+        produces confidence intervals that are far too narrow.
+
+  \item \textbf{Every run writes a manifest} --- git SHA, config hash, seed,
+        library versions, dataset checksums --- into \texttt{results/}.
+        A results table that cannot be traced to a manifest does not go in the
+        paper.
+
+  \item \textbf{Seeds fixed and recorded.} Report across at least 10 seeds,
+        not one.
+
+  \item \textbf{Raw data never enters git.} Redistribution terms differ per
+        dataset, and DAIC-WOZ's EULA prohibits it outright.
+        \texttt{data/README.md} carries download instructions and SHA-256
+        checksums instead.
+
+\end{enumerate}
+
+\subsection{Reporting outputs the code should generate directly}
+
+Have the pipeline emit publication-ready artefacts rather than numbers to be
+transcribed by hand --- transcription is where errors enter.
+
+\begin{itemize}
+  \item LaTeX tables written straight into \texttt{paper/empirical/tables/}
+  \item Reliability curves and discrimination/calibration comparison figures
+        as PDF
+  \item A TRIPOD+AI self-audit report listing which items the manuscript
+        satisfies, generated from the run manifests
+\end{itemize}
+
+% =====================================================================
+\section{Kickoff prompt for Claude Code}
+
+Paste the block below into a new Claude Code session in an empty repository.
+It states the scientific constraints first, because those are what the
+implementation must serve.
+
+\begin{lstlisting}
+I am building the codebase for an empirical companion study to a systematic
+review of machine learning models for mental health prediction. The review
+found that published models rarely perform external validation, rarely report
+calibration, and frequently use evaluation designs that leak subject
+information. This repository must demonstrate and quantify those three
+failures rigorously -- so its own methodology has to be beyond criticism.
+
+Please scaffold a Python project with this structure: [paste the tree from
+Section 4.1 of the brief]
+
+Core scientific constraints, which override convenience:
+
+1. SUBJECT-WISE SPLITTING IS THE DEFAULT. Actigraphy data yields many windows
+   per participant. No subject_id may appear in both train and test in any
+   fold. Implement SubjectWiseSplit and RecordWiseSplit as separate splitter
+   classes. RecordWiseSplit is used ONLY in experiment E1, where the
+   inflation it causes is what we are measuring.
+
+2. Write tests/test_no_subject_leakage.py FIRST, before any model code. It
+   must fail the build if any non-E1 fold shares a subject between train and
+   test.
+
+3. All preprocessing goes inside an imblearn Pipeline so that scaling,
+   imputation and resampling are fitted on training folds only. Never
+   fit_transform the full dataset before splitting.
+
+4. Bootstrap confidence intervals must resample at the SUBJECT level, not
+   the window level.
+
+5. Every run writes a manifest to results/ containing git SHA, config hash,
+   seed, library versions and dataset checksums.
+
+6. data/raw/ is gitignored. Never commit dataset files -- DAIC-WOZ's EULA
+   prohibits redistribution.
+
+Three experiments to support:
+  E1: record-wise vs subject-wise splitting on the same data; report the
+      accuracy/AUC inflation.
+  E2: train on cohort A, evaluate unchanged on cohort B (no refitting);
+      contrast with the internal CV estimate on A.
+  E3: for every model above, report calibration slope, intercept, Brier
+      score and reliability curves alongside discrimination.
+
+Datasets (I will download and place these in data/raw/ myself):
+  - Depresjon:  https://datasets.simula.no/depresjon/
+  - Psykose:    https://datasets.simula.no/psykose/
+  - HYPERAKTIV: https://datasets.simula.no/hyperaktiv/
+  - DAIC-WOZ:   https://dcapswoz.ict.usc.edu/  (EULA pending)
+Each is per-subject CSV of minute-level activity counts plus a scores file
+with demographics and clinical scales. Write one loader per dataset mapping
+into a common schema: subject_id, cohort, window_id, features, label.
+
+Models: majority-class baseline, logistic regression, random forest,
+XGBoost, and a small 1D-CNN. The first two exist to establish that the
+others earn their complexity.
+
+Metrics: macro-F1, AUROC (one-vs-rest where multiclass), Brier score,
+calibration slope and intercept, with BCa bootstrap CIs.
+
+Start by scaffolding the repo, writing pyproject.toml with pinned versions,
+and implementing schema.py, splitters.py and the leakage test. Do not write
+model code until the leakage test passes against synthetic fixture data.
+\end{lstlisting}
+
+\subsection{Why this order}
+
+Asking Claude Code to build the leakage test before the models is
+deliberate. If the splitter is wrong, every downstream number is wrong and
+the error is invisible --- results simply look better than they should. A
+failing test at the outset is much cheaper than a retraction.
+
+% =====================================================================
+\section{Sequencing across both papers}
+
+\begin{enumerate}
+  \item \textbf{Now.} Register Paper~A on PROSPERO. Submit the DAIC-WOZ
+        EULA request --- it takes time and is the only external dependency.
+        Download the three Simula datasets, which are immediately available.
+  \item \textbf{Weeks 1--2.} Scaffold the repository. Get the leakage test
+        passing against synthetic fixtures. Run the four database searches
+        for Paper~A and record the counts.
+  \item \textbf{Weeks 3--8.} Screening and extraction for Paper~A, in Rayyan
+        and the extraction workbook. In parallel, implement loaders,
+        features and the model registry for Paper~B.
+  \item \textbf{Weeks 8--12.} Run E1--E3. Paper~A's appraisal results
+        determine which findings Paper~B should foreground.
+  \item \textbf{Weeks 12--16.} Draft both manuscripts. Paper~A cites Paper~B
+        as a demonstration; Paper~B cites Paper~A as motivation.
+\end{enumerate}
+
+\subsection{Submission strategy}
+
+Submit \textbf{Paper~A first}, or both simultaneously to different journals.
+Do not submit Paper~B alone --- without the review establishing that the
+problem is widespread, its contribution reads as a methodological remark
+rather than a finding.
+
+Cross-cite explicitly. If Paper~A is still under review when Paper~B is
+submitted, cite it as \emph{under review} with a preprint DOI, and say so
+in the cover letter. Editors accept this readily; discovering it later
+independently does not go as well.
+
+\subsection{Candidate venues}
+
+\begin{center}
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{0.12\linewidth}p{0.40\linewidth}p{0.42\linewidth}@{}}
+\toprule
+& \textbf{Paper A (review)} & \textbf{Paper B (empirical)}\\
+\midrule
+Primary & Journal of Biomedical Informatics & Journal of Biomedical Informatics\\
+Alt.\ 1 & Int.\ Journal of Medical Informatics & Computers in Biology and Medicine\\
+Alt.\ 2 & JMIR Mental Health & Artificial Intelligence in Medicine\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Verify current quartile rankings in JCR or Scopus before committing. Avoid
+sending both to the same journal simultaneously without telling the editor.
+
+% =====================================================================
+\section{Governance}
+
+\begin{itemize}
+  \item \textbf{DAIC-WOZ EULA} --- start now; it gates any use of that cohort.
+  \item \textbf{Simula datasets} --- open for research and education, but the
+        source publications must be cited. Commercial use needs written
+        permission.
+  \item \textbf{IRB} --- even for public de-identified data, check whether
+        Hafr Al-Batin requires a secondary-use determination. Usually a short
+        expedited form.
+  \item \textbf{Code licence} --- MIT for the repository. Do not apply a code
+        licence to data you did not create.
+  \item \textbf{Social media corpora} --- if CLPsych or eRisk are added later,
+        note that inferring clinical status from scraped posts carries ethical
+        considerations that reviewers at clinical venues will raise. Address
+        it in the manuscript rather than waiting to be asked.
+\end{itemize}
+
+\vspace{1em}
+{\footnotesize\color{softgrey}
+Companion files: \texttt{P1\_review\_protocol.md} (PICOS criteria, four
+database search strings, PROSPERO content) and
+\texttt{P1\_extraction\_appraisal.xlsx} (PROBAST and TRIPOD+AI extraction
+workbook, 7 sheets).\par}
+
+\end{document}

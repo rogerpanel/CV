@@ -1,0 +1,29 @@
+# Raw, interim and processed data never enter git (redistribution terms differ per dataset; DAIC-WOZ EULA forbids it)
+data/raw/*
+data/interim/*
+data/processed/*
+data/synthetic/*
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/synthetic/.gitkeep
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/
+# LaTeX build products
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+# Results: keep tables, figures and manifests; ignore bulky per-fold prediction dumps
+results/**/predictions/

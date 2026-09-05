@@ -1,0 +1,324 @@
+%% ===========================================================================
+%%  Analysis of the paired-paper proposal: venue targeting, alignment with the
+%%  appraisal categorisation, gap review, dataset acquisition and codebase status
+%%  Prepared for Dr. Aminat Abiola Ajibola -- 5 September 2026
+%%  Compile: latexmk -pdf P1_analysis_venue_gaps.tex
+%% ===========================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.2cm,top=2.4cm,bottom=2.4cm]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{ragged2e}
+\usepackage[hidelinks]{hyperref}
+\urlstyle{same}
+
+\definecolor{accent}{HTML}{8C2F1E}
+\definecolor{softgrey}{HTML}{5C5851}
+\titleformat{\section}{\normalfont\sffamily\bfseries\large\color{accent}}{\thesection.}{0.6em}{}
+\titleformat{\subsection}{\normalfont\sffamily\bfseries\normalsize}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{2.4ex plus 1ex}{1.1ex}
+\setlist[itemize,1]{leftmargin=1.4em,itemsep=0.25em,topsep=0.3em}
+\setlist[enumerate,1]{leftmargin=1.7em,itemsep=0.35em,topsep=0.4em}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\footnotesize\sffamily\color{softgrey}ML for mental-health prediction: proposal analysis}
+\fancyhead[R]{\footnotesize\sffamily\color{softgrey}5 Sept 2026}
+\fancyfoot[C]{\footnotesize\sffamily\color{softgrey}\thepage}
+\setlength{\parskip}{0.5em}\setlength{\parindent}{0pt}
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+\newcommand{\verify}{\textcolor{accent}{\textbf{[verify]}}}
+
+\begin{document}
+\begin{center}
+{\sffamily\footnotesize\color{softgrey}\MakeUppercase{Proposal analysis}}\\[0.8em]
+{\sffamily\LARGE\bfseries Machine Learning for Mental Health Prediction}\\[0.3em]
+{\sffamily\large Venue targeting, alignment with the PROBAST/TRIPOD+AI categorisation,\\ gap review, dataset acquisition and codebase status}\\[0.8em]
+{\footnotesize\color{softgrey}Prepared for Dr.\ Aminat Abiola Ajibola \quad\textbullet\quad Companion to repository \texttt{rogerpanel/cv/mlmh-appraisal}}
+\end{center}
+\vspace{0.3em}\hrule\vspace{1em}
+
+\section{Executive summary}
+\begin{enumerate}
+\item \textbf{The reframing in the protocol is correct and necessary.} The descriptive question is
+occupied (Hasan et al.\ 2026 screened 3{,}320 records on essentially the same scope). The
+appraisal question is open at field breadth, \emph{provided} the appraisal uses PROBAST+AI (BMJ
+2025) and TRIPOD+AI (BMJ 2024) rather than the 2019/2015 instruments, and provided Paper~A
+positions itself explicitly against Meehan et al.\ (\emph{Mol Psychiatry} 2022; 308 psychiatric
+prediction models; 22.1\,\% reported calibration), which is the closest prior work and is not
+mentioned in the package.
+\item \textbf{Venue.} Paper~A: \emph{npj Digital Medicine} (first choice if the yield is
+$\geq$100 studies and PROBAST+AI is used), \emph{JMIR Mental Health} (second), \emph{Journal of
+Clinical Epidemiology} (methodological fallback). Paper~B: \emph{JMIR AI} (first; it has just
+published a participant-aware validation study asking the E1 question in another domain),
+\emph{IEEE JBHI} (second). The brief's primary choice, \emph{Journal of Biomedical Informatics},
+is listed as Q2 in the 2026 JCR summary found by search; keep it as a fallback for~B, not as the
+first target for~A.
+\item \textbf{The experimental design aligns with the categorisation} once each review outcome is
+tied to a PROBAST(+AI) signalling question, a TRIPOD+AI item, one experiment, one module and one
+test (Section~\ref{sec:align}). Two items are not covered by the code and must be handled in the
+text: fairness by subgroup (sex is available) and pre-registration of E1--E3 (OSF; cheap).
+\item \textbf{Two design hazards were found that the brief does not mention.} (i)~The PSYKOSE
+control group \emph{is} the DEPRESJON control group (32 identical files; this is why OBF-Psychiatric
+has 162 participants), so the obvious E2 pair leaks unless the shared controls are assigned to one
+side; the code detects this from the activity series and does the assignment. (ii)~HYPERAKTIV's
+``controls'' are psychiatric patients without ADHD, so DEPRESJON$\rightarrow$HYPERAKTIV is a label-shift
+test, not an external validation of the same task; it is kept as a deliberately adversarial pair.
+\item \textbf{The instruments in the workbook need re-keying.} The TRIPOD\_AI sheet uses a custom
+27-line numbering that does not follow the published checklist; the PROBAST sheet reproduces 2019
+PROBAST. Adherence percentages will be challenged unless both are aligned to the official items.
+\item \textbf{Codebase.} \texttt{mlmh-appraisal/} is scaffolded exactly to the brief's
+specification, with 26 passing tests (the subject-leakage test first), a synthetic fixture that
+mimics every dataset's on-disk layout, and an end-to-end run producing LaTeX tables, PDF figures,
+manifests and a TRIPOD+AI self-audit. \textbf{No real data could be fetched}: every dataset host is
+blocked by the sandbox's egress policy. Section~\ref{sec:data} gives exact links and a step-by-step
+route to bring the archives back into the session.
+\end{enumerate}
+
+\section{Reading of the proposal package}
+The package comprises the project brief (paired-paper design, dataset plan, repository
+specification), the review protocol (overlap check, reframed question, PICOS, four search strings,
+PROSPERO text, workload) and a seven-sheet extraction/appraisal workbook. Its logic is sound:
+Paper~A measures prevalence of methodological failures; Paper~B measures their cost; together they
+form one argument. The following observations affect execution.
+
+\begin{itemize}
+\item \textbf{Instruments.} The brief says ``PROBAST (20 signalling questions, 4 domains)''. That is
+the 2019 tool. PROBAST+AI (Moons, Damen, Collins et al., BMJ 2025) is the current instrument for
+ML models and adds explicit questions on data leakage and on AI-specific sample-size expectations;
+using it is both correct and a novelty claim. The brief's ``EPV $\geq$ 200 for ML (Moons et al.,
+2025)'' must be checked against the published wording before it is quoted \verify.
+\item \textbf{Workbook TRIPOD\_AI sheet.} Item numbers 1--27 in the sheet are custom (e.g.\ the sheet's
+item~11 is ``class imbalance'', the published item~16 is; the sheet's 19/20 are data/code
+availability, published item~21 is ``Open science''). Re-key to the published 27 items / 52
+sub-items before piloting.
+\item \textbf{Workbook PROBAST sheet.} Signalling question 4.1's EPV text should carry the PROBAST+AI
+wording; add the PROBAST+AI leakage and transportability questions.
+\item \textbf{PRISMA.} The earlier draft's flow diagram did not reconcile (14 vs 15). The
+repository ships a PRISMA template whose counts are computed from macros so the figure cannot
+disagree with the text.
+\item \textbf{Dataset table corrections.} HYPERAKTIV: 51 ADHD + 52 clinical controls, activity
+available for 85, HRV for 80, not ``ADHD patients''. OBF-Psychiatric is on Zenodo
+(record 13754984). DAIC-WOZ: the WOZ subset used in AVEC has 142 participants with PHQ-8 in the
+official split; 189 is the full DAIC session count \verify.
+\item \textbf{Sequencing.} The brief asks for the leakage test before any model code. That order
+was followed: \texttt{tests/test\_no\_subject\_leakage.py} was written first and passes against
+synthetic fixtures; the CV runner also asserts disjointness at run time.
+\end{itemize}
+
+\section{Venue targeting}
+Journal metrics below were read from public indexing pages found by web search on 5 September 2026
+and must be re-verified in JCR/Scopus before submission.
+
+\subsection{Paper A (systematic review and critical appraisal)}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight}p{3.4cm} L L@{}}
+\toprule
+\textbf{Venue} & \textbf{Why} & \textbf{Risk}\\
+\midrule
+npj Digital Medicine (IF $\approx$18) & Publishes PROBAST critical appraisals of ML models; state-of-the-field methods critiques are core scope & Very selective; needs the full 80--200 study yield and PROBAST+AI; APC\\
+JMIR Mental Health (IF $\approx$7.4, Q1 Psychiatry) & Exact readership; methodological reviews of digital mental-health AI; fast; long supplements accepted & APC; less methodological prestige\\
+Journal of Clinical Epidemiology (Q1) & Home of the PROBAST/TRIPOD community; right if the centre of gravity is the instrument (first PROBAST+AI use at breadth, EPV finding) & Readers are methodologists, not psychiatrists\\
+Molecular / Translational Psychiatry & Meehan 2022 precedent; 2025 generalizability review & Must show what is added over Meehan: ML/digital modalities, PROBAST+AI, leakage outcome, EPV $\geq$ 200\\
+J.\ Biomedical Informatics (brief's primary; 2026 listing IF 5.9, Q2) & Would accept; methods-friendly & Under-sells a review; weak mental-health readership\\
+Int.\ J.\ Medical Informatics (IF $\approx$5.0, Q1) & Safe fallback & Lower visibility\\
+\bottomrule
+\end{tabularx}
+
+\subsection{Paper B (empirical companion)}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight}p{3.4cm} L L@{}}
+\toprule
+\textbf{Venue} & \textbf{Why} & \textbf{Risk}\\
+\midrule
+JMIR AI & Published ``Participant-Aware Model Validation for Repeated-Measures Data'' (2026;e87728): stratified 10-fold overestimated performance through subject-level leakage, group/nested CV gave conservative estimates. E1 is that question on mental-health data & Young journal; indexing maturing\\
+IEEE J.\ Biomedical and Health Informatics (Q1) & Wearable/actigraphy ML readership; the Simula cohorts are known there & Slow; engineering presentation expected\\
+J.\ Biomedical Informatics & Comfortable with cautionary empirical results; pairs with A if A goes elsewhere & Q2\\
+npj Digital Medicine (brief communication) & Highest-impact pairing if E1--E3 effects are large and clean & Selectivity; two APCs\\
+Computers in Biology and Medicine (IF $\approx$8.4) / AI in Medicine & Broad ML-in-medicine venues & Reviewer pool less attuned to PROBAST/TRIPOD framing\\
+\bottomrule
+\end{tabularx}
+
+\textbf{Submission strategy.} Preprint A (medRxiv) at submission; submit B only when A has a
+preprint DOI; cross-cite; tell both editors. Do not send both to the same journal at once without
+saying so.
+
+\section{Alignment of the research and experimental structure with the categorisation}\label{sec:align}
+Every Paper~A primary outcome is tied to the item that scores it, the experiment that prices it,
+the module that implements it and the test that enforces it.
+
+\begin{scriptsize}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight}p{2.5cm} >{\RaggedRight}p{1.5cm} >{\RaggedRight}p{1.2cm} >{\RaggedRight}p{2.4cm} L L@{}}
+\toprule
+\textbf{Paper A outcome} & \textbf{PROBAST} & \textbf{TRIPOD} & \textbf{Paper B experiment} & \textbf{Code} & \textbf{Enforced by}\\
+\midrule
+External validation performed & 4.8; applicability & 10e, 24 & E2: train on A, test on B, no refit & \texttt{evaluation/\allowbreak external.py} & \texttt{assert\_cohorts\_disjoint}; test refuses overlapping cohorts\\
+Calibration reported & 4.7 & 12, 24 & E3: slope, intercept, Brier, ECE, reliability curves & \texttt{evaluation/\allowbreak metrics.py} & \texttt{test\_metrics.py} recovers known miscalibration\\
+AUROC vs accuracy only & 4.7 & 12 & all experiments report AUROC, AUPRC, F1, MCC with accuracy & \texttt{metrics.py} & key/range test\\
+Leakage-prone design & 4.8; +AI leakage & 10d, 11 & E1: record-wise vs subject-wise, paired & \texttt{evaluation/\allowbreak splitters.py} & \texttt{test\_no\_subject\_\allowbreak leakage.py} fails the build for any non-E1 use of \texttt{record\_wise}\\
+EPV $\geq$ 200 & 4.1 & 8 & reported per cohort (E2 table) & \texttt{experiments.\_epv} & reported\\
+Class prevalence & 1.2 / 3.4 & 22 & prevalence in every metrics row & \texttt{metrics.py} & ---\\
+Resampling inside folds & 4.8 & 11 & SMOTE optional inside imblearn Pipeline & \texttt{models/\allowbreak pipelines.py} & \texttt{test\_pipeline\_\allowbreak fit\_order.py}\\
+Code / data availability & --- & 19--21 & repository; manifests with SHA and checksums & \texttt{reporting/\allowbreak manifest.py} & ---\\
+Near-perfect performance cases & 4.8 & 24 & E1 inflation size & \texttt{run\_e1} & paired subject bootstrap\\
+Uncertainty intervals & 4.8 & 24 & subject-level BCa bootstrap & \texttt{evaluation/\allowbreak bootstrap.py} & subject-resampling test\\
+\bottomrule
+\end{tabularx}
+\end{scriptsize}
+
+\textbf{Not covered by code:} fairness/subgroup performance (add a sex-stratified analysis; sex
+exists in all three Simula cohorts) and pre-registration of the analysis plan (OSF, before real data
+are run). Both are manuscript obligations, and Paper~B cannot score other studies on items it does
+not itself satisfy.
+
+\section{Gap review}
+\subsection{Reviews to position against}
+\begin{itemize}
+\item \textbf{Hasan et al.\ 2026}, \emph{Front Digit Health} (doi 10.3389/fdgth.2025.1724348): descriptive
+taxonomy of ML methods and datasets, 2015--2024, 3{,}320 records; no risk-of-bias or reporting
+appraisal. Occupies the descriptive question completely.
+\item \textbf{Meehan et al.\ 2022}, \emph{Mol Psychiatry} (doi 10.1038/s41380-022-01528-4): 308 clinical
+prediction models in psychiatry; 22.1\,\% (68/308) tested calibration, of which 52.9\,\% presented a
+plot and 22.1\,\% only Hosmer--Lemeshow; 75.6\,\% used some internal validation but only 11.4\,\% to an
+adequate standard. Closest prior work. Paper~A adds: ML/digital-phenotyping modalities
+(sensor, speech, social media), PROBAST+AI and TRIPOD+AI, a leakage-design outcome, the ML EPV
+expectation, and the paired empirical companion.
+\item \textbf{Generalizability of clinical prediction models in mental health}, \emph{Mol Psychiatry}
+2025 (doi 10.1038/s41380-025-02950-0): external validation is rare \verify{} exact proportions.
+\item Narrow PROBAST reviews: adolescent EHR crisis prediction (5 studies, 2025); psychosis
+prediction in at-risk mental state (2/48 models at low risk of bias); ADHD individualized prediction
+(\emph{Mol Psychiatry} 2024); social-media ML biases (arXiv 2410.16204). None at field breadth.
+\item \textbf{Responsible Evaluation of AI for Mental Health}, ACL 2026 (arXiv 2602.00065): 135 NLP
+papers, generic metrics, little clinician involvement. Useful for the discussion, not an appraisal.
+\end{itemize}
+
+\subsection{What the benchmarks actually show on the chosen cohorts}
+\begin{footnotesize}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight}p{4.2cm} >{\RaggedRight}p{2.6cm} >{\RaggedRight}p{2.2cm} L@{}}
+\toprule
+\textbf{Study (cohort)} & \textbf{Split unit} & \textbf{Best reported} & \textbf{Comment}\\
+\midrule
+Garcia-Ceja 2018 (DEPRESJON dataset paper) & leave-one-patient-out; day features; RF, DNN; SMOTE compared & F1 0.73, MCC 0.44 & The honest subject-wise baseline; no calibration, no external validation\\
+2D-CNN on time series, 2022 (PMC9495338) & per-window & accuracy 76.7\,\% & no calibration\\
+Transfer-learning screening tool, arXiv 2303.07847 & ``modified leave-one-out'' & accuracy 0.96 & split modification is the design the review flags\\
+Explainable XGBoost, JMIR Ment Health 2025;e72038 & not stated in abstract \verify & accuracy 84.9\,\% binary, 85.9\,\% multiclass & day-wise k-fold would be record-wise leakage\\
+CoAtNet/ViT on actigraphy images, arXiv 2512.00103 & three-fold subject-wise & CoAtNet-Tiny best & one of few stating subject-wise\\
+Jakobsen 2020 (PSYKOSE dataset paper) & leave-one-patient-out & \verify & baseline\\
+Multi-branch DL (Soft Computing 2024); DL+XAI (BSPC 2024) (PSYKOSE) & day-level & accuracy $\approx$0.94 & day-level $\Rightarrow$ record-wise unless stated \verify\\
+Night-time signal classification 2022 (PMC9318635; DEPRESJON+PSYKOSE) & --- & --- & check double-counting of the shared controls\\
+Hicks 2021 (HYPERAKTIV dataset paper) & 10-fold on features & modest & code on GitHub simula/hyperaktiv\\
+OBF-Psychiatric, Sci Data 2025 & multi-class baselines & --- & canonical harmonised copy; single control group\\
+DAIC-WOZ audits: ICMI 2025 companion (doi 10.1145/3747327.3763034); arXiv 2605.23977; arXiv 2404.14463 & official split & --- & ``most DAIC-WOZ classifiers are invalid''; CV winner ranks 20th on test, test winner 41st by CV; therapist prompts leak labels\\
+\bottomrule
+\end{tabularx}
+\end{footnotesize}
+
+\subsection{The real gaps, as testable claims}
+\begin{enumerate}
+\item \textbf{Unit-of-analysis leakage is common and its size on these cohorts is unmeasured.} No
+paper reports the paired record-wise vs subject-wise difference on the same data; the dataset
+authors' subject-wise baseline (F1 0.73) sits far below later day-level claims ($>$0.9). (E1)
+\item \textbf{Cross-cohort external validation of actigraphy models has not been reported, and the
+obvious pair is contaminated} (shared controls). The shared-control assignment table is itself a
+reportable finding. (E2)
+\item \textbf{Calibration is never reported for sensor-based mental-health models.} No reliability
+curve for any DEPRESJON/PSYKOSE model exists in the literature. (E3)
+\item \textbf{Sample size is far below any EPV guidance and window counts hide it.} 23 cases and
+$\approx$30 features give subject-level EPV $<$1 on DEPRESJON; hundreds of days make it look 10--20$\times$
+larger. Reporting both levels with subject-level intervals is a corrective. (E2 table)
+\item \textbf{Reproducibility.} Follow-up papers rarely release code; none release manifests.
+\item \textbf{Transdiagnostic and multiclass framing is under-examined}; OBF-Psychiatric enables it
+with a de-duplicated control group. DEPRESJON$\rightarrow$HYPERAKTIV is a deliberate label-shift test.
+\end{enumerate}
+
+\section{Datasets: what could not be fetched, exact links, and how to bring them in}\label{sec:data}
+The session's egress policy blocks \texttt{datasets.simula.no}, \texttt{zenodo.org},
+\texttt{nature.com}, \texttt{dcapswoz.ict.usc.edu}, \texttt{wwwn.cdc.gov}, \texttt{uni-siegen.de} and
+\texttt{dartmouth.edu} (HTTP 403 at the proxy; only PyPI and the GitHub repository are reachable).
+Download on your machine, keep the archives zipped, and attach them to the chat; they arrive under
+\texttt{/root/.claude/uploads/} and are unzipped into \texttt{data/raw/<cohort>/}, then
+\texttt{python -m mlmh verify-data} confirms the layout. Full instructions, expected folder layout and
+a checksum table are in \texttt{data/README.md}.
+
+\begin{footnotesize}
+\begin{tabularx}{\linewidth}{@{}>{\RaggedRight}p{2.6cm} L >{\RaggedRight}p{2.6cm}@{}}
+\toprule
+\textbf{Dataset} & \textbf{Where} & \textbf{Terms}\\
+\midrule
+DEPRESJON & \url{https://datasets.simula.no/depresjon/} (``Download'' link; \texttt{downloads/depresjon.zip}) & open for research; cite MMSys 2018\\
+PSYKOSE & \url{https://datasets.simula.no/psykose/} & open; cite CBMS 2020\\
+HYPERAKTIV & \url{https://datasets.simula.no/hyperaktiv/}; code \url{https://github.com/simula/hyperaktiv} & open; cite MMSys 2021\\
+OBF-Psychiatric & \url{https://zenodo.org/records/13754984} (DOI 10.5281/zenodo.13754984); paper \url{https://doi.org/10.1038/s41597-025-04384-3} & open; cite Sci Data 2025\\
+DAIC-WOZ / E-DAIC & \url{https://dcapswoz.ict.usc.edu/} -- sign the EULA form on the page with an academic e-mail; E-DAIC (AVEC 2019) through the same route & academics only; no redistribution; weeks\\
+NHANES DPQ (PHQ-9) & \url{https://wwwn.cdc.gov/nchs/nhanes/} -- \texttt{DPQ\_J.XPT} (2017--18), \texttt{P\_DPQ.XPT} (2017--Mar 2020), \texttt{DPQ\_L.XPT} (2021--23) + \texttt{DEMO} & fully open\\
+WESAD & \url{https://ubi29.informatik.uni-siegen.de/usi/data_wesad.html} (2.5\,GB; also UCI ML repository) & open; cite\\
+StudentLife & \url{https://studentlife.cs.dartmouth.edu/dataset.html} (\texttt{dataset.tar.bz2}, $\approx$5\,GB) & open\\
+MODMA & \url{https://modma.lzu.edu.cn/data/index/} (application form) & on request\\
+\bottomrule
+\end{tabularx}
+\end{footnotesize}
+
+Order of priority: DEPRESJON and PSYKOSE first (small, enough for E1--E3), then HYPERAKTIV, then
+OBF-Psychiatric. Submit the DAIC-WOZ EULA now; it is the only external dependency with a lead time.
+
+\section{Codebase: what exists and what has been verified}
+\texttt{mlmh-appraisal/} in the \texttt{rogerpanel/cv} repository, branch
+\texttt{claude/mental-health-prediction-proposal-s7o5hc}, implements the brief's tree:
+\texttt{schema.py} (window-level records carrying \texttt{subject\_id}, \texttt{cohort},
+\texttt{window\_id}; a subject may carry only one label), one loader per cohort into that schema
+(delimiter and column-name sniffing; activity-series hashing to detect the same participant across
+cohorts), day windowing, statistical and circadian features (M10, L5, relative amplitude, IV,
+day/night ratio, autocorrelation, spectral summaries), a model registry (majority, logistic
+regression, random forest, XGBoost, MLP, optional 1D-CNN in PyTorch), imblearn pipelines,
+\texttt{SubjectWiseSplit}/\texttt{LeaveOneSubjectOut}/\texttt{RecordWiseSplit}, metrics with calibration
+slope/intercept/Brier/ECE at window and subject level, subject-level BCa bootstrap and paired
+bootstrap for the E1 difference, an external-validation runner that refuses overlapping cohorts and
+assigns shared controls, LaTeX table and PDF figure writers, run manifests, and a TRIPOD+AI
+self-audit generator. Tests: 26, all passing; the leakage test also scans every config on disk.
+
+\textbf{Verified end to end on a synthetic fixture} that reproduces each dataset's on-disk layout
+(including the duplicated PSYKOSE controls and HYPERAKTIV's semicolon-separated files): the
+pipeline produces \texttt{paper/empirical/tables/e1\_auroc\_inflation.tex},
+\texttt{e1\_full\_metrics.tex}, \texttt{e2\_external\_validation.tex}, \texttt{e3\_calibration.tex},
+the figures, manifests and \texttt{results/synthetic/tripod\_ai\_self\_audit.md}. Every synthetic
+table is watermarked; none of its numbers is a result. The README's results section is regenerated
+by \texttt{scripts/update\_readme.py} so it tracks the latest run.
+
+\section{Roadmap}
+\begin{enumerate}
+\item Register Paper~A (PROSPERO text supplied); submit the DAIC-WOZ EULA; download the Tier-1 archives.
+\item Re-key the TRIPOD\_AI sheet to the published 27 items and the PROBAST sheet to PROBAST+AI; pilot on five studies.
+\item Upload the archives; run \texttt{verify-data}, \texttt{prepare}, E1--E3 with 10 seeds and 1{,}000 bootstrap replicates; commit \texttt{results/real/}.
+\item Add the sex-stratified analysis and the OBF-Psychiatric multiclass arm; pre-register on OSF before step 3 if at all possible.
+\item Run the four searches; screen in Rayyan; extract; build the PRISMA figure from the search log.
+\item Freeze a tagged release; draft both manuscripts from the generated tables; preprint A; submit A, then B.
+\end{enumerate}
+
+\section*{Sources consulted (web search, 5 September 2026)}
+\begin{footnotesize}
+\begin{itemize}
+\item Hasan MJ et al. Front Digit Health 2026. \url{https://www.frontiersin.org/journals/digital-health/articles/10.3389/fdgth.2025.1724348/full}
+\item Meehan AJ et al. Mol Psychiatry 2022. \url{https://www.nature.com/articles/s41380-022-01528-4}
+\item Generalizability of clinical prediction models in mental health. Mol Psychiatry 2025. \url{https://www.nature.com/articles/s41380-025-02950-0}
+\item Moons KGM et al. PROBAST+AI. BMJ 2025. \url{https://pubmed.ncbi.nlm.nih.gov/40127903/}
+\item Collins GS et al. TRIPOD+AI. BMJ 2024;385:e078378. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC11019967/}
+\item Garcia-Ceja E et al. OBF-Psychiatric. Sci Data 2025. \url{https://www.nature.com/articles/s41597-025-04384-3}; Zenodo \url{https://zenodo.org/records/13754984}
+\item Garcia-Ceja E et al. Depresjon. ACM MMSys 2018. \url{https://dl.acm.org/doi/10.1145/3204949.3208125}
+\item Hicks SA et al. HYPERAKTIV. ACM MMSys 2021. \url{https://dl.acm.org/doi/10.1145/3458305.3478454}
+\item Explainable AI for depression detection from activity data. JMIR Ment Health 2025;e72038. \url{https://mental.jmir.org/2025/1/e72038}
+\item 2D-CNN on Depresjon. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9495338/}; transfer learning screening tool \url{https://arxiv.org/abs/2303.07847}; ViT/CoAtNet on actigraphy images \url{https://arxiv.org/pdf/2512.00103}
+\item Participant-Aware Model Validation for Repeated-Measures Data. JMIR AI 2026. \url{https://ai.jmir.org/2026/1/e87728}; Beyond participant-level CV \url{https://arxiv.org/html/2608.26205v1}
+\item Impact of the choice of cross-validation techniques (subject-wise vs record-wise). \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC8369053/}
+\item A multi-probe audit of clinical-interview depression detection benchmarks. \url{https://arxiv.org/abs/2605.23977}; Most DAIC-WOZ classifiers are invalid. \url{https://dl.acm.org/doi/10.1145/3747327.3763034}; therapist prompts \url{https://arxiv.org/pdf/2404.14463}
+\item Responsible Evaluation of AI for Mental Health. ACL 2026. \url{https://aclanthology.org/2026.acl-long.347/}
+\item Journal metrics: JBI \url{https://www.journalmetrics.org/journal/journal-of-biomedical-informatics}; IJMI \url{https://www.journalmetrics.org/journal/international-journal-of-medical-informatics}; JMIR family \url{https://www.jmir.org/announcements/182}; npj Digit Med \url{https://research.com/journal/npj-digital-medicine}; CBM \url{https://research.com/journal/computers-in-biology-and-medicine-1}
+\item DAIC-WOZ access \url{https://dcapswoz.ict.usc.edu/}; WESAD \url{https://ubi29.informatik.uni-siegen.de/usi/data_wesad.html}; StudentLife \url{https://studentlife.cs.dartmouth.edu/}; MODMA \url{https://github.com/UAIS-LANZHOU/MODMA-Dataset}; NHANES DPQ \url{https://wwwn.cdc.gov/Nchs/Data/Nhanes/Public/2021/DataFiles/DPQY_L_R.htm}
+\end{itemize}
+\end{footnotesize}
+\end{document}

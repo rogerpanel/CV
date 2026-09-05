@@ -1,0 +1,8 @@
+database,search_date,string_version,records_returned,exported_file,notes
+PubMed,,protocol.md 4.1,,,
+Scopus,,protocol.md 4.2,,,
+Web of Science Core Collection,,protocol.md 4.3,,,
+IEEE Xplore,,protocol.md 4.4,,,
+PsycINFO,,n/a,,,declare absence if not searched
+Citation chasing (backward),,,,,
+Citation chasing (forward),,,,,

@@ -1,0 +1,9 @@
+inherit: base.yaml
+experiment: E1
+description: >
+  The cost of leaky splitting. The same model, data and seeds are evaluated
+  under record-wise (windows of one participant in both train and test) and
+  subject-wise (no participant crosses the boundary) 5-fold CV. The paired
+  difference is the leakage inflation.
+cohorts: [depresjon, psykose, hyperaktiv]
+splitters: [subject_wise, record_wise]   # record_wise is permitted ONLY here

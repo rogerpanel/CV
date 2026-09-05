@@ -1,0 +1,9 @@
+inherit: base.yaml
+experiment: E3
+description: >
+  The calibration blind spot. Reads every stored prediction set from E1
+  (subject-wise arm) and E2 and reports Brier score, calibration slope and
+  intercept, ECE and reliability curves next to AUROC. Adds a logistic
+  recalibration arm for the external predictions.
+splitter: subject_wise
+recalibrate: true

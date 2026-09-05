@@ -1,0 +1,10 @@
+inherit: base.yaml
+experiment: E1
+description: >
+  E1 with the 1D-CNN on the raw 1440-minute series (requires torch and
+  `representations: [engineered, raw]` at prepare time).
+cohorts: [depresjon, psykose, hyperaktiv]
+representations: [engineered, raw]
+models: [majority, logreg, cnn1d]
+splitters: [subject_wise, record_wise]
+seeds: [0, 1, 2, 3, 4]

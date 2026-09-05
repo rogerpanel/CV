@@ -1,0 +1,33 @@
+name: mlmh-appraisal tests
+
+on:
+  push:
+    paths: ["mlmh-appraisal/**", ".github/workflows/mlmh-tests.yml"]
+  pull_request:
+    paths: ["mlmh-appraisal/**"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mlmh-appraisal
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: pip install -e .[dev]
+      - name: Leakage test first
+        run: python -m pytest tests/test_no_subject_leakage.py -q
+      - name: Full test suite
+        run: python -m pytest -q
+      - name: Synthetic smoke run (tiny)
+        run: |
+          python -m mlmh synth --scale 0.3 --days 4
+          python -m mlmh prepare --synthetic
+          python -m mlmh run configs/e1_split_leakage.yaml --synthetic --seeds 0 --n-boot 50 --models majority logreg
+          python -m mlmh run configs/e2_external_val.yaml --synthetic --seeds 0 --n-boot 50 --models logreg
+          python -m mlmh run configs/e3_calibration.yaml --synthetic
+          python -m mlmh tripod --synthetic

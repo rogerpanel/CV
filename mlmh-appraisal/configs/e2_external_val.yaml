@@ -1,0 +1,15 @@
+inherit: base.yaml
+experiment: E2
+description: >
+  The cost of skipping external validation. Train on cohort A (internal
+  estimate = subject-wise CV on A), then apply the fitted model unchanged to
+  cohort B. DEPRESJON and PSYKOSE share their 32 healthy controls: with
+  shared_control_policy "split" each shared participant is assigned to exactly
+  one cohort so that both retain both classes and nobody crosses the boundary.
+splitter: subject_wise
+shared_control_policy: split      # split | drop_from_test
+shared_control_seed: 0
+pairs:
+  - {train: depresjon, test: psykose}
+  - {train: psykose, test: depresjon}
+  - {train: depresjon, test: hyperaktiv}   # label shift: ADHD vs clinical controls
