@@ -180,7 +180,8 @@ def _epv(ds: WindowedDataset) -> tuple[int, int, float]:
 
 # --------------------------------------------------------------------- E1
 def run_e1(cfg: dict) -> pd.DataFrame:
-    out = results_dir(cfg, "E1")
+    run_name = cfg.get("run_name", "E1")
+    out = results_dir(cfg, run_name)
     (out / "predictions").mkdir(exist_ok=True)
     seeds = list(cfg["seeds"])
     rows, preds_store = [], {}
@@ -210,13 +211,14 @@ def run_e1(cfg: dict) -> pd.DataFrame:
                         rows.append({"cohort": cohort, "model": model, "splitter": "inflation", f"{level}_{key}_mean": est, f"{level}_{key}_ci_lo": lo, f"{level}_{key}_ci_hi": hi})
     table = pd.DataFrame(rows)
     table.to_csv(out / "e1_results.csv", index=False)
-    _e1_tables(table, cfg, out)
-    _e1_figures(preds_store, table, cfg, out)
-    write_manifest(out, cfg, extra={"experiment": "E1", "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
+    suffix = "" if run_name == "E1" else "_" + run_name.lower()
+    _e1_tables(table, cfg, out, suffix)
+    _e1_figures(preds_store, table, cfg, out, suffix)
+    write_manifest(out, cfg, extra={"experiment": run_name, "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
     return table
 
 
-def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path) -> None:
+def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> None:
     syn = bool(cfg.get("synthetic"))
     tdir = ROOT / cfg.get("tables_dir", "paper/empirical/tables")
     main = table[table["splitter"].isin(["subject_wise", "record_wise"])]
@@ -238,7 +240,7 @@ def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path) -> None:
                     r[f"{lab} inflation"] = fmt_ci(ii.iloc[0][col], ii.iloc[0][f"{level}_auroc_ci_lo"], ii.iloc[0][f"{level}_auroc_ci_hi"])
         rows.append(r)
     df = pd.DataFrame(rows)
-    write_latex_table(df, tdir / "e1_auroc_inflation.tex", "E1: discrimination under subject-wise versus record-wise cross-validation. Cells give the mean over seeds with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", "tab:e1", synthetic=syn)
+    write_latex_table(df, tdir / f"e1_auroc_inflation{suffix}.tex", "E1: discrimination under subject-wise versus record-wise cross-validation. Cells give the mean over seeds with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", f"tab:e1{suffix}", synthetic=syn)
     # accuracy/F1/calibration companion
     rows = []
     for _, r in main.iterrows():
@@ -256,10 +258,10 @@ def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path) -> None:
                 "ECE": f"{r['window_ece_mean']:.3f}",
             }
         )
-    write_latex_table(pd.DataFrame(rows), tdir / "e1_full_metrics.tex", "E1: window-level discrimination and calibration for every model, cohort and splitting design (mean over seeds).", "tab:e1full", synthetic=syn)
+    write_latex_table(pd.DataFrame(rows), tdir / f"e1_full_metrics{suffix}.tex", "E1: window-level discrimination and calibration for every model, cohort and splitting design (mean over seeds).", f"tab:e1full{suffix}", synthetic=syn)
 
 
-def _e1_figures(preds_store: dict, table: pd.DataFrame, cfg: dict, out: Path) -> None:
+def _e1_figures(preds_store: dict, table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> None:
     syn = bool(cfg.get("synthetic"))
     fdir = ROOT / cfg.get("figures_dir", "paper/empirical/figures")
     main = table[table["splitter"].isin(["subject_wise", "record_wise"])]
@@ -269,12 +271,12 @@ def _e1_figures(preds_store: dict, table: pd.DataFrame, cfg: dict, out: Path) ->
     piv.columns = [c if isinstance(c, str) else c for c in piv.columns]
     piv = piv.rename(columns={"subject_wise": "auroc_subject_wise", "record_wise": "auroc_record_wise"})
     if {"auroc_subject_wise", "auroc_record_wise"} <= set(piv.columns):
-        inflation_plot(piv, fdir / "e1_inflation_auroc.pdf", synthetic=syn)
+        inflation_plot(piv, fdir / f"e1_inflation_auroc{suffix}.pdf", synthetic=syn)
     for cohort in cfg["cohorts"]:
         sub = {f"{MODEL_LABELS.get(m, m)} / {s.replace('_', '-')}": p for (c, m, s), p in preds_store.items() if c == cohort and m != "majority"}
         if sub:
-            reliability_plot(sub, fdir / f"e1_reliability_{cohort}.pdf", title=cohort, synthetic=syn)
-            roc_plot(sub, fdir / f"e1_roc_{cohort}.pdf", title=cohort, synthetic=syn)
+            reliability_plot(sub, fdir / f"e1_reliability_{cohort}{suffix}.pdf", title=cohort, synthetic=syn)
+            roc_plot(sub, fdir / f"e1_roc_{cohort}{suffix}.pdf", title=cohort, synthetic=syn)
 
 
 # --------------------------------------------------------------------- E2
@@ -382,7 +384,7 @@ def run_e3(cfg: dict) -> pd.DataFrame:
     syn = bool(cfg.get("synthetic"))
     base = out.parent
     rows, curves = [], {}
-    for path in sorted((base / "E1" / "predictions").glob("*.subject_wise.csv")) + sorted((base / "E2" / "predictions").glob("*.csv")):
+    for path in sorted(base.glob("E1*/predictions/*.subject_wise.csv")) + sorted((base / "E2" / "predictions").glob("*.csv")):
         pred = seed_averaged(pd.read_csv(path))
         name = path.stem
         m = binary_metrics(pred["y"], pred["p"])
@@ -418,8 +420,10 @@ def run_e3(cfg: dict) -> pd.DataFrame:
         show[c] = show[c].map(lambda v: f"{v:.2f}")
     write_latex_table(show, tdir / "e3_calibration.tex", "E3: calibration alongside discrimination for every model in E1 (subject-wise arm) and E2, plus logistic recalibration of external predictions.", "tab:e3", synthetic=syn, column_format="llrrrrr")
     fdir = ROOT / cfg.get("figures_dir", "paper/empirical/figures")
-    ext = {k: v for k, v in curves.items() if "external" in k and "majority" not in k}
-    if ext:
-        reliability_plot(ext, fdir / "e3_reliability_external.pdf", title="External predictions", synthetic=syn)
+    pairs = sorted({k.split(".")[0] for k in curves if "external" in k})
+    for pair in pairs:
+        ext = {k.split(".", 1)[1].replace(".external", ""): v for k, v in curves.items() if k.startswith(pair + ".") and "external" in k and "majority" not in k}
+        if ext:
+            reliability_plot(ext, fdir / f"e3_reliability_{pair.replace('-to-', '_to_')}.pdf", title=pair.replace("-to-", " $\\rightarrow$ "), synthetic=syn)
     write_manifest(out, cfg, extra={"experiment": "E3", "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
     return table

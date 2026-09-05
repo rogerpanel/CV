@@ -1,5 +1,6 @@
 inherit: base.yaml
 experiment: E1
+run_name: E1_cnn
 description: >
   E1 with the 1D-CNN on the raw 1440-minute series (requires torch and
   `representations: [engineered, raw]` at prepare time).
