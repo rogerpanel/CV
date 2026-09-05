@@ -23,13 +23,16 @@ MIN = 1440
 
 
 def _subject_series(rng: np.random.Generator, n_days: int, case: bool, start: pd.Timestamp) -> pd.DataFrame:
-    # Population effects
-    amp = rng.normal(1.0 if not case else 0.7, 0.15)
-    night_level = rng.normal(0.08 if not case else 0.18, 0.04)
-    mean_level = np.exp(rng.normal(np.log(260 if not case else 200), 0.25))
+    # Population effects are deliberately smaller than between-participant variation, so that
+    # subject-wise discrimination is moderate while each participant remains identifiable.
+    c = 1.0 if case else 0.0
+    amp = max(rng.normal(1.0 - 0.10 * c, 0.25), 0.1)
+    night_level = np.clip(rng.normal(0.10 + 0.02 * c, 0.05), 0.01, None)
+    mean_level = np.exp(rng.normal(np.log(250) - 0.08 * c, 0.35))
+    sleep_p = float(np.clip(rng.normal(0.82 - 0.03 * c, 0.08), 0.5, 0.97))
     # Participant fingerprint
-    phase = rng.normal(0, 1.2)  # hours
-    profile = rng.normal(0, 0.15, size=24)
+    phase = rng.normal(0.5 * c, 1.5)  # hours
+    profile = rng.normal(0, 0.22, size=24)
     profile = np.repeat(profile, 60)
     t = np.arange(n_days * MIN)
     hour = (t % MIN) / 60.0
@@ -39,7 +42,7 @@ def _subject_series(rng: np.random.Generator, n_days: int, case: bool, start: pd
     act = np.clip(base * noise, 0, None)
     # sleep: zeros at night with probability
     asleep = (hour < 6.5 + 0.3 * phase) | (hour > 23.0 + 0.3 * phase)
-    act = np.where(asleep & (rng.random(t.size) < (0.85 if not case else 0.7)), 0, act)
+    act = np.where(asleep & (rng.random(t.size) < sleep_p), 0, act)
     # occasional missing minutes
     act = act.astype(float)
     act[rng.random(t.size) < 0.002] = np.nan
