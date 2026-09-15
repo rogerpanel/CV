@@ -116,6 +116,17 @@ def cnn_section(rdir: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def e6_section(rdir: Path) -> str:
+    p = rdir / "E6" / "e6_ablation.csv"
+    if not p.exists():
+        return "_E6 not run yet._\n"
+    t = pd.read_csv(p)
+    lines = ["| Cohort | Model | Variant | k | AUROC [95% CI] | Subject AUROC | Cal. slope | ECE |", "|---|---|---|---|---|---|---|---|"]
+    for _, r in t.iterrows():
+        lines.append(f"| {r['cohort']} | {LABELS.get(r['model'], r['model'])} | {r['variant']} | {r['n_features']} | {_ci(r, 'auroc')} | {_f(r['subject_auroc_est'])} | {_f(r['window_calibration_slope_est'], 2)} | {_f(r['window_ece_est'])} |")
+    return "\n".join(lines) + "\n"
+
+
 def manifests(rdir: Path) -> str:
     rows = []
     for m in sorted(rdir.glob("*/manifest.json")):
@@ -145,6 +156,7 @@ def main() -> None:
         + "#### E3: calibration alongside discrimination\n\n" + e3_section(rdir) + "\n"
         + "#### E4: sex-stratified performance (subject-wise E1 models)\n\n" + e4_section(rdir) + "\n"
         + "#### E5: OBF-Psychiatric transdiagnostic and five-class arms\n\n" + e5_section(rdir) + "\n"
+        + "#### E6: ablation (feature groups, SMOTE inside folds, LOSO)\n\n" + e6_section(rdir) + "\n"
         + "#### Supplementary arm: 1D-CNN on the raw 1440-minute series (5 seeds)\n\n" + cnn_section(rdir) + "\n"
         + "#### Run manifests\n\n" + manifests(rdir)
         + "<!-- RESULTS:END -->"
