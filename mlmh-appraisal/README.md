@@ -364,8 +364,7 @@ raw cohorts in `data/raw/` (see `data/README.md`).
 ## Citation
 
 Manuscript: Ajibola AA, Anaedevha RN. Machine Learning for Mental Disorder Detection from
-Actigraphy: Published Claims versus Subject-wise, Cross-cohort and Calibrated Evaluation on
-DEPRESJON, PSYKOSE and HYPERAKTIV. 2026 (submitted).
+Actigraphy: Published Claims versus Subject-wise, Cross-cohort and Calibrated Evaluation. 2026 (submitted).
 Code: this repository, release `v1.0.0-submission` (git SHA in each manifest; Zenodo DOI to be
 added when the release is archived). Data: cite the source publications listed in
 `data/README.md`; the MIT licence covers code only.
