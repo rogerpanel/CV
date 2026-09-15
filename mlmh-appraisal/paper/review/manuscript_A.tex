@@ -1,0 +1,225 @@
+%% =====================================================================================
+%%  Paper A -- Systematic review and critical appraisal (PRISMA 2020 structure)
+%%  Methodological quality and reporting completeness of machine learning models for
+%%  mental health prediction: a systematic review and PROBAST+AI / TRIPOD+AI appraisal
+%%
+%%  STATUS: Methods complete and protocol-grade. Results sections are structured
+%%  placeholders (marked \todo) to be filled from the extraction workbook once
+%%  screening and dual extraction are done. Numbers from the empirical companion
+%%  (Paper B, this repository) are already in place in the Discussion.
+%%  Compile: pdflatex -> bibtex not needed (thebibliography) -> pdflatex x2
+%% =====================================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage{microtype}
+\usepackage[margin=2.4cm]{geometry}\usepackage{booktabs}\usepackage{tabularx}\usepackage{array}
+\usepackage{ragged2e}\usepackage{graphicx}\usepackage{xcolor}\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}\usepackage{lineno}
+\input{prisma_counts}
+\newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\setlength{\parskip}{0.4em}\setlength{\parindent}{0pt}
+\title{Methodological quality and reporting completeness of machine learning models for mental health prediction: a systematic review and PROBAST+AI / TRIPOD+AI appraisal}
+\author{Aminat Abiola Ajibola$^{1}$ \and \todo{co-authors}}
+\date{$^{1}$\todo{Affiliation, University of Hafr Al-Batin} \\[0.5em] Protocol registered on PROSPERO: \todo{CRD number}}
+\begin{document}
+\maketitle
+\linenumbers
+
+\begin{abstract}
+\textbf{Background.} Machine learning (ML) models that predict, detect or classify mental health
+conditions are published at an accelerating rate, and descriptive reviews of the field already
+exist. Whether these models are developed and reported to the standards now expected of clinical
+prediction models has not been assessed across populations, disorders and data modalities.
+\textbf{Methods.} We searched PubMed, Scopus, Web of Science and IEEE Xplore (1 January 2018 to
+\todo{search date}) for studies developing or validating a supervised ML model predicting a mental
+health outcome in humans, with at least one performance metric. Two reviewers screened,
+extracted and appraised every study with PROBAST+AI (risk of bias and applicability) and the
+TRIPOD+AI checklist (reporting completeness). Pre-specified secondary outcomes were the
+proportions of studies with external validation, calibration assessment, discrimination reported
+as AUROC rather than accuracy alone, leakage-prone evaluation design, events per variable (EPV)
+relative to current guidance, and code or data availability.
+\textbf{Results.} \todo{n records; n included; PROBAST+AI domain distribution; TRIPOD+AI
+adherence; secondary-outcome proportions with 95\% CIs; stratification by modality.}
+\textbf{Conclusions.} \todo{one sentence on prevalence of the deficiencies}. A companion empirical
+study on three public actigraphy cohorts quantifies what these deficiencies cost: record-wise
+cross-validation inflated AUROC by 0.04 to 0.17, external validation reduced AUROC by up to 0.20
+with calibration slopes collapsing to 0.3, and no published model on those cohorts reports
+calibration at all.
+\end{abstract}
+
+\section{Introduction}
+Prediction models based on machine learning are proposed for nearly every mental health
+condition and data source: electronic health records, questionnaires, wearable actigraphy, speech,
+neuroimaging and social media text. Descriptive reviews catalogue the algorithms and datasets in
+use \cite{hasan2026,madububambachu2024}; the most recent screened 3{,}320 records and organised
+the field by method and data type \cite{hasan2026}. What none of them asks is whether the models
+are trustworthy: whether they were evaluated on participants unseen in training, whether their
+probabilities are calibrated, whether their sample sizes support the number of candidate
+predictors, and whether the reports contain what a reader needs to reproduce or appraise them.
+
+For clinical prediction models generally, that question has been asked and the answer is
+discouraging. Meehan and colleagues appraised 308 psychiatric prediction models and found that
+22.1\% tested calibration and 11.4\% performed internal validation to an adequate standard
+\cite{meehan2022}; external validation is rare and generalisability poorly characterised
+\cite{molpsych2025}. Those appraisals concentrate on regression-based clinical models. The ML
+literature that now dominates mental-health prediction, and in particular the sensor-, speech-
+and text-based studies, has been appraised only in narrow slices: adolescent EHR crisis prediction
+\cite{adolescentehr2025}, psychosis prediction in at-risk individuals \cite{psychosisarms}, ADHD
+\cite{adhd2024}, and social-media detection \cite{socialmedia2024}. Two developments make a
+field-wide appraisal both feasible and overdue: TRIPOD+AI \cite{collins2024} and PROBAST+AI
+\cite{moons2025} extend the reporting and risk-of-bias instruments explicitly to ML models,
+adding items on data leakage, class imbalance, fairness, and ML-specific sample-size expectations.
+
+Two evaluation practices are specific enough to ML on repeated-measures data to deserve their own
+outcome. First, \emph{record-wise} splitting, in which windows or sessions from one participant
+appear on both sides of a train/test split, lets a flexible model recognise the participant rather
+than the condition; the resulting optimism is well documented in wearable and neuroimaging
+research \cite{saeb2017,jmirai2026} but its prevalence in mental-health ML has not been counted.
+Second, resampling or feature selection applied before splitting leaks test information into
+training. Both are invisible in a results table and both are what turns a 0.75 AUROC into a 0.95.
+
+We therefore asked: how methodologically sound and completely reported are ML models for mental
+health prediction, across all populations, disorders and modalities? We pre-specified the
+proportions of studies affected by each of six deficiencies and, in a paired empirical study on
+public actigraphy cohorts \cite{paperB}, measured how much each of the three most consequential
+ones costs.
+
+\section{Methods}
+The review follows PRISMA 2020 \cite{page2021} and was registered on PROSPERO (\todo{CRD}). The
+full protocol, search strings, extraction workbook and code are available in the project
+repository \cite{repo}.
+
+\subsection{Eligibility criteria}
+\begin{table}[!htbp]\centering\caption{Inclusion and exclusion criteria.}\label{tab:criteria}\footnotesize
+\begin{tabularx}{\linewidth}{@{}p{2.2cm} L L@{}}\toprule
+\textbf{Element} & \textbf{Inclusion} & \textbf{Exclusion}\\\midrule
+Population & Human participants, any age or setting, any country & Animal studies; simulation-only work\\
+Condition & Any mental health disorder or state (depressive, anxiety, stress-related, PTSD, psychotic, bipolar, eating, substance use, ADHD, psychological distress) & Neurological conditions without a psychiatric outcome; physical health outcomes\\
+Index model & Supervised ML or DL model developed and/or validated to predict, detect, classify or diagnose a mental health outcome & Descriptive statistics; unsupervised clustering without a predictive target; conventional regression alone; chatbots or interventions without a prediction model\\
+Comparator & Not required & ---\\
+Outcomes & At least one quantitative performance metric & No performance metric\\
+Design & Development, validation, or development-with-validation studies; any data source & Reviews, editorials, protocols, abstracts without full text, preprints (analysed as a separate stratum if included)\\
+Timeframe & 1 January 2018 to \todo{date} & Before 2018\\
+Language & English & Non-English\\
+\bottomrule\end{tabularx}\end{table}
+
+\subsection{Information sources and search}
+PubMed, Scopus, Web of Science Core Collection and IEEE Xplore were searched on \todo{date}
+using three concept blocks (machine learning AND mental health AND prediction/detection); the
+full strings are in Supplementary Table S1 and the repository. PsycINFO \todo{was / was not}
+searched \todo{state reason}. Backward and forward citation chasing was performed for every
+included study and for the four overlapping reviews \cite{hasan2026,meehan2022,molpsych2025,madububambachu2024}.
+\todo{Record counts per database from search\_log.csv.}
+
+\subsection{Selection and data collection}
+Records were de-duplicated and screened in Rayyan with blinding by two reviewers independently at
+title/abstract and full-text stages; disagreements were resolved by discussion or a third
+reviewer. Inter-rater agreement is reported as Cohen's $\kappa$. Data were extracted in duplicate
+into a structured workbook (Supplementary File S2) after a five-study pilot: study characteristics,
+population, outcome definition and prevalence, data modality, number of candidate predictors,
+models, validation design, performance metrics, and availability statements.
+
+\subsection{Risk of bias and reporting appraisal}
+Risk of bias and applicability were assessed with PROBAST+AI \cite{moons2025} by two reviewers
+independently (domains: participants and data, predictors, outcome, analysis). Reporting
+completeness was scored against the 27 TRIPOD+AI items \cite{collins2024} as fully, partially or
+not reported, with adherence per study computed as fully reported items over applicable items.
+
+\subsection{Outcomes}
+Primary: PROBAST+AI risk-of-bias judgement per domain and overall; TRIPOD+AI adherence per item and
+per study. Secondary (pre-specified): (1) any external validation (temporal, geographical or
+independent cohort; a random hold-out does not qualify); (2) calibration reported by any method
+(plot, slope/intercept, Brier, ECE, Hosmer--Lemeshow); (3) AUROC reported versus accuracy as the
+only discrimination metric; (4) leakage-prone evaluation design, coded as present when
+repeated-measures data were split record-wise, when resampling or feature selection preceded the
+split, or when a predictor was derived from the outcome; (5) EPV, computed as outcome events
+divided by candidate predictors and compared with the $\geq$20 (regression) and higher ML
+expectations discussed in PROBAST+AI \cite{moons2025}; (6) code and data availability with a
+working link. Studies reporting $\geq$99\% accuracy without external validation were examined
+individually as leakage case studies.
+
+\subsection{Synthesis}
+Proportions with Wilson 95\% confidence intervals, overall and stratified by data modality
+(EHR/registry, questionnaire, wearable/actigraphy, speech/interview, imaging, social-media text),
+disorder and publication year. Meta-analysis of performance was pre-specified only for
+clinically homogeneous subsets reporting AUROC with variance; \todo{state whether performed}.
+
+\section{Results}
+\subsection{Study selection}
+\todo{PRISMA flow: \nDb{} database records, \nOther{} from other sources, \nDup{} duplicates,
+\nScreened{} screened, \nExclTA{} excluded, \nAssessed{} full texts assessed, \nIncluded{} included.
+Use paper/review/prisma\_flow\_template.tex.}
+\subsection{Study characteristics}
+\todo{Table: year, country, population, disorder, modality, sample size, prevalence, models. Summarise medians and IQRs.}
+\subsection{Risk of bias (PROBAST+AI)}
+\todo{Stacked bar per domain; proportion high/unclear/low; which signalling questions drive high risk (expected: analysis domain, 4.1 sample size, 4.7 calibration, 4.8 optimism/leakage).}
+\subsection{Reporting completeness (TRIPOD+AI)}
+\todo{Per-item adherence bar chart; median adherence per study; items with lowest adherence (expected: sample size justification, calibration, fairness, code availability, model specification).}
+\subsection{Secondary outcomes}
+\todo{Table with one row per outcome: n/N (\%, 95\% CI), stratified by modality. Leakage case studies described narratively.}
+
+\section{Discussion}
+\subsection{Principal findings}
+\todo{Three sentences on the headline proportions.}
+
+\subsection{What the deficiencies cost: the companion study}
+The proportions above describe how widespread each practice is; they do not say how much it
+matters. The companion study \cite{paperB} answers that on three public actigraphy cohorts
+(DEPRESJON, PSYKOSE, HYPERAKTIV; 162 unique participants, 1{,}818 unique valid day-windows, the 32 healthy controls being shared by the first two cohorts) with the same
+fixed models, seeds and subject-level bootstrap. Record-wise cross-validation inflated window-level
+AUROC by 0.065 (95\% CI 0.024 to 0.122) to 0.114 (0.060 to 0.181) for depression versus controls,
+by 0.020 to 0.044 for schizophrenia versus controls, and by 0.130 (0.095 to 0.167) to 0.169
+(0.135 to 0.206) for ADHD versus clinical controls, where the honest estimate was at chance
+(AUROC 0.45 to 0.46): leakage did not merely exaggerate a real signal, it manufactured one.
+Applying a model trained on one cohort to another without refitting reduced AUROC by 0.12 to 0.20
+in the harder direction and collapsed calibration slopes to 0.27 to 0.63 with intercepts of
+0.7 to 1.4, i.e.\ probabilities were both overconfident and shifted, while a deliberate label-shift
+transfer (depression model applied to ADHD versus clinical controls) fell to chance. Even under
+honest internal validation, calibration slopes were 0.53 to 0.95 and expected calibration error
+0.06 to 0.22, and no published model on these cohorts reports any of these quantities. Subject-level
+events per candidate predictor were 0.6 to 0.8 in every cohort, one to two orders of magnitude
+below guidance, although window-level counts make the samples look ten to twenty times larger.
+
+\subsection{Comparison with previous reviews}
+Our findings extend Meehan et al.\ \cite{meehan2022} from regression-based clinical models to the
+ML and digital-phenotyping literature, and go beyond the descriptive catalogue of Hasan et al.\
+\cite{hasan2026} by appraising quality rather than method. Benchmark-level audits of clinical
+interview corpora \cite{daicaudit2026,daicinvalid2025} reach the same conclusion by a different
+route: published rankings on DAIC-WOZ are unstable across splits and models learn corpus artefacts.
+
+\subsection{Strengths and limitations}
+Breadth across disorders and modalities; pre-registration; PROBAST+AI and TRIPOD+AI applied in
+duplicate; a paired empirical companion. Limitations: English-only; \todo{PsycINFO}; appraisal
+depends on what authors report, so under-reporting and poor conduct cannot always be separated;
+\todo{single second screener on a sample, if applicable}.
+
+\subsection{Implications}
+Journals in this field should require, as a condition of review, a statement of the unit of
+splitting for repeated-measures data, a calibration plot or slope, subject-level (not window-level)
+sample sizes with EPV, and a code link. Authors should treat the TRIPOD+AI checklist as a design
+document rather than a submission form.
+
+\section*{Declarations}
+Funding: \todo{}. Conflicts of interest: none declared. Registration: PROSPERO \todo{CRD}. Data
+and code: extraction workbook, search log and analysis code at \cite{repo}.
+
+\begin{thebibliography}{99}\footnotesize
+\bibitem{hasan2026} Hasan MJ, Shifat SH, Matubber J, et al. An in-depth exploration of machine learning methods for mental health state detection: a systematic review and analysis. Front Digit Health. 2026. doi:10.3389/fdgth.2025.1724348
+\bibitem{madububambachu2024} Madububambachu U, et al. Machine learning techniques to predict mental health diagnoses: a systematic literature review. Clin Pract Epidemiol Ment Health. 2024.
+\bibitem{meehan2022} Meehan AJ, Lewis SJ, Fazel S, et al. Clinical prediction models in psychiatry: a systematic review of two decades of progress and challenges. Mol Psychiatry. 2022;27:2700--2708. doi:10.1038/s41380-022-01528-4
+\bibitem{molpsych2025} Generalizability of clinical prediction models in mental health. Mol Psychiatry. 2025. doi:10.1038/s41380-025-02950-0
+\bibitem{adolescentehr2025} Machine learning models for predicting mental health crises in adolescents using electronic health records: a systematic review. 2025. PMC12426581.
+\bibitem{psychosisarms} Systematic review of clinical prediction models for psychosis in individuals meeting At Risk Mental State criteria. PMC11480010.
+\bibitem{adhd2024} Individualized prediction models in ADHD: a systematic review and meta-regression. Mol Psychiatry. 2024. doi:10.1038/s41380-024-02606-5
+\bibitem{socialmedia2024} Machine learning approaches for mental illness detection on social media: a systematic review of biases and methodological challenges. arXiv:2410.16204.
+\bibitem{collins2024} Collins GS, Moons KGM, Dhiman P, et al. TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods. BMJ. 2024;385:e078378.
+\bibitem{moons2025} Moons KGM, Damen JAA, Nair T, et al. PROBAST+AI: an updated quality, risk of bias, and applicability assessment tool for prediction models using regression or artificial intelligence methods. BMJ. 2025;388:e082505.
+\bibitem{saeb2017} Saeb S, Lonini L, Jayaraman A, Mohr DC, Kording KP. The need to approximate the use-case in clinical machine learning. GigaScience. 2017;6:1--9.
+\bibitem{jmirai2026} Karbalaie A, Abtahi F, H\"ager C. Participant-aware model validation for repeated-measures data: comparative cross-validation study. JMIR AI. 2026;5:e87728.
+\bibitem{page2021} Page MJ, McKenzie JE, Bossuyt PM, et al. The PRISMA 2020 statement. BMJ. 2021;372:n71.
+\bibitem{daicaudit2026} A multi-probe audit of clinical-interview depression detection benchmarks. arXiv:2605.23977. 2026.
+\bibitem{daicinvalid2025} Most DAIC-WOZ depression classifiers are invalid, they don't learn task-specific features: preliminary findings from a large-scale reproducibility study. ICMI Companion. 2025. doi:10.1145/3747327.3763034
+\bibitem{paperB} Ajibola AA, et al. How much do leaky splits, missing external validation and missing calibration cost? An empirical companion on public actigraphy cohorts. \todo{preprint DOI}. 2026.
+\bibitem{repo} mlmh-appraisal repository. \url{https://github.com/rogerpanel/cv/tree/main/mlmh-appraisal}. \todo{tag and DOI via Zenodo}.
+\end{thebibliography}
+\end{document}

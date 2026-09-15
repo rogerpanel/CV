@@ -4,6 +4,7 @@
 \caption{E1: window-level discrimination and calibration for every model, cohort and splitting design (mean over seeds).}
 \label{tab:e1full}
 \footnotesize
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{llllllllll}
 \toprule
 Cohort & Model & Split & Accuracy & Macro-F1 & AUROC & Brier & Cal. slope & Cal. intercept & ECE \\
@@ -34,4 +35,5 @@ hyperaktiv & XGBoost & subject-wise & 0.460 & 0.460 & 0.449 & 0.330 & -0.15 & 0.
 hyperaktiv & XGBoost & record-wise & 0.557 & 0.557 & 0.586 & 0.271 & 0.26 & 0.00 & 0.151 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

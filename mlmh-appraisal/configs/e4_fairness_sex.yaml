@@ -1,0 +1,4 @@
+inherit: base.yaml
+experiment: E4
+description: Sex-stratified performance of the E1 subject-wise models (TRIPOD+AI fairness items 14 and 25).
+splitter: subject_wise

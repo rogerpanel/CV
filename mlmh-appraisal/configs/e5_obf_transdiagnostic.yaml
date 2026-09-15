@@ -1,0 +1,9 @@
+inherit: base.yaml
+experiment: E5
+description: >
+  OBF-Psychiatric arms: any psychiatric group vs healthy control (binary, transdiagnostic) and the
+  five diagnostic groups (multiclass, macro one-vs-rest AUROC), both under subject-wise and
+  record-wise CV. Record-wise is permitted here because, like E1, the inflation is the object of study.
+cohorts: [obf_psychiatric]
+splitters: [subject_wise, record_wise]
+models: [majority, logreg, rf, xgboost]

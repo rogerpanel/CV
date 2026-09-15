@@ -83,7 +83,9 @@ def main(argv: list[str] | None = None) -> int:
         if a.n_boot:
             cfg["n_boot"] = a.n_boot
         exp = cfg.get("experiment")
-        runner = {"E1": ex.run_e1, "E2": ex.run_e2, "E3": ex.run_e3}.get(exp)
+        from . import extras
+
+        runner = {"E1": ex.run_e1, "E2": ex.run_e2, "E3": ex.run_e3, "E4": extras.run_e4, "E5": extras.run_e5, "cohort_table": extras.cohort_table}.get(exp)
         if runner is None:
             print(f"config has no recognised 'experiment' key (got {exp!r})", file=sys.stderr)
             return 2

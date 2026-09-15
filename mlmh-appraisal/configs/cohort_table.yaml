@@ -1,0 +1,4 @@
+inherit: base.yaml
+experiment: cohort_table
+description: Participant characteristics table (TRIPOD+AI item 22) from the harmonised OBF metadata.
+splitter: subject_wise

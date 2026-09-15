@@ -4,6 +4,7 @@
 \caption{E2: internal (subject-wise CV on the training cohort) versus external (unchanged model applied to the second cohort) performance. Window-level estimates, mean over seeds, subject-level BCa 95\% intervals. EPV = minority-class subjects per candidate predictor in the training cohort.}
 \label{tab:e2}
 \footnotesize
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{llllllllll}
 \toprule
 Train $\rightarrow$ Test & Model & EPV & Internal AUROC & External AUROC & $\Delta$ & Int. slope & Ext. slope & Ext. intercept & Ext. Brier \\
@@ -22,4 +23,5 @@ depresjon $\rightarrow$ hyperaktiv & Random forest & 0.8 & 0.762 [0.681, 0.848] 
 depresjon $\rightarrow$ hyperaktiv & XGBoost & 0.8 & 0.745 [0.675, 0.842] & 0.459 [0.358, 0.550] & -0.286 & 0.43 & -0.09 & 0.48 & 0.364 \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}

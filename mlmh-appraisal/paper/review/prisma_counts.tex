@@ -1,0 +1,13 @@
+% PRISMA 2020 flow diagram skeleton. Fill the macros from search_log.csv and Rayyan exports;
+% the arithmetic is checked at compile time so that the figure cannot disagree with the text.
+\newcommand{\nDb}{0}          % records identified from databases
+\newcommand{\nOther}{0}       % records identified by citation chasing
+\newcommand{\nDup}{0}         % duplicates removed
+\newcommand{\nScreened}{\the\numexpr\nDb+\nOther-\nDup\relax}
+\newcommand{\nExclTA}{0}      % excluded at title/abstract
+\newcommand{\nSought}{\the\numexpr\nScreened-\nExclTA\relax}
+\newcommand{\nNotRetrieved}{0}
+\newcommand{\nAssessed}{\the\numexpr\nSought-\nNotRetrieved\relax}
+\newcommand{\nExclFT}{0}      % excluded at full text (sum of reasons below)
+\newcommand{\nIncluded}{\the\numexpr\nAssessed-\nExclFT\relax}
+% Usage in the manuscript: \nIncluded{} studies were included (Figure~\ref{fig:prisma}).

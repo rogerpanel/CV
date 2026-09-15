@@ -27,7 +27,9 @@ def write_latex_table(df: pd.DataFrame, path: Path, caption: str, label: str, no
         f"\\caption{{{caption}}}",
         f"\\label{{{label}}}",
         "\\footnotesize",
+        "\\begin{adjustbox}{max width=\\linewidth}",
         body.strip(),
+        "\\end{adjustbox}",
     ]
     if note:
         lines.append(f"\\par\\smallskip\\raggedright\\footnotesize {note}")
