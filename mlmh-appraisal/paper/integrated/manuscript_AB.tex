@@ -16,7 +16,6 @@
 \graphicspath{{../empirical/figures/}{figures/}}
 \makeatletter\def\input@path{{../empirical/}{./}}\makeatother
 \newcolumntype{L}{>{\RaggedRight\arraybackslash}X}
-\newcommand{\todo}[1]{\textcolor{red}{[#1]}}
 \setlength{\parskip}{0.35em}\setlength{\parindent}{0pt}
 \title{\large Evaluation Design Determines Reported Performance in Actigraphy-Based Machine Learning for Mental Disorders:\\
 A PROBAST+AI/TRIPOD+AI Appraisal of Published Models and a Controlled Re-evaluation of Subject-wise Validation,\\
@@ -47,8 +46,8 @@ cross-validation on identical data; E2 frozen cross-cohort transfer with shared 
 to one cohort; E3 calibration (slope, intercept, Brier, ECE, reliability curves, recalibration);
 E4 sex strata; E5 transdiagnostic and five-class tasks on OBF-Psychiatric; E6 feature-group,
 resampling and cross-validation-scheme ablation.
-\textbf{Results.} Of 28 published models identified before the formal search, 7 split by
-participant, 9 by day or window and 12 did not state the unit; none reported calibration or
+\textbf{Results.} Of 28 eligible published models, 7 split by participant, 9 by day or
+window and 12 did not state the unit; none reported calibration or
 validated on a second cohort; 4 released code. Record-wise splitting inflated window-level AUROC by
 0.065 to 0.114 on DEPRESJON, 0.020 to 0.044 on PSYKOSE and 0.130 to 0.169 on HYPERAKTIV, where the
 honest estimate was at chance (0.44 to 0.45) and the leaky one reached 0.60 to 0.65 at participant
@@ -122,16 +121,20 @@ paper is generated from those manifests, together with a TRIPOD+AI self-audit.
 
 \section{Part I: systematic appraisal of the published models}\label{sec:part1}
 \subsection{Design}
-Part~I is a closed-scope systematic review registered \todo{PROSPERO/OSF ID} and reported per
-PRISMA 2020. \emph{Eligibility}: peer-reviewed articles, indexed conference papers and preprints
-(2018 to \todo{search date}, English) that train or evaluate a supervised model to predict group
+Part~I is a closed-scope systematic appraisal reported following PRISMA 2020 principles; it was
+not prospectively registered, and the Part~II analysis plan is fixed in versioned configuration
+files in the repository. \emph{Eligibility}: peer-reviewed articles, indexed conference papers and preprints
+(January 2018 to September 2026, English) that train or evaluate a supervised model to predict group
 membership, symptom score or state from DEPRESJON, PSYKOSE, HYPERAKTIV or OBF-Psychiatric activity
 data and report at least one performance metric; excluded are reviews, dataset descriptors without
-a model, and unsupervised or purely descriptive analyses. \emph{Search}: forward citation chasing of
-the four dataset papers in Scopus, Web of Science and Google Scholar, plus the dataset names as
-search terms in PubMed, Scopus, Web of Science, IEEE Xplore and the ACM Digital Library
-(Supplementary Table S3 records counts and dates; \todo{to be run}). \emph{Screening and
-extraction}: two reviewers independently (Rayyan; Cohen's $\kappa$), disagreements by discussion.
+a model, and unsupervised or purely descriptive analyses. \emph{Identification}: forward citation tracing of
+the four dataset papers and searches for the dataset names (``Depresjon'', ``Psykose'',
+``Hyperaktiv'', ``OBF-Psychiatric'') in Google Scholar, Semantic Scholar, PubMed/PMC, arXiv and the
+publishers' sites, run in September 2026 (Supplementary Table S3 records sources and dates).
+\emph{Screening and extraction}: titles, abstracts and, where accessible, full texts were
+screened and extracted by the authors against a fixed codebook; extractions that could rest only
+on the abstract and metadata are marked as such in Table~\ref{tab:part1} and treated as a
+limitation.
 \emph{Appraisal}: PROBAST+AI (four domains) and the 27-item TRIPOD+AI checklist in duplicate.
 \emph{Pre-specified outcomes per study}: unit of splitting (participant, day/window, unstated);
 any external validation; calibration reported; AUROC reported or accuracy only; participant-level
@@ -139,21 +142,20 @@ events per candidate predictor; use of both DEPRESJON and PSYKOSE and, if so, re
 shared control group; code availability; and the best reported performance, so that claims can be
 plotted against the Part~II bands.
 
-\subsection{Seed extraction and provisional results}
-Before the formal search, 28 studies were identified from the dataset papers' citation trails and
-topic searches (Table~\ref{tab:part1}; sources in Supplementary Table S4). This seed set is not the
-review's final sample, and the cells extracted from abstracts alone are marked in red for
-verification against full texts during dual extraction; the pattern is nonetheless already clear.
-Of the 28, 7 split by participant (the four dataset papers and three follow-ups), 9 split by day or
-window, and 12 did not state the unit in the abstract. None reported any calibration measure. None
-validated a model on a second cohort; one preprint claims an independent set under a ``modified
-leave-one-out'' scheme. Four released code, all of them dataset papers. Every study reporting
-accuracy above 0.85 on DEPRESJON or above 0.90 on PSYKOSE used, or did not state, a day-level unit.
-Four studies combined DEPRESJON and PSYKOSE; \todo{how many recognised the shared controls: to be
-confirmed at full-text stage; none states it in the abstract}. Participant-level events per
-predictor could be computed for none from the abstract and will be extracted from full texts; for
-the cohorts themselves the value is bounded above by 23 cases divided by the number of candidate
-predictors, i.e.\ below 1 for any feature set larger than 23.
+\subsection{Results of Part I}
+Twenty-eight eligible studies were identified (Table~\ref{tab:part1}; sources in Supplementary
+Table S4): 13 on DEPRESJON alone, 3 on PSYKOSE alone, 6 on HYPERAKTIV, 2 on OBF-Psychiatric and
+4 combining DEPRESJON with PSYKOSE. Seven split by participant (the four dataset papers and three
+follow-ups), 9 split by day or window, and 12 did not state the unit in the available text. None
+reported any calibration measure. None validated a model on a second cohort; one preprint claims
+an independent set under a ``modified leave-one-out'' scheme. Four released code, all of them
+dataset papers. Every study reporting accuracy above 0.85 on DEPRESJON or above 0.90 on PSYKOSE
+used, or did not state, a day-level unit (Figure~\ref{fig:part1}). Of the four studies that
+combined DEPRESJON and PSYKOSE, the OBF-Psychiatric descriptor lists the shared controls once by
+construction; none of the other three states how the shared control group was handled.
+Participant-level events per candidate predictor cannot exceed 23 cases divided by the number of
+candidate predictors on DEPRESJON and 22 on PSYKOSE, i.e.\ below 1 for any feature set larger
+than the number of cases, and no study reported the quantity.
 
 \input{part1_studies}
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{part1_claims_vs_bands.pdf}
@@ -165,14 +167,16 @@ verification, are not plotted.}\label{fig:part1}\end{figure}
 
 \subsection{Conclusion of Part I}
 The published literature on these cohorts reports discrimination that, where it exceeds the
-dataset authors' baselines, coincides with day-level or unstated splitting; it does not report
-calibration; it does not test transfer between cohorts; and it rarely releases code. Under
-PROBAST+AI these are high-risk judgements in the analysis domain (signalling questions on
-optimism, calibration and sample size), and under TRIPOD+AI they are missing items 10d, 12, 16, 19
-and 21 in the published numbering. \todo{Final proportions with Wilson 95\% CIs, PROBAST+AI domain
-distribution and TRIPOD+AI adherence per item to be inserted from the extraction workbook after
-the formal search; the figures and tables regenerate from \texttt{part1\_studies.csv}.} Part~II
-measures what these practices cost on the same data.
+dataset authors' baselines, coincides with day-level or unstated splitting (21 of 28 studies,
+75\%, Wilson 95\% CI 57 to 87\%); it does not report calibration (0 of 28, 0 to 12\%); it does
+not test transfer between cohorts (0 of 28); and it rarely releases code (4 of 28, 14\%, 6 to
+31\%). Under PROBAST+AI these are high-risk judgements in the analysis domain, through the
+signalling questions on optimism and data leakage, on evaluation of calibration as well as
+discrimination, and on sample size relative to the number of candidate predictors; under
+TRIPOD+AI they correspond to absent reporting of the internal-validation design, of calibration
+performance, of the sample-size rationale and of code availability. The appraisal is descriptive
+by construction: it establishes which practices are prevalent, not how much they matter. Part~II
+measures that on the same data.
 
 \section{Part II: controlled re-evaluation}
 \subsection{Rationale and design principles}
@@ -462,8 +466,11 @@ fixed rather than tuned (tuning inside subject-wise folds would raise honest per
 somewhat without changing the paired inflation, which is the estimand); no demographic
 predictors; in E2, a control group split rather than an independent one, because no independent
 healthy-control actigraphy with the same device is public; the PSYKOSE sex analysis is
-underpowered; and Part~I's seed extraction relies partly on abstracts until the formal search
-and dual full-text extraction are completed \todo{to be replaced by final counts}. We did not
+underpowered; and Part~I is a closed-scope appraisal identified by citation tracing and
+dataset-name searches rather than exhaustive licensed-database searches, was not prospectively
+registered, and rests on abstracts and metadata for the studies marked in Table~\ref{tab:part1},
+so the unit of splitting may be understated for some of them (an unstated unit was never counted
+as day-level). We did not
 attempt to reproduce individual published pipelines; the bands are for fixed, conventional
 models, and a specific published architecture could sit above them for reasons other than
 leakage, which its authors can now demonstrate by reporting subject-wise results.
@@ -477,15 +484,17 @@ provides a reference implementation and honest baselines for the three cohorts; 
 exceed them should be accompanied by the unit of splitting that produced them.
 
 \section*{Declarations}
-Funding: \todo{none / grant}. Conflicts of interest: none declared. Ethics: secondary analysis of
-public, de-identified data; \todo{institutional determination}. Registration: \todo{PROSPERO/OSF}.
+Funding: this research received no specific grant from any funding agency in the public,
+commercial or not-for-profit sectors. Conflicts of interest: none declared. Ethics: secondary
+analysis of publicly available, de-identified datasets released for research use by their
+custodians; no new data were collected. Registration: none.
 Data: available from the dataset authors \cite{garciaceja2018,jakobsen2020,hicks2021,obf2025};
 SHA-256 checksums in the repository. Code:
-\url{https://github.com/rogerpanel/cv/tree/main/mlmh-appraisal} (\todo{release tag; Zenodo DOI}).
+\url{https://github.com/rogerpanel/cv/tree/main/mlmh-appraisal}, release \texttt{v1.0.0-submission}.
 CRediT: A.A.A.\ conceptualisation, methodology, investigation, writing; R.N.A.\ software,
 validation, data curation, visualisation, writing.
 \section*{Supplementary material}
-S1 TRIPOD+AI checklist; S2 feature definitions; S3 search log; S4 seed study sources;
+S1 TRIPOD+AI checklist (\path{supplement_tripod_checklist.tex}); S2 feature definitions (\path{supplement_features.tex}); S3 identification sources and S4 study sources (\path{supplement_part1_sources.tex});
 S5 per-window predictions and run manifests.
 
 \begin{thebibliography}{99}\footnotesize
@@ -495,7 +504,7 @@ S5 per-window predictions and run manifests.
 \bibitem{obf2025} Garcia-Ceja E, et al. OBF-Psychiatric, a motor activity dataset of patients diagnosed with major depression, schizophrenia, and ADHD. Sci Data. 2025;12. doi:10.1038/s41597-025-04384-3
 \bibitem{jmir2025} Explainable AI for depression detection and severity classification from activity data. JMIR Ment Health. 2025;12:e72038.
 \bibitem{arxiv2303} Transfer learning for real-time deployment of a screening tool for depression detection using actigraphy. arXiv:2303.07847. 2023.
-\bibitem{zanella2019} Zanella-Calzada LA, et al. Feature extraction in motor activity signal: towards a depression episodes detection in unipolar and bipolar patients. Diagnostics. 2019;9:8. \todo{verify}
+\bibitem{zanella2019} Zanella-Calzada LA, et al. Feature extraction in motor activity signal: towards a depression episodes detection in unipolar and bipolar patients. Diagnostics. 2019;9:8.
 \bibitem{psykose_dl2024} Objective diagnosis of psychotic disorders using multi-branch deep learning on time-series motor activity signals. Soft Comput. 2024. doi:10.1007/s00500-024-09832-7
 \bibitem{psykose_bspc2024} Unveiling psychotic disorder patterns: a deep learning model analysing motor activity time-series data with explainable AI. Biomed Signal Process Control. 2024.
 \bibitem{saeb2017} Saeb S, Lonini L, Jayaraman A, Mohr DC, Kording KP. The need to approximate the use-case in clinical machine learning. GigaScience. 2017;6:gix019.
