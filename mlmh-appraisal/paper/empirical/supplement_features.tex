@@ -1,0 +1,24 @@
+% Supplementary Table S2: window-level predictors (src/mlmh/features/actigraphy.py)
+\begin{longtable}{p{3.2cm}p{10.8cm}}
+\caption{Predictors computed for each valid calendar day of minute-level activity counts.}\label{tab:features}\\
+\toprule Feature & Definition\\ \midrule \endfirsthead
+\toprule Feature & Definition\\ \midrule \endhead
+mean, sd, cv & Mean, standard deviation and coefficient of variation of counts over valid minutes\\
+median, p10, p90, max & Median, 10th and 90th percentiles, maximum\\
+skew, kurtosis & Sample skewness and excess kurtosis\\
+prop\_zero & Proportion of valid minutes with zero counts (inactivity)\\
+mean\_log1p, sd\_log1p & Mean and SD of $\log(1+x)$\\
+day\_mean, night\_mean & Mean counts 08:00--22:00 and outside that interval\\
+night\_day\_ratio & night\_mean / day\_mean\\
+night\_prop\_zero & Proportion of zero minutes at night\\
+M10, L5 & Mean of the most active 10 h and least active 5 h of the hourly profile (circular)\\
+relative\_amplitude & (M10 $-$ L5)/(M10 + L5)\\
+IV & Intradaily variability of the hourly profile (Van Someren et al.)\\
+m10\_onset\_sin, m10\_onset\_cos & Sine and cosine of the hour at which the M10 window starts (phase proxy)\\
+acf\_5, acf\_60 & Autocorrelation of the minute series at lags 5 and 60 min\\
+psd\_mean & $\log(1+\text{mean power})$ of the within-day periodogram (excluding DC)\\
+dominant\_period\_min & Period (min) of the dominant within-day spectral peak\\
+n\_transitions & Number of rest/activity transitions (zero to non-zero or back)\\
+missing\_frac & Fraction of the 1440 minutes without a valid count\\
+\bottomrule
+\end{longtable}
