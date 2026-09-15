@@ -42,7 +42,7 @@ relative to current guidance, and code or data availability.
 adherence; secondary-outcome proportions with 95\% CIs; stratification by modality.}
 \textbf{Conclusions.} \todo{one sentence on prevalence of the deficiencies}. A companion empirical
 study on three public actigraphy cohorts quantifies what these deficiencies cost: record-wise
-cross-validation inflated AUROC by 0.04 to 0.17, external validation reduced AUROC by up to 0.20
+cross-validation inflated AUROC by 0.04 to 0.17, external validation reduced AUROC by up to 0.21
 with calibration slopes collapsing to 0.3, and no published model on those cohorts reports
 calibration at all.
 \end{abstract}
@@ -170,8 +170,8 @@ fixed models, seeds and subject-level bootstrap. Record-wise cross-validation in
 AUROC by 0.065 (95\% CI 0.024 to 0.122) to 0.114 (0.060 to 0.181) for depression versus controls,
 by 0.020 to 0.044 for schizophrenia versus controls, and by 0.130 (0.095 to 0.167) to 0.169
 (0.135 to 0.206) for ADHD versus clinical controls, where the honest estimate was at chance
-(AUROC 0.45 to 0.46): leakage did not merely exaggerate a real signal, it manufactured one.
-Applying a model trained on one cohort to another without refitting reduced AUROC by 0.12 to 0.20
+(AUROC 0.44 to 0.45): leakage did not merely exaggerate a real signal, it manufactured one.
+Applying a model trained on one cohort to another without refitting reduced AUROC by 0.13 to 0.21
 in the harder direction and collapsed calibration slopes to 0.27 to 0.63 with intercepts of
 0.7 to 1.4, i.e.\ probabilities were both overconfident and shifted, while a deliberate label-shift
 transfer (depression model applied to ADHD versus clinical controls) fell to chance. Even under

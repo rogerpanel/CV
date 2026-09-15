@@ -21,7 +21,9 @@ def _f(v, nd=3):
 
 
 def _ci(row, key, level="window"):
-    est = row.get(f"{level}_{key}_mean")
+    est = row.get(f"{level}_{key}_est")
+    if est is None or pd.isna(est):
+        est = row.get(f"{level}_{key}_mean")
     lo, hi = row.get(f"{level}_{key}_ci_lo"), row.get(f"{level}_{key}_ci_hi")
     if pd.isna(est):
         return "--"
@@ -57,7 +59,7 @@ def e2_section(rdir: Path) -> str:
     for (a, b, m), g in t.groupby(["train", "test", "model"], sort=False):
         i, e = g[g["arm"] == "internal"].iloc[0], g[g["arm"] == "external"].iloc[0]
         lines.append(
-            f"| {a} -> {b} | {LABELS.get(m, m)} | {_f(i['epv'], 1)} | {_ci(i, 'auroc')} | {_ci(e, 'auroc')} | {e['window_auroc_mean'] - i['window_auroc_mean']:+.3f} | "
+            f"| {a} -> {b} | {LABELS.get(m, m)} | {_f(i['epv'], 1)} | {_ci(i, 'auroc')} | {_ci(e, 'auroc')} | {(e.get('window_auroc_est') if pd.notna(e.get('window_auroc_est', float('nan'))) else e['window_auroc_mean']) - (i.get('window_auroc_est') if pd.notna(i.get('window_auroc_est', float('nan'))) else i['window_auroc_mean']):+.3f} | "
             f"{_f(e['window_calibration_slope_mean'], 2)} | {_f(e['window_calibration_intercept_mean'], 2)} | {_f(e['window_brier_mean'])} |"
         )
     return "\n".join(lines) + "\n"

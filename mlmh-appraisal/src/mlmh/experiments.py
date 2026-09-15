@@ -167,7 +167,7 @@ def _summarise(pred: pd.DataFrame, cfg: dict, seed_for_boot: int = 0) -> dict:
     for key in cfg.get("ci_metrics", ["auroc", "accuracy", "brier", "calibration_slope"]):
         for level in ("window", "subject"):
             est, lo, hi = subject_bootstrap_ci(avg, _metric_fn(key, level), n_boot=n_boot, seed=seed_for_boot, method=cfg.get("ci_method", "bca"))
-            row[f"{level}_{key}_ci_lo"], row[f"{level}_{key}_ci_hi"] = lo, hi
+            row[f"{level}_{key}_est"], row[f"{level}_{key}_ci_lo"], row[f"{level}_{key}_ci_hi"] = est, lo, hi
     return row
 
 
@@ -218,6 +218,12 @@ def run_e1(cfg: dict) -> pd.DataFrame:
     return table
 
 
+def _pt(row, level: str, key: str):
+    """Point estimate printed next to a CI: the seed-averaged estimate the CI was built on, else the per-seed mean."""
+    v = row.get(f"{level}_{key}_est")
+    return v if v is not None and not pd.isna(v) else row.get(f"{level}_{key}_mean")
+
+
 def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> None:
     syn = bool(cfg.get("synthetic"))
     tdir = ROOT / cfg.get("tables_dir", "paper/empirical/tables")
@@ -230,9 +236,9 @@ def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> N
         r = {"Cohort": cohort, "Model": MODEL_LABELS.get(model, model)}
         for level, lab in (("window", "Window"), ("subject", "Subject")):
             if sw is not None:
-                r[f"{lab} AUROC subject-wise"] = fmt_ci(sw[f"{level}_auroc_mean"], sw.get(f"{level}_auroc_ci_lo"), sw.get(f"{level}_auroc_ci_hi"))
+                r[f"{lab} AUROC subject-wise"] = fmt_ci(_pt(sw, level, "auroc"), sw.get(f"{level}_auroc_ci_lo"), sw.get(f"{level}_auroc_ci_hi"))
             if rw is not None:
-                r[f"{lab} AUROC record-wise"] = fmt_ci(rw[f"{level}_auroc_mean"], rw.get(f"{level}_auroc_ci_lo"), rw.get(f"{level}_auroc_ci_hi"))
+                r[f"{lab} AUROC record-wise"] = fmt_ci(_pt(rw, level, "auroc"), rw.get(f"{level}_auroc_ci_lo"), rw.get(f"{level}_auroc_ci_hi"))
             if len(inf):
                 col = f"{level}_auroc_mean"
                 ii = inf[inf[col].notna()]
@@ -240,7 +246,7 @@ def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> N
                     r[f"{lab} inflation"] = fmt_ci(ii.iloc[0][col], ii.iloc[0][f"{level}_auroc_ci_lo"], ii.iloc[0][f"{level}_auroc_ci_hi"])
         rows.append(r)
     df = pd.DataFrame(rows)
-    write_latex_table(df, tdir / f"e1_auroc_inflation{suffix}.tex", "E1: discrimination under subject-wise versus record-wise cross-validation. Cells give the mean over seeds with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", f"tab:e1{suffix}", synthetic=syn)
+    write_latex_table(df, tdir / f"e1_auroc_inflation{suffix}.tex", "E1: discrimination under subject-wise versus record-wise cross-validation. Cells give the estimate on seed-averaged out-of-fold predictions with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", f"tab:e1{suffix}", synthetic=syn)
     # accuracy/F1/calibration companion
     rows = []
     for _, r in main.iterrows():
@@ -336,9 +342,9 @@ def _e2_tables(table: pd.DataFrame, cfg: dict) -> None:
                 "Train $\\rightarrow$ Test": f"{a} $\\rightarrow$ {b}",
                 "Model": MODEL_LABELS.get(m, m),
                 "EPV": f"{i['epv']:.1f}",
-                "Internal AUROC": fmt_ci(i["window_auroc_mean"], i.get("window_auroc_ci_lo"), i.get("window_auroc_ci_hi")),
-                "External AUROC": fmt_ci(e["window_auroc_mean"], e.get("window_auroc_ci_lo"), e.get("window_auroc_ci_hi")),
-                "$\\Delta$": f"{e['window_auroc_mean'] - i['window_auroc_mean']:+.3f}",
+                "Internal AUROC": fmt_ci(_pt(i, "window", "auroc"), i.get("window_auroc_ci_lo"), i.get("window_auroc_ci_hi")),
+                "External AUROC": fmt_ci(_pt(e, "window", "auroc"), e.get("window_auroc_ci_lo"), e.get("window_auroc_ci_hi")),
+                "$\\Delta$": f"{_pt(e, 'window', 'auroc') - _pt(i, 'window', 'auroc'):+.3f}",
                 "Int. slope": f"{i['window_calibration_slope_mean']:.2f}",
                 "Ext. slope": f"{e['window_calibration_slope_mean']:.2f}",
                 "Ext. intercept": f"{e['window_calibration_intercept_mean']:.2f}",
@@ -431,3 +437,42 @@ def run_e3(cfg: dict) -> pd.DataFrame:
             reliability_plot(ext, fdir / f"e3_reliability_{pair.replace('-to-', '_to_')}.pdf", title=pair.replace("-to-", " $\\rightarrow$ "), synthetic=syn)
     write_manifest(out, cfg, extra={"experiment": "E3", "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
     return table
+
+
+# ----------------------------------------------------------------- retable
+def _est_from_predictions(pred_path: Path, cfg: dict) -> dict:
+    avg = seed_averaged(pd.read_csv(pred_path))
+    out = {}
+    for key in cfg.get("ci_metrics", ["auroc", "accuracy", "macro_f1", "brier", "calibration_slope"]):
+        for level in ("window", "subject"):
+            out[f"{level}_{key}_est"] = _metric_fn(key, level)(avg)
+    return out
+
+
+def retable(cfg: dict) -> None:
+    """Re-emit E1/E2 tables from results CSVs, adding seed-averaged point estimates from stored predictions."""
+    for exp in ("E1", "E1_cnn", "E2"):
+        d = results_dir(cfg, exp)
+        csv = d / ("e2_results.csv" if exp == "E2" else "e1_results.csv")
+        if not csv.exists():
+            continue
+        t = pd.read_csv(csv)
+        rows = []
+        for _, r in t.iterrows():
+            r = r.to_dict()
+            if exp == "E2":
+                pp = d / "predictions" / (f"{r['train']}.{r['model']}.internal.csv" if r["arm"] == "internal" else f"{r['train']}-to-{r['test']}.{r['model']}.external.csv")
+            elif r["splitter"] in ("subject_wise", "record_wise"):
+                pp = d / "predictions" / f"{r['cohort']}.{r['model']}.{r['splitter']}.csv"
+            else:
+                pp = None
+            if pp is not None and pp.exists():
+                r.update(_est_from_predictions(pp, cfg))
+            rows.append(r)
+        t = pd.DataFrame(rows)
+        t.to_csv(csv, index=False)
+        if exp == "E2":
+            _e2_tables(t, cfg)
+        else:
+            _e1_tables(t, cfg, d, "" if exp == "E1" else "_" + exp.lower())
+        print(f"[retable] {exp}: {len(t)} rows, tables regenerated")

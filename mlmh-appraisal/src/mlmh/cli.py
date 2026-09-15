@@ -33,6 +33,10 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("--models", nargs="*", help="override models")
     r.add_argument("--n-boot", type=int, help="override bootstrap replicates")
 
+    rt = sub.add_parser("retable", help="re-emit E1/E2 LaTeX tables from stored results with seed-averaged point estimates")
+    rt.add_argument("--config", default="configs/base.yaml")
+    rt.add_argument("--synthetic", action="store_true")
+
     t = sub.add_parser("tripod", help="write the TRIPOD+AI self-audit from run manifests")
     t.add_argument("--synthetic", action="store_true")
 
@@ -70,6 +74,10 @@ def main(argv: list[str] | None = None) -> int:
                 ok = False
                 print(f"[verify] {name}: FAILED -- {type(e).__name__}: {e}")
         return 0 if ok else 1
+
+    if a.cmd == "retable":
+        ex.retable(cfg)
+        return 0
 
     if a.cmd == "prepare":
         ex.prepare(cfg, cohorts=a.cohorts)

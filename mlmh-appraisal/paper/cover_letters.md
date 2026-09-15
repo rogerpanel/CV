@@ -18,7 +18,7 @@ predictor, and code/data availability. [One sentence with the headline proportio
 What distinguishes this review is a paired empirical companion (submitted to [journal]; preprint
 DOI [..]) that measures, on three public actigraphy cohorts, what the most prevalent deficiencies
 cost: record-wise splitting inflated AUROC by up to 0.17 and manufactured signal where there was
-none, external validation exposed losses of up to 0.20 AUROC with calibration collapse, and no
+none, external validation exposed losses of up to 0.21 AUROC with calibration collapse, and no
 published model on those cohorts reports calibration. The review measures how widespread the
 problem is; the companion measures how much it matters.
 
@@ -44,7 +44,7 @@ widespread: absence of external validation and absence of calibration assessment
 On DEPRESJON, PSYKOSE and HYPERAKTIV (162 participants, same recording device) with fixed models
 and ten seeds, record-wise splitting inflated AUROC by 0.02 to 0.17 with subject-level bootstrap
 intervals excluding zero, and turned a chance-level ADHD classifier into an apparently useful one.
-Freezing a model and applying it to another cohort lost up to 0.20 AUROC in one direction while
+Freezing a model and applying it to another cohort lost up to 0.21 AUROC in one direction while
 the other direction held, and calibration slopes fell to 0.3. We also report that the PSYKOSE and
 DEPRESJON control groups are the same 32 people, a fact that contaminates any naive cross-cohort
 validation and that we detect from the data rather than the documentation.

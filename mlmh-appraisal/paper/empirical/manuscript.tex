@@ -37,10 +37,10 @@ model, plus a logistic recalibration arm. Ten seeds; subject-level BCa bootstrap
 run traceable to a manifest. \textbf{Results.} Record-wise splitting inflated window-level AUROC
 by 0.065 (95\% CI 0.024 to 0.122) to 0.114 (0.060 to 0.181) in DEPRESJON, 0.020 (0.006 to 0.041)
 to 0.044 (0.017 to 0.080) in PSYKOSE, and 0.130 (0.095 to 0.167) to 0.169 (0.135 to 0.206) in
-HYPERAKTIV, where the honest estimate was at chance (0.45 to 0.46) and the leaky one reached 0.60
+HYPERAKTIV, where the honest estimate was at chance (0.44 to 0.45) and the leaky one reached 0.60
 to 0.65 at subject level. Flexible models inflated more than logistic regression in every cohort.
 Transfer from DEPRESJON to PSYKOSE preserved discrimination (AUROC 0.77 to 0.78) but transfer in
-the opposite direction reduced AUROC by 0.12 to 0.20, with calibration slopes of 0.27 to 0.63 and
+the opposite direction reduced AUROC by 0.13 to 0.21, with calibration slopes of 0.27 to 0.63 and
 intercepts of 0.7 to 1.4; a label-shift transfer to HYPERAKTIV fell to chance. Under honest
 internal validation, slopes were 0.53 to 0.95 and ECE 0.06 to 0.22; recalibration on the training
 cohort did not repair the external miscalibration. Subject-level events per candidate predictor
@@ -186,13 +186,15 @@ contains all 162 participants exactly once.
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{e1_inflation_auroc.pdf}
 \caption{E1. Window-level AUROC of each model under subject-wise (dark) and record-wise (red) five-fold cross-validation, mean over ten seeds. The grey bar is the leakage inflation.}\label{fig:e1}\end{figure}
 Record-wise splitting raised window-level AUROC in every cohort and for every informative model
-(Table~\ref{tab:e1}, Figure~\ref{fig:e1}). In DEPRESJON, XGBoost rose from 0.745 (95\% CI 0.675 to
-0.842) to 0.872 (0.830 to 0.918), a paired inflation of 0.114 (0.060 to 0.181); at subject level the
-leaky estimate reached 0.983. In PSYKOSE, where the honest estimate is already high (0.899 to
-0.906), the inflation was 0.020 to 0.044. In HYPERAKTIV the honest estimate was at or below chance
-for all three models (0.447 to 0.463 window level; 0.425 to 0.445 subject level), yet record-wise
-splitting produced 0.577 to 0.603 at window level and 0.601 to 0.645 at subject level, an
-inflation of 0.130 to 0.169 with intervals excluding zero. Accuracy and macro-F1 behaved the same
+(Table~\ref{tab:e1}, Figure~\ref{fig:e1}; all point estimates below are computed on the
+seed-averaged out-of-fold predictions on which the intervals are built, and per-seed means are in
+Table~\ref{tab:e1full}). In DEPRESJON, XGBoost rose from 0.764 (95\% CI 0.675 to 0.842) to 0.878
+(0.830 to 0.918), a paired inflation of 0.114 (0.060 to 0.181); at subject level the leaky estimate
+reached 0.985. In PSYKOSE, where the honest estimate is already high (0.893 to 0.907), the
+inflation was 0.020 to 0.044. In HYPERAKTIV the honest estimate was at or below chance for all
+three models (0.442 to 0.449 window level; 0.424 to 0.438 subject level), yet record-wise splitting
+produced 0.579 to 0.612 at window level and 0.601 to 0.652 at subject level, an inflation of 0.130
+to 0.169 with intervals excluding zero. Accuracy and macro-F1 behaved the same
 way (Table~\ref{tab:e1full}). Logistic regression inflated least in every cohort (0.065, 0.020,
 0.130) and the tree ensembles most.
 
@@ -204,9 +206,9 @@ way (Table~\ref{tab:e1full}). Logistic regression inflated least in every cohort
 \caption{E2, PSYKOSE $\rightarrow$ DEPRESJON. Left: ROC curves of the internal (subject-wise CV on PSYKOSE) and external (frozen model on DEPRESJON) predictions. Right: reliability curves of the same predictions.}\label{fig:e2}\end{figure}
 Transfer was asymmetric (Table~\ref{tab:e2}). Models trained on DEPRESJON discriminated
 schizophrenia from the held-out controls as well as they had discriminated depression internally
-(external AUROC 0.768 to 0.779 versus internal 0.716 to 0.790), because schizophrenia produces the
-larger activity deficit. Models trained on PSYKOSE lost 0.12 to 0.20 AUROC when applied to
-DEPRESJON (logistic regression 0.881 $\rightarrow$ 0.689; XGBoost 0.871 $\rightarrow$ 0.670), and their
+(external AUROC 0.769 to 0.779 versus internal 0.764 to 0.779), because schizophrenia produces the
+larger activity deficit. Models trained on PSYKOSE lost 0.13 to 0.21 AUROC when applied to
+DEPRESJON (logistic regression 0.885 $\rightarrow$ 0.689; XGBoost 0.877 $\rightarrow$ 0.671), and their
 probabilities were both overconfident and shifted: calibration slopes 0.27 to 0.63, intercepts
 0.74 to 1.44, Brier 0.22 to 0.29 against 0.25 for the constant prediction (Figure~\ref{fig:e2}).
 The label-shift pair DEPRESJON $\rightarrow$ HYPERAKTIV fell to 0.442 to 0.460 with negative slopes.
@@ -250,20 +252,27 @@ splitting (Table~\ref{tab:e5}); the inflation was again largest for the tree ens
 
 \subsection{Supplementary arm: 1D-CNN on the raw series}
 \input{tables/e1_auroc_inflation_e1_cnn}
-\todo{One sentence from results/real/E1\_cnn/e1\_results.csv once the run completes.}
+A three-block 1D-CNN on the $\log(1+x)$ minute series (30 epochs, five seeds) did not earn its
+complexity: under subject-wise splitting its seed-averaged window-level AUROC was 0.696 (95\% CI
+0.576 to 0.795) in DEPRESJON, 0.849 (0.744 to 0.910) in PSYKOSE and 0.459 (0.356 to 0.588) in
+HYPERAKTIV, below the feature-based models in every cohort, and it was unstable across seeds
+(per-seed means 0.61, 0.74 and 0.48). Its window-level inflation under record-wise splitting was
+small (0.03 to 0.05, intervals including zero), but at subject level the leaky estimate rose from
+0.738 to 0.912 in DEPRESJON (paired difference 0.174, 0.067 to 0.270) and from 0.922 to 0.986 in
+PSYKOSE (Table~\ref{tab:e1_e1_cnn}), i.e.\ the network memorised participants rather than days.
 
 \section{Discussion}
 \subsection{Principal findings}
 Each practice the review found to be common changed conclusions on real data, always towards
 optimism. Record-wise splitting added 0.02 to 0.17 AUROC and turned a null result into an apparently
-useful classifier. Skipping external validation hid a loss of up to 0.20 AUROC and a collapse of
+useful classifier. Skipping external validation hid a loss of up to 0.21 AUROC and a collapse of
 calibration in one transfer direction while the other direction happened to hold, which is exactly
 why one cannot know without doing it. Calibration, never reported for these cohorts, was poor even
 under honest validation and was not repairable from the training data alone.
 
 \subsection{Relation to the published benchmarks}
-The honest subject-level AUROC of 0.86 to 0.89 on DEPRESJON is consistent with the dataset
-authors' leave-one-patient-out baseline \cite{garciaceja2018} and well below the 0.95 to 0.98
+The honest subject-level AUROC of 0.87 to 0.90 on DEPRESJON is consistent with the dataset
+authors' leave-one-patient-out baseline \cite{garciaceja2018} and well below the 0.97 to 0.99
 that our own record-wise arm produces. Published accuracies above 0.9 on these cohorts
 \cite{jmir2025,arxiv2303,psykose_dl2024} are therefore reproducible, but only under the design
 that the companion review scores as high risk of bias. The HYPERAKTIV result deserves emphasis:
