@@ -4,7 +4,7 @@
 
 Dear Editor,
 
-We submit "Machine Learning Models for Mental-Health Prediction: A Systematic Appraisal and an Empirical Demonstration" for consideration as a Research Paper.
+We submit "Machine Learning Models for Mental-Health Prediction from Actigraphy: A Systematic Appraisal and an Empirical Demonstration" for consideration as a Research Paper.
 
 The three Simula actigraphy cohorts are the most used open benchmarks for machine-learning detection of mental disorders from wearables, and reported accuracies on them have climbed from the dataset authors' leave-one-patient-out 0.7 to above 0.9. Our paper asks whether that is progress. Part I is a closed-scope systematic review of every published model on the cohorts, appraised with PROBAST+AI and TRIPOD+AI, with outcomes that can be checked against the data: unit of splitting, external validation, calibration, sample size, and double counting of the control group that DEPRESJON and PSYKOSE share. Part II re-evaluates the cohorts with fixed models, ten seeds and subject-level bootstrap intervals under the designs the review scores as high and low risk. Record-wise splitting inflates AUROC by up to 0.17 and turns a chance-level ADHD classifier into an apparently useful one; frozen cross-cohort transfer loses up to 0.21 AUROC in one direction with calibration collapse; calibration is poor even under honest validation and is never reported in the literature on these cohorts.
 
