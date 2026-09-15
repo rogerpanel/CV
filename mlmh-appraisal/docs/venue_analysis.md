@@ -81,3 +81,26 @@ E1-E3 analysis plan before the real data is run is strongly recommended and chea
   experiment opens with the Paper A proportion it responds to.
 * Both papers share one figure concept: "prevalence of the practice in the literature (A)" beside
   "cost of the practice on data (B)".
+
+## 5. Update (15 Sept 2026): APC-free Elsevier targets and the integrated option
+
+The author prefers venues without an article processing charge. Elsevier hybrid journals publish
+subscription articles at no cost to the author (open access is optional and paid). Verified on
+public journal pages:
+
+| Venue | Model | Fit | Notes |
+|---|---|---|---|
+| **Artificial Intelligence in Medicine** (Elsevier) | Hybrid; ~31 % gold OA, subscription route free | Best fit for the integrated paper and for Paper B: AI methods applied in medicine, methodological rigour valued, publishes systematic reviews with appraisal | Q1 (Scimago: AI, Medicine misc.) |
+| Computer Methods and Programs in Biomedicine (Elsevier) | Hybrid; APC USD 3,180 only if OA chosen; subscription route free | Methods/software in biomedicine; Q1 in Computer Science Applications, Health Informatics, Software | Good second choice |
+| International Journal of Medical Informatics (Elsevier) | Hybrid | Q1; informatics readership | Third |
+| Journal of Biomedical Informatics (Elsevier) | Hybrid | Q2 in 2026 listing | Fallback |
+| Computers in Biology and Medicine (Elsevier) | Charges an APC for OA; check current model before submitting | Broad | Avoid if APC-free is a requirement |
+| IEEE JBHI | Hybrid (no fee for traditional publication) | Wearables/health ML | Non-Elsevier alternative |
+
+**Integrated paper.** A single manuscript combining a *closed-scope* systematic appraisal (every
+published model on DEPRESJON/PSYKOSE/HYPERAKTIV/OBF-Psychiatric) with the empirical re-evaluation
+on the same cohorts is stronger than either half alone and is completable: the review scope is
+citation-closed (tens of papers, not thousands), and each appraisal outcome is priced on the same
+data. Draft: `paper/integrated/manuscript_AB.tex`. The field-wide review (Paper A) remains a
+separate, later paper. Recommended: submit the integrated paper to Artificial Intelligence in
+Medicine.

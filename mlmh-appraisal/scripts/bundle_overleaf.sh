@@ -4,7 +4,13 @@ set -e
 cd "$(dirname "$0")/.."
 OUT=$(realpath -m "${1:-dist}")
 mkdir -p "$OUT"
-rm -f "$OUT"/paperA_review_overleaf.zip "$OUT"/paperB_empirical_overleaf.zip
+rm -f "$OUT"/paperA_review_overleaf.zip "$OUT"/paperB_empirical_overleaf.zip "$OUT"/integrated_AB_overleaf.zip
 ( cd paper/review && zip -qr "$OUT/paperA_review_overleaf.zip" manuscript_A.tex prisma_counts.tex prisma_flow_template.tex protocol.md prospero_registration.md search_log.csv P1_extraction_appraisal.xlsx )
 ( cd paper/empirical && zip -qr "$OUT/paperB_empirical_overleaf.zip" manuscript.tex supplement_tripod_checklist.tex tables figures )
+# Integrated paper: flatten the ../empirical references so the zip is self-contained on Overleaf
+TMP=$(mktemp -d); mkdir -p "$TMP/tables" "$TMP/figures"
+sed -e 's|{{../empirical/figures/}}|{{figures/}}|' -e 's|\\def\\input@path{{../empirical/}}||' paper/integrated/manuscript_AB.tex > "$TMP/manuscript_AB.tex"
+cp paper/empirical/tables/*.tex "$TMP/tables/"; cp paper/empirical/figures/*.pdf "$TMP/figures/"; cp paper/empirical/supplement_*.tex "$TMP/"
+( cd "$TMP" && zip -qr "$OUT/integrated_AB_overleaf.zip" . )
+rm -rf "$TMP"
 ls -la "$OUT"
