@@ -201,6 +201,52 @@ _Last refreshed by `scripts/update_readme.py` from `results/real`._
 | E2 | `psykose-to-depresjon.rf.external+recal` | 0.728 | 0.221 | 0.77 | 0.67 | 0.129 |
 | E2 | `psykose-to-depresjon.xgboost.external+recal` | 0.671 | 0.258 | 0.49 | 0.93 | 0.200 |
 
+#### E4: sex-stratified performance (subject-wise E1 models)
+
+| Cohort | Model | Sex | Participants (cases) | AUROC [95% CI] | Cal. slope | ECE |
+|---|---|---|---|---|---|---|
+| depresjon | Logistic regression | female | 30 (10) | 0.777 [0.649, 0.872] | 0.75 | 0.120 |
+| depresjon | Logistic regression | male | 25 (13) | 0.776 [0.562, 0.882] | 0.62 | 0.091 |
+| depresjon | Random forest | female | 30 (10) | 0.763 [0.623, 0.870] | 0.75 | 0.071 |
+| depresjon | Random forest | male | 25 (13) | 0.777 [0.626, 0.870] | 0.80 | 0.070 |
+| depresjon | XGBoost | female | 30 (10) | 0.755 [0.620, 0.859] | 0.51 | 0.109 |
+| depresjon | XGBoost | male | 25 (13) | 0.772 [0.619, 0.868] | 0.55 | 0.120 |
+| hyperaktiv | Logistic regression | female | 41 (21) | 0.479 [0.370, 0.602] | -0.10 | 0.152 |
+| hyperaktiv | Logistic regression | male | 44 (24) | 0.424 [0.321, 0.543] | -0.49 | 0.168 |
+| hyperaktiv | Random forest | female | 41 (21) | 0.491 [0.371, 0.611] | -0.10 | 0.111 |
+| hyperaktiv | Random forest | male | 44 (24) | 0.398 [0.278, 0.516] | -0.80 | 0.160 |
+| hyperaktiv | XGBoost | female | 41 (21) | 0.498 [0.385, 0.605] | -0.02 | 0.211 |
+| hyperaktiv | XGBoost | male | 44 (24) | 0.388 [0.278, 0.505] | -0.44 | 0.230 |
+| psykose | Logistic regression | female | 23 (3) | 0.971 [0.915, 0.998] | 1.58 | 0.177 |
+| psykose | Logistic regression | male | 31 (19) | 0.890 [0.771, 0.933] | 0.83 | 0.081 |
+| psykose | Random forest | female | 23 (3) | 0.966 [0.891, 0.995] | 1.66 | 0.147 |
+| psykose | Random forest | male | 31 (19) | 0.874 [0.765, 0.930] | 0.90 | 0.123 |
+| psykose | XGBoost | female | 23 (3) | 0.969 [0.904, 0.997] | 1.16 | 0.100 |
+| psykose | XGBoost | male | 31 (19) | 0.884 [0.774, 0.933] | 0.71 | 0.121 |
+
+#### E5: OBF-Psychiatric transdiagnostic and five-class arms
+
+| Arm | Model | Split | AUROC / macro-AUROC [95% CI] | Accuracy | Macro-F1 |
+|---|---|---|---|---|---|
+| any psychiatric vs control | Majority class | subject_wise | 0.490 [0.358, 0.614] | 0.641 | 0.391 |
+| any psychiatric vs control | Majority class | record_wise | 0.500 [0.470, 0.529] | 0.641 | 0.391 |
+| any psychiatric vs control | Logistic regression | subject_wise | 0.795 [0.745, 0.848] | 0.741 | 0.725 |
+| any psychiatric vs control | Logistic regression | record_wise | 0.824 [0.777, 0.867] | 0.756 | 0.742 |
+| any psychiatric vs control | Random forest | subject_wise | 0.781 [0.726, 0.837] | 0.739 | 0.705 |
+| any psychiatric vs control | Random forest | record_wise | 0.849 [0.811, 0.887] | 0.782 | 0.755 |
+| any psychiatric vs control | XGBoost | subject_wise | 0.776 [0.729, 0.834] | 0.734 | 0.702 |
+| any psychiatric vs control | XGBoost | record_wise | 0.844 [0.810, 0.885] | 0.781 | 0.755 |
+| five classes | Logistic regression | subject_wise | 0.713 [0.677, 0.750] | 0.431 | 0.390 |
+| five classes | Logistic regression | record_wise | 0.770 [0.740, 0.799] | 0.484 | 0.444 |
+| five classes | Random forest | subject_wise | 0.695 [0.662, 0.735] | 0.434 | 0.350 |
+| five classes | Random forest | record_wise | 0.811 [0.786, 0.843] | 0.558 | 0.482 |
+| five classes | XGBoost | subject_wise | 0.702 [0.670, 0.743] | 0.448 | 0.355 |
+| five classes | XGBoost | record_wise | 0.808 [0.785, 0.842] | 0.558 | 0.467 |
+
+#### Supplementary arm: 1D-CNN on the raw 1440-minute series (5 seeds)
+
+_1D-CNN arm not run yet._
+
 #### Run manifests
 
 | Exp. | git | config hash | seeds | bootstrap | created (UTC) | synthetic |
@@ -208,6 +254,8 @@ _Last refreshed by `scripts/update_readme.py` from `results/real`._
 | E1 | `b73113386f` (dirty) | `c4d916bbcf7d8a68` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T02:41:29 | no |
 | E2 | `b73113386f` (dirty) | `4060ca000b6800ec` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T03:13:15 | no |
 | E3 | `b73113386f` (dirty) | `0faac025c6abeb8d` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T03:13:20 | no |
+| E4 | `e4e110ed68` (dirty) | `dca705bf16030746` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T04:54:43 | no |
+| E5 | `2ffe795380` (dirty) | `3717e32497af3ad6` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T06:37:51 | no |
 <!-- RESULTS:END -->
 
 ## Roadmap

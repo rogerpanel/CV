@@ -75,6 +75,45 @@ def e3_section(rdir: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def e4_section(rdir: Path) -> str:
+    p = rdir / "E4" / "e4_fairness.csv"
+    if not p.exists():
+        return "_E4 not run yet._\n"
+    t = pd.read_csv(p)
+    lines = ["| Cohort | Model | Sex | Participants (cases) | AUROC [95% CI] | Cal. slope | ECE |", "|---|---|---|---|---|---|---|"]
+    for _, r in t.iterrows():
+        lines.append(f"| {r['cohort']} | {LABELS.get(r['model'], r['model'])} | {r['sex']} | {r['n_subjects']} ({r['n_cases']}) | {r['auroc']:.3f} [{r['auroc_lo']:.3f}, {r['auroc_hi']:.3f}] | {_f(r['calibration_slope'], 2)} | {_f(r['ece'])} |")
+    return "\n".join(lines) + "\n"
+
+
+def e5_section(rdir: Path) -> str:
+    p = rdir / "E5" / "e5_obf.csv"
+    if not p.exists():
+        return "_E5 not run yet._\n"
+    t = pd.read_csv(p)
+    lines = ["| Arm | Model | Split | AUROC / macro-AUROC [95% CI] | Accuracy | Macro-F1 |", "|---|---|---|---|---|---|"]
+    for _, r in t.iterrows():
+        if r["arm"] == "any_psychiatric_vs_control":
+            lines.append(f"| any psychiatric vs control | {LABELS.get(r['model'], r['model'])} | {r['splitter']} | {_ci(r, 'auroc')} | {_f(r['window_accuracy_mean'])} | {_f(r['window_macro_f1_mean'])} |")
+        else:
+            lines.append(f"| five classes | {LABELS.get(r['model'], r['model'])} | {r['splitter']} | {r['macro_auroc_ovr_mean']:.3f} [{r['macro_auroc_ovr_ci_lo']:.3f}, {r['macro_auroc_ovr_ci_hi']:.3f}] | {_f(r['accuracy_mean'])} | {_f(r['macro_f1_mean'])} |")
+    return "\n".join(lines) + "\n"
+
+
+def cnn_section(rdir: Path) -> str:
+    p = rdir / "E1_cnn" / "e1_results.csv"
+    if not p.exists():
+        return "_1D-CNN arm not run yet._\n"
+    t = pd.read_csv(p)
+    main = t[t["splitter"].isin(["subject_wise", "record_wise"]) & (t["model"] == "cnn1d")]
+    lines = ["| Cohort | AUROC subject-wise (window) | AUROC record-wise (window) | Inflation (paired) |", "|---|---|---|---|"]
+    for c, g in main.groupby("cohort", sort=False):
+        sw, rw = g[g["splitter"] == "subject_wise"], g[g["splitter"] == "record_wise"]
+        inf = t[(t["cohort"] == c) & (t["model"] == "cnn1d") & (t["splitter"] == "inflation") & t["window_auroc_mean"].notna()]
+        lines.append(f"| {c} | {_ci(sw.iloc[0], 'auroc') if len(sw) else '--'} | {_ci(rw.iloc[0], 'auroc') if len(rw) else '--'} | {_ci(inf.iloc[0], 'auroc') if len(inf) else '--'} |")
+    return "\n".join(lines) + "\n"
+
+
 def manifests(rdir: Path) -> str:
     rows = []
     for m in sorted(rdir.glob("*/manifest.json")):
@@ -102,6 +141,9 @@ def main() -> None:
         + "#### E1: leakage inflation (record-wise minus subject-wise)\n\n" + e1_section(rdir) + "\n"
         + "#### E2: internal versus external validation\n\n" + e2_section(rdir) + "\n"
         + "#### E3: calibration alongside discrimination\n\n" + e3_section(rdir) + "\n"
+        + "#### E4: sex-stratified performance (subject-wise E1 models)\n\n" + e4_section(rdir) + "\n"
+        + "#### E5: OBF-Psychiatric transdiagnostic and five-class arms\n\n" + e5_section(rdir) + "\n"
+        + "#### Supplementary arm: 1D-CNN on the raw 1440-minute series (5 seeds)\n\n" + cnn_section(rdir) + "\n"
         + "#### Run manifests\n\n" + manifests(rdir)
         + "<!-- RESULTS:END -->"
     )

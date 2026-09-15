@@ -240,7 +240,13 @@ stratum's (0.87 to 0.89). Calibration slopes differed more than discrimination b
 
 \subsection{E5: OBF-Psychiatric transdiagnostic and five-class arms}
 \input{tables/e5_obf_transdiagnostic}
-\todo{Two sentences from results/real/E5/e5\_obf.csv once the run completes: any-psychiatric-vs-control AUROC subject-wise vs record-wise; five-class macro-AUROC subject-wise vs record-wise.}
+In the harmonised 162-participant release, separating any psychiatric group from the healthy
+controls reached window-level AUROC 0.776 to 0.795 subject-wise and 0.824 to 0.849 record-wise
+(subject level 0.856 to 0.867 versus 0.899 to 0.943). Distinguishing the five diagnostic groups
+gave a macro one-vs-rest AUROC of 0.695 to 0.713 (accuracy 0.43 to 0.45 against a 0.28 majority
+rate) under subject-wise splitting and 0.770 to 0.811 (accuracy 0.48 to 0.56) under record-wise
+splitting (Table~\ref{tab:e5}); the inflation was again largest for the tree ensembles (0.106 to
+0.116 in macro-AUROC) and smallest for logistic regression (0.057).
 
 \subsection{Supplementary arm: 1D-CNN on the raw series}
 \input{tables/e1_auroc_inflation_e1_cnn}

@@ -36,6 +36,9 @@ class Conv1DClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
         import torch
 
+        import os
+
+        torch.set_num_threads(int(os.environ.get("MLMH_TORCH_THREADS", os.cpu_count() or 1)))
         torch.manual_seed(self.seed)
         np.random.seed(self.seed)
         X = np.nan_to_num(np.asarray(X, dtype=np.float32), nan=0.0)
