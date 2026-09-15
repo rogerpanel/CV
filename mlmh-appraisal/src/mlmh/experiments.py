@@ -225,46 +225,28 @@ def _pt(row, level: str, key: str):
 
 
 def _e1_tables(table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> None:
+    """Two compact tables (window level, participant level) plus the full-metrics table."""
     syn = bool(cfg.get("synthetic"))
     tdir = ROOT / cfg.get("tables_dir", "paper/empirical/tables")
     main = table[table["splitter"].isin(["subject_wise", "record_wise"])]
-    rows = []
-    for (cohort, model), g in main.groupby(["cohort", "model"], sort=False):
-        sw = g[g["splitter"] == "subject_wise"].iloc[0] if (g["splitter"] == "subject_wise").any() else None
-        rw = g[g["splitter"] == "record_wise"].iloc[0] if (g["splitter"] == "record_wise").any() else None
-        inf = table[(table["cohort"] == cohort) & (table["model"] == model) & (table["splitter"] == "inflation")]
-        r = {"Cohort": cohort, "Model": MODEL_LABELS.get(model, model)}
-        for level, lab in (("window", "Window"), ("subject", "Subject")):
-            if sw is not None:
-                r[f"{lab} AUROC subject-wise"] = fmt_ci(_pt(sw, level, "auroc"), sw.get(f"{level}_auroc_ci_lo"), sw.get(f"{level}_auroc_ci_hi"))
-            if rw is not None:
-                r[f"{lab} AUROC record-wise"] = fmt_ci(_pt(rw, level, "auroc"), rw.get(f"{level}_auroc_ci_lo"), rw.get(f"{level}_auroc_ci_hi"))
-            if len(inf):
-                col = f"{level}_auroc_mean"
-                ii = inf[inf[col].notna()]
-                if len(ii):
-                    r[f"{lab} inflation"] = fmt_ci(ii.iloc[0][col], ii.iloc[0][f"{level}_auroc_ci_lo"], ii.iloc[0][f"{level}_auroc_ci_hi"])
-        rows.append(r)
-    df = pd.DataFrame(rows)
-    write_latex_table(df, tdir / f"e1_auroc_inflation{suffix}.tex", "E1: discrimination under subject-wise versus record-wise cross-validation. Cells give the estimate on seed-averaged out-of-fold predictions with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", f"tab:e1{suffix}", synthetic=syn)
-    # accuracy/F1/calibration companion
+    for level, lab, fname, label in (("window", "Window-level", f"e1_auroc_inflation{suffix}.tex", f"tab:e1{suffix}"), ("subject", "Participant-level", f"e1_auroc_inflation_subject{suffix}.tex", f"tab:e1subj{suffix}")):
+        rows = []
+        for (cohort, model), g in main.groupby(["cohort", "model"], sort=False):
+            sw = g[g["splitter"] == "subject_wise"].iloc[0] if (g["splitter"] == "subject_wise").any() else None
+            rw = g[g["splitter"] == "record_wise"].iloc[0] if (g["splitter"] == "record_wise").any() else None
+            inf = table[(table["cohort"] == cohort) & (table["model"] == model) & (table["splitter"] == "inflation") & table[f"{level}_auroc_mean"].notna()]
+            r = {"Cohort": cohort, "Model": MODEL_LABELS.get(model, model)}
+            r["AUROC subject-wise"] = fmt_ci(_pt(sw, level, "auroc"), sw.get(f"{level}_auroc_ci_lo"), sw.get(f"{level}_auroc_ci_hi")) if sw is not None else "--"
+            r["AUROC record-wise"] = fmt_ci(_pt(rw, level, "auroc"), rw.get(f"{level}_auroc_ci_lo"), rw.get(f"{level}_auroc_ci_hi")) if rw is not None else "--"
+            r["Inflation (paired)"] = fmt_ci(inf.iloc[0][f"{level}_auroc_mean"], inf.iloc[0][f"{level}_auroc_ci_lo"], inf.iloc[0][f"{level}_auroc_ci_hi"]) if len(inf) else "--"
+            rows.append(r)
+        write_latex_table(pd.DataFrame(rows), tdir / fname, f"E1, {lab.lower()} AUROC under subject-wise versus record-wise five-fold cross-validation. Estimates on seed-averaged out-of-fold predictions with subject-level BCa 95\\% bootstrap intervals; inflation is the paired record-wise minus subject-wise difference.", label, synthetic=syn, column_format="llccc")
     rows = []
     for _, r in main.iterrows():
-        rows.append(
-            {
-                "Cohort": r["cohort"],
-                "Model": MODEL_LABELS.get(r["model"], r["model"]),
-                "Split": r["splitter"].replace("_", "-"),
-                "Accuracy": f"{r['window_accuracy_mean']:.3f}",
-                "Macro-F1": f"{r['window_macro_f1_mean']:.3f}",
-                "AUROC": f"{r['window_auroc_mean']:.3f}",
-                "Brier": f"{r['window_brier_mean']:.3f}",
-                "Cal. slope": f"{r['window_calibration_slope_mean']:.2f}",
-                "Cal. intercept": f"{r['window_calibration_intercept_mean']:.2f}",
-                "ECE": f"{r['window_ece_mean']:.3f}",
-            }
-        )
-    write_latex_table(pd.DataFrame(rows), tdir / f"e1_full_metrics{suffix}.tex", "E1: window-level discrimination and calibration for every model, cohort and splitting design (mean over seeds).", f"tab:e1full{suffix}", synthetic=syn)
+        rows.append({"Cohort": r["cohort"], "Model": MODEL_LABELS.get(r["model"], r["model"]), "Split": r["splitter"].replace("_", "-"),
+                     "Accuracy": f"{r['window_accuracy_mean']:.3f}", "Macro-F1": f"{r['window_macro_f1_mean']:.3f}", "AUROC": f"{r['window_auroc_mean']:.3f}",
+                     "Brier": f"{r['window_brier_mean']:.3f}", "Cal. slope": f"{r['window_calibration_slope_mean']:.2f}", "Cal. intercept": f"{r['window_calibration_intercept_mean']:.2f}", "ECE": f"{r['window_ece_mean']:.3f}"})
+    write_latex_table(pd.DataFrame(rows), tdir / f"e1_full_metrics{suffix}.tex", "E1: window-level discrimination and calibration for every model, cohort and splitting design (per-seed means over ten seeds).", f"tab:e1full{suffix}", synthetic=syn)
 
 
 def _e1_figures(preds_store: dict, table: pd.DataFrame, cfg: dict, out: Path, suffix: str = "") -> None:

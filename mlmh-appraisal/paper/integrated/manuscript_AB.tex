@@ -175,172 +175,306 @@ the formal search; the figures and tables regenerate from \texttt{part1\_studies
 measures what these practices cost on the same data.
 
 \section{Part II: controlled re-evaluation}
+\subsection{Rationale and design principles}
+Part~II is designed so that each of the appraisal outcomes in Part~I corresponds to one
+controlled contrast on the same data, and so that the contrast cannot be attributed to anything
+other than the practice under study. Four principles follow. First, \emph{models are fixed a
+priori}: the same four estimators with the same hyper-parameters are used in every experiment,
+so that a difference between two arms is a difference in evaluation design rather than in
+model selection. Second, \emph{the unit of inference is the participant}: every split, every
+bootstrap resample and every aggregate is keyed on participant identity, and window-level
+numbers are reported only because they are the numbers the literature reports. Third,
+\emph{integrity is enforced by code rather than by discipline}: a test fails the build if any
+experiment other than E1 or E5 requests record-wise splitting, the cross-validation runner
+asserts fold disjointness at run time, the external-validation runner refuses any cohort pair
+with a participant on both sides, and all preprocessing lives inside a pipeline fitted on the
+training fold. Fourth, \emph{every number is traceable}: each run writes a manifest with the
+git commit, configuration hash, seeds, package versions and dataset checksums, and every table
+and figure in this paper is written by the code from those runs.
+
 \subsection{Data, participants and windows}
 \input{tables/cohort_characteristics}
-DEPRESJON: 23 patients with unipolar or bipolar depression (MADRS at start median 24) and 32
-healthy controls; PSYKOSE: 22 inpatients with schizophrenia (BPRS median 51) and the same 32
-controls; HYPERAKTIV: 45 adults with ADHD and 40 clinical controls (psychiatric outpatients without
-ADHD) with activity recordings, read from OBF-Psychiatric. Hashing every participant's activity
-series confirmed that the 32 PSYKOSE control recordings are byte-identical to the DEPRESJON control
-recordings and that OBF-Psychiatric contains each of the 162 participants exactly once. The
-analysis unit was one calendar day with at least 80\% valid minutes; partial first and last days
-were dropped. DEPRESJON yielded 1{,}034 valid days (median 15 per participant), PSYKOSE 1{,}021
-(16) and HYPERAKTIV 502 (6); 1{,}818 unique days; no participant was excluded
-(Table~\ref{tab:cohorts}). Labels are participant-level diagnostic groups; the data schema rejects
-a participant with two labels.
+DEPRESJON \cite{garciaceja2018} comprises 23 patients with unipolar or bipolar depression
+(MADRS at the start of recording, median 24, interquartile range 18 to 26) and 32 healthy
+controls; PSYKOSE \cite{jakobsen2020} comprises 22 inpatients with schizophrenia (BPRS median
+51, 44 to 58) and the same 32 controls; HYPERAKTIV \cite{hicks2021} comprises adults referred
+for ADHD assessment, of whom 45 with ADHD and 40 clinical controls (psychiatric outpatients
+without ADHD) have activity recordings, read here from the OBF-Psychiatric release
+\cite{obf2025}. All cohorts were recorded with an Actiwatch (Cambridge Neurotechnology) at
+one-minute resolution; recruitment, consent and clinical assessment are described in the
+source publications. Table~\ref{tab:cohorts} summarises the analysed participants; sex, age
+band and recording days are taken from the harmonised OBF metadata and matched to the
+original cohorts by activity-series hash.
 
-\subsection{Predictors, models and estimation}
-Twenty-eight predictors per day (Supplementary Table S2): distributional statistics, day/night
-contrasts, non-parametric circadian measures on the hourly profile (M10, L5, relative amplitude,
-intradaily variability, M10-onset phase), autocorrelation, spectral summaries, rest/activity
-transitions and missingness. No demographic variable, so that E2 compares populations rather than
-covariate availability. Models: majority-class baseline, $L_2$ logistic regression ($C=1$,
-class-balanced), random forest (500 trees, minimum leaf 2, balanced subsampling), XGBoost (300
-rounds, depth 3, learning rate 0.05, subsampling 0.8), all fixed a priori and not tuned so that E1
-isolates the splitting design; a three-block 1D-CNN on the raw $\log(1+x)$ minute series is a
-supplementary arm. Imputation (training-fold median) and standardisation are fitted on training
-folds only inside an \texttt{imblearn} pipeline; no resampling in the main runs. Metrics at
-\emph{window} level (the unit most papers report) and at \emph{participant} level (mean predicted
-probability per participant): AUROC, accuracy, balanced accuracy, macro-F1, MCC, Brier score,
-calibration slope and intercept \cite{vancalster2019}, expected calibration error (ECE, ten bins)
-and reliability curves. Point estimates are computed on the seed-averaged out-of-fold predictions
-of ten seeds; 95\% intervals are bias-corrected and accelerated bootstrap intervals from 1{,}000
-resamples of \emph{participants} with a leave-one-participant-out jackknife; per-seed means and
-SDs are reported alongside. Participant-level events per predictor (EPV) are the minority-class
-participants divided by 28.
+Hashing each participant's activity series confirmed two facts that the documentation states
+but the literature rarely acts on: the 32 PSYKOSE control recordings are byte-identical to the
+32 DEPRESJON control recordings, and OBF-Psychiatric contains each of the 162 participants
+exactly once ($23 + 22 + 85 + 32$). The analysis unit was one calendar day (00:00 to 23:59) with
+at least 80\% valid minutes; partial first and last days were dropped. DEPRESJON yielded
+1{,}034 valid days (median 15 per participant), PSYKOSE 1{,}021 (16) and HYPERAKTIV 502 (6),
+1{,}818 unique days in total; no participant lost all days. Labels are participant-level
+diagnostic groups inherited by every window, and the data schema rejects a participant carrying
+two labels.
+
+\subsection{Predictors}
+Twenty-eight predictors were computed per day (Supplementary Table S2), chosen to cover the
+constructs the actigraphy literature associates with mood and psychotic disorders rather than to
+maximise discrimination: distributional statistics of the minute counts (mean, SD, coefficient
+of variation, median, 10th and 90th percentiles, maximum, skewness, kurtosis, proportion of
+zero-count minutes, mean and SD of $\log(1+x)$); day/night contrasts (means for 08:00 to 22:00
+and for the night, their ratio, night-time inactivity); non-parametric circadian measures on the
+hourly profile (M10, L5, relative amplitude, intradaily variability, sine and cosine of the
+M10-onset hour); autocorrelation at 5 and 60 minutes; spectral summaries (mean log power, dominant
+within-day period); the number of rest/activity transitions; and the missing-minute fraction. No
+demographic variable was used, so that the cross-cohort comparison in E2 is a comparison of
+populations and not of covariate availability. A raw representation, the $\log(1+x)$-transformed
+1440-minute series, feeds a one-dimensional convolutional network in a supplementary arm.
+
+\subsection{Models and preprocessing}
+Four estimators were fixed before any result was seen: a majority-class baseline (constant
+prediction at the training prevalence); $L_2$-regularised logistic regression ($C=1$, class-balanced
+weights); a random forest (500 trees, minimum leaf size 2, balanced subsampling); and XGBoost (300
+rounds, maximum depth 3, learning rate 0.05, row and column subsampling 0.8). The two simplest
+exist so that the flexible ones must earn their complexity. Hyper-parameters are library defaults
+or conservative values and were not tuned, because tuning inside subject-wise folds would raise
+honest performance somewhat without altering the paired inflation that E1 estimates, while
+tuning inside record-wise folds would inflate it further. Median imputation and standardisation
+are fitted on the training fold only, inside an \texttt{imblearn} pipeline whose sampler steps run
+only at training time; no resampling was used in the main runs (E6 tests SMOTE inside folds). The
+supplementary 1D-CNN has three convolution--pooling blocks, global average pooling and a linear
+head, trained for a fixed 30 epochs with a class-weighted loss; it has no early stopping on the
+test fold.
+
+\subsection{Performance measures and estimation}
+Discrimination is reported as AUROC (primary), accuracy, balanced accuracy, macro-F1 and
+Matthews correlation at a 0.5 threshold, and area under the precision--recall curve. Calibration
+is reported as the Brier score, the calibration slope (coefficient of the logit of the predicted
+probability in a logistic regression of the outcome) and the calibration intercept (fitted with
+the slope fixed at one) \cite{vancalster2019}, the expected calibration error over ten equal-width
+bins, and reliability curves. All measures are computed at two levels: the \emph{window} level,
+on every day's prediction, and the \emph{participant} level, on the mean predicted probability
+per participant, which is the quantity a screening decision would use. Every experiment is
+repeated over ten seeds that govern fold assignment and model randomness. Point estimates are
+computed on the seed-averaged out-of-fold predictions (an ensemble over seeds; the per-seed mean
+and SD are also reported), and 95\% intervals are bias-corrected and accelerated bootstrap
+intervals from 1{,}000 resamples of \emph{participants}, drawing all of a participant's windows
+together and using a leave-one-participant-out jackknife for the acceleration term. Resampling
+windows instead of participants would treat correlated observations as independent and produce
+intervals that are far too narrow. Participant-level events per predictor (EPV) are reported as
+the minority-class participants divided by 28.
 
 \subsection{Experiments}
-\textbf{E1 leaky splitting.} Five-fold cross-validation under a subject-wise splitter (stratified
-group $k$-fold; no participant on both sides of a fold) and a record-wise splitter (stratified
-$k$-fold over days), identical data and seeds; the paired difference, bootstrapped over the same
-participants, is the inflation. A test in the codebase fails the build if any configuration other
-than E1/E5 requests the record-wise splitter, and the runner asserts fold disjointness at run time.
-\textbf{E2 external validation.} Model fitted on all windows of cohort A and applied, frozen, to
-cohort B; internal comparator is subject-wise CV on A. Shared controls were assigned at random
-(seed 0) to exactly one cohort, 16 each, and the runner refuses any pair with a participant on both
-sides. DEPRESJON $\rightarrow$ HYPERAKTIV is a deliberate label-shift control.
-\textbf{E3 calibration.} All E1 (subject-wise) and E2 models, plus logistic recalibration (slope,
-intercept) fitted on the training cohort's out-of-fold predictions and applied to the external
-predictions.
-\textbf{E4 sex strata.} Subject-wise E1 predictions stratified by sex from the OBF metadata.
-\textbf{E5 OBF-Psychiatric.} Any psychiatric group versus healthy control, and the five diagnostic
-groups (macro one-vs-rest AUROC), under both splitters.
-\textbf{E6 ablation.} Under subject-wise CV: drop-one and only-one feature groups
-(distributional, day/night, circadian, temporal/spectral), SMOTE inside training folds, and
-leave-one-subject-out in place of five-fold; logistic regression and XGBoost, five seeds.
+\paragraph{E1: the cost of leaky splitting.} Five-fold cross-validation was run under two
+splitters on identical data and seeds. The \emph{subject-wise} splitter is a stratified group
+$k$-fold in which no participant appears on both sides of any fold. The \emph{record-wise}
+splitter is a stratified $k$-fold over days that ignores participant identity, so that days from
+one participant appear in training and test. The estimand is the paired difference in AUROC
+(record-wise minus subject-wise) for the same participants, bootstrapped by resampling
+participants in both arms simultaneously. This is the design most day-level papers on these
+cohorts use; the experiment measures its optimism directly rather than inferring it.
+\paragraph{E2: the cost of skipping external validation.} For each ordered cohort pair, the
+model was fitted on all windows of cohort A and applied, frozen, to cohort B; the internal
+comparator is subject-wise cross-validation on A. Because DEPRESJON and PSYKOSE share their
+controls, each shared control was assigned at random (seed 0) to exactly one cohort, 16 to each,
+so that both cohorts retain both classes and no participant crosses; the assignment table is in
+the repository. Two pairs are informative (DEPRESJON $\leftrightarrow$ PSYKOSE: same controls,
+different patient group, same device); the third, DEPRESJON $\rightarrow$ HYPERAKTIV, is a
+deliberate label-shift control in which a depression-versus-healthy model is applied to
+ADHD-versus-clinical-control data and is expected to fail.
+\paragraph{E3: the calibration blind spot.} For every model in E1 (subject-wise arm) and E2, the
+calibration measures above were computed, and a logistic recalibration (slope and intercept)
+fitted on the training cohort's out-of-fold predictions was applied to the external predictions,
+to test whether external miscalibration is repairable without access to the target cohort.
+\paragraph{E4: sex strata.} Subject-wise E1 predictions were stratified by sex and the measures
+recomputed with participant-level intervals; strata with fewer than six participants or one
+class are omitted.
+\paragraph{E5: OBF-Psychiatric.} On the harmonised release, with its single de-duplicated control
+group, two tasks were evaluated under both splitters: any psychiatric group versus healthy
+control (130 versus 32 participants), and the five diagnostic groups (macro one-versus-rest AUROC).
+\paragraph{E6: ablation.} Under subject-wise cross-validation, with logistic regression and
+XGBoost and five seeds: each feature group dropped and each used alone (distributional,
+day/night, circadian, temporal/spectral); SMOTE applied inside training folds; and
+leave-one-subject-out in place of five-fold. E6 answers the objection that honest performance
+is low only because the feature set, the class balance or the fold count was unfavourable.
 
-\subsection{E1: the cost of leaky splitting}
+\subsection{E1 results: the cost of leaky splitting}
 \input{tables/e1_auroc_inflation}
+\input{tables/e1_auroc_inflation_subject}
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{e1_inflation_auroc.pdf}
 \caption{E1. Window-level AUROC of each model under subject-wise (dark) and record-wise (red) five-fold cross-validation; the grey bar is the leakage inflation.}\label{fig:e1}\end{figure}
-Record-wise splitting raised window-level AUROC for every informative model in every cohort
-(Table~\ref{tab:e1}, Figure~\ref{fig:e1}). On DEPRESJON, XGBoost rose from 0.764 (95\% CI 0.675 to
-0.842) to 0.878 (0.830 to 0.918), a paired inflation of 0.114 (0.060 to 0.181); at participant
-level the leaky estimate reached 0.985. On PSYKOSE, where honest discrimination is already high
-(0.893 to 0.907), inflation was 0.020 to 0.044. On HYPERAKTIV the honest estimate was at or below
-chance for all models (0.442 to 0.449; participant level 0.424 to 0.438), yet record-wise splitting
-produced 0.579 to 0.612 at window level and 0.601 to 0.652 at participant level, an inflation of
-0.130 to 0.169 with intervals excluding zero: leakage manufactured a signal. Logistic regression
-inflated least in every cohort (0.065, 0.020, 0.130) and the tree ensembles most. Accuracy and
-macro-F1 behaved identically (Table~\ref{tab:e1full}). The 1D-CNN did not exceed the feature-based
-models under honest splitting (0.696, 0.849 and 0.459) and was unstable across seeds; its
-participant-level estimate rose from 0.738 to 0.912 on DEPRESJON under record-wise splitting
-(Table~\ref{tab:e1_e1_cnn}), i.e.\ it memorised participants.
-\input{tables/e1_full_metrics}
-\input{tables/e1_auroc_inflation_e1_cnn}
+Record-wise splitting raised AUROC for every informative model in every cohort, at both levels
+(Tables~\ref{tab:e1} and~\ref{tab:e1subj}, Figure~\ref{fig:e1}). On DEPRESJON, XGBoost rose from
+0.764 (95\% CI 0.675 to 0.842) to 0.878 (0.830 to 0.918) at window level, a paired inflation of
+0.114 (0.060 to 0.181); at participant level the honest 0.874 became 0.985, and random forest and
+logistic regression showed the same pattern with inflations of 0.107 and 0.065. On PSYKOSE, where
+schizophrenia produces a large and consistent activity deficit and honest discrimination is
+already 0.893 to 0.907, the inflation was smaller (0.020 to 0.044) but still excluded zero, and
+the participant-level leaky estimates were 0.994 to 0.997. On HYPERAKTIV the honest estimate was
+at or below chance for every model (0.442 to 0.449 at window level, 0.424 to 0.438 at
+participant level), consistent with a recent report that quality-controlled OBF activity features
+do not separate ADHD from controls \cite{obf2025}; record-wise splitting nevertheless produced
+0.579 to 0.612 at window level and 0.601 to 0.652 at participant level, an inflation of 0.130 to
+0.169 with intervals excluding zero. Leakage did not merely exaggerate a real signal; it created
+one. Across cohorts the ordering was stable: logistic regression inflated least (0.065, 0.020,
+0.130) and the tree ensembles most (up to 0.114, 0.044, 0.169), as expected if the mechanism is
+memorisation of participant-specific activity signatures. Accuracy and macro-F1 behaved
+identically (Table~\ref{tab:e1full}).
 
-\subsection{E2: the cost of skipping external validation}
+The 1D-CNN on the raw series did not earn its complexity. Under subject-wise splitting its
+seed-averaged AUROC was 0.696 (0.576 to 0.795) on DEPRESJON, 0.849 (0.744 to 0.910) on PSYKOSE and
+0.459 (0.356 to 0.588) on HYPERAKTIV, below the feature-based models in every cohort, and it was
+unstable across seeds (per-seed means 0.61, 0.74 and 0.48). Its window-level inflation under
+record-wise splitting was small, but its participant-level estimate rose from 0.738 to 0.912 on
+DEPRESJON and from 0.922 to 0.986 on PSYKOSE (Tables~\ref{tab:e1_e1_cnn} and
+\ref{tab:e1subj_e1_cnn}): the network learned to recognise participants across days.
+\input{tables/e1_full_metrics}
+\input{tables/e1_auroc_inflation_e1_cnn}\input{tables/e1_auroc_inflation_subject_e1_cnn}
+
+\subsection{E2 results: the cost of skipping external validation}
 \input{tables/e2_external_validation}
 \begin{figure}[!htbp]\centering
 \includegraphics[width=.48\linewidth]{e2_roc_psykose_to_depresjon.pdf}\hfill
 \includegraphics[width=.48\linewidth]{e3_reliability_psykose_to_depresjon.pdf}
-\caption{E2/E3, PSYKOSE $\rightarrow$ DEPRESJON. Left: ROC curves of internal (subject-wise CV on PSYKOSE) and external (frozen model on DEPRESJON) predictions. Right: reliability curves of the external predictions before and after logistic recalibration fitted on the training cohort.}\label{fig:e2}\end{figure}
-Transfer was asymmetric (Table~\ref{tab:e2}). DEPRESJON-trained models separated schizophrenia
-from the held-out controls as well as they had separated depression internally (external 0.769 to
-0.779 versus internal 0.764 to 0.779), because schizophrenia produces the larger activity deficit.
-PSYKOSE-trained models lost 0.13 to 0.21 AUROC on DEPRESJON (logistic regression 0.885
-$\rightarrow$ 0.689; XGBoost 0.877 $\rightarrow$ 0.671) and their probabilities were both
-overconfident and shifted: slopes 0.27 to 0.63, intercepts 0.74 to 1.44, Brier 0.22 to 0.29
-against 0.25 for a constant prediction (Figure~\ref{fig:e2}). The label-shift pair DEPRESJON
-$\rightarrow$ HYPERAKTIV fell to 0.442 to 0.460 with negative slopes. Participant-level EPV was
-0.6 (DEPRESJON, PSYKOSE after the control split) and 0.8 (HYPERAKTIV).
+\caption{E2/E3, PSYKOSE $\rightarrow$ DEPRESJON. Left: ROC curves of the internal (subject-wise CV on PSYKOSE) and external (frozen model on DEPRESJON) predictions. Right: reliability curves of the external predictions before and after logistic recalibration fitted on the training cohort.}\label{fig:e2}\end{figure}
+Transfer was asymmetric (Table~\ref{tab:e2}). Models trained on DEPRESJON, whose positive class
+is the milder activity deficit, separated schizophrenia from the held-out controls as well as
+they had separated depression internally: external AUROC 0.769 to 0.779 against internal 0.764 to
+0.779, with calibration slopes of 0.50 to 0.81 and intercepts near zero. Models trained on
+PSYKOSE, whose positive class is the more severe deficit, lost 0.13 to 0.21 AUROC when applied to
+DEPRESJON (logistic regression 0.885 $\rightarrow$ 0.689; random forest 0.854 $\rightarrow$ 0.728;
+XGBoost 0.877 $\rightarrow$ 0.671), and their probabilities were both overconfident and shifted:
+slopes 0.27 to 0.63, intercepts 0.74 to 1.44, Brier scores 0.22 to 0.29 against 0.25 for a
+constant prediction (Figure~\ref{fig:e2}). A model that had looked excellent internally would
+have been worse than useless as a probability on the new cohort. The label-shift pair DEPRESJON
+$\rightarrow$ HYPERAKTIV fell to AUROC 0.442 to 0.460 with negative slopes, as designed; a paper
+that reported this transfer as ``external validation'' of a mental-disorder detector would be
+reporting noise. Participant-level EPV in the training cohorts was 0.6 (DEPRESJON and PSYKOSE
+after the control split) and 0.8 (HYPERAKTIV), one to two orders of magnitude below any
+guidance, while the window-level counts (hundreds of days per class) would have suggested
+adequacy.
 
-\subsection{E3: the calibration blind spot}
+\subsection{E3 results: the calibration blind spot}
 \begin{figure}[!htbp]\centering\includegraphics[width=.9\linewidth]{e3_ece_slope_comparison.pdf}
 \caption{E3. Expected calibration error (left) and calibration slope (right) of every model under subject-wise (solid) and record-wise (hatched) cross-validation. Record-wise models appear better calibrated because they score participants they have seen.}\label{fig:ece}\end{figure}
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{e1_radar_models.pdf}
 \caption{Multi-metric profile of the models per cohort (AUROC, balanced accuracy, macro-F1, $1-$Brier, $1-$ECE and a slope score $1-|1-\text{slope}|$) under subject-wise (solid) and record-wise (dashed) cross-validation. Leakage expands every axis at once; on HYPERAKTIV the honest profile collapses to chance while the leaky profile does not.}\label{fig:radar}\end{figure}
 Under honest splitting the informative models were already miscalibrated (Table~\ref{tab:e3},
-Figure~\ref{fig:ece}): slopes 0.53 (XGBoost) to 0.77 (random forest) on DEPRESJON, 0.95 (logistic
-regression) on PSYKOSE, and negative slopes with ECE 0.14 to 0.22 on HYPERAKTIV, where the models
-had learned nothing yet produced confident probabilities. Record-wise models were markedly
-\emph{better} calibrated in-sample, which is a symptom rather than a virtue. Recalibrating external
-predictions with a slope and intercept fitted on the training cohort repaired the easy direction
-(DEPRESJON $\rightarrow$ PSYKOSE: slopes 1.05, ECE 0.04 to 0.05 for the ensembles) but not the hard
-one (PSYKOSE $\rightarrow$ DEPRESJON: slopes 0.35 to 0.77, ECE 0.13 to 0.20), because the
-miscalibration there is a property of the population shift, not of the model.
+Figures~\ref{fig:ece} and~\ref{fig:radar}). On DEPRESJON, slopes were 0.53 (XGBoost), 0.69
+(logistic regression) and 0.77 (random forest), with ECE 0.06 to 0.11; on PSYKOSE, 0.95 for
+logistic regression; on HYPERAKTIV, slopes were negative and ECE 0.14 to 0.22, i.e.\ the models
+had learned nothing and yet issued confident probabilities. Under record-wise splitting the same
+models appeared markedly better calibrated (slopes 0.9 to 1.3, ECE 0.02 to 0.05 on DEPRESJON and
+PSYKOSE), which is not a virtue but a symptom: they were scoring participants they had seen, and
+their confidence was justified only for those participants. The radar profiles make the same
+point in one view: leakage expands every axis simultaneously, and on HYPERAKTIV the honest profile
+collapses to the centre while the leaky profile does not. Recalibrating external predictions with
+a slope and intercept fitted on the training cohort's own out-of-fold predictions repaired the
+easy direction (DEPRESJON $\rightarrow$ PSYKOSE: slopes 1.05, ECE 0.04 to 0.05 for the ensembles)
+but not the hard one (PSYKOSE $\rightarrow$ DEPRESJON: slopes 0.35 to 0.77, ECE 0.13 to 0.20),
+because the miscalibration there is a property of the population shift and cannot be estimated
+without data from the target population.
 \input{tables/e3_calibration}
 
-\subsection{E4 and E5: sex strata; transdiagnostic and five-class tasks}
+\subsection{E4 and E5 results: sex strata; transdiagnostic and five-class tasks}
 \input{tables/e4_fairness_sex}
 \input{tables/e5_obf_transdiagnostic}
-Discrimination did not differ materially by sex on DEPRESJON (0.76 to 0.78 in both strata) or
-HYPERAKTIV (chance in both); the PSYKOSE female stratum contains three cases and its apparently
-higher AUROC rests on them (Table~\ref{tab:e4}). On OBF-Psychiatric, any psychiatric group versus
-healthy control reached 0.776 to 0.795 subject-wise and 0.824 to 0.849 record-wise (participant
-level 0.856 to 0.867 versus 0.899 to 0.943); the five-class task gave macro-AUROC 0.695 to 0.713
-(accuracy 0.43 to 0.45 against a 0.28 majority rate) subject-wise and 0.770 to 0.811 (0.48 to
-0.56) record-wise (Table~\ref{tab:e5}), inflation again largest for the ensembles.
+Discrimination did not differ materially by sex on DEPRESJON (AUROC 0.76 to 0.78 in both
+strata) or on HYPERAKTIV (chance in both); on PSYKOSE the female stratum contains three cases and
+its apparently higher AUROC (0.97) rests on them, with intervals overlapping the male stratum
+(Table~\ref{tab:e4}). Calibration slopes differed between strata more than discrimination did,
+which is the usual pattern when a model's probabilities are shifted for a subgroup that is
+under-represented in training. On OBF-Psychiatric, separating any psychiatric group from the
+healthy controls reached AUROC 0.776 to 0.795 subject-wise and 0.824 to 0.849 record-wise
+(participant level 0.856 to 0.867 versus 0.899 to 0.943); the five-class task gave a macro
+one-versus-rest AUROC of 0.695 to 0.713 (accuracy 0.43 to 0.45 against a 0.28 majority rate)
+subject-wise and 0.770 to 0.811 (0.48 to 0.56) record-wise (Table~\ref{tab:e5}). Inflation was
+again largest for the ensembles (0.106 to 0.116 in macro-AUROC) and smallest for logistic
+regression (0.057). A transdiagnostic actigraphy signal exists, but it is moderate, and the
+five-way separation is weak once participants are held out.
 
-\subsection{E6: ablation}
+\subsection{E6 results: ablation}
 \input{tables/e6_ablation}
-\todo{E6 paragraph is filled automatically from results/real/E6/e6\_ablation.csv when the run completes; see Table~\ref{tab:e6}.}
+\input{e6_paragraph}
 
 \subsection{Published claims against the measured bands}
 \input{tables/sota_comparison}
 Table~\ref{tab:sota} places the Part~I claims beside the Part~II bands. Every published accuracy
 above the subject-wise band on DEPRESJON (0.89, 0.96, 0.85) lies inside or above the record-wise
-band, and every such study used or did not state a day-level unit; the two PSYKOSE claims of 0.92
-and 0.94 sit at the top of the record-wise band. The honest participant-level AUROC of 0.87 to
-0.90 for depression agrees with the dataset authors' leave-one-patient-out baseline and is what a
-new participant should expect; the leaky 0.97 to 0.99 is what the literature reports.
+band, and every such study used, or did not state, a day-level unit; the two PSYKOSE claims of
+0.92 and 0.94 sit at the top of the record-wise band. The honest participant-level AUROC of 0.87
+to 0.90 for depression agrees with the dataset authors' leave-one-patient-out baseline
+\cite{garciaceja2018} and is what a new participant should expect; the leaky 0.97 to 0.99 is
+what the literature reports. For ADHD versus clinical controls the honest band is chance and no
+published claim above it survives subject-wise evaluation. The comparison is not a criticism of
+any individual study: the numbers reproduce. It is a statement about what they measure.
 
 \section{Discussion}
 \subsection{Principal findings}
-Each practice the appraisal flags changed conclusions on the data, always towards optimism.
+Each practice the appraisal flags changed conclusions on real data, always towards optimism.
 Record-wise splitting added 0.02 to 0.17 AUROC and turned a null result into an apparently useful
 ADHD classifier. Skipping external validation hid a loss of up to 0.21 AUROC and a collapse of
 calibration in one transfer direction while the other direction happened to hold, which is why
 transfer must be tested rather than assumed. Calibration, unreported in the entire literature on
 these cohorts, was poor under honest validation and was not repairable from the training data
 alone. The honest results were robust to feature subsets, resampling inside folds and the
-cross-validation scheme (E6), so the gap between published and honest numbers is not a matter of
-feature engineering.
+cross-validation scheme, so the gap between published and honest numbers is a property of the
+splitting design and not of feature engineering.
+
+\subsection{Mechanism}
+Why does record-wise splitting inflate so much here? Each participant contributes 6 to 16 days,
+and a day's activity profile is strongly participant-specific: habitual wake time, weekday
+routine, overall activity level and rest fragmentation vary far more between people than a
+disorder shifts them within a person. A flexible model trained on some of a participant's days
+and tested on others can match the test day to its owner and read off the owner's label. The
+evidence is direct: inflation grew with model flexibility, it was largest where the disorder
+signal was weakest (HYPERAKTIV), and the convolutional network, which can encode the full daily
+profile, showed the largest participant-level jump. The same mechanism explains why record-wise
+models look well calibrated: their confidence is warranted for the participants they memorised.
+None of this is specific to actigraphy; it applies to any repeated-measures data, and the
+PROBAST+AI signalling question on data leakage exists for this reason.
 
 \subsection{Why the combination matters}
 An appraisal alone counts practices; a re-analysis alone is one more model on familiar data.
 Together, on the same cohorts, they show that the practices the appraisal flags are the practices
 that produce the reported numbers. This is the strongest form of evidence a methodological
 critique can offer: not that a practice \emph{could} inflate results, but that it \emph{did}, by
-how much, and for which claims.
+how much, and for which claims. It also gives the field something it lacks: a reference band.
+Future work on these cohorts can be read against Tables~\ref{tab:e1}, \ref{tab:e2} and
+\ref{tab:sota}, and a claim above the honest band invites one question, namely which splitting
+unit produced it.
+
+\subsection{Clinical implications}
+For a screening application the relevant quantities are participant-level discrimination and
+calibration on people the model has never seen, in the population where it will be used. On
+these data, those quantities are an AUROC of about 0.87 to 0.90 for depression and 0.96 to 0.97
+for schizophrenia against healthy controls, no discrimination for ADHD against other psychiatric
+outpatients, and probabilities that need recalibration in the target population before they can
+inform a decision. The distinction between healthy and clinical controls matters clinically: a
+model that separates depressed patients from healthy volunteers has not been shown to separate
+them from the anxious, sleep-disordered or otherwise unwell people who make up a referral
+population, and HYPERAKTIV's clinical controls show how quickly the actigraphy signal disappears
+when the comparison becomes realistic.
 
 \subsection{Limitations}
 One device family and one country; small participant numbers with wide participant-level
 intervals; diagnostic-group labels rather than symptom trajectories; one window length; models
 fixed rather than tuned (tuning inside subject-wise folds would raise honest performance
-somewhat without changing the paired inflation, which is the estimand); no demographic predictors;
-in E2 a control group split rather than an independent one, because no independent healthy-control
-actigraphy with the same device is public; the PSYKOSE sex analysis is underpowered; and Part~I's
-seed extraction relies partly on abstracts until the formal search and dual full-text extraction
-are completed \todo{to be replaced by final counts}.
+somewhat without changing the paired inflation, which is the estimand); no demographic
+predictors; in E2, a control group split rather than an independent one, because no independent
+healthy-control actigraphy with the same device is public; the PSYKOSE sex analysis is
+underpowered; and Part~I's seed extraction relies partly on abstracts until the formal search
+and dual full-text extraction are completed \todo{to be replaced by final counts}. We did not
+attempt to reproduce individual published pipelines; the bands are for fixed, conventional
+models, and a specific published architecture could sit above them for reasons other than
+leakage, which its authors can now demonstrate by reporting subject-wise results.
 
 \subsection{Recommendations and conclusion}
 For any repeated-measures mental-health dataset: state the unit of splitting; report
 participant-level as well as window-level sample sizes and metrics; report calibration slope and
 intercept with a reliability curve; check for shared participants across combined datasets;
 release code with run manifests. Journals could require each in one sentence. This repository
-provides a reference implementation and honest baselines for the three cohorts; claims that exceed
-them should be accompanied by the unit of splitting that produced them.
+provides a reference implementation and honest baselines for the three cohorts; claims that
+exceed them should be accompanied by the unit of splitting that produced them.
 
 \section*{Declarations}
 Funding: \todo{none / grant}. Conflicts of interest: none declared. Ethics: secondary analysis of

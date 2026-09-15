@@ -185,6 +185,7 @@ contains all 162 participants exactly once.
 
 \subsection{E1: the cost of leaky splitting}
 \input{tables/e1_auroc_inflation}
+\input{tables/e1_auroc_inflation_subject}
 \input{tables/e1_full_metrics}
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{e1_inflation_auroc.pdf}
 \caption{E1. Window-level AUROC of each model under subject-wise (dark) and record-wise (red) five-fold cross-validation, mean over ten seeds. The grey bar is the leakage inflation.}\label{fig:e1}\end{figure}
@@ -254,7 +255,7 @@ splitting (Table~\ref{tab:e5}); the inflation was again largest for the tree ens
 0.116 in macro-AUROC) and smallest for logistic regression (0.057).
 
 \subsection{Supplementary arm: 1D-CNN on the raw series}
-\input{tables/e1_auroc_inflation_e1_cnn}
+\input{tables/e1_auroc_inflation_e1_cnn}\input{tables/e1_auroc_inflation_subject_e1_cnn}
 A three-block 1D-CNN on the $\log(1+x)$ minute series (30 epochs, five seeds) did not earn its
 complexity: under subject-wise splitting its seed-averaged window-level AUROC was 0.696 (95\% CI
 0.576 to 0.795) in DEPRESJON, 0.849 (0.744 to 0.910) in PSYKOSE and 0.459 (0.356 to 0.588) in
