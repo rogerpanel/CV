@@ -136,6 +136,6 @@ For archives larger than the chat-upload limit, split them locally (`split -b 20
 | Cohort | Files | Combined SHA-256 of the sorted per-file hashes | Date obtained |
 |---|---|---|---|
 | depresjon | 56 | `5ba462b45f7c2d867df94e6d1941f24a7ac3591d80cfa465eef0bcafc0fc5312` | 2026-09-15 (chat upload, archive dated 2018-02-22) |
-| psykose | | | |
-| hyperaktiv | | | |
-| obf_psychiatric | | | |
+| psykose | 57 | `2a356aa29e448bd6ad7dbc7f8ba2d436fb86e1a01996ae4c5700cd619083e4df` | 2026-09-15 (chat upload, archive dated 2020-02-27) |
+| hyperaktiv | 168 | `44eafd9d00478bcae5aef53719120bbd3742661485f5dc1cafcb8ac2fcad15d4` | 2026-09-15 (read from the OBF-Psychiatric archive (adhd/ + clinical/)) |
+| obf_psychiatric | 168 | `44eafd9d00478bcae5aef53719120bbd3742661485f5dc1cafcb8ac2fcad15d4` | 2026-09-15 (chat upload, Zenodo archive dated 2024-09-12) |
