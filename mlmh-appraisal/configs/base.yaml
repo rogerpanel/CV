@@ -7,7 +7,11 @@ tables_dir: paper/empirical/tables
 figures_dir: paper/empirical/figures
 synthetic: false
 
-cohorts: [depresjon, psykose, hyperaktiv]
+cohorts: [depresjon, psykose, hyperaktiv, obf_psychiatric]
+# Per-cohort root overrides (relative to the repository). HYPERAKTIV's 85 activity participants are
+# shipped, harmonised, inside OBF-Psychiatric (adhd/ + clinical/), so the original archive is optional.
+cohort_roots:
+  hyperaktiv: data/raw/obf_psychiatric
 loader_kwargs:
   obf_psychiatric: {label_scheme: any_psychiatric_vs_control}
 

@@ -56,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
         droot = ex.data_root(cfg)
         ok = True
         for name in cfg["cohorts"]:
-            croot = droot / name
+            croot = ex.ROOT / cfg["cohort_roots"][name] if name in cfg.get("cohort_roots", {}) and not cfg.get("synthetic") else droot / name
             if not croot.exists():
                 print(f"[verify] {name}: MISSING at {croot}")
                 ok = False

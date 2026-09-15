@@ -30,6 +30,8 @@ publication must be cited.
 | HYPERAKTIV | https://datasets.simula.no/hyperaktiv/ (code: https://github.com/simula/hyperaktiv) | "Download" on the page (`https://datasets.simula.no/downloads/hyperaktiv.zip`) | Hicks SA, Stautland A, Fasmer OB, et al. *HYPERAKTIV: an activity dataset from patients with attention-deficit/hyperactivity disorder (ADHD).* ACM MMSys 2021. https://doi.org/10.1145/3458305.3478454 |
 | OBF-Psychiatric (all three, harmonised) | https://zenodo.org/records/13754984 (DOI 10.5281/zenodo.13754984) | Zenodo file list on the record page | Garcia-Ceja E, et al. *OBF-Psychiatric, a motor activity dataset of patients diagnosed with major depression, schizophrenia, and ADHD.* Sci Data 2025;12. https://doi.org/10.1038/s41597-025-04384-3 |
 
+**Note (15 Sept 2026).** The OBF-Psychiatric archive (10 MB zipped) already contains the 85 HYPERAKTIV participants with activity data under `adhd/` and `clinical/`, plus `adhd-info.csv` / `clinical-info.csv`; `configs/base.yaml` therefore reads the `hyperaktiv` cohort from `data/raw/obf_psychiatric/` (`cohort_roots`). The original HYPERAKTIV archive is optional (it adds heart-rate data, which is not used).
+
 **Recommendation.** Download all four. Use OBF-Psychiatric as the canonical, harmonised copy
 (same devices, standardised CSVs, five group folders, 162 participants / 1,565 days) and the three
 originals for the clinical score files (MADRS, BPRS, neuropsychological test output) and to
@@ -96,7 +98,7 @@ hand, one loader per dataset into the same schema (`src/mlmh/data/loaders.py`).
 | Route | Works? | Notes |
 |---|---|---|
 | Chat upload of a `.zip` (DEPRESJON, 5.6 MB) | **yes** | Files land in `/root/.claude/uploads/`; unzipped into `data/raw/<cohort>/`. Use this for PSYKOSE, HYPERAKTIV and OBF-Psychiatric (all tens of MB). |
-| Google Drive connector | **no** for the shared folder `1uneSbbTn8lTuUIEeYoUp4H_8NOjv55rM` | The connected Google account returns "entity not found" for that folder and lists no files at all, so either a different account is connected or the shared link has not been added to that account's My Drive. Even when visible, the connector returns file bytes inside the tool response, which is not viable for a multi-GB archive. |
+| Google Drive connector | **no** (tested 5 and 15 Sept: folder `1uneSbbTn8lTuUIEeYoUp4H_8NOjv55rM`, files `1blRaWDf4EL_AcWXr6mLHKUn8L8-I9jh4`, `1zslA0KHnmrh16kwM5duDJp40tJM4DZDH`) | The connected Google account returns "entity not found" for the folder and for both file IDs, and `list_recent_files` / `sharedWithMe = true` return nothing at all. Anyone-with-the-link sharing is not enumerable through the Drive API: the file must be shared *explicitly with the connected account's e-mail address* (Share -> Add people), or uploaded into that account's own My Drive. Even then the connector returns file bytes inside the tool response, which is not viable for a multi-GB archive. |
 | Direct HTTPS to drive.google.com / dartmouth.edu / simula.no / zenodo.org | **no** | Blocked by the sandbox egress policy (HTTP 403 at the proxy). |
 | A private GitHub repository holding only the archive | **untested but expected to work** | `git clone` goes through the session's git proxy. Create a *private* repo (e.g. `rogerpanel/mlmh-data`), commit the archive(s) there (Git LFS for files > 100 MB), and add it to the session with `add_repo`. Keep it private: the Simula terms allow research use, not redistribution. |
 

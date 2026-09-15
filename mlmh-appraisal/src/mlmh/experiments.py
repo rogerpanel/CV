@@ -68,14 +68,14 @@ def prepare(cfg: dict, cohorts: list[str] | None = None) -> dict[str, dict]:
     cohorts = cohorts or cfg["cohorts"]
     summary, checksums, minute_tables = {}, {}, {}
     for name in cohorts:
-        croot = root / name
+        croot = ROOT / cfg["cohort_roots"][name] if name in cfg.get("cohort_roots", {}) and not cfg.get("synthetic") else root / name
         if not croot.exists():
             print(f"[prepare] {name}: {croot} not found -- skipped (see data/README.md)")
             continue
         loader_kwargs = cfg.get("loader_kwargs", {}).get(name, {})
         minutes, subjects = load_cohort(name, croot, **loader_kwargs)
         for f in sorted(croot.rglob("*.csv")):
-            checksums[str(f.relative_to(root))] = sha256_file(f)
+            checksums[f"{name}/{f.relative_to(croot)}"] = sha256_file(f)
         windows = make_day_windows(minutes, min_minutes=cfg.get("min_minutes_per_day", 1152), drop_edge_days=cfg.get("drop_edge_days", True))
         minute_tables[name] = minutes
         for rep in cfg.get("representations", ["engineered"]):

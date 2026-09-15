@@ -109,11 +109,19 @@ def load_psykose(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def load_hyperaktiv(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """HYPERAKTIV: ADHD vs clinical controls.
+
+    Accepts either the original Simula archive (activity_data/ + patient_info.csv) or the
+    OBF-Psychiatric harmonised layout (adhd/ + clinical/ folders with adhd-info.csv and
+    clinical-info.csv), which contains exactly the 85 HYPERAKTIV participants with activity data.
+    """
     root = Path(root)
+    if (root / "adhd").is_dir() and (root / "clinical").is_dir():
+        return _load_hyperaktiv_from_obf(root)
     act_dir = _first_existing(root, ["activity_data", "activity"])
     info_path = _first_existing(root, ["patient_info.csv", "patients_info.csv"])
     if act_dir is None or info_path is None:
-        raise FileNotFoundError(f"{root}: expected activity_data/ and patient_info.csv")
+        raise FileNotFoundError(f"{root}: expected activity_data/ and patient_info.csv (or OBF adhd/ + clinical/)")
     info = read_table(info_path)
     if "id" not in info.columns or "adhd" not in info.columns:
         raise ValueError(f"{info_path}: expected ID and ADHD columns, found {list(info.columns)}")
@@ -138,6 +146,18 @@ def load_hyperaktiv(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.concat(minutes, ignore_index=True), subjects
 
 
+def _load_hyperaktiv_from_obf(root: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    m1, s1 = _collect(list((root / "adhd").glob("*.csv")), "hyperaktiv", 1, "adhd")
+    m2, s2 = _collect(list((root / "clinical").glob("*.csv")), "hyperaktiv", 0, "clinical_control")
+    subjects = pd.DataFrame(s1 + s2)
+    infos = [read_table(root / f) for f in ("adhd-info.csv", "clinical-info.csv") if (root / f).exists()]
+    if infos:
+        info = pd.concat(infos, ignore_index=True).rename(columns={"number": "subject_id"})
+        info["subject_id"] = info["subject_id"].astype(str)
+        subjects = subjects.merge(info, on="subject_id", how="left", suffixes=("", "_info"))
+    return pd.concat(m1 + m2, ignore_index=True), subjects
+
+
 OBF_GROUPS = ["adhd", "clinical", "control", "depression", "schizophrenia"]
 
 
@@ -158,10 +178,18 @@ def load_obf_psychiatric(root: Path, label_scheme: str = "any_psychiatric_vs_con
             label = OBF_GROUPS.index(g)
         else:
             label = 0 if g == "control" else 1
-        mm, ss = _collect(list((root / g).rglob("*.csv")), "obf_psychiatric", label, g, id_prefix=f"{g}_")
+        files = list((root / g).rglob("*.csv"))
+        prefix = "" if all(f.stem.startswith(g) for f in files) else f"{g}_"
+        mm, ss = _collect(files, "obf_psychiatric", label, g, id_prefix=prefix)
         minutes += mm
         subjects += ss
-    return pd.concat(minutes, ignore_index=True), pd.DataFrame(subjects)
+    subjects = pd.DataFrame(subjects)
+    infos = [read_table(root / f"{g}-info.csv") for g in found if (root / f"{g}-info.csv").exists()]
+    if infos:
+        info = pd.concat(infos, ignore_index=True).rename(columns={"number": "subject_id"})
+        info["subject_id"] = info["subject_id"].astype(str)
+        subjects = subjects.merge(info.drop_duplicates("subject_id"), on="subject_id", how="left", suffixes=("", "_info"))
+    return pd.concat(minutes, ignore_index=True), subjects
 
 
 LOADERS = {
