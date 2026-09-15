@@ -30,7 +30,7 @@ use evaluation designs that leak participant identity. We quantified what each p
 public data. \textbf{Methods.} Three open actigraphy cohorts recorded with the same device:
 DEPRESJON (23 depressed, 32 healthy controls), PSYKOSE (22 schizophrenia, the same 32 controls)
 and HYPERAKTIV (45 ADHD, 40 clinical controls). One calendar day of minute-level activity was the
-analysis unit (1{,}818 unique valid days from 162 participants); 31 statistical and circadian
+analysis unit (1{,}818 unique valid days from 162 participants); 28 statistical and circadian
 features fed a majority-class baseline, logistic regression, random forest and XGBoost with
 hyper-parameters fixed a priori. E1 compared record-wise with subject-wise five-fold
 cross-validation on identical data and seeds. E2 trained on one cohort and evaluated the frozen
@@ -102,7 +102,7 @@ participant with more than one label.
 
 \subsection{Predictors}
 The analysis unit was one calendar day (00:00 to 23:59) of activity counts with at least 80\%
-valid minutes; partial first and last days were dropped. Thirty-one predictors were computed per
+valid minutes; partial first and last days were dropped. Twenty-eight predictors were computed per
 day (Supplementary Table S2): distributional statistics (mean, SD, coefficient of variation,
 median, 10th and 90th percentiles, maximum, skewness, kurtosis, proportion of zero-count minutes,
 mean and SD of $\log(1+x)$), day/night contrasts (08:00 to 22:00 versus night), non-parametric
@@ -115,7 +115,7 @@ reported as a supplementary arm.
 
 \subsection{Sample size}
 No sample-size calculation was possible; the cohorts are fixed. We report subject-level events per
-candidate predictor (minority-class participants divided by 31) for every training cohort, which
+candidate predictor (minority-class participants divided by 28) for every training cohort, which
 is 0.6 to 0.8, and we report window-level counts alongside, because that is the number most papers
 present.
 

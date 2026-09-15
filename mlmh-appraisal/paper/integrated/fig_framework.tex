@@ -1,0 +1,39 @@
+% Figure 1: architectural framework of the study (TikZ). Included by manuscript_AB.tex.
+\begin{figure}[!htbp]\centering
+\begin{tikzpicture}[
+  font=\sffamily\scriptsize, node distance=3mm and 4mm,
+  box/.style={draw, rounded corners=1pt, align=center, inner sep=3pt, minimum height=7mm, fill=white, line width=0.5pt},
+  data/.style={box, fill=gray!8},
+  part/.style={draw, rounded corners=2pt, inner sep=5pt, line width=0.6pt},
+  arr/.style={-{Latex[length=1.6mm]}, line width=0.5pt},
+  lbl/.style={font=\sffamily\bfseries\scriptsize, fill=white, inner sep=1pt}]
+% ----- data layer
+\node[data] (dep) {DEPRESJON\\23 dep.\ + 32 ctrl};
+\node[data, right=of dep] (psy) {PSYKOSE\\22 scz + \emph{same} 32 ctrl};
+\node[data, right=of psy] (hyp) {HYPERAKTIV\\45 ADHD + 40 clin.\ ctrl};
+\node[data, right=of hyp] (obf) {OBF-Psychiatric\\162 participants (harmonised)};
+\node[box, below=6mm of psy.south east, xshift=2mm, fill=accent!10] (hash) {Series hashing: shared participants detected from the data\\(32 controls identical in DEPRESJON/PSYKOSE)};
+\draw[arr] (dep.south) -- ++(0,-3mm) -| (hash.north west);
+\draw[arr] (psy.south) -- (hash.north);
+\draw[arr] (hyp.south) -- ++(0,-3mm) -| (hash.north east);
+\draw[arr] (obf.south) -- ++(0,-3mm) -| ([xshift=8mm]hash.north east);
+% ----- Part I
+\node[box, below left=9mm and -8mm of hash.south west, text width=44mm, fill=blue!5] (p1a) {\textbf{Part I: closed-scope appraisal}\\citation-closed search of every published model on the four cohorts\\PROBAST+AI $\cdot$ TRIPOD+AI (dual)};
+\node[box, below=of p1a, text width=44mm, fill=blue!5] (p1b) {Outcomes: split unit $\cdot$ external validation $\cdot$ calibration $\cdot$ EPV $\cdot$ shared-control double counting $\cdot$ code};
+\node[box, below=of p1b, text width=44mm, fill=blue!5] (p1c) {Output: claim distribution vs.\ Part II bands (Fig.~\ref{fig:part1})};
+% ----- Part II
+\node[box, below right=9mm and -8mm of hash.south east, text width=58mm, fill=accent!6] (p2a) {\textbf{Part II: empirical re-evaluation}\\day windows ($\geq$80\% valid) $\rightarrow$ 31 circadian/statistical features (raw series for 1D-CNN)\\models fixed a priori: majority, LogReg, RF, XGBoost, 1D-CNN};
+\node[box, below=of p2a, text width=58mm, fill=accent!6] (p2b) {\textbf{E1} record-wise vs subject-wise CV (paired inflation)\quad \textbf{E2} frozen cross-cohort transfer, shared controls split\\ \textbf{E3} slope, intercept, Brier, ECE, reliability, recalibration\quad \textbf{E4} sex strata\\ \textbf{E5} OBF transdiagnostic + five-class\quad \textbf{E6} feature / SMOTE / LOSO ablation};
+\node[box, below=of p2b, text width=58mm, fill=accent!6] (p2c) {Estimation: 10 seeds $\cdot$ subject-level BCa bootstrap $\cdot$ window \& subject level\\Guards: leakage test fails the build; cross-cohort overlap refused; preprocessing inside folds};
+\node[box, below=of p2c, text width=58mm, fill=gray!8] (p2d) {Outputs: run manifests (commit, config hash, seeds, versions, checksums) $\rightarrow$ LaTeX tables, figures, TRIPOD+AI self-audit};
+\draw[arr] (hash.south) -- ++(0,-3mm) -| (p1a.north);
+\draw[arr] (hash.south) -- ++(0,-3mm) -| (p2a.north);
+\draw[arr] (p1a) -- (p1b); \draw[arr] (p1b) -- (p1c);
+\draw[arr] (p2a) -- (p2b); \draw[arr] (p2b) -- (p2c); \draw[arr] (p2c) -- (p2d);
+% ----- synthesis
+\node[box, below=7mm of $(p1c.south)!0.5!(p2d.south)$, text width=80mm, fill=green!6] (syn) {\textbf{Synthesis:} each appraisal outcome (Part I) is priced on the same data (Part II);\\published claims above the honest band are explained by the design they used};
+\draw[arr] (p1c.south) |- ([yshift=2mm]syn.north) -- (syn.north);
+\draw[arr] (p2d.south) |- ([yshift=2mm]syn.north);
+\end{tikzpicture}
+\caption{Architecture of the study. Four open actigraphy cohorts feed a data-level integrity check (participant hashing), a closed-scope systematic appraisal of the published models (Part I) and a controlled re-evaluation under the designs the appraisal scores (Part II); the synthesis maps every appraisal outcome to a measured cost.}\label{fig:framework}
+\end{figure}

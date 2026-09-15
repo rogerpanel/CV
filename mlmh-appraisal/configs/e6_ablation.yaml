@@ -1,0 +1,8 @@
+inherit: base.yaml
+experiment: E6
+description: Feature-group, resampling and CV-scheme ablation under subject-wise CV (Part II robustness evidence).
+cohorts: [depresjon, psykose, hyperaktiv]
+models: [logreg, xgboost]
+splitter: subject_wise
+seeds: [0, 1, 2, 3, 4]
+n_boot: 500

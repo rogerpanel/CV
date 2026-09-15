@@ -1,0 +1,29 @@
+id,first_author,year,venue,cohorts,task,best_model,split_unit,best_metric_name,best_metric,calibration,external_validation,shared_controls_flag,code,confidence,source
+S01,Garcia-Ceja,2018,ACM MMSys (dataset paper),DEPRESJON,depressed vs control,Random forest / DNN,participant (leave-one-patient-out),F1,0.73,no,no,n/a,yes,high,doi:10.1145/3204949.3208125
+S02,Zanella-Calzada,2019,Diagnostics,DEPRESJON,depressed vs control,Random forest,day/window,accuracy,0.89,no,no,n/a,no,medium (verify),Feature extraction in motor activity signal (Diagnostics 2019)
+S03,Frogner,2019,ACM MMHealth,DEPRESJON,depressed vs control,1D-CNN,participant (leave-one-participant-out),F1,verify,no,no,n/a,no,medium (verify),doi:10.1145/3347444.3356238
+S04,Jakobsen,2020,PLOS One,DEPRESJON,depressed vs control,Random forest / DNN / CNN,participant (leave-one-out),accuracy,verify,no,no,n/a,no,medium (verify),doi:10.1371/journal.pone.0231995
+S05,Jakobsen,2020,IEEE CBMS (dataset paper),PSYKOSE,schizophrenia vs control,Classical ML,participant (leave-one-patient-out),F1,verify,no,no,recognised (same study),yes,high,doi:10.1109/CBMS49503.2020.00064
+S06,Hicks,2021,ACM MMSys (dataset paper),HYPERAKTIV,ADHD vs clinical control,Classical ML,unstated (10-fold on features),accuracy,verify,no,no,n/a,yes,high,doi:10.1145/3458305.3478454
+S07,Rodriguez-Ruiz,2022,Diagnostics,DEPRESJON,depressed vs control,2D-CNN,day/window,accuracy,0.767,no,no,n/a,no,medium,PMC9495338
+S08,Rodriguez-Ruiz,2022,Healthcare,DEPRESJON+PSYKOSE,depressive vs schizophrenic vs control (night signal),CNN,day/window,accuracy,verify,no,no,unstated (verify),no,medium (verify),PMC9318635
+S09,Kumar,2022,ICSCC / IEEE conf.,DEPRESJON,depressed vs control,ML on autoregressive features,unstated,accuracy,0.78,no,no,n/a,no,low (verify),ResearchGate 362753700
+S10,Ahmed (arXiv),2023,arXiv 2303.07847,DEPRESJON,depressed vs control,Transfer learning ensemble,modified leave-one-out (verify),accuracy,0.96,no,claims independent set,n/a,no,medium (verify),arXiv:2303.07847
+S11,Hybrid RF-ANN (arXiv),2023,arXiv 2310.09277,DEPRESJON,depressed vs control,RF-ANN ensemble,unstated,accuracy,verify,no,no,n/a,no,low (verify),arXiv:2310.09277
+S12,UMAP study,2023,Diagnostics,DEPRESJON,unipolar vs bipolar vs control,ML + UMAP,unstated,accuracy,verify,no,no,n/a,no,low (verify),PMC10377958
+S13,Genetic-algorithm feature selection,2023,Computacion y Sistemas,DEPRESJON,depressed vs control,GA feature selection + classifier,day/window (intervals),accuracy,verify,no,no,n/a,no,low (verify),SciELO S0188-95322023000400038
+S14,Attention CNN (IoMT),2023,Multimedia Tools Appl,PSYKOSE,schizophrenia vs control,Deep CNN + attention,day/window,accuracy,verify,no,no,n/a,no,low (verify),doi:10.1007/s11042-023-17119-6
+S15,Multi-branch DL,2024,Soft Computing,PSYKOSE,schizophrenia vs control,Multi-branch deep network,day/window,accuracy,0.92,no,no,n/a,no,medium,doi:10.1007/s00500-024-09832-7
+S16,DL + XAI,2024,Biomed Signal Process Control,PSYKOSE (+DEPRESJON),psychotic vs control,Deep network + XAI,day/window (24-h segments),accuracy,0.94,no,no,unstated (verify),no,medium,doi:10.1016/j.bspc.2024.105907 (verify)
+S17,Hopping-mean augmentation,2024,Multimedia Tools Appl,DEPRESJON,depressed vs control,Augmented ML,day/window,accuracy,verify,no,no,n/a,no,low (verify),doi:10.1007/s11042-024-19631-9
+S18,IoMT dimensionality reduction,2024,Int J Inf Technol,HYPERAKTIV,ADHD vs clinical control,10 classifiers on reduced features,unstated,accuracy,verify,no,no,n/a,no,low (verify),doi:10.1007/s41870-024-01895-x
+S19,Explainable XGBoost,2025,JMIR Mental Health,DEPRESJON,depressed vs control; severity,XGBoost + ADASYN,unstated in abstract (verify),accuracy,0.849,no,no,n/a,no,medium,doi:10.2196/72038
+S20,Improved CNN framework,2025,Scientific Reports,DEPRESJON+PSYKOSE,mental illness vs control,Improved CNN,day/window (verify),accuracy,verify,no,no,unstated (verify),no,low (verify),doi:10.1038/s41598-025-07245-6
+S21,Enhanced ADHD ML,2025,PubMed 40588896,HYPERAKTIV/OBF (45 participants),ADHD vs control,SVM,unstated (verify),F1,0.779,no,no,n/a,no,medium,PMID 40588896
+S22,HYPERAKTIV ML study,2025,Springer chapter,HYPERAKTIV,ADHD vs clinical control,RF / LightGBM / SVM,unstated,accuracy,verify,no,no,n/a,no,low (verify),doi:10.1007/978-3-032-05507-1_16
+S23,Multimodal digital biomarkers,2025,TechRxiv,HYPERAKTIV,ADHD vs clinical control,Bernoulli NB (actigraphy+HRV),unstated (verify),F1,0.79,no,no,n/a,no,medium,doi:10.36227/techrxiv.176403977.77890479
+S24,OBF-Psychiatric descriptor,2025,Scientific Data,OBF-Psychiatric,multi-class groups,Classical ML baselines,participant (verify),accuracy,verify,no,no,recognised (single control set),yes,high,doi:10.1038/s41597-025-04384-3
+S25,Data-uncertainty case study,2025,medRxiv,OBF-Psychiatric (ADHD),ADHD vs control,QC + ML,participant (verify),n/a,no difference after QC,no,no,n/a,no,medium,doi:10.1101/2025.08.26.25332257
+S26,ViT / CoAtNet on images,2025,arXiv 2512.00103,DEPRESJON+PSYKOSE,condition vs control (images),CoAtNet-Tiny,participant (three-fold subject-wise),accuracy,verify,no,no,unstated (verify),no,medium,arXiv:2512.00103
+S27,Time-segmentation evaluation,2026,Discover Artificial Intelligence,DEPRESJON,depressed vs control,ML on day segments,verify,accuracy,verify,no,no,n/a,no,low (verify),doi:10.1007/s44163-026-01574-9
+S28,Accurate ADHD identification,2022,Brain Sciences (PMC9312518),HYPERAKTIV,ADHD vs clinical control,ML on real-time activity,unstated (verify),accuracy,verify,no,no,n/a,no,low (verify),PMC9312518

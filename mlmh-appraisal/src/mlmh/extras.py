@@ -214,3 +214,64 @@ def run_e5(cfg: dict) -> pd.DataFrame:
     write_latex_table(pd.DataFrame(show), ROOT / cfg.get("tables_dir", "paper/empirical/tables") / "e5_obf_transdiagnostic.tex", "E5: OBF-Psychiatric (162 participants, single control group). Transdiagnostic binary arm (any psychiatric group vs healthy control; window-level AUROC with subject-level BCa intervals) and five-class arm (macro one-vs-rest AUROC), each under subject-wise and record-wise CV.", "tab:e5", synthetic=bool(cfg.get("synthetic")), column_format="lllrrrr")
     write_manifest(out, cfg, extra={"experiment": "E5", "n_rows": len(table)}, checksums_path=pdir / "checksums.json")
     return table
+
+
+# ------------------------------------------------------------------- E6
+FEATURE_GROUPS = {
+    "distributional": ["mean", "sd", "cv", "median", "p10", "p90", "max", "skew", "kurtosis", "prop_zero", "mean_log1p", "sd_log1p"],
+    "day_night": ["day_mean", "night_mean", "night_day_ratio", "night_prop_zero"],
+    "circadian": ["M10", "L5", "relative_amplitude", "IV", "m10_onset_sin", "m10_onset_cos"],
+    "temporal_spectral": ["acf_5", "acf_60", "psd_mean", "dominant_period_min", "n_transitions", "missing_frac"],
+}
+
+
+def run_e6(cfg: dict) -> pd.DataFrame:
+    """Ablation under subject-wise CV: feature groups (drop-one and only-one), SMOTE inside folds,
+    leave-one-subject-out instead of 5-fold, and window-validity threshold sensitivity is reported
+    from the prepare summary. Fixed models, seeds as configured."""
+    from .evaluation.cv import oof_predictions
+    from .experiments import _summarise
+
+    out = results_dir(cfg, "E6")
+    seeds = list(cfg["seeds"])
+    rows = []
+    for cohort in cfg["cohorts"]:
+        ds = load_processed(cfg, cohort)
+        names = ds.feature_names
+        variants = {"all_features": names}
+        for g, cols in FEATURE_GROUPS.items():
+            variants[f"drop_{g}"] = [n for n in names if n not in cols]
+            variants[f"only_{g}"] = [n for n in names if n in cols]
+        for model in cfg["models"]:
+            for vname, cols in variants.items():
+                idx = [names.index(c) for c in cols]
+                sub = WindowedDataset(X=ds.X[:, idx], y=ds.y, subject_id=ds.subject_id, cohort=ds.cohort, window_id=ds.window_id, feature_names=cols, subjects=ds.subjects)
+                pred = oof_predictions(sub, model, "subject_wise", seeds, n_splits=cfg.get("n_splits", 5))
+                row = {"cohort": cohort, "model": model, "variant": vname, "n_features": len(cols), "splitter": "subject_wise", "resample": "none"}
+                row.update(_summarise(pred, cfg))
+                rows.append(row)
+                print(f"[E6] {cohort:>10} {model:>8} {vname:>24} k={len(cols):2d}  AUROC={row['window_auroc_est']:.3f} [{row['window_auroc_ci_lo']:.3f},{row['window_auroc_ci_hi']:.3f}]  ECE={row['window_ece_est']:.3f}")
+            # SMOTE inside folds
+            pred = oof_predictions(ds, model, "subject_wise", seeds, n_splits=cfg.get("n_splits", 5), resample="smote")
+            row = {"cohort": cohort, "model": model, "variant": "all_features+smote_in_fold", "n_features": len(names), "splitter": "subject_wise", "resample": "smote"}
+            row.update(_summarise(pred, cfg)); rows.append(row)
+            print(f"[E6] {cohort:>10} {model:>8} {'smote_in_fold':>24} k={len(names):2d}  AUROC={row['window_auroc_est']:.3f}  ECE={row['window_ece_est']:.3f}")
+            # LOSO
+            pred = oof_predictions(ds, model, "loso", seeds[:1], n_splits=cfg.get("n_splits", 5))
+            row = {"cohort": cohort, "model": model, "variant": "all_features+loso", "n_features": len(names), "splitter": "loso", "resample": "none"}
+            row.update(_summarise(pred, cfg)); rows.append(row)
+            print(f"[E6] {cohort:>10} {model:>8} {'loso':>24} k={len(names):2d}  AUROC={row['window_auroc_est']:.3f}  ECE={row['window_ece_est']:.3f}")
+    table = pd.DataFrame(rows)
+    table.to_csv(out / "e6_ablation.csv", index=False)
+    show = pd.DataFrame({
+        "Cohort": table["cohort"], "Model": table["model"].map(lambda m: MODEL_LABELS.get(m, m)),
+        "Variant": table["variant"].str.replace("_", "\\_"), "k": table["n_features"],
+        "AUROC [95\\% CI]": [fmt_ci(a, b, c) for a, b, c in zip(table["window_auroc_est"], table["window_auroc_ci_lo"], table["window_auroc_ci_hi"])],
+        "Subject AUROC": table["subject_auroc_est"].map(lambda v: f"{v:.3f}"),
+        "Brier": table["window_brier_est"].map(lambda v: f"{v:.3f}"),
+        "Cal. slope": table["window_calibration_slope_est"].map(lambda v: f"{v:.2f}"),
+        "ECE": table["window_ece_est"].map(lambda v: f"{v:.3f}"),
+    })
+    write_latex_table(show, ROOT / cfg.get("tables_dir", "paper/empirical/tables") / "e6_ablation.tex", "E6: ablation under subject-wise CV. Feature-group ablations (drop-one and only-one), SMOTE applied inside training folds, and leave-one-subject-out (LOSO) in place of five-fold CV. Window-level estimates with subject-level BCa intervals.", "tab:e6", synthetic=bool(cfg.get("synthetic")), column_format="lllrlrrrr")
+    write_manifest(out, cfg, extra={"experiment": "E6", "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
+    return table
