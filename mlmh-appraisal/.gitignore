@@ -27,3 +27,4 @@ dist/
 *.toc
 # Results: keep tables, figures and manifests; ignore bulky per-fold prediction dumps
 results/**/predictions/
+dist/
