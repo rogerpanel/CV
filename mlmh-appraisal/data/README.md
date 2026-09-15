@@ -91,6 +91,17 @@ hand, one loader per dataset into the same schema (`src/mlmh/data/loaders.py`).
 
 ---
 
+## Transfer routes that work from this session (tested 15 Sept 2026)
+
+| Route | Works? | Notes |
+|---|---|---|
+| Chat upload of a `.zip` (DEPRESJON, 5.6 MB) | **yes** | Files land in `/root/.claude/uploads/`; unzipped into `data/raw/<cohort>/`. Use this for PSYKOSE, HYPERAKTIV and OBF-Psychiatric (all tens of MB). |
+| Google Drive connector | **no** for the shared folder `1uneSbbTn8lTuUIEeYoUp4H_8NOjv55rM` | The connected Google account returns "entity not found" for that folder and lists no files at all, so either a different account is connected or the shared link has not been added to that account's My Drive. Even when visible, the connector returns file bytes inside the tool response, which is not viable for a multi-GB archive. |
+| Direct HTTPS to drive.google.com / dartmouth.edu / simula.no / zenodo.org | **no** | Blocked by the sandbox egress policy (HTTP 403 at the proxy). |
+| A private GitHub repository holding only the archive | **untested but expected to work** | `git clone` goes through the session's git proxy. Create a *private* repo (e.g. `rogerpanel/mlmh-data`), commit the archive(s) there (Git LFS for files > 100 MB), and add it to the session with `add_repo`. Keep it private: the Simula terms allow research use, not redistribution. |
+
+For archives larger than the chat-upload limit, split them locally (`split -b 200m wesad.zip wesad.part.`) and upload the parts; they are re-joined with `cat wesad.part.* > wesad.zip`.
+
 ## Step-by-step: bringing the data back into the session
 
 1. On your machine, download the three Simula archives and the OBF-Psychiatric Zenodo files.
