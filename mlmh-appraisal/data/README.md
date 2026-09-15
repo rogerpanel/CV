@@ -133,7 +133,7 @@ For archives larger than the chat-upload limit, split them locally (`split -b 20
 
 | Cohort | Files | Combined SHA-256 of the sorted per-file hashes | Date obtained |
 |---|---|---|---|
-| depresjon | | | |
+| depresjon | 56 | `5ba462b45f7c2d867df94e6d1941f24a7ac3591d80cfa465eef0bcafc0fc5312` | 2026-09-15 (chat upload, archive dated 2018-02-22) |
 | psykose | | | |
 | hyperaktiv | | | |
 | obf_psychiatric | | | |
