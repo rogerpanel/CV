@@ -4,11 +4,11 @@
 
 Dear Editor,
 
-We submit "What published machine-learning models on public actigraphy cohorts claim, and what honest evaluation shows: a PROBAST+AI / TRIPOD+AI appraisal and empirical re-evaluation on DEPRESJON, PSYKOSE and HYPERAKTIV" for consideration as a Research Paper.
+We submit "Machine Learning for Mental Disorder Detection from Actigraphy: What Published Models Claim and What Subject-wise, Cross-cohort and Calibrated Evaluation Shows on the DEPRESJON, PSYKOSE and HYPERAKTIV Cohorts" for consideration as a Research Paper.
 
 The three Simula actigraphy cohorts are the most used open benchmarks for machine-learning detection of mental disorders from wearables, and reported accuracies on them have climbed from the dataset authors' leave-one-patient-out 0.7 to above 0.9. Our paper asks whether that is progress. Part I is a closed-scope systematic review of every published model on the cohorts, appraised with PROBAST+AI and TRIPOD+AI, with outcomes that can be checked against the data: unit of splitting, external validation, calibration, sample size, and double counting of the control group that DEPRESJON and PSYKOSE share. Part II re-evaluates the cohorts with fixed models, ten seeds and subject-level bootstrap intervals under the designs the review scores as high and low risk. Record-wise splitting inflates AUROC by up to 0.17 and turns a chance-level ADHD classifier into an apparently useful one; frozen cross-cohort transfer loses up to 0.21 AUROC in one direction with calibration collapse; calibration is poor even under honest validation and is never reported in the literature on these cohorts.
 
-All analysis code, run manifests and generated tables are public. TRIPOD+AI and PRISMA checklists are attached. The manuscript is not under consideration elsewhere. We choose the subscription publication route.
+All analysis code, run manifests and generated tables are public. The TRIPOD+AI checklist is attached; the Part I appraisal is reported following PRISMA 2020 principles and its identification procedure and limitations are stated in the manuscript. All figures and tables were regenerated independently on Google Colab from the public repository with identical results. The manuscript is not under consideration elsewhere. We choose the subscription publication route.
 
 Corresponding author: Dr Aminat Abiola Ajibola, College of Computer Science and Engineering, University of Hafr Al-Batin, Kingdom of Saudi Arabia (aajibola@uhb.edu.sa). Co-author: Roger Nick Anaedevha, Institute of Cyber Intelligence Systems, National Research Nuclear University MEPhI, Moscow (roger@robustidps.ai).
 

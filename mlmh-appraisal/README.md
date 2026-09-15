@@ -5,7 +5,7 @@ DEPRESJON, PSYKOSE, HYPERAKTIV and OBF-Psychiatric (10 seeds, 1,000 subject-leve
 replicates, manifests in `results/real/`). Paper B (`paper/empirical/manuscript.tex`) is a complete
 draft with real numbers and auto-generated tables; Paper A (`paper/review/manuscript_A.tex`) has
 protocol-grade Methods and structured Results placeholders that await the screening and dual
-extraction, which only humans can do. **Recommended submission: the integrated manuscript** `paper/integrated/manuscript_AB.tex`
+extraction, which only humans can do. **Submission version tagged `v1.0.0-submission`.** The integrated manuscript `paper/integrated/manuscript_AB.tex`
 (Part I: closed-scope PROBAST+AI/TRIPOD+AI appraisal of the 28+ published models on these cohorts,
 seeded from `part1_studies.csv`; Part II: E1-E6 re-evaluation with SOTA comparison, ECE and radar
 figures, ablation), targeted at Artificial Intelligence in Medicine (Elsevier, subscription route,
@@ -353,7 +353,25 @@ _Last refreshed by `scripts/update_readme.py` from `results/real`._
 4. **Weeks 8-12.** Freeze results (tag a release, cite the SHA in both manuscripts).
 5. **Weeks 12-16.** Draft both manuscripts from the auto-generated tables; cross-cite.
 
+## Reproducing the figures elsewhere
+
+The tables and figures regenerate from the committed results without the raw data:
+`python scripts/part1_figure.py`, `python scripts/part2_extra_figures.py`,
+`python scripts/fill_e6_paragraph.py`, `python scripts/update_readme.py`. This was verified
+independently on Google Colab (identical outputs). Re-running the experiments themselves needs the
+raw cohorts in `data/raw/` (see `data/README.md`).
+
 ## Citation
 
-Code: this repository (tag + git SHA in each manifest). Data: cite the source publications listed
-in `data/README.md`; this licence (MIT) covers code only.
+Manuscript: Ajibola AA, Anaedevha RN. Machine Learning for Mental Disorder Detection from
+Actigraphy: What Published Models Claim and What Subject-wise, Cross-cohort and Calibrated
+Evaluation Shows on the DEPRESJON, PSYKOSE and HYPERAKTIV Cohorts. 2026 (submitted).
+Code: this repository, release `v1.0.0-submission` (git SHA in each manifest; Zenodo DOI to be
+added when the release is archived). Data: cite the source publications listed in
+`data/README.md`; the MIT licence covers code only.
+
+## Release checklist (maintainer)
+
+1. Connect the repository to Zenodo (zenodo.org -> GitHub -> toggle `rogerpanel/cv`).
+2. On GitHub, Releases -> Draft a new release -> tag `v1.0.0-submission` on the submission commit.
+3. Copy the minted DOI into the Code availability sentence of the manuscript and into this section.

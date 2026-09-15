@@ -4,6 +4,7 @@
 \caption{E5: OBF-Psychiatric (162 participants, single control group). Transdiagnostic binary arm (any psychiatric group vs healthy control; window-level AUROC with subject-level BCa intervals) and five-class arm (macro one-vs-rest AUROC), each under subject-wise and record-wise CV.}
 \label{tab:e5}
 \footnotesize
+\begin{adjustbox}{max width=\linewidth}
 \begin{tabular}{lllrrrr}
 \toprule
 Arm & Model & Split & AUROC / macro-AUROC & Accuracy & Macro-F1 & Cal. slope \\
@@ -24,4 +25,5 @@ Five diagnostic groups & XGBoost & subject-wise & 0.702 [0.670, 0.743] & 0.448 &
 Five diagnostic groups & XGBoost & record-wise & 0.808 [0.785, 0.842] & 0.558 & 0.467 & -- \\
 \bottomrule
 \end{tabular}
+\end{adjustbox}
 \end{table}
