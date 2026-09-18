@@ -1,103 +1,81 @@
 # Reproducibility Guide
 
-This document walks through the exact command sequence used to reproduce the
-LipMamba paper's headline numbers (Section 5).  It assumes a standard Linux
-environment with Python 3.10 +, CUDA 12, and 4 × A100 80 GB GPUs for the
-larger models; smaller variants can be reproduced on a single 24 GB GPU.
+Exact command sequence to regenerate every number of the ICLR manuscript.
+Python 3.10+, CUDA 12 for the 130M/370M runs (the harness runs on CPU for
+the demo path).
 
 ## 1. Environment
 
 ```bash
-git clone https://github.com/rogerpanel/CV.git
-cd CV/lipmamba
+git clone https://github.com/rogerpanel/CV.git && cd CV/lipmamba
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[training]"
-# Optional fast kernels — may not be available on all platforms
-pip install -e ".[fast_kernels]" || true
+pip install -e ".[training,dev]"
+pytest -q                                       # 36 tests
+python scripts/regenerate_all.py --demo         # end-to-end smoke run on a random model
 ```
 
-Verify the math:
+## 2. Constants first
 
 ```bash
-pytest -q tests
+python scripts/report_constants.py --config configs/lipmamba_130m.yaml
 ```
 
-## 2. Data preparation
+Read the three lines under "Readings".  If ℓ\* is < 1 or L_block is ≫ 10,
+decide (docs/ICLR2027_AUDIT_RESPONSE.md §4) whether to change Δ_min, Δ_max,
+λ_min, λ_max before spending GPU time.
+
+## 3. Base checkpoints and data
 
 ```bash
-mkdir -p data_cache
-python scripts/download_datasets.py --datasets wikitext103 robench25 cicids2017
-# manually download CIC-IDS2017 if the script requests it, then:
-python -c "from lipmamba.data import IDSDataset, IDSDatasetConfig; \
-            IDSDataset(IDSDatasetConfig(name='cicids2017', csv_path='data_cache/cicids2017_clean.parquet'))"
+python scripts/todo3_init_from_hf_mamba.py --base state-spaces/mamba-130m --revision <commit> \
+    --out runs/lipmamba-130m_init.pt
+python scripts/download_datasets.py --datasets wikitext103
+python - <<'EOF'
+from transformers import AutoTokenizer; import numpy as np, datasets
+tok = AutoTokenizer.from_pretrained("EleutherAI/gpt-neox-20b")
+for split in ("train", "validation"):
+    ds = datasets.load_dataset("wikitext", "wikitext-103-raw-v1", split=split)
+    ids = np.asarray(tok("\n".join(ds["text"]))["input_ids"], dtype=np.int32)
+    ids.tofile(f"data_cache/wikitext103_{'val' if split=='validation' else 'train'}.bin")
+EOF
 ```
 
-For the language model, use any tokeniser to produce flat ``int32`` arrays:
+RoBench-25: obtain the HiSPA authors' anonymised release, export to JSONL
+(`abstract_id, abstract, question, answer`), tokenise prompts with the same
+tokenizer.
 
-```python
-from transformers import AutoTokenizer
-import numpy as np
-tok = AutoTokenizer.from_pretrained("gpt2")
-ids = np.asarray(tok.encode(open("wikitext103.txt").read()), dtype=np.int32)
-ids.tofile("data_cache/wikitext103_train.bin")
-```
-
-## 3. Pre-training (LipMamba-130M)
+## 4. Train
 
 ```bash
-python scripts/train.py --config configs/lipmamba_130m.yaml
+python scripts/finetune.py --config configs/lipmamba_130m.yaml --init-from runs/lipmamba-130m_init.pt
+python scripts/finetune.py --config configs/lipmamba_370m.yaml --init-from runs/lipmamba-370m_init.pt
 ```
 
-Expected reference numbers (Section 5, Table 2):
-
-| Metric | Mamba | LipMamba-130M |
-| --- | --- | --- |
-| WikiText-103 PPL | 18.7 | 19.6 |
-| RoBench-25 ASR | 92 % | 4 % |
-| Certified ε* | 0.04 | 0.18 |
-| Clean accuracy | 89.7 % | 90.8 % |
-
-## 4. Certifying robustness
+## 5. Regenerate every table and figure (three seeds)
 
 ```bash
-python scripts/certify.py --config configs/certificate.yaml
+python scripts/regenerate_all.py --config configs/lipmamba_130m.yaml \
+    --checkpoint runs/lipmamba_130m/final.pt --tokens data_cache/wikitext103_val.bin
+python scripts/perplexity_overhead.py --base state-spaces/mamba-130m --lip runs/lipmamba_130m/final.pt \
+    --config configs/lipmamba_130m.yaml --tokens data_cache/wikitext103_val.bin
+python scripts/fill_paper_numbers.py --runs runs --out paper/todo_snippets.tex
 ```
 
-Outputs ``runs/lipmamba_130m/certified.json`` containing the certified-radius
-curve and the certified poisoning-immunity bound from Theorem 2.
+Outputs: `runs/todo{1,2,4,5}_*.json` (+ `.png`), `runs/perplexity_overhead.json`,
+`paper/todo_snippets.tex`.
 
-## 5. Attacking with HiSPA / RoBench-25
+## 6. Anonymised bundle
 
 ```bash
-python scripts/attack.py --config configs/attack_robench25.yaml
+python scripts/todo6_make_anonymous_bundle.py --out LipMamba-ICLR27-anon.zip
 ```
 
-The reported attack success rate should drop below 5% for LipMamba whereas a
-baseline Mamba checkpoint typically exceeds 90 %.
+Aborts if any identifying string remains.  Upload to anonymous.4open.science
+and set `\anonrepo`.
 
-## 6. Network-intrusion fine-tuning
+## 7. What "reproduced" means here
 
-```bash
-python scripts/train.py --config configs/ids_cic2017.yaml
-```
-
-Reproduces the IDS column of the paper (LipMamba achieves 95.9% F1 with
-0.5 ms latency on a single A100 80 GB) — see
-[`ROBUSTIDPS_INTEGRATION.md`](ROBUSTIDPS_INTEGRATION.md) for the full
-deployment recipe.
-
-## 7. Benchmark sweep
-
-```bash
-for cfg in configs/lipmamba_130m.yaml configs/lipmamba_370m.yaml; do
-  python scripts/train.py    --config $cfg
-  python scripts/certify.py  --config configs/certificate.yaml
-  python scripts/attack.py   --config configs/attack_robench25.yaml
-done
-```
-
-## 8. Reporting
-
-All evaluation outputs are persisted as JSON under ``runs/.../*.json``.  Use
-your favourite plotting tool (matplotlib / seaborn) to reproduce Figures 2
-and 3 of the paper.
+The manuscript's Table 1 numbers were not produced by this repository at the
+time of writing; §5 regenerates them.  The demo path
+(`--demo`) validates the pipeline on a random model and its numbers are
+meaningless as results.

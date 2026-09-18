@@ -3,7 +3,7 @@ seed: 42
 
 model:
   variant: lipmamba_130m
-  vocab_size: 50257
+  vocab_size: 50280   # GPT-NeoX tokenizer (state-spaces/mamba-* base checkpoints)
   n_layers: 24
   d_model: 768
   d_inner: 1536
@@ -13,11 +13,12 @@ model:
   s_c: 1.0
   s_delta: 0.5
   s_out: 1.0
+  delta_min: 1.0e-3
   delta_max: 0.5
   lambda_min: 0.05
   lambda_max: 1.0
+  x_max: 1.0
   n_power_iters: 1
-  l_ssm_cap: 5.0
   n_classes: 0
   s_head: 1.0
   epsilon_train: 0.18
@@ -43,11 +44,19 @@ trainer:
   out_dir: runs/lipmamba_130m
   use_margin_objective: true
   use_attack: null
+  lipschitz_mode: local      # local | global | fixed  (Remark 4)
+  local_lipschitz:
+    radius: 0.3
+    n_steps: 20
+    n_restarts: 8
+  seed: 42
 
 pac_bayes:
   delta: 0.05
-  sigma_post: 0.05
+  sigma_post: 0.04
   sigma_prior: 0.10
   epsilon_train: 0.18
   beta: 1.0
+  l_ell: 1.0
+  objective_half: true
   n_train: 100000

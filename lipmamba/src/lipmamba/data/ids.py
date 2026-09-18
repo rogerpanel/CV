@@ -1,9 +1,8 @@
-"""Network-intrusion-detection datasets used by the robustidps.ai pipeline.
+"""Network-intrusion-detection datasets (deployment-domain transfer, Appendix F).
 
 Supports the eight datasets listed in :mod:`registry`.  All datasets are
 flat CSV/Parquet flow records with a single label column; we standardise
-features per-column with the running mean / std (matching the
-``robustidps_web_app`` preprocessing).
+features per-column with the running mean / std.
 """
 from __future__ import annotations
 

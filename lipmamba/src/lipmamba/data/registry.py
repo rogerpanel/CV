@@ -72,9 +72,13 @@ SAFETY: dict[str, DatasetSpec] = {
     ),
     "robench25": DatasetSpec(
         name="RoBench-25",
-        url="https://github.com/HiSPA-robench",
-        license="Research only",
-        description="1,050 hidden-state poisoning triggers (9 attack families).",
+        url="https://arxiv.org/abs/2601.01972",
+        license="Research only (anonymised 4open.science release by the HiSPA authors; public release pending publication)",
+        description=(
+            "Long-context retrieval benchmark of the HiSPA preprint: 120 abstracts of accepted "
+            "NeurIPS-2025 papers with 240 true/false questions, evaluated with/without trigger insertion. "
+            "NOT a separate trigger collection."
+        ),
     ),
 }
 

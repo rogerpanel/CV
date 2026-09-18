@@ -1,155 +1,113 @@
 # LipMamba
 
-**Lipschitz-Constrained Selective State-Space Models with PAC-Bayesian Certificates for Certified Robustness Against Hidden-State Poisoning in Language Models**
+**Lipschitz-Constrained Selective State-Space Models with State-Retention and PAC-Bayesian Bounds Against Hidden-State Poisoning**
 
-Reference implementation accompanying the manuscript:
+Reference implementation and reproducibility harness for the LipMamba
+manuscripts (journal versions: <https://github.com/rogerpanel/LipMamba-Models>;
+ICLR 2027 submission version: anonymised, see `paper/README.md`).
 
-> Roger Nick Anaedevha. *LipMamba: Lipschitz-Constrained Selective State-Space Models with PAC-Bayesian Certificates for Certified Robustness Against Hidden State Poisoning in Language Models.* 2026.
-
-Source manuscripts: <https://github.com/rogerpanel/LipMamba-Models>
-Reproducibility mirror: <https://github.com/rogerpanel/CV/tree/main/lipmamba>
+Reproducibility mirror of this folder: <https://github.com/rogerpanel/CV/tree/main/lipmamba>
 
 ---
 
-## Overview
+## What the code implements (ICLR-version numbering)
 
-LipMamba is the first certified architectural defense against **hidden-state
-poisoning** of selective state-space language models (Mamba-style). It combines
-three ideas:
+| Manuscript | Module |
+| --- | --- |
+| Eq. (2) two-sided step clamp Δ_t ∈ [Δ_min, Δ_max) | `models/clipped_delta.py` |
+| Spectral projection ‖W̄_•‖₂ ≤ s_• (one-step power iteration) | `models/spectral_norm.py` |
+| Eigenvalue reparameterisation λ_i(A) ∈ [−λ_max, −λ_min] | `models/eigen_reparam.py` |
+| Assumption 1 ‖x_t‖₂ ≤ X_max (projection, by construction) | `models/input_clip.py` |
+| Selective scan + Algorithm 1 online constant tracking | `models/selective_ssm.py` |
+| GloRo head, ε\*(x), margin-augmented logit | `models/glorot_head.py` |
+| Lemma 1 (H), Theorem 1 (L_block), Theorem 2 (ℓ\*) closed forms | `certificates/constants.py` |
+| Worst-case / data-dependent / empirical-lower-bound Lipschitz | `certificates/lipschitz.py` |
+| Appendix E local estimator L_loc, LL-Acc | `certificates/local_lipschitz.py`, `evaluation/ll_acc.py` |
+| Theorem 3 PAC-Bayes with L_ℓ; Eq. (5) objective | `certificates/pac_bayes.py`, `training/` |
+| State-retention bound, per-input ℓ\* distribution | `certificates/poisoning_immunity.py` |
+| Z-HiSPA, M-HiSPA (GA), continuous HiSPA | `attacks/hispa.py` |
+| Adaptive white-box attack on the clamp (saturate / overwrite / margin) | `attacks/adaptive_clamp.py` |
+| Baselines: unconstrained Mamba, GloRo-Mamba, Naive-SN, randomized smoothing | `baselines/` |
+| ECE (15 bins), Friedman + Holm, Wilcoxon r | `evaluation/calibration.py`, `evaluation/stats.py` |
+| RoBench-25 (120 abstracts, 240 T/F questions), HarmBench/JailbreakBench/WildJailbreak, IDS sets | `data/` |
 
-1. **Spectral parameterization** of all selective projections (`B`, `C`, `Δ`)
-   via single-step power-iteration spectral normalization.
-2. **Eigenvalue reparameterization** of the state matrix `A` so that
-   `λᵢ(A) ∈ [-λ_max, -λ_min]` is enforced by construction.
-3. **Clipped discretization** `Δ_t = Δ_max · tanh(softplus(W_Δx_t + τ)/Δ_max)`
-   so that the discrete recurrence radius `ρ_max = exp(-Δ_min λ_min) < 1`.
-
-These ingredients yield a closed-form per-layer Lipschitz bound (Theorem 1),
-an exponential lower bound on post-trigger hidden-state norms (Theorem 2,
-"certified poisoning immunity"), and a PAC-Bayesian generalization /
-adversarial bound (Theorem 3). A GloroNet-style certification head produces a
-per-input certified radius `ε*(x)`.
-
-The codebase reproduces:
-
-* LipMamba 130M / 370M / 1.3B configurations.
-* Training with the PAC-Bayes adversarial objective.
-* HiSPA hidden-state poisoning attack + RoBench-25/26, HarmBench, JailbreakBench evaluation.
-* Network-intrusion application aligned with the `robustidps.ai` deployment
-  (CIC-IDS2017, Edge-IIoTset, UNSW-NB15, TON_IoT, NSL-KDD, CIC-IoT-2023,
-  CIC-DDoS-2019, post-quantum traffic).
-
-## Repository Layout
-
-```
-lipmamba/
-├── src/lipmamba/
-│   ├── models/         Selective SSM block, spectral norm, eigenvalue reparam, GloroNet head
-│   ├── certificates/   Lipschitz tracking, PAC-Bayes bound, certified radius, poisoning immunity
-│   ├── attacks/        HiSPA poisoning, PGD, jailbreak, discrete trigger search
-│   ├── data/           Dataset loaders + registry (LM, safety, IDS)
-│   ├── training/       Trainer, AdamW + cosine, PAC-Bayes objective, prior fitting
-│   ├── evaluation/     Clean/Certified/PACC accuracy, perplexity, benchmark runner
-│   └── utils/          Logging, seeding, checkpoints
-├── configs/            YAML configs (130M, 370M, 1.3B, IDS, certificate, attack)
-├── scripts/            CLI entry points (train, evaluate, certify, attack, pretrain, finetune, download_datasets)
-├── tests/              Unit tests for math invariants
-├── examples/           Minimal end-to-end demos
-└── docs/               THEORY, METHODOLOGY, DATASETS, HYPERPARAMETERS, REPRODUCIBILITY, ROBUSTIDPS_INTEGRATION
-```
-
-## Installation
+## Install
 
 ```bash
-git clone https://github.com/rogerpanel/CV.git
-cd CV/lipmamba
+git clone https://github.com/rogerpanel/CV.git && cd CV/lipmamba
 python -m venv .venv && source .venv/bin/activate
-pip install -e .
+pip install -e ".[training,dev]"
+pytest -q            # 36 tests: clamp bounds, Lemma 1, Thm 1/2 constants, attacks, estimator
 ```
 
-GPU training requires PyTorch ≥ 2.1 with CUDA 12. Optional kernels: install
-`mamba-ssm` and `causal-conv1d` for parity-fast scans (the included reference
-scan is pure PyTorch so the codebase runs on CPU as well for testing).
+The scan is pure PyTorch (CPU works); install `mamba-ssm` for speed on GPU.
 
-## Quick Start
+## Check the constants before you train
 
 ```bash
-# 1. Sanity-check the math
-pytest -q tests
-
-# 2. Train a small LipMamba on WikiText-103 with the PAC-Bayes objective
-python scripts/train.py --config configs/lipmamba_130m.yaml
-
-# 3. Compute certified radii on a held-out split
-python scripts/certify.py --config configs/certificate.yaml \
-    --checkpoint runs/lipmamba_130m/best.pt
-
-# 4. Attack with HiSPA / RoBench-25
-python scripts/attack.py --config configs/attack_robench25.yaml \
-    --checkpoint runs/lipmamba_130m/best.pt
-
-# 5. End-to-end intrusion-detection demo (robustidps.ai integration)
-python scripts/train.py --config configs/ids_cic2017.yaml
+python scripts/report_constants.py --config configs/lipmamba_130m.yaml
 ```
+
+prints c, ρ_max, ρ_min, H, γ, L_block, the 24-block product and ℓ\*.  With the
+manuscript's stated constants this gives **L_block ≈ 1.1 × 10⁸** and
+**ℓ\* ≈ 0.95 tokens** — see `docs/ICLR2027_AUDIT_RESPONSE.md` for why this
+matters and `docs/THEORY.md` for the formulas.
+
+## Resolve the manuscript's `\todo` markers
+
+```bash
+python scripts/regenerate_all.py --demo                 # smoke run, random model, CPU
+python scripts/regenerate_all.py --config configs/lipmamba_130m.yaml \
+    --checkpoint runs/lipmamba_130m/final.pt --tokens data_cache/wikitext103_val.bin
+```
+
+| Marker | Script |
+| --- | --- |
+| ℓ\* recomputation + Fig. 4 region | `scripts/todo1_ell_star.py` |
+| adaptive white-box attack | `scripts/todo2_adaptive_attack.py` |
+| base checkpoints + corpus, PPL overhead | `scripts/todo3_init_from_hf_mamba.py`, `scripts/perplexity_overhead.py` |
+| GloRo-Mamba baseline row | `scripts/todo4_gloro_mamba_baseline.py` |
+| Fig. 2 four curves | `scripts/todo5_fig2_lipschitz_depth.py` |
+| anonymised repo bundle | `scripts/todo6_make_anonymous_bundle.py` |
+| LaTeX snippets from the JSON outputs | `scripts/fill_paper_numbers.py` → `paper/todo_snippets.tex` |
+
+## Train / evaluate / certify / attack
+
+```bash
+python scripts/train.py    --config configs/lipmamba_130m.yaml
+python scripts/evaluate.py --config configs/lipmamba_130m.yaml --checkpoint runs/lipmamba_130m/final.pt
+python scripts/certify.py  --config configs/certificate.yaml
+python scripts/attack.py   --config configs/attack_robench25.yaml
+```
+
+Ablations (Table 3) and baselines (Table 1) are configuration presets:
+`configs/ablations.yaml`, `configs/baselines.yaml`, `lipmamba.baselines.preset(...)`.
 
 ## Datasets
 
-All datasets used in the paper are listed in
-[`docs/DATASETS.md`](docs/DATASETS.md) with download links and citation
-information. The downloader script
+Canonical URLs and licences: `docs/DATASETS.md` and `lipmamba.data.registry`.
+No dataset is redistributed.  **RoBench-25** is the HiSPA preprint's
+long-context benchmark (120 NeurIPS-2025 abstracts, 240 true/false
+questions), obtained from the authors' anonymised release — not a trigger
+collection.
 
-```bash
-python scripts/download_datasets.py --datasets wikitext103 robench25 cicids2017
-```
+## Documentation
 
-automates retrieval where licensing allows (most are gated behind a click-wrap
-agreement and must be downloaded manually; the script prints the canonical
-URL when automatic download is not possible).
-
-| Domain | Dataset | URL |
-| --- | --- | --- |
-| Pre-training | The Pile | <https://pile.eleuther.ai/> |
-| Pre-training | SlimPajama-627B | <https://huggingface.co/datasets/cerebras/SlimPajama-627B> |
-| Pre-training | C4 | <https://huggingface.co/datasets/allenai/c4> |
-| LM eval | WikiText-103 | <https://huggingface.co/datasets/wikitext> |
-| Safety | HarmBench | <https://www.harmbench.org/> |
-| Safety | JailbreakBench | <https://github.com/JailbreakBench/jailbreakbench> |
-| Safety | AdvBench | <https://github.com/llm-attacks/llm-attacks> |
-| Safety | WildJailbreak | <https://huggingface.co/datasets/allenai/wildjailbreak> |
-| SSM-poisoning | RoBench-25 / RoBench-26 | <https://github.com/HiSPA-robench> |
-| IDS | CIC-IDS2017 | <https://www.unb.ca/cic/datasets/ids-2017.html> |
-| IDS | Edge-IIoTset | <https://www.kaggle.com/datasets/mohamedamineferrag/edgeiiotset-cyber-security-dataset-of-iot-iiot> |
-| IDS | UNSW-NB15 | <https://research.unsw.edu.au/projects/unsw-nb15-dataset> |
-| IDS | TON_IoT | <https://research.unsw.edu.au/projects/toniot-datasets> |
-| IDS | NSL-KDD | <https://www.unb.ca/cic/datasets/nsl.html> |
-| IDS | CIC-IoT-2023 | <https://www.unb.ca/cic/datasets/iotdataset-2023.html> |
-| IDS | CIC-DDoS-2019 | <https://www.unb.ca/cic/datasets/ddos-2019.html> |
-| IDS | PQC traffic | <https://doi.org/10.34740/kaggle/dsv/15424420> |
-
-## Reproducibility Checklist
-
-* Hyperparameters: [`docs/HYPERPARAMETERS.md`](docs/HYPERPARAMETERS.md).
-* Theorems and proof sketches: [`docs/THEORY.md`](docs/THEORY.md).
-* Algorithms (Algorithm 1: forward; Algorithm 2: training):
-  [`docs/METHODOLOGY.md`](docs/METHODOLOGY.md).
-* Step-by-step run instructions:
-  [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md).
-* Integration with `robustidps.ai` operational deployment:
-  [`docs/ROBUSTIDPS_INTEGRATION.md`](docs/ROBUSTIDPS_INTEGRATION.md).
+* `docs/THEORY.md` — Assumption 1, Lemma 1, Theorems 1–3, Appendix E, with the numbers.
+* `docs/ICLR2027_AUDIT_RESPONSE.md` — audit findings → code changes → scripts; open decisions.
+* `docs/METHODOLOGY.md`, `docs/HYPERPARAMETERS.md`, `docs/REPRODUCIBILITY.md`, `docs/DATASETS.md`, `docs/ARCHITECTURE.md`, `docs/PAPER_LINKS.md`.
+* `docs/ROBUSTIDPS_INTEGRATION.md`, `docs/MODEL_CARD.md` — deployment notes (excluded from the anonymised bundle).
 
 ## Citing
 
 ```bibtex
 @article{anaedevha2026lipmamba,
-  author  = {Anaedevha, Roger Nick},
-  title   = {LipMamba: Lipschitz-Constrained Selective State-Space Models with
-             PAC-Bayesian Certificates for Certified Robustness Against Hidden
-             State Poisoning in Language Models},
-  year    = {2026},
-  url     = {https://github.com/rogerpanel/CV/tree/main/lipmamba}
+  author = {Anaedevha, Roger Nick},
+  title  = {LipMamba: Lipschitz-Constrained Selective State-Space Models with State-Retention and
+            PAC-Bayesian Bounds Against Hidden-State Poisoning},
+  year   = {2026},
+  url    = {https://github.com/rogerpanel/CV/tree/main/lipmamba}
 }
 ```
 
-## License
-
-MIT — see [LICENSE](LICENSE).
+MIT — see `LICENSE`.

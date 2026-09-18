@@ -68,4 +68,4 @@ def margin_adversarial_loss(
     logits = out["cls_logits"]
     if model.cls_head is None:
         raise RuntimeError("model has no GloroNet classification head")
-    return model.cls_head.margin_loss(logits, batch["labels"], l_net=l_net, epsilon=epsilon)
+    return model.cls_head.margin_loss(logits, batch["labels"], l=l_net, epsilon=epsilon)

@@ -1,17 +1,19 @@
-"""LipMamba trainer.
+"""LipMamba trainer — Algorithm 2 (PAC-Bayes adversarial training).
 
-Implements *Algorithm 2 — PAC-Bayesian adversarial training* from the
-manuscript.  The training loop iterates:
-
-1. Sample a clean mini-batch.
-2. (Optional) generate adversarial inputs via PGD or HiSPA.
-3. Forward pass → margin-augmented classification or LM cross-entropy.
-4. Add the Lipschitz penalty L_SSM · ε / 2 and the PAC-Bayes complexity.
-5. Backprop, gradient clip, AdamW step, cosine-annealed LR.
-6. After ``power_iter_freq`` steps, refresh σ̂ via :class:`SpectralNormLinear`.
-
-The trainer is deliberately framework-light (no Lightning / Accelerate
-dependency) so that the core algorithm is easy to inspect.
+Per step:
+  1. clean mini-batch;
+  2. choose the Lipschitz constant L used in the margin term and the
+     PAC-Bayes gap term according to ``lipschitz_mode``:
+       * ``"local"``  — Appendix-E estimator on the batch (the manuscript's
+                        choice; costs 8 restarts × 20 PGD steps per batch);
+       * ``"global"`` — worst-case Theorem-1 product (vacuous at depth,
+                        provided for the ablation / sanity check);
+       * ``"fixed"``  — a user-supplied constant ``l_fixed``;
+  3. margin-augmented cross-entropy (GloRo) or empirical adversarial loss
+     under PGD / HiSPA;
+  4. + ½ L_ℓ L ε_train + β·complexity(KL);
+  5. AdamW, grad-clip 1.0, cosine LR; spectral σ̂ refreshed by power
+     iteration inside every forward.
 """
 from __future__ import annotations
 
@@ -22,7 +24,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from ..certificates.lipschitz import empirical_network_lipschitz
+from ..certificates.local_lipschitz import LocalLipschitzConfig, local_lipschitz_estimate
 from ..certificates.pac_bayes import PACBayesConfig
 from ..utils.checkpoint import save_checkpoint
 from ..utils.logging import get_logger
@@ -33,8 +35,6 @@ from .pac_objective import pac_bayes_total_loss
 
 @dataclass
 class TrainerConfig:
-    """Trainer-level hyper-parameters (paper defaults)."""
-
     max_steps: int = 100_000
     warmup_steps: int = 1_000
     lr: float = 2e-4
@@ -45,46 +45,28 @@ class TrainerConfig:
     eval_every: int = 5_000
     save_every: int = 5_000
     out_dir: str = "runs/lipmamba"
-    power_iter_freq: int = 1
     pac_bayes: PACBayesConfig = field(default_factory=PACBayesConfig)
-    use_margin_objective: bool = True   # Eq. 16 — closed-form upper bound
-    use_attack: str | None = None        # {"pgd", "hispa", None}
+    use_margin_objective: bool = True
+    use_attack: str | None = None            # {"pgd", "hispa", None}
     attack_kwargs: dict = field(default_factory=dict)
+    lipschitz_mode: str = "local"            # {"local", "global", "fixed"}
+    l_fixed: float = 1.0
+    local_lipschitz: LocalLipschitzConfig = field(default_factory=lambda: LocalLipschitzConfig(n_restarts=2, n_steps=5))
+    seed: int = 42
 
 
 class LipMambaTrainer:
-    """Single-process PAC-Bayes adversarial trainer."""
-
-    def __init__(
-        self,
-        model: nn.Module,
-        train_loader: DataLoader,
-        val_loader: DataLoader | None = None,
-        prior_params: torch.Tensor | None = None,
-        cfg: TrainerConfig | None = None,
-    ) -> None:
+    def __init__(self, model: nn.Module, train_loader: DataLoader, val_loader: DataLoader | None = None,
+                 prior_params: torch.Tensor | None = None, cfg: TrainerConfig | None = None) -> None:
         self.model = model
         self.train_loader = train_loader
         self.val_loader = val_loader
         self.cfg = cfg or TrainerConfig()
-        self.optimizer = build_optimizer(
-            model.parameters(),
-            lr=self.cfg.lr,
-            weight_decay=self.cfg.weight_decay,
-        )
-        self.scheduler = build_scheduler(
-            self.optimizer,
-            warmup_steps=self.cfg.warmup_steps,
-            max_steps=self.cfg.max_steps,
-        )
+        self.optimizer = build_optimizer(model.parameters(), lr=self.cfg.lr, weight_decay=self.cfg.weight_decay)
+        self.scheduler = build_scheduler(self.optimizer, warmup_steps=self.cfg.warmup_steps, max_steps=self.cfg.max_steps)
         self.prior_params = prior_params
         self.logger = get_logger("lipmamba.train")
-
         Path(self.cfg.out_dir).mkdir(parents=True, exist_ok=True)
-
-    # ------------------------------------------------------------------ #
-    # Inner step                                                          #
-    # ------------------------------------------------------------------ #
 
     def _attack_fn(self):
         kind = self.cfg.use_attack
@@ -92,115 +74,91 @@ class LipMambaTrainer:
             return None
         if kind == "pgd":
             from ..attacks.pgd import PGDAttack, PGDConfig
-            cfg = PGDConfig(**self.cfg.attack_kwargs)
-            attacker = PGDAttack(self.model, cfg)
-            return lambda model, batch: attacker.attack(batch["input_ids"], batch["labels"])
+            att = PGDAttack(self.model, PGDConfig(**self.cfg.attack_kwargs))
+            return lambda model, batch: att.attack(batch["input_ids"], batch["labels"])
         if kind == "hispa":
             from ..attacks.hispa import HiSPAAttack, HiSPAConfig
-            cfg = HiSPAConfig(**self.cfg.attack_kwargs)
-            attacker = HiSPAAttack(self.model, cfg)
-            return lambda model, batch: attacker.attack(batch["input_ids"])[0]
-        raise ValueError(f"unknown attack kind {kind!r}")
+            att = HiSPAAttack(self.model, HiSPAConfig(**self.cfg.attack_kwargs))
+            return lambda model, batch: torch.cat([model.embed_tokens(batch["input_ids"]).detach(),
+                                                   att.attack(batch["input_ids"])[0]], 1)
+        raise ValueError(kind)
+
+    def _lipschitz(self, batch: dict[str, torch.Tensor]) -> torch.Tensor:
+        mode = self.cfg.lipschitz_mode
+        dev = next(self.model.parameters()).device
+        if mode == "global":
+            return self.model.network_lipschitz_bound().to(dev)
+        if mode == "fixed":
+            return torch.tensor(self.cfg.l_fixed, device=dev)
+        if mode == "local":
+            emb = self.model.embed_tokens(batch["input_ids"]).detach()
+            was_training = self.model.training
+            l = local_lipschitz_estimate(self.model, emb, self.cfg.local_lipschitz)
+            self.model.train(was_training)
+            return l.detach()          # per-sample (B,)
+        raise ValueError(mode)
 
     def _step(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
         self.model.train()
-        device = next(self.model.parameters()).device
-        batch = {k: v.to(device) for k, v in batch.items()}
+        dev = next(self.model.parameters()).device
+        batch = {k: v.to(dev) for k, v in batch.items()}
+        l = self._lipschitz(batch)
 
         if self.cfg.use_margin_objective and self.model.cls_head is not None:
-            l_net = self.model.network_lipschitz_bound().to(device)
-            adv = margin_adversarial_loss(
-                self.model, batch, l_net=l_net, epsilon=self.cfg.epsilon_train
-            )
+            adv = margin_adversarial_loss(self.model, batch, l_net=l, epsilon=self.cfg.epsilon_train)
         else:
             adv = adversarial_loss(self.model, batch, self._attack_fn())
-            l_net = self.model.network_lipschitz_bound().to(device)
 
-        if self.prior_params is None:
-            # Cold start: prior == current parameters (KL ≈ 0)
-            prior = torch.zeros_like(
-                torch.cat([p.detach().reshape(-1) for p in self.model.parameters()])
-            )
-        else:
-            prior = self.prior_params
+        prior = self.prior_params
+        if prior is None:
+            from ..certificates.pac_bayes import flatten_constrained_parameters
+            prior = flatten_constrained_parameters(self.model).detach().clone()
+            self.prior_params = prior   # cold start: KL = 0 at step 0, grows with drift
 
-        components = pac_bayes_total_loss(
-            self.model,
-            batch,
-            empirical_adv_loss=adv,
-            l_net=l_net,
-            prior_params=prior,
-            cfg=self.cfg.pac_bayes,
-        )
-
-        loss = components["loss"]
+        comp = pac_bayes_total_loss(self.model, batch, empirical_adv_loss=adv,
+                                    l_net=l.mean() if l.dim() else l, prior_params=prior, cfg=self.cfg.pac_bayes)
+        loss = comp["loss"]
         self.optimizer.zero_grad(set_to_none=True)
         loss.backward()
         if self.cfg.grad_clip is not None:
             nn.utils.clip_grad_norm_(self.model.parameters(), self.cfg.grad_clip)
-        self.optimizer.step()
-        self.scheduler.step()
-
-        return {
-            "loss": float(loss.detach().item()),
-            "adv": float(components["adv_loss"].item()),
-            "kl": float(components["kl"].item()),
-            "lip": float(components["lipschitz_term"].item()),
-            "L_net": float(l_net.item()),
-        }
-
-    # ------------------------------------------------------------------ #
-    # Outer training loop                                                  #
-    # ------------------------------------------------------------------ #
+        self.optimizer.step(); self.scheduler.step()
+        return {"loss": float(loss), "adv": float(comp["adv_loss"]), "kl": float(comp["kl"]),
+                "lip": float(comp["lipschitz_term"]), "L": float(l.mean() if l.dim() else l)}
 
     def train(self) -> None:
         cfg = self.cfg
         step = 0
-        iterator = iter(self.train_loader)
+        it = iter(self.train_loader)
         while step < cfg.max_steps:
             try:
-                batch = next(iterator)
+                batch = next(it)
             except StopIteration:
-                iterator = iter(self.train_loader)
-                batch = next(iterator)
-            stats = self._step(batch)
-            step += 1
+                it = iter(self.train_loader); batch = next(it)
+            st = self._step(batch); step += 1
             if step % cfg.log_every == 0:
-                self.logger.info(
-                    "step=%d loss=%.4f adv=%.4f L_net=%.3f kl=%.2f",
-                    step, stats["loss"], stats["adv"], stats["L_net"], stats["kl"],
-                )
+                self.logger.info("step=%d loss=%.4f adv=%.4f L(%s)=%.3g kl=%.2f",
+                                 step, st["loss"], st["adv"], cfg.lipschitz_mode, st["L"], st["kl"])
             if step % cfg.eval_every == 0 and self.val_loader is not None:
-                self.evaluate(step=step)
+                self.evaluate(step)
             if step % cfg.save_every == 0:
-                save_checkpoint(
-                    self.model,
-                    self.optimizer,
-                    step=step,
-                    path=str(Path(cfg.out_dir) / f"step{step}.pt"),
-                )
+                save_checkpoint(self.model, self.optimizer, step=step, path=str(Path(cfg.out_dir) / f"step{step}.pt"))
         save_checkpoint(self.model, self.optimizer, step=step, path=str(Path(cfg.out_dir) / "final.pt"))
 
     @torch.no_grad()
     def evaluate(self, step: int | None = None) -> dict[str, float]:
         self.model.eval()
-        device = next(self.model.parameters()).device
-        ce = 0.0
-        n = 0
+        dev = next(self.model.parameters()).device
+        ce, n = 0.0, 0
         for batch in self.val_loader or []:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v.to(dev) for k, v in batch.items()}
             out = self.model(batch["input_ids"])
             if "cls_logits" in out:
-                logits = out["cls_logits"]
-                loss = nn.functional.cross_entropy(logits, batch["labels"])
+                loss = nn.functional.cross_entropy(out["cls_logits"], batch["labels"])
             else:
-                loss = nn.functional.cross_entropy(
-                    out["lm_logits"].reshape(-1, out["lm_logits"].size(-1)),
-                    batch["labels"].reshape(-1),
-                )
-            ce += float(loss.item()) * batch["input_ids"].size(0)
-            n += batch["input_ids"].size(0)
-        l_net = float(empirical_network_lipschitz(self.model))
-        ce_avg = ce / max(1, n)
-        self.logger.info("[eval] step=%s ce=%.4f L_net=%.3f", step, ce_avg, l_net)
-        return {"ce": ce_avg, "L_net": l_net}
+                loss = nn.functional.cross_entropy(out["lm_logits"].reshape(-1, out["lm_logits"].size(-1)),
+                                                   batch["labels"].reshape(-1))
+            ce += float(loss) * batch["input_ids"].size(0); n += batch["input_ids"].size(0)
+        res = {"ce": ce / max(1, n), "log10_L_global": self.model.log10_network_lipschitz_bound()}
+        self.logger.info("[eval] step=%s ce=%.4f log10(L_global)=%.1f", step, res["ce"], res["log10_L_global"])
+        return res

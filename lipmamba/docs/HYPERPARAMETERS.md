@@ -1,80 +1,82 @@
-# Hyperparameters Reference
+# Hyperparameters Reference (ICLR 2027 version)
 
-Every hyperparameter used by LipMamba, mapped to the location in the codebase
-where it is consumed.
+Every hyperparameter, mapped to where it is consumed.  Values are the
+manuscript's stated 130M defaults; see `docs/THEORY.md` for what those values
+imply numerically (ℓ\* ≈ 1, L_block ≈ 10⁸).
+
+## Constraint set (Assumption 1)
+
+| Symbol | Default | Code |
+| --- | --- | --- |
+| s_B, s_C | 1.0 | `SSMConfig.s_b`, `s_c` |
+| s_Δ | 0.5 | `SSMConfig.s_delta` |
+| s_out | 1.0 | `SSMConfig.s_out` |
+| Δ_min | 1e-3 | `SSMConfig.delta_min` (two-sided clamp, Eq. 2) |
+| Δ_max | 0.5 | `SSMConfig.delta_max` |
+| λ_min | 0.05 | `EigenReparamA.lambda_min` |
+| λ_max | 1.0 | `EigenReparamA.lambda_max` |
+| X_max | 1.0 | `InputNormClip.x_max` |
+| L_SiLU | 1.0998 | `certificates/constants.py::L_SILU` |
+| power-iteration steps | 1 | `SpectralNormLinear.n_power_iters` |
+| σ̂ safety margin for the certificate | 2 % | manuscript §3 (apply when reading `SpectralNormLinear.sigma`) |
+
+Derived (`ConstraintSet`): c = s_B Δ_max X_max², ρ_max = e^{−Δ_min λ_min},
+ρ_min = e^{−Δ_max λ_max}, H = c/(1−ρ_max), γ, L_block, ℓ\*.
 
 ## Architecture
 
-| Symbol     | Default | Where it lives in the code |
-| ---------- | ------- | -------------------------- |
-| `vocab_size` | 50257 | `LipMambaConfig.vocab_size` (`models/lipmamba_model.py`) |
-| `n_layers`  | 24    | per-variant override; see `configs/*.yaml` |
-| `d_model`   | 768   | as above |
-| `d_inner`   | 1536  | as above |
-| `state_dim` (N) | 16 | `SSMConfig.state_dim` (`models/selective_ssm.py`) |
-| `conv_kernel` | 4   | `LipMambaBlockConfig.conv_kernel` (`models/lipmamba_block.py`) |
-| `s_B` | 1.0 | `SSMConfig.s_b` |
-| `s_C` | 1.0 | `SSMConfig.s_c` |
-| `s_Δ` | 0.5 | `SSMConfig.s_delta` |
-| `s_out` | 1.0 | `SSMConfig.s_out` |
-| `Δ_max` | 0.5 | `SSMConfig.delta_max` |
-| `λ_min` | 0.05 | `EigenReparamA.lambda_min` |
-| `λ_max` | 1.0 | `EigenReparamA.lambda_max` |
-| `n_power_iters` | 1 | `SpectralNormLinear.n_power_iters` |
-| `track_lipschitz` | True | `SSMConfig.track_lipschitz` |
+| Variant | layers | d_model | d_inner | N | conv | vocab | base checkpoint |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| LipMamba-130M | 24 | 768 | 1536 | 16 | 4 | 50280 | `state-spaces/mamba-130m` |
+| LipMamba-370M | 48 | 1024 | 2048 | 16 | 4 | 50280 | `state-spaces/mamba-370m` |
+| LipMamba-1.3B | 48 | 2048 | 4096 | 16 | 4 | 50280 | `state-spaces/mamba-1.4b` |
 
-### Variant table
+## Certificates / PAC-Bayes (Theorem 3, Eq. 5)
 
-| Variant | Layers | d_model | d_inner | L_SSM cap |
-| ---     | ---    | ---     | ---     | --- |
-| LipMamba-130M | 24 | 768 | 1536 | 5.0 |
-| LipMamba-370M | 48 | 1024 | 2048 | 8.0 |
-| LipMamba-1.3B | 64 | 2048 | 4096 | 12.0 |
-
-## PAC-Bayes / certificates
-
-| Symbol | Default | Where it lives |
+| Symbol | Default | Code |
 | --- | --- | --- |
-| `ε_train` | 0.18 | `TrainerConfig.epsilon_train`, `GloroNetHead.epsilon_train` |
-| `δ` | 0.05 | `PACBayesConfig.delta` |
-| `σ_post` | 0.05 | `PACBayesConfig.sigma_post` |
-| `σ_prior` | 0.10 | `PACBayesConfig.sigma_prior` |
-| `β` | 1.0 | `PACBayesConfig.beta` |
+| ε_train | 0.18 | `TrainerConfig.epsilon_train`, `GloroNetHead.epsilon_train` |
+| δ | 0.05 | `PACBayesConfig.delta` |
+| σ (posterior) | 0.04 | `PACBayesConfig.sigma_post` |
+| σ₀ (prior) | 0.10 | `PACBayesConfig.sigma_prior` |
+| β | 1.0 | `PACBayesConfig.beta` |
+| L_ℓ | 1.0 | `PACBayesConfig.l_ell` |
+| ½ factor in Eq. 5 | on | `PACBayesConfig.objective_half` |
+| n (bound instantiation) | 10⁷ | `PACBayesConfig.n_train` |
+| prior split | 5 % clean held-out | `certificates/prior_fitting.py` |
 
-## Optimiser / schedule
+## Local Lipschitz estimator (Appendix E)
 
-| Symbol | Default | Where it lives |
+| Field | Default | Code |
 | --- | --- | --- |
-| Optimiser | AdamW | `training/optim.build_optimizer` |
-| Learning rate | 2e-4 | `TrainerConfig.lr` |
-| Weight decay | 0.1 | `TrainerConfig.weight_decay` |
-| Betas | (0.9, 0.95) | `optim.build_optimizer` |
-| LR scheduler | Cosine + linear warmup | `optim.CosineWithWarmup` |
-| Warmup steps | 1 000 | `TrainerConfig.warmup_steps` |
-| Max steps | 100 000 (130M) | `TrainerConfig.max_steps` |
-| Min LR ratio | 0.1 | `optim.CosineWithWarmup.min_lr_ratio` |
-| Gradient clip | 1.0 | `TrainerConfig.grad_clip` |
+| radius r | 0.3 (embedding space) | `LocalLipschitzConfig.radius` |
+| PGD steps | 20 | `LocalLipschitzConfig.n_steps` |
+| random starts | 8 | `LocalLipschitzConfig.n_restarts` |
+| Lipschitz mode in training | local | `TrainerConfig.lipschitz_mode` |
 
-## Adversarial / attack defaults
+## Optimiser
 
-| Field | Default | Where it lives |
+| Field | Default | Code |
 | --- | --- | --- |
-| `epsilon_train` | 0.18 | `TrainerConfig`, `PACBayesConfig` |
-| PGD steps | 20 (sweep ∈ {10, 20, 40}) | `attacks/pgd.PGDConfig.n_steps` |
-| PGD step size | ε / 4 | `PGDConfig.step_size` |
-| HiSPA trigger length | 16 | `HiSPAConfig.trigger_length` |
-| HiSPA n_steps | 200 | `HiSPAConfig.n_steps` |
-| HiSPA target α | 0.05 | `HiSPAConfig.target_alpha` |
+| AdamW lr / wd / betas | 2e-4 / 0.1 / (0.9, 0.95) | `training/optim.py` |
+| schedule | cosine, linear warm-up | `optim.CosineWithWarmup` |
+| grad clip | 1.0 | `TrainerConfig.grad_clip` |
+| epochs | 100 | manuscript; `max_steps` in configs |
+| seeds | {42, 137, 2026} | `scripts/regenerate_all.py` |
+| hardware | 4 × A100 80 GB | manuscript |
 
-## Operational (robustidps.ai)
+## Attacks
 
-| Symbol | Default | Description |
+| Field | Default | Code |
 | --- | --- | --- |
-| MC dropout T | 20 (1 in fast mode) | `unified_model.py` |
-| EWC β | 0.7 | Fisher information sharing |
-| RAG poisoning τ | 0.82 | embedding similarity threshold |
-| Detection throughput target | 12 000 flows/sec | per-CPU goal |
-| Per-flow latency | 0.5–8.7 ms | SLA spec |
+| HiSPA trigger lengths | {4, …, 48}; PACC at ℓ = 24 | `HiSPAConfig.trigger_length` |
+| target α | 0.05 (success), α_min = 0.5 (Theorem 2) | `HiSPAConfig.target_alpha`, `ell_star(alpha_min)` |
+| M-HiSPA GA | pop 64, 50 gen, mutation 0.1, tournament 4 | `HiSPAConfig` |
+| PGD | ε ∈ [0.05, 0.30], 40 steps, step ε/4 | `PGDConfig` |
+| adaptive clamp attack | 200 steps, lr 0.05, budget 1.0, GCG top-k 64 | `AdaptiveClampConfig` |
+| randomized smoothing | σ 0.25, n₀ 64, n 512, α 0.001 | `SmoothingConfig` |
 
-The full operational hyperparameter set is documented in
-[`ROBUSTIDPS_INTEGRATION.md`](ROBUSTIDPS_INTEGRATION.md).
+## Metrics
+
+ACC, PACC (HiSPA ℓ = 24), ASR (HarmBench-CLS), LL-Acc@ε under L_loc, ECE (15 bins), latency/token;
+Friedman + Holm post-hoc, Wilcoxon with rank-biserial r (`evaluation/stats.py`).

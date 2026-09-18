@@ -29,7 +29,13 @@ from lipmamba.utils import set_seed
 
 
 def build_model(model_cfg: dict) -> LipMambaModel:
+    import dataclasses
+    model_cfg = dict(model_cfg)
     variant = model_cfg.pop("variant", None)
+    known = {f.name for f in dataclasses.fields(LipMambaConfig)}
+    unknown = {k: model_cfg.pop(k) for k in list(model_cfg) if k not in known}
+    if unknown:
+        print(f"[build_model] ignoring unknown model keys: {sorted(unknown)}")
     if variant == "lipmamba_130m":
         cfg = LipMambaConfig.lipmamba_130m(**model_cfg)
     elif variant == "lipmamba_370m":
@@ -93,9 +99,10 @@ def main() -> None:
     elif torch.cuda.is_available():
         model.to("cuda")
 
-    trainer_cfg = TrainerConfig(
-        **{**cfg["trainer"], "pac_bayes": PACBayesConfig(**cfg["pac_bayes"])}
-    )
+    from lipmamba.certificates.local_lipschitz import LocalLipschitzConfig
+    tr = dict(cfg["trainer"])
+    ll = LocalLipschitzConfig(**tr.pop("local_lipschitz", {}))
+    trainer_cfg = TrainerConfig(**{**tr, "pac_bayes": PACBayesConfig(**cfg["pac_bayes"]), "local_lipschitz": ll})
     trainer = LipMambaTrainer(
         model=model,
         train_loader=train_loader,

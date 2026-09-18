@@ -1,66 +1,61 @@
-# LipMamba — Methodology
+# LipMamba — Methodology (ICLR 2027 version)
 
-This file expands on the algorithms used during training and evaluation,
-written so that the reader can follow each step in the source code.
-
-## Algorithm 1 — Lipschitz-Constrained Selective Forward Pass
+## Algorithm 1 — forward pass with online tracking of the analytical constant
 
 ```
-Inputs : x_t ∈ R^{d_model},  hidden state h_{t-1} ∈ R^{N},
-         spectral budgets (s_B, s_C, s_Δ, s_out),
-         eigenvalue interval [λ_min, λ_max], Δ_max.
-Output : y_t ∈ R^{d_model},  updated hidden state h_t.
-
-1.  W̄_•  ← W_• · min(1, s_• / σ̂_max(W_•))    for • ∈ {B, C, Δ, out}      (spectral_norm.py)
-2.  α    ← logits ;  λ ← λ_min + (λ_max - λ_min) · σ(α)                   (eigen_reparam.py)
-3.  A    ← -diag(λ)
-4.  Δ_t  ← Δ_max · tanh( softplus(W̄_Δ x_t + τ) / Δ_max )                  (clipped_delta.py)
-5.  Ā_t  ← exp(Δ_t ⊙ A) ;  B̄_t  ← Δ_t ⊙ (W̄_B x_t)
-6.  h_t  ← Ā_t ⊙ h_{t-1} + B̄_t · x_t                                      (selective_ssm.py)
-7.  y_t  ← W̄_out · ( SiLU(C̄_t^T h_t) )
-8.  Update online Lipschitz tracker  L_t ← ρ_t · L_{t-1} + s_C s_out L_SiLU (β_t + s_B)
+Require: tokens x_1..x_L, params {W_B, W_C, W_Δ, α, W_out}, budgets (s_B,s_C,s_Δ,s_out),
+         (λ_min,λ_max), (Δ_min,Δ_max), X_max
+ 1: W̄_• ← W_• · min(1, s_•/σ̂_max^PI(W_•))                         (spectral_norm.py)
+ 2: A ← −diag(λ_min + (λ_max−λ_min)σ(α)); ρ_max ← e^{−Δ_min λ_min}; H ← s_B Δ_max X_max²/(1−ρ_max)
+ 3: h_0 ← 0; D_0 ← 0
+ 4: for t = 1..L:
+ 5:    x_t ← x_t · min(1, X_max/‖x_t‖)                                  (input_clip.py, Assumption 1)
+ 6:    Δ_t ← Δ_min + (Δ_max−Δ_min) tanh(softplus(W̄_Δ x_t + τ)/(Δ_max−Δ_min))   (clipped_delta.py)
+ 7:    B_t ← W̄_B x_t; C_t ← W̄_C x_t; Ā_t ← exp(Δ_t A); B̄_t ← Δ_t B_t
+ 8:    h_t ← Ā_t h_{t−1} + B̄_t x_t;  y_t ← W̄_out SiLU(C_tᵀ h_t)
+ 9:    γ_t ← 2 s_B Δ_t X_max + s_Δ(λ_max ‖h_{t−1}‖ + s_B X_max);  D_t ← ‖Ā_t‖₂ D_{t−1} + γ_t
+10: L_block ← s_out L_SiLU s_C (X_max max_t D_t + max_t ‖h_t‖)        (data-dependent refinement)
+11: return y_{1:L}, L_block, margin z_ŷ − max_{k≠ŷ} z_k
 ```
 
-## Algorithm 2 — PAC-Bayesian Adversarial Training
+Implementation: `SelectiveSSM.forward` records `ScanTrace(delta, a_bar_max,
+a_bar_min, injection_norm, h_norm, d_t)`; `data_dependent_block_bound()`
+evaluates line 10.  The worst-case (input-free) constant is
+`ConstraintSet.l_block`; the data-dependent one is always ≤ it.
+
+## Algorithm 2 — PAC-Bayes adversarial training (Eq. 5)
 
 ```
-Inputs : data S = {(x_i, y_i)}_{i=1}^n, epochs E, ε_train, β, δ.
-1.  Fit data-dependent prior θ_prior on a 5% clean held-out split (no
-    adversarial perturbation, no Lipschitz penalty)                        (prior_fitting.py)
-2.  Initialise posterior parameters θ from θ_prior, set σ_post (default 0.05).
-3.  for epoch = 1, …, E:
-       for batch (x, y) in DataLoader(S):
-         (a) compute logits z(x) (forward pass)
-         (b) margin-augmented loss
-                z̃_K = max_{k≠ŷ} z_k(x) + √2 · L_net · ε_train             (glorot_head.py)
-                L̂_S^{adv} = CE([z, z̃_K], y)
-         (c) Lipschitz penalty   L_lip      = L_SSM(θ) · ε_train / 2
-         (d) PAC-Bayes complexity L_complex = β · sqrt((KL(Q‖P) + ln(2√n/δ)) / 2n)
-         (e) total loss          L = L̂_S^{adv} + L_lip + L_complex        (pac_objective.py)
-         (f) backprop, AdamW step, gradient clipped to ‖·‖ ≤ 1.0
-         (g) refresh σ̂ via single-step power iteration                     (spectral_norm.py)
-4. return checkpoint.
+ 1: fit prior θ_prior on a 5 % clean held-out split (clean CE, no margin, no penalty)   (prior_fitting.py)
+ 2: θ ← θ_prior; σ ← 0.04, σ₀ ← 0.10
+ 3: for each mini-batch (x, y):
+ 4:    L ← L_loc(x)  (Appendix E: r = 0.3, 20 PGD steps, 8 starts)   [or global / fixed, for ablation]
+ 5:    z ← logits;  z̃_K ← max_{k≠ŷ} z_k + √2 L ε_train;  L̂_adv ← CE([z, z̃_K], y)      (glorot_head.py)
+ 6:    L_lip ← ½ L_ℓ L ε_train
+ 7:    L_KL  ← β sqrt((KL(N(θ,σ²I) ‖ N(θ_prior,σ₀²I)) + ln(2√n/δ)) / 2n)
+ 8:    loss ← L̂_adv + L_lip + L_KL;  backprop; clip ‖g‖ ≤ 1; AdamW; cosine LR
+ 9:    (σ̂ refreshed by one-step power iteration inside every forward)
 ```
 
-## Hyperparameters Used in the Paper
+Implementation: `training/trainer.py` (`lipschitz_mode`), `training/pac_objective.py`.
 
-The full table is in [`HYPERPARAMETERS.md`](HYPERPARAMETERS.md); summary:
+## Evaluation protocol (Section 5)
 
-| Symbol | Value | Description |
-| --- | --- | --- |
-| `s_B`         | 1.0  | spectral budget on `W_B` |
-| `s_C`         | 1.0  | spectral budget on `W_C` |
-| `s_Δ`         | 0.5  | spectral budget on `W_Δ` |
-| `s_out`       | 1.0  | spectral budget on output projection |
-| `Δ_max`       | 0.5  | clipping ceiling for Δ_t |
-| `λ_max`       | 1.0  | upper eigenvalue bound |
-| `λ_min`       | 0.05 | lower eigenvalue bound |
-| `ε_train`     | 0.18 | adversarial radius used in margin term |
-| `δ`           | 0.05 | PAC-Bayes confidence |
-| `σ_post`      | 0.05 | posterior std |
-| `σ_prior`     | 0.10 | prior std |
-| `β`           | 1.0  | weight on PAC-Bayes complexity term |
-| Optimiser     | AdamW | lr = 2e-4, wd = 0.1 |
-| LR schedule   | Cosine, 100 epochs | linear warm-up |
-| Grad clip     | 1.0  | norm-clipping |
-| Hardware      | 4 × A100 80GB | for 130M / 370M / 1.3B |
+* **ACC** clean accuracy; **PACC** accuracy under HiSPA at ℓ = 24 (Z-HiSPA, M-HiSPA
+  *and* the adaptive clamp attack — worst case over the three);
+* **ASR** on HarmBench with HarmBench-CLS;
+* **LL-Acc@ε** fraction correctly classified with margin/(√2 L_loc) ≥ ε — reported
+  next to the same quantity under the global constant (≈ 0) so the scope is visible;
+* **ECE** 15 bins; **latency** per token;
+* three seeds {42, 137, 2026}; Friedman over methods × seeds, Holm post-hoc,
+  Wilcoxon with rank-biserial r.
+
+Scripts: `todo4_gloro_mamba_baseline.py` (Table 1 rows + stats),
+`todo2_adaptive_attack.py` (adaptive column), `todo1_ell_star.py` (Fig. 4),
+`todo5_fig2_lipschitz_depth.py` (Fig. 2), `perplexity_overhead.py` (Fig. 3).
+
+## Ablations (Table 3)
+
+Configuration presets in `configs/ablations.yaml` / `lipmamba.baselines.ablate`:
+no spectral norm, no clamp (vanilla softplus), free A, no GloRo head, no
+PAC-Bayes term, no adversarial/margin term, N(0, I) prior, Δ_max ∈ {0.25, 0.5, 1, 2}.

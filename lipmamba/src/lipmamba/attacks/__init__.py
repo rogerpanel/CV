@@ -1,13 +1,11 @@
-"""Hidden-state poisoning, PGD, and jailbreak attacks."""
+"""Attacks: HiSPA (Z/M/continuous), adaptive clamp attack, PGD, jailbreak, greedy search."""
+from .adaptive_clamp import AdaptiveClampAttack, AdaptiveClampConfig
 from .hispa import HiSPAAttack, HiSPAConfig
-from .pgd import PGDAttack
 from .jailbreak import JailbreakHarness
-from .trigger_search import GreedyDiscreteTriggerSearch
+from .pgd import PGDAttack, PGDConfig
+from .trigger_search import GreedyDiscreteTriggerSearch, GreedySearchConfig
 
 __all__ = [
-    "HiSPAAttack",
-    "HiSPAConfig",
-    "PGDAttack",
-    "JailbreakHarness",
-    "GreedyDiscreteTriggerSearch",
+    "AdaptiveClampAttack", "AdaptiveClampConfig", "HiSPAAttack", "HiSPAConfig",
+    "JailbreakHarness", "PGDAttack", "PGDConfig", "GreedyDiscreteTriggerSearch", "GreedySearchConfig",
 ]

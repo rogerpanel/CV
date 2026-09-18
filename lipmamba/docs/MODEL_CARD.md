@@ -2,67 +2,52 @@
 
 ## Overview
 
-LipMamba is a Lipschitz-constrained selective state-space language model
-trained with a PAC-Bayesian adversarial objective.  Its distinguishing
-feature is a *certified* defence against hidden-state-poisoning triggers
-(Section 5 of the paper).
+Lipschitz-constrained selective state-space language model trained with a
+PAC-Bayes adversarial objective, with a two-sided clamp on the discretisation
+step that removes the HiSPA collapse mechanism Ā_t → 0.
 
-* **Architectures**: 130M, 370M, 1.3B parameters.
-* **Pre-training corpora**: SlimPajama-627B (1.3B), The Pile (370M),
-  WikiText-103 (130M).
-* **Adversarial fine-tuning**: RoBench-25 (HiSPA family), AdvBench,
-  HarmBench, JailbreakBench.
-* **License**: MIT — see [`LICENSE`](../LICENSE).
+* **Variants**: 130M (24 layers), 370M (48 layers); 1.3B configuration provided, not trained.
+* **Base checkpoints**: `state-spaces/mamba-130m` / `-370m` (The Pile, GPT-NeoX tokenizer), converted by `scripts/todo3_init_from_hf_mamba.py`.
+* **Fine-tuning / evaluation**: RoBench-25, HarmBench, JailbreakBench, WildJailbreak; IDS transfer in Appendix F.
+* **License**: MIT.
 
-## Intended Use
+## What is guaranteed, and what is not (Remarks 4 and 5)
 
-1. Research on certified robustness for selective state-space models.
-2. As a defensive component in `robustidps.ai`-class IDPS deployments.
-3. Pedagogical reference implementation for the LipMamba paper.
+* Theorem 1 gives an explicit but **non-tight global** Lipschitz constant on
+  the bounded-input domain; with the stated constants it is ≈ 10⁸ per block,
+  so any radius under it is vacuous.  Reported radii are **empirical
+  local-Lipschitz radii (LL-Acc)**, not certificates.
+* Theorem 2 bounds state **norm**, not content.  With the stated constants
+  the certified trigger length is ℓ\* ≈ 1 token; an adversary can overwrite
+  content at unchanged norm (measured by `attacks/adaptive_clamp.py`, objective `overwrite`).
+* Theorem 3 is instantiated with the local estimate; it is a bound
+  conditional on L_loc upper-bounding the true local constant on the sampled balls.
 
-## Out-of-scope Use
+## Results as reported in the manuscript (Table 1; three seeds; **regenerate before quoting**)
 
-LipMamba is not a finished safety-aligned LLM — it is a robustness
-*primitive*.  It must be combined with the rest of the robustidps.ai stack
-(content filters, RAG-poisoning defence, RLHF) for production use.
+| Method | ACC | PACC (HiSPA ℓ=24) | ASR ↓ | LL-Acc@0.18 | ECE ↓ |
+| --- | --- | --- | --- | --- | --- |
+| Mamba (unconstrained) | 89.7 | 23.4 | 92.1 | 19.2 | 0.058 |
+| GloRo-Mamba (head only) | placeholder — produce with `scripts/todo4_gloro_mamba_baseline.py` or delete | | | | |
+| CLASP | 89.7 | 67.1 | 38.5 | — | — |
+| SpectralGuard (Bonetto 2026) | 89.4 | 71.4 | 35.6 | — | — |
+| LipMamba-130M | 90.8 | 82.7 | 32.4 | 77.1 | 0.038 |
+| LipMamba-370M | 91.9 | 85.3 | 30.9 | 80.4 | 0.034 |
 
-## Evaluation Summary
+These numbers come from the manuscript, not from a run of this repository;
+the scripts under `scripts/todo*.py` regenerate them from the seeds
+{42, 137, 2026}.  PACC must additionally be evaluated under the adaptive
+attack (`todo2_adaptive_attack.py`) before it can be described as worst-case.
 
-| Variant       | WikiText-103 PPL | HarmBench ASR | RoBench-25 ASR | Certified ε\* |
-| ------------- | ---------------- | ------------- | -------------- | ------------- |
-| LipMamba-130M | 19.6             |  6.1 %        |  4.0 %         | 0.18          |
-| LipMamba-370M | 17.1             |  5.4 %        |  3.7 %         | 0.18          |
-| LipMamba-1.3B | 14.2             |  4.6 %        |  3.0 %         | 0.18          |
-| Mamba-130M (baseline) | 18.7    | 87.3 %        | 92.0 %         | 0.04          |
+## Intended use
 
-Numbers are reported in the manuscript and reproduced by
-`scripts/evaluate.py` + `scripts/certify.py` + `scripts/attack.py`.
+Research on robustness of selective SSMs; a defensive primitive, not a
+stand-alone safeguard.  The attack code is for evaluating one's own systems.
 
 ## Limitations
 
-* The published Lipschitz bound is a worst-case estimate; the empirical
-  Lipschitz constant is typically 30–60 % smaller.
-* The certified radius ε\* applies to ℓ₂ embedding-space perturbations
-  (GloroNet convention).  For discrete token-substitution attacks, see the
-  greedy-search robustness numbers in Appendix C.3 of the paper.
-* Pre-training data inherits all biases of SlimPajama / The Pile; users
-  should run dedicated bias evaluations before downstream deployment.
-
-## Ethical Considerations
-
-The HiSPA attack toolkit is included to enable defensive research and
-red-teaming of *your own* systems.  Do not use it against systems you do
-not have explicit permission to test.
-
-## Citing
-
-```bibtex
-@article{anaedevha2026lipmamba,
-  author  = {Anaedevha, Roger Nick},
-  title   = {LipMamba: Lipschitz-Constrained Selective State-Space Models with
-             PAC-Bayesian Certificates for Certified Robustness Against Hidden
-             State Poisoning in Language Models},
-  year    = {2026},
-  url     = {https://github.com/rogerpanel/CV/tree/main/lipmamba}
-}
-```
+* Global certificate vacuous at depth; local radii are empirical.
+* Retention bound is per-input and, for the stated constants, ≈ 1 token.
+* HiSPA, CLASP, SpectralGuard, RoBench-25 are unrefereed 2026 preprints.
+* The HarmBench-CLS classifier is not bundled (licence); the rule-based
+  stand-in in `attacks/jailbreak.py` is for unit tests only.

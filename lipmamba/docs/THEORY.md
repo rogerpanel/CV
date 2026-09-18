@@ -1,109 +1,131 @@
-# LipMamba — Theoretical Foundations
+# LipMamba — Theoretical Foundations (ICLR 2027 version)
 
-This document records the three central theorems of the LipMamba paper and the
-quantities the code base computes to enforce / verify them. Notation follows
-the manuscript (`lipmamba_injoit.tex`).
+This document states the results exactly as in the corrected manuscript
+(`lipmamba_iclr2027.tex`) and points to the code that computes each
+quantity.  Every constant below is produced by
+`lipmamba.certificates.constants.ConstraintSet`; run
+`python scripts/report_constants.py` to print them for any configuration.
 
-## 1. Lipschitz-Bounded Selective SSM Block (Theorem 1)
+## Assumption 1 (bounded inputs, constrained parameters)
 
-For a single LipMamba block with spectral budgets `(s_B, s_C, s_Δ, s_out)`,
-clipped step-size `Δ_max`, and bounded eigenvalue interval
-`λᵢ(A) ∈ [-λ_max, -λ_min]`, the block-level Lipschitz constant satisfies
+* ‖x_t‖₂ ≤ X_max for all t — **enforced by construction** by the projection
+  `InputNormClip` at the SSM input (`models/input_clip.py`); it is
+  1-Lipschitz so it does not change any constant.
+* ‖W̄_•‖₂ ≤ s_• for • ∈ {B, C, Δ, out} — `SpectralNormLinear`.
+* λ_i(A) ∈ [−λ_max, −λ_min], λ_min > 0 — `EigenReparamA`.
+* Δ_t ∈ [Δ_min, Δ_max], Δ_min > 0 — the **two-sided clamp** (Eq. 2)
 
-```
-L_block ≤ s_out · L_SiLU · [
-    s_C · (s_B · Δ_max) / (1 - ρ_max)
-  + s_C · ‖h‖_∞ · s_Δ · Δ_max / (1 - ρ_max)
-]
-```
+      Δ_t = Δ_min + (Δ_max − Δ_min) · tanh( softplus(W̄_Δ x_t + τ) / (Δ_max − Δ_min) )
 
-with `ρ_max = exp(-Δ_min · λ_min) < 1` and `L_SiLU ≈ 1.0998`.
-The *network* Lipschitz constant `L_net` is the product of per-block bounds.
-The online tracker in `certificates/lipschitz.py` updates a running estimate
+  (`models/clipped_delta.py`), smooth and 1-Lipschitz in its pre-activation.
 
-```
-L_t = ρ_t · L_{t-1} + s_C · s_out · L_SiLU · (β_t + s_B)
-```
+Derived constants:
 
-where `ρ_t = ‖Ā_t‖₂` and `β_t = ‖B̄_t‖₂` are computed from the discretised
-matrices each step.
+    c      = s_B Δ_max X_max²                (per-step injection bound ‖B̄_t x_t‖ ≤ c)
+    ρ_max  = exp(−Δ_min λ_min)  < 1          (upper bound on ‖Ā_t‖₂)
+    ρ_min  = exp(−Δ_max λ_max)  > 0          (lower bound on σ_min(Ā_t))
 
-## 2. Certified Hidden-State Poisoning Immunity (Theorem 2)
+Because A is real diagonal, Ā_t = diag(e^{Δ_t a_i}) and its spectral radius,
+largest and smallest singular values coincide with max_i / min_i e^{Δ_t a_i}
+(audit item G: this is why "spectral radius" and "smallest singular value"
+are interchangeable *only* under diagonal A; the code records both,
+`ScanTrace.a_bar_max` / `a_bar_min`).
 
-Let `τ = (τ₁,…,τ_ℓ)` be a trigger sequence. The poisoned hidden state obeys
+## Lemma 1 (bounded state)
 
-```
-‖h_{t₀+ℓ}‖₂ ≥ ρ_min^ℓ · ‖h_{t₀}‖₂
-            − (B̄_max · X_max) · (1 − ρ_min^ℓ) / (1 − ρ_min)
-```
+    ‖h_t‖₂ ≤ H := c / (1 − ρ_max)      for all t, all inputs, h_0 = 0.
 
-so an `(α, ℓ)`-poisoning attack with α ≪ 1 is impossible whenever the lower
-bound exceeds α. The maximum trigger length tolerated is
+The lower clamp is the reason this exists: Δ_min = 0 ⇒ ρ_max = 1 ⇒ no H.
+This is the error-explosion regime of Qi et al. (NeurIPS 2024).
+Code: `ConstraintSet.H`; verified at run time by `ScanTrace.h_norm ≤ H`
+(`tests/test_attacks_and_local.py::test_scan_trace_records_bounds_within_theory`).
 
-```
-ℓ* ≤ log( α_min + B̄_max·X_max / ((1 − ρ_min) · ‖h_{t₀}‖) ) / log(ρ_min).
-```
+## Theorem 1 (Lipschitz constant of the selective scan)
 
-`certificates/poisoning_immunity.py` evaluates this for any trained model and
-returns the per-position certified trigger budget.
+    ‖f_block(x) − f_block(x′)‖ ≤ L_block ‖x − x′‖,
+    L_block = s_out L_SiLU s_C ( X_max γ / (1 − ρ_max) + H ),
+    γ       = 2 s_B Δ_max X_max + s_Δ (λ_max H + s_B X_max),
+    L_SSM  ≤ ∏_i L_block^{(i)}          (N blocks; × (1 + L_block) per block if the block has a residual).
 
-## 3. PAC-Bayesian Adversarial Bound (Theorem 3)
+The ‖h‖_∞ term of the old version is replaced by the *derived* constant H
+(audit item A).  No tightness claim (item C).  Code: `ConstraintSet.l_block`,
+`l_network`; online data-dependent refinement of Algorithm 1 in
+`SelectiveSSM.forward` (accumulator D_t) and `data_dependent_block_bound()`.
 
-Posterior `Q = N(θ, σ²I)` over the constrained parameters, prior
-`P = N(θ_prior, σ₀²I)` fitted on a clean held-out split:
+### Remark 4 (scope) — and a numerical warning the manuscript must address
 
-```
-E_{θ~Q}[L_adv(θ; ε)] ≤ E_{θ~Q}[L̂_S^{adv}(θ; ε)]
-                     + L_SSM(θ) · ε / 2
-                     + sqrt( ( KL(Q‖P) + ln(2√n / δ) ) / (2n) ).
-```
+With the manuscript's own 130M constants
+(s_B = s_C = 1, s_Δ = 0.5, Δ_min = 10⁻³, Δ_max = 0.5, λ_min = 0.05, λ_max = 1, X_max = 1):
 
-Training jointly minimises empirical adversarial risk, the Lipschitz term
-(implicitly through margin-augmented training), and the Gaussian KL.
+| quantity | value |
+| --- | --- |
+| ρ_max | 0.99995 |
+| 1/(1 − ρ_max) | 2.0 × 10⁴ |
+| H | 1.0 × 10⁴ |
+| γ | 5.0 × 10³ |
+| **L_block** | **1.1 × 10⁸** |
+| L_SSM at 24 blocks | 10¹⁹³ |
 
-## Margin-Augmented Logit (Eq. 16)
+So Figure 2's "∼10¹⁰ at 24 layers" is **not** the worst-case Theorem-1
+product; only the *data-dependent* Algorithm-1 quantity (observed ‖Ā_t‖ and
+‖h_t‖ instead of ρ_max and H) can be of that order.  The figure caption and
+Remark 4 must say which curve is plotted.  `scripts/todo5_fig2_lipschitz_depth.py`
+computes and plots both, plus the operator-norm product and the
+attack-based lower estimate, so the four are never conflated again.
 
-For multiclass classification with predicted class `ŷ` and logits `z(x)`,
-training uses
+To bring the *worst-case* per-block constant to O(10) one needs
+1 − ρ_max = O(0.1–1), i.e. Δ_min λ_min ≈ 0.1–0.7 (e.g. Δ_min = 0.25, λ_min = 1
+gives L_block ≈ 16; Δ_min = 0.5, λ_min = 1 gives ≈ 7.4).  Those constraints
+change the model materially; whether they are acceptable is an empirical
+question the sweep in `report_constants.py` lets you answer before training.
 
-```
-z̃_K = max_{k ≠ ŷ} z_k(x) + sqrt(2) · L_net · ε_train
-```
+## Theorem 2 (state-retention bound)  — formerly "poisoning immunity"
 
-and the corresponding cross-entropy. At inference, the per-input certified
-radius (GloroNet-style) is
+    ‖h_{t0+ℓ}‖₂ ≥ ρ_min^ℓ ‖h_{t0}‖₂ − c (1 − ρ_min^ℓ)/(1 − ρ_min)
+    κ  := c / ((1 − ρ_min) ‖h_{t0}‖₂)
+    ℓ* := log((α_min + κ)/(1 + κ)) / log(ρ_min)          (> 0 for α_min < 1)
 
-```
-ε*(x) = ( z_{ŷ} − max_{k ≠ ŷ} z_k ) / ( sqrt(2) · L_net ).
-```
+The (1 + κ) denominator was missing in the old inversion (audit item F).
+Code: `ConstraintSet.retention_lower_bound`, `ell_star`;
+per-input distribution `certificates/poisoning_immunity.py::ell_star_distribution`;
+data-dependent version from a `ScanTrace`: `ell_star_from_trace`.
 
-Implementation: `models/glorot_head.py`, `certificates/certified_radius.py`.
+### Remark 5 — what it certifies, and the number
 
-## Spectral Normalisation (Power Iteration)
+Norm, not content (audit item E).  The adaptive `overwrite` objective in
+`attacks/adaptive_clamp.py` is the adversary this remark describes; the demo
+already shows it moving the state by > 1 relative unit while keeping the norm.
 
-Each constrained projection is rescaled every step:
+With (s_B, Δ_max, λ_max, X_max, α_min, ‖h_{t0}‖) = (1, 0.5, 1, 1, 0.5, 4):
+ρ_min = 0.607, κ = 0.318, **ℓ* = 0.95** — the TODO in Remark 5 is confirmed.
+ℓ* ≈ 24 at α_min = 0.5 requires Δ_max λ_max ≤ 0.029 (κ → 0), i.e. about 17×
+smaller than the stated 0.5.  `scripts/todo1_ell_star.py` prints the
+(Δ_max, λ_max) sweep, the per-input distribution and the pgfplots command for
+the corrected Figure-4 shaded region.
 
-```
-W̄_•  ← W_• · min(1, s_• / σ̂_max(W_•)),    • ∈ {B, C, Δ, out}.
-```
+## Theorem 3 (PAC-Bayes bound on adversarial risk)
 
-`σ̂_max` is the one-step power-iteration estimate with running-average
-smoothing — see `models/spectral_norm.py`.
+    E_Q[L_adv(θ;ε)] ≤ E_Q[L̂_S(θ)] + E_Q[L_ℓ L(θ)] ε + sqrt((KL(Q‖P) + ln(2√n/δ))/(2n)).
 
-## Eigenvalue Reparameterisation
+L_ℓ (loss Lipschitz constant in the logits) is now explicit
+(`PACBayesConfig.l_ell`).  Training objective (Eq. 5) uses ½ L_ℓ L_loc ε_train
+(`PACBayesConfig.objective_half`).  With the global constant of Theorem 1 the
+middle term is vacuous; the code instantiates it with L_loc.
+Code: `certificates/pac_bayes.py`.
 
-```
-A = -diag( λ_min + (λ_max − λ_min) · σ(α) ).
-```
+## Appendix E — local Lipschitz estimator
 
-Sigmoid keeps every diagonal entry strictly inside `(λ_min, λ_max)`. See
-`models/eigen_reparam.py`.
+    L_loc(x) = max_{k≠ŷ} max_{x′∈B(x,r)} ‖∇_{x′}(z_ŷ − z_k)(x′)‖₂ / √2,
+    r = 0.3, 20 PGD steps, 8 random starts.
 
-## Clipped Discretisation
+A *lower* estimate of the true local constant ⇒ ε*(x) = margin/(√2 L_loc) is an
+*empirical local-Lipschitz radius*, and LL-Acc@ε is **not** a certificate.
+Code: `certificates/local_lipschitz.py`; metric `evaluation/ll_acc.py`, which
+also reports the (≈ 0) accuracy under the global constant next to it.
 
-```
-Δ_t = Δ_max · tanh( softplus(W̄_Δ x_t + τ) / Δ_max ).
-```
+## GloRo head (Leino et al. 2021)
 
-`softplus` keeps `Δ_t > 0`; `tanh` smooth-saturates to `Δ_max`. Implementation:
-`models/clipped_delta.py`.
+    ε*(x) = (z_ŷ − max_{k≠ŷ} z_k) / (√2 L),     z̃_K = max_{k≠ŷ} z_k + √2 L ε_train.
+
+Code: `models/glorot_head.py`.  The "⊥" logit is appended as an extra class
+(the original GloRo construction) rather than overwriting the runner-up.

@@ -1,26 +1,34 @@
-# Paper ↔ Code Cross-Reference
+# Paper ↔ Code Cross-Reference (ICLR 2027 version, `lipmamba_iclr2027.tex`)
 
-Source manuscripts (LaTeX + PDF) live in
-<https://github.com/rogerpanel/LipMamba-Models>.  This file maps every
-section of those manuscripts to the implementation in this repository so
-reviewers can follow the code while reading the paper.
-
-| Manuscript section | Equation / Algorithm | Code location |
-| --- | --- | --- |
-| §3.1 Spectral parameterisation | Eq. 3 | `src/lipmamba/models/spectral_norm.py` |
-| §3.2 Eigenvalue reparameterisation | Eq. 4 | `src/lipmamba/models/eigen_reparam.py` |
-| §3.3 Clipped discretisation | Eq. 5 | `src/lipmamba/models/clipped_delta.py` |
-| §3.4 Selective scan | Eq. 6 | `src/lipmamba/models/selective_ssm.py` |
-| §4.1 Theorem 1 (Lipschitz bound) | Thm. 1 | `src/lipmamba/certificates/lipschitz.py` |
-| §4.2 Theorem 2 (Poisoning immunity) | Thm. 2 | `src/lipmamba/certificates/poisoning_immunity.py` |
-| §4.3 Theorem 3 (PAC-Bayes) | Thm. 3 | `src/lipmamba/certificates/pac_bayes.py` |
-| §4.4 GloroNet certified radius | Eq. 15 | `src/lipmamba/models/glorot_head.py`, `certificates/certified_radius.py` |
-| §4.5 Margin-augmented logit | Eq. 16 | `models/glorot_head.py::margin_augmented` |
-| Algorithm 1 — Forward pass | — | `src/lipmamba/models/lipmamba_block.py` |
-| Algorithm 2 — Adversarial PAC-Bayes training | — | `src/lipmamba/training/trainer.py` |
-| §5.1 RoBench-25 | — | `src/lipmamba/data/robench.py`, `scripts/run_robench.py` |
-| §5.2 HarmBench / JailbreakBench | — | `src/lipmamba/data/safety.py`, `attacks/jailbreak.py` |
-| §5.3 IDS evaluation | — | `src/lipmamba/data/ids.py`, `configs/ids_cic2017.yaml` |
-| §5.4 Ablation: Δ_max sweep | Table 3 | `configs/lipmamba_*.yaml` (override `delta_max`) |
-| Appendix B.1 SiLU constant | — | `certificates/lipschitz.py::L_SILU` |
-| Appendix B.2 HiPPO init | — | `models/hippo.py` |
+| Manuscript | Code |
+| --- | --- |
+| §3 Preliminaries, Eq. (s6); diagonal-A remark | `models/selective_ssm.py`, `models/eigen_reparam.py` |
+| Definition 1 (α, ℓ)-poisoning | `attacks/hispa.py` (retention ratio α reported by every variant) |
+| §4 Spectral projection (2 % safety margin) | `models/spectral_norm.py` |
+| §4 Eigenvalue reparameterisation | `models/eigen_reparam.py` |
+| §4 Eq. (2) two-sided clamp | `models/clipped_delta.py` |
+| §4 Readout and GloRo head | `models/lipmamba_block.py`, `models/glorot_head.py` |
+| §4 Eq. (5) training objective | `training/pac_objective.py`, `training/trainer.py` |
+| Assumption 1 | `models/input_clip.py`, `certificates/constants.py` |
+| Lemma 1 (bounded state) | `ConstraintSet.H`; runtime check in `ScanTrace.h_norm` |
+| Theorem 1 (Lipschitz constant) | `ConstraintSet.l_block`, `l_network` |
+| Remark 4 (global vs local) | `certificates/local_lipschitz.py`, `evaluation/ll_acc.py`, `scripts/todo5_*` |
+| Theorem 2 (state-retention) + Eq. (lstar) | `ConstraintSet.retention_lower_bound`, `ell_star` |
+| Remark 5 (norm not content; per-input ℓ\*) | `ell_star_distribution`, `ell_star_from_trace`; `AdaptiveClampAttack("overwrite")` |
+| Theorem 3 (PAC-Bayes with L_ℓ) | `certificates/pac_bayes.py` |
+| §5 Benchmarks (RoBench-25: 120 abstracts / 240 questions) | `data/robench.py` |
+| §5 Baselines (Mamba, GloRo-Mamba, Naive SN) | `baselines/__init__.py`; randomized smoothing `baselines/randomized_smoothing.py` |
+| §5 Attacks (Z-HiSPA, M-HiSPA, PGD-40; adaptive) | `attacks/hispa.py`, `attacks/pgd.py`, `attacks/adaptive_clamp.py` |
+| §5 Metrics (ACC, PACC, ASR, LL-Acc, ECE, latency; Friedman/Holm) | `evaluation/` |
+| Table 1 | `scripts/todo4_gloro_mamba_baseline.py` |
+| Fig. 2 | `scripts/todo5_fig2_lipschitz_depth.py` |
+| Fig. 3 (LL-Acc vs ε) | `evaluation/ll_acc.py` |
+| Fig. 3 (perplexity overhead) | `scripts/perplexity_overhead.py` |
+| Fig. 4 (HiSPA vs ℓ, shaded region) | `scripts/todo1_ell_star.py`, `scripts/todo2_adaptive_attack.py` |
+| Table 3 (ablation) | `configs/ablations.yaml`, `lipmamba.baselines.ablate` |
+| Appendix A Algorithm 1 | `SelectiveSSM.forward` (D_t accumulator) |
+| Appendix B–D proofs | constants used in each step are named in `certificates/constants.py` docstrings |
+| Appendix E local estimator | `certificates/local_lipschitz.py` |
+| Appendix F IDS transfer | `data/ids.py`, `configs/ids_cic2017.yaml` |
+| Reproducibility statement | `scripts/regenerate_all.py`, `scripts/fill_paper_numbers.py` |
+| `\anonrepo` | `scripts/todo6_make_anonymous_bundle.py` |

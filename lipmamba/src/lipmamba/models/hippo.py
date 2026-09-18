@@ -29,6 +29,7 @@ def hippo_init(
     alpha: torch.Tensor,
     lambda_min: float,
     lambda_max: float,
+    free: bool = False,
 ) -> None:
     """Fill ``α`` so that the reparameterised eigenvalues track HiPPO-LegS.
 
@@ -45,6 +46,11 @@ def hippo_init(
         raise ValueError("alpha must be 2-D (n_channels, state_dim)")
     n_channels, state_dim = alpha.shape
     raw = hippo_legs_eigenvalues(state_dim)
+    if free:
+        # vanilla Mamba: A = -exp(a_log) with a_log = log(i + 1)
+        with torch.no_grad():
+            alpha.copy_(torch.log(raw + 0.5).unsqueeze(0).expand(n_channels, state_dim))
+        return
     raw = raw / raw[-1]  # in (0, 1]
     # squeeze a touch inside (lambda_min, lambda_max) so logit is finite.
     eps = 1e-3

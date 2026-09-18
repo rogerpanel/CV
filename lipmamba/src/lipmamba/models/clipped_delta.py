@@ -1,11 +1,18 @@
-"""Clipped discretisation step ``Δ_t``.
+"""Two-sided clamped discretisation step Δ_t (Eq. 2 of the ICLR manuscript).
 
-Implements
+    Δ_t = Δ_min + (Δ_max − Δ_min) · tanh( softplus(W̄_Δ x_t + τ) / (Δ_max − Δ_min) )
 
-    Δ_t = Δ_max · tanh( softplus( W̄_Δ x_t + τ ) / Δ_max )
+so that Δ_t ∈ [Δ_min, Δ_max).  Both ends matter:
 
-so that Δ_t ∈ (0, Δ_max) with smooth saturation, ensuring the discrete
-recurrence radius ``ρ = exp(-Δ · λ_min)`` stays strictly below one.
+* the *upper* clamp stops the HiSPA mechanism (Δ_t → ∞ ⇒ Ā_t → 0);
+* the *lower* clamp Δ_min > 0 is what makes the state bounded
+  (Lemma "Bounded state": ‖h_t‖ ≤ H = c / (1 − ρ_max) with
+  ρ_max = exp(−Δ_min λ_min) < 1).  With Δ_min = 0 the geometric series
+  diverges, which is the error-explosion regime of Qi et al. (NeurIPS 2024).
+
+The map is smooth and 1-Lipschitz in its pre-activation (tanh′ ≤ 1,
+softplus′ ≤ 1), which the Theorem-1 proof uses to get
+|Δ_t − Δ′_t| ≤ s_Δ ‖x_t − x′_t‖.
 """
 from __future__ import annotations
 
@@ -17,31 +24,42 @@ from .spectral_norm import SpectralNormLinear
 
 
 class ClippedDelta(nn.Module):
-    """Spectrally-bounded, clipped Δ_t projection."""
+    """Spectrally-bounded, two-sided clamped Δ_t projection."""
 
     def __init__(
         self,
         d_model: int,
         d_inner: int,
+        delta_min: float = 1e-3,
         delta_max: float = 0.5,
         s_delta: float = 0.5,
         n_power_iters: int = 1,
+        tau_init: float = 0.0,
     ) -> None:
         super().__init__()
+        if not (0.0 < delta_min < delta_max):
+            raise ValueError("require 0 < delta_min < delta_max")
+        self.delta_min = float(delta_min)
         self.delta_max = float(delta_max)
         self.s_delta = float(s_delta)
         self.proj = SpectralNormLinear(
             d_model, d_inner, s=s_delta, bias=True, n_power_iters=n_power_iters
         )
-        # Bias offset τ — initialise so that Δ_t starts near Δ_max/2.
-        nn.init.constant_(self.proj.bias, 0.0)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Compute Δ_t from input ``x`` of shape ``(B, T, d_model)``."""
-        z = self.proj(x)
-        return self.delta_max * torch.tanh(F.softplus(z) / self.delta_max)
+        nn.init.constant_(self.proj.bias, tau_init)
 
     @property
-    def delta_min(self) -> float:
-        """Lower bound on Δ_t in the asymptotic regime (≈ 0)."""
-        return 0.0
+    def span(self) -> float:
+        return self.delta_max - self.delta_min
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Compute Δ_t ∈ [Δ_min, Δ_max) from ``x`` of shape ``(B, T, d_model)``."""
+        z = self.proj(x)
+        return self.delta_min + self.span * torch.tanh(F.softplus(z) / self.span)
+
+    def extra_repr(self) -> str:
+        return f"delta_min={self.delta_min}, delta_max={self.delta_max}, s_delta={self.s_delta}"
+
+
+def vanilla_softplus_delta(z: torch.Tensor) -> torch.Tensor:
+    """Unconstrained Mamba step (ablation "w/o step clamp")."""
+    return F.softplus(z)

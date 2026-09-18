@@ -1,17 +1,12 @@
-"""GloroNet-style certification head.
+"""GloRo-style certification head (Leino et al., ICML 2021).
 
-For a classification model with logits ``z(x) ∈ R^K`` and predicted class
-``ŷ = argmax z(x)``, the GloroNet certified radius is
+    ε*(x) = ( z_ŷ − max_{k≠ŷ} z_k ) / ( √2 · L )
+    z̃_K  = max_{k≠ŷ} z_k + √2 · L · ε_train          (training augmentation)
 
-    ε*(x) = ( z_{ŷ} − max_{k ≠ ŷ} z_k ) / ( sqrt(2) · L_net ).
-
-During training the head computes a *margin-augmented logit* (Eq. 16 of the
-paper)::
-
-    z̃_K = max_{k ≠ ŷ} z_k(x) + sqrt(2) · L_net · ε_train
-
-so that minimising cross-entropy on ``[z, z̃_K]`` directly enlarges the
-certified margin.
+Which ``L`` is passed in is the subject of Remark 4 of the manuscript: the
+*global* Theorem-1 product is vacuous at depth, so the reported radii use the
+local estimate L_loc (certificates/local_lipschitz.py) and are labelled
+"LL-Acc" (empirical local-Lipschitz radii, not deterministic certificates).
 """
 from __future__ import annotations
 
@@ -24,76 +19,54 @@ import torch.nn.functional as F
 from .spectral_norm import SpectralNormLinear
 
 
-class GloroNetHead(nn.Module):
-    """Spectrally-bounded classification head with GloroNet certification."""
+def _top2(logits: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    z_hat, hat_idx = logits.max(dim=-1)
+    masked = logits.clone()
+    masked.scatter_(1, hat_idx.unsqueeze(-1), float("-inf"))
+    z_runner, runner_idx = masked.max(dim=-1)
+    return z_hat, z_runner, runner_idx
 
+
+class GloroNetHead(nn.Module):
     def __init__(
         self,
         d_model: int,
         n_classes: int,
         s_head: float = 1.0,
         epsilon_train: float = 0.18,
+        spectral_norm: bool = True,
     ) -> None:
         super().__init__()
-        self.classifier = SpectralNormLinear(d_model, n_classes, s=s_head)
         self.s_head = float(s_head)
         self.epsilon_train = float(epsilon_train)
+        self.classifier = (
+            SpectralNormLinear(d_model, n_classes, s=s_head) if spectral_norm
+            else nn.Linear(d_model, n_classes)
+        )
 
-    def forward(self, features: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        """Logits ``(B, K)`` from features ``(B, d_model)``."""
+    def forward(self, features: torch.Tensor) -> torch.Tensor:
         return self.classifier(features)
 
-    # ------------------------------------------------------------------ #
-    # Certification                                                       #
-    # ------------------------------------------------------------------ #
-
     @staticmethod
-    def certified_radius(
-        logits: torch.Tensor,
-        l_net: torch.Tensor | float,
-    ) -> torch.Tensor:
-        """Per-sample certified radius ε*(x).
-
-        Returns ``-inf`` for samples whose top-1 has been overtaken (negative
-        margin).  The convention matches GloroNet: ``ε* > 0`` means
-        ``argmax z(x + δ) = ŷ`` for all ``‖δ‖ ≤ ε*``.
-        """
-        z_hat, hat_idx = logits.max(dim=-1)
-        masked = logits.clone()
-        masked.scatter_(1, hat_idx.unsqueeze(-1), float("-inf"))
-        z_runner = masked.max(dim=-1).values
-        margin = z_hat - z_runner
-        l = torch.as_tensor(l_net, dtype=logits.dtype, device=logits.device)
-        return margin / (math.sqrt(2.0) * (l + 1e-12))
+    def certified_radius(logits: torch.Tensor, l: torch.Tensor | float) -> torch.Tensor:
+        z_hat, z_runner, _ = _top2(logits)
+        l = torch.as_tensor(l, dtype=logits.dtype, device=logits.device)
+        return (z_hat - z_runner) / (math.sqrt(2.0) * (l + 1e-12))
 
     def margin_augmented(
-        self,
-        logits: torch.Tensor,
-        l_net: torch.Tensor | float,
-        epsilon: float | None = None,
+        self, logits: torch.Tensor, l: torch.Tensor | float, epsilon: float | None = None
     ) -> torch.Tensor:
-        """Return logits with the runner-up bumped by ``√2 · L · ε`` (Eq. 16)."""
+        """Append the GloRo "⊥" logit z̃_K = max_{k≠ŷ} z_k + √2 L ε as an extra class."""
         eps = self.epsilon_train if epsilon is None else float(epsilon)
-        z_hat, hat_idx = logits.max(dim=-1)
-        masked = logits.clone()
-        masked.scatter_(1, hat_idx.unsqueeze(-1), float("-inf"))
-        z_runner = masked.max(dim=-1).values
-        l = torch.as_tensor(l_net, dtype=logits.dtype, device=logits.device)
+        _, z_runner, _ = _top2(logits)
+        l = torch.as_tensor(l, dtype=logits.dtype, device=logits.device)
+        if l.dim() == 0:
+            l = l.expand(logits.size(0))
         bump = math.sqrt(2.0) * l * eps
-        # build new logits: keep z_hat, replace runner-up with bumped value.
-        bumped = logits.clone()
-        # Find the runner-up index per row.
-        runner_idx = masked.argmax(dim=-1)
-        bumped[torch.arange(logits.size(0)), runner_idx] = z_runner + bump
-        return bumped
+        return torch.cat([logits, (z_runner + bump).unsqueeze(-1)], dim=-1)
 
     def margin_loss(
-        self,
-        logits: torch.Tensor,
-        targets: torch.Tensor,
-        l_net: torch.Tensor | float,
+        self, logits: torch.Tensor, targets: torch.Tensor, l: torch.Tensor | float,
         epsilon: float | None = None,
     ) -> torch.Tensor:
-        """Cross-entropy on margin-augmented logits."""
-        bumped = self.margin_augmented(logits, l_net=l_net, epsilon=epsilon)
-        return F.cross_entropy(bumped, targets)
+        return F.cross_entropy(self.margin_augmented(logits, l, epsilon), targets)

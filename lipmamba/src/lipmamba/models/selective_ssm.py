@@ -1,34 +1,44 @@
 """Selective state-space recurrence with Lipschitz-bounded projections.
 
-This is the core layer underlying LipMamba.  It implements the selective scan
+Implements the S6 layer of Eq. (s6) under the LipMamba constraints and
+Algorithm 1 (forward pass with online tracking of the analytical constant):
 
-    h_t = Ā_t h_{t-1} + B̄_t x_t
-    y_t = C_tᵀ h_t
+    h_t = Ā_t h_{t-1} + B̄_t x_t ,   y_t = C_tᵀ h_t
+    Ā_t = exp(Δ_t A),   B̄_t = Δ_t B_t,   Δ_t ∈ [Δ_min, Δ_max)
 
-with input-dependent ``B_t``, ``C_t``, ``Δ_t`` produced by spectrally-bounded
-projection networks.  The parameterisation guarantees a closed-form Lipschitz
-constant (see :mod:`lipmamba.certificates.lipschitz`).
+with the *data-dependent refinement* of Theorem 1
 
-For pedagogical clarity and CPU portability the scan is implemented as a
-pure-PyTorch ``for`` loop.  For GPU acceleration drop in the official
-``mamba_ssm.selective_scan`` kernel — the public tensor signatures match.
+    γ_t = 2 s_B Δ_t X_max + s_Δ (λ_max ‖h_{t-1}‖₂ + s_B X_max)
+    D_t = ‖Ā_t‖₂ D_{t-1} + γ_t
+    L_block(data) = s_out L_SiLU s_C ( X_max · max_t D_t + max_t ‖h_t‖₂ )
+
+which is always ≤ the worst-case closed form of Theorem 1 (it replaces
+ρ_max, H by their observed values) and is the quantity plotted as the
+"analytical" curve of Figure 2 *if* the figure is meant to be data-dependent.
+Both are exposed so the two can be compared.
+
+The scan is a pure-PyTorch loop for CPU portability.  It also records, per
+token, σ_min(Ā_t) and ‖B̄_t x_t‖ so that the retention bound (Theorem 2) can
+be evaluated with observed rather than worst-case constants.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import torch
 import torch.nn as nn
 
+from ..certificates.constants import L_SILU, ConstraintSet
 from .clipped_delta import ClippedDelta
 from .eigen_reparam import EigenReparamA
 from .hippo import hippo_init
+from .input_clip import InputNormClip
 from .spectral_norm import SpectralNormLinear
 
 
 @dataclass
 class SSMConfig:
-    """Selective SSM hyper-parameters (Section 3 of the paper)."""
+    """Selective SSM hyper-parameters (Sections 3-4 of the manuscript)."""
 
     d_model: int = 1024
     d_inner: int = 2048
@@ -37,136 +47,177 @@ class SSMConfig:
     s_c: float = 1.0
     s_delta: float = 0.5
     s_out: float = 1.0
+    delta_min: float = 1e-3
     delta_max: float = 0.5
     lambda_min: float = 0.05
     lambda_max: float = 1.0
+    x_max: float = 1.0
     n_power_iters: int = 1
     track_lipschitz: bool = True
+    # Ablation switches (Table 3)
+    clamp_delta: bool = True          # False → vanilla softplus Δ_t
+    reparam_eigen: bool = True        # False → free (unconstrained) A
+    spectral_norm: bool = True        # False → plain linear projections
+
+    def constraints(self) -> ConstraintSet:
+        return ConstraintSet(
+            s_b=self.s_b, s_c=self.s_c, s_delta=self.s_delta, s_out=self.s_out,
+            delta_min=self.delta_min, delta_max=self.delta_max,
+            lambda_min=self.lambda_min, lambda_max=self.lambda_max, x_max=self.x_max,
+        )
+
+
+@dataclass
+class ScanTrace:
+    """Per-token statistics recorded during a forward pass."""
+
+    delta: torch.Tensor                     # (B, T, D)
+    a_bar_max: torch.Tensor                 # (B, T)  max_i e^{Δ_t a_i}   = ‖Ā_t‖₂
+    a_bar_min: torch.Tensor                 # (B, T)  min_i e^{Δ_t a_i}   = σ_min(Ā_t)
+    injection_norm: torch.Tensor            # (B, T)  ‖B̄_t x_t‖₂ (max over channels)
+    h_norm: torch.Tensor                    # (B, T)  ‖h_t‖₂ (max over channels)
+    d_t: torch.Tensor                       # (B, T)  Algorithm 1 accumulator
+    extras: dict = field(default_factory=dict)
+
+
+class _PlainLinear(nn.Linear):
+    """Linear with the SpectralNormLinear interface (for the ablation)."""
+
+    @property
+    def sigma(self) -> torch.Tensor:
+        return torch.linalg.matrix_norm(self.weight, ord=2)
 
 
 class SelectiveSSM(nn.Module):
-    """Lipschitz-bounded selective scan over ``D`` channels.
-
-    Tensor shapes
-    -------------
-    Input  : ``x``  — ``(B, T, d_inner)``
-    Output : ``y``  — ``(B, T, d_inner)``
-
-    The class also exposes :meth:`lipschitz_state` which, after a forward
-    pass, returns the running estimate of the recurrence radius
-    ``ρ_t = ‖Ā_t‖₂`` and projection norms ``β_t = ‖B̄_t‖₂`` used by the
-    online Lipschitz tracker.
-    """
+    """Lipschitz-bounded selective scan over ``D`` channels."""
 
     def __init__(self, cfg: SSMConfig) -> None:
         super().__init__()
         self.cfg = cfg
+        n, d = cfg.state_dim, cfg.d_inner
 
-        # Input-dependent projections — spectrally normalised.
-        self.x_to_b = SpectralNormLinear(
-            cfg.d_inner, cfg.state_dim, s=cfg.s_b, n_power_iters=cfg.n_power_iters
-        )
-        self.x_to_c = SpectralNormLinear(
-            cfg.d_inner, cfg.state_dim, s=cfg.s_c, n_power_iters=cfg.n_power_iters
-        )
+        self.input_clip = InputNormClip(cfg.x_max)
+
+        if cfg.spectral_norm:
+            self.x_to_b = SpectralNormLinear(d, n, s=cfg.s_b, n_power_iters=cfg.n_power_iters)
+            self.x_to_c = SpectralNormLinear(d, n, s=cfg.s_c, n_power_iters=cfg.n_power_iters)
+        else:
+            self.x_to_b = _PlainLinear(d, n)
+            self.x_to_c = _PlainLinear(d, n)
+
         self.delta_proj = ClippedDelta(
-            d_model=cfg.d_inner,
-            d_inner=cfg.d_inner,
-            delta_max=cfg.delta_max,
-            s_delta=cfg.s_delta,
+            d_model=d, d_inner=d,
+            delta_min=cfg.delta_min, delta_max=cfg.delta_max,
+            s_delta=cfg.s_delta if cfg.spectral_norm else 1e9,
             n_power_iters=cfg.n_power_iters,
         )
 
-        # Eigenvalue-bounded state matrix (one set of eigenvalues per channel).
         self.A = EigenReparamA(
-            state_dim=cfg.state_dim,
-            n_channels=cfg.d_inner,
-            lambda_min=cfg.lambda_min,
-            lambda_max=cfg.lambda_max,
+            state_dim=n, n_channels=d,
+            lambda_min=cfg.lambda_min, lambda_max=cfg.lambda_max,
+            free=not cfg.reparam_eigen,
         )
-        # HiPPO-style warm start
-        hippo_init(self.A.alpha, cfg.lambda_min, cfg.lambda_max)
+        hippo_init(self.A.alpha, cfg.lambda_min, cfg.lambda_max, free=not cfg.reparam_eigen)
 
-        # Per-channel skip connection D (paper uses bounded form ``s_out``).
-        self.D = nn.Parameter(torch.ones(cfg.d_inner))
-
-        # Buffers for online Lipschitz statistics.
-        self.register_buffer("_rho_running", torch.tensor(0.0))
-        self.register_buffer("_beta_running", torch.tensor(0.0))
+        self.D = nn.Parameter(torch.ones(d))
+        self._last_trace: ScanTrace | None = None
 
     # ------------------------------------------------------------------ #
-    # Forward / scan                                                     #
+    # Forward                                                            #
     # ------------------------------------------------------------------ #
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  # noqa: D401
-        """Run the selective scan."""
+    def compute_delta(self, x: torch.Tensor) -> torch.Tensor:
+        if self.cfg.clamp_delta:
+            return self.delta_proj(x)
+        # Ablation: vanilla softplus (unbounded above, → 0 below)
+        return torch.nn.functional.softplus(self.delta_proj.proj(x))
+
+    def forward(self, x: torch.Tensor, record_trace: bool | None = None) -> torch.Tensor:
+        cfg = self.cfg
+        x = self.input_clip(x)                       # Assumption 1 by construction
         b, t, d = x.shape
-        n = self.cfg.state_dim
+        n = cfg.state_dim
+        record = cfg.track_lipschitz if record_trace is None else record_trace
 
-        delta = self.delta_proj(x)              # (B, T, D)
-        b_t = self.x_to_b(x)                    # (B, T, N)
-        c_t = self.x_to_c(x)                    # (B, T, N)
-
-        # Discretise: Ā_t (B, T, D, N) and B̄_t (B, T, D, N)
-        a_bar = self.A.discretise(delta)         # exp(Δ ⊙ A)
-        # Δ ⊙ B with broadcasting — ZOH-like rule (matches mamba reference)
-        b_bar = delta.unsqueeze(-1) * b_t.unsqueeze(-2)  # (B, T, D, N)
+        delta = self.compute_delta(x)                # (B, T, D)
+        b_t = self.x_to_b(x)                         # (B, T, N)
+        c_t = self.x_to_c(x)                         # (B, T, N)
+        a_bar = self.A.discretise(delta)             # (B, T, D, N)  = exp(Δ ⊙ A)
+        b_bar = delta.unsqueeze(-1) * b_t.unsqueeze(-2)  # (B, T, D, N) = Δ_t B_t
 
         h = x.new_zeros(b, d, n)
         ys = []
-        rho_acc = 0.0
-        beta_acc = 0.0
+        if record:
+            a_max = x.new_zeros(b, t); a_min = x.new_zeros(b, t)
+            inj = x.new_zeros(b, t); hn = x.new_zeros(b, t); dt = x.new_zeros(b, t)
+            D_prev = x.new_zeros(b)
+            with torch.no_grad():
+                s_b_eff = cfg.s_b if cfg.spectral_norm else float(self.x_to_b.sigma)
+                s_d_eff = cfg.s_delta if cfg.spectral_norm else float(self.delta_proj.proj.sigma)
+
         for tt in range(t):
-            h = a_bar[:, tt] * h + b_bar[:, tt] * x[:, tt].unsqueeze(-1)  # (B, D, N)
-            y = (h * c_t[:, tt].unsqueeze(1)).sum(dim=-1)                  # (B, D)
+            inj_t = b_bar[:, tt] * x[:, tt].unsqueeze(-1)              # (B, D, N)
+            h_prev = h
+            h = a_bar[:, tt] * h_prev + inj_t
+            y = (h * c_t[:, tt].unsqueeze(1)).sum(dim=-1)             # (B, D)
             ys.append(y)
 
-            if self.cfg.track_lipschitz and self.training:
-                # cheap upper-bound estimates of operator norms
-                rho_acc += a_bar[:, tt].abs().amax().detach()
-                beta_acc += b_bar[:, tt].abs().amax().detach()
+            if record:
+                with torch.no_grad():
+                    am = a_bar[:, tt].amax(dim=(1, 2)); an = a_bar[:, tt].amin(dim=(1, 2))
+                    inj_norm = inj_t.norm(dim=-1).amax(dim=-1)        # max over channels
+                    hprev_norm = h_prev.norm(dim=-1).amax(dim=-1)
+                    gamma_t = (2.0 * s_b_eff * delta[:, tt].amax(dim=-1) * cfg.x_max
+                               + s_d_eff * (cfg.lambda_max * hprev_norm + s_b_eff * cfg.x_max))
+                    D_t = am * D_prev + gamma_t
+                    a_max[:, tt] = am; a_min[:, tt] = an; inj[:, tt] = inj_norm
+                    hn[:, tt] = h.norm(dim=-1).amax(dim=-1); dt[:, tt] = D_t
+                    D_prev = D_t
 
-        y = torch.stack(ys, dim=1)               # (B, T, D)
-        y = y + self.D * x                       # bounded skip
-
-        if self.cfg.track_lipschitz and self.training and t > 0:
-            self._rho_running.copy_(rho_acc / t)
-            self._beta_running.copy_(beta_acc / t)
-
+        y = torch.stack(ys, dim=1) + self.D * x
+        if record:
+            self._last_trace = ScanTrace(
+                delta=delta.detach(), a_bar_max=a_max, a_bar_min=a_min,
+                injection_norm=inj, h_norm=hn, d_t=dt,
+            )
         return y
 
     # ------------------------------------------------------------------ #
-    # Lipschitz / certificate helpers                                    #
+    # Certificates                                                       #
     # ------------------------------------------------------------------ #
 
-    def block_lipschitz_bound(
-        self,
-        h_inf: float = 1.0,
-        l_silu: float = 1.0998,
-    ) -> torch.Tensor:
-        """Closed-form per-block Lipschitz bound (Theorem 1).
+    @property
+    def constraints(self) -> ConstraintSet:
+        return self.cfg.constraints()
 
-        Parameters
-        ----------
-        h_inf : float
-            Upper bound on ``‖h‖_∞`` (estimated empirically during training).
-        l_silu : float
-            Lipschitz constant of SiLU (≈ 1.0998).
-        """
+    def block_lipschitz_bound(self, **_ignored) -> torch.Tensor:
+        """Worst-case closed form of Theorem 1 (input-independent)."""
+        return torch.tensor(self.constraints.l_block)
+
+    def state_bound_H(self) -> float:
+        """Lemma 1."""
+        return self.constraints.H
+
+    @torch.no_grad()
+    def data_dependent_block_bound(self) -> torch.Tensor | None:
+        """Algorithm 1: L_block = s_out L_SiLU s_C (X_max max_t D_t + max_t ‖h_t‖)."""
+        tr = self._last_trace
+        if tr is None:
+            return None
         cfg = self.cfg
-        # ρ_max attained at λ_min (smallest decay).
-        rho_max = float(torch.exp(torch.tensor(-cfg.delta_max * cfg.lambda_min)).item())
-        # The bound equation from the paper:
-        denom = max(1.0 - rho_max, 1e-8)
-        term_input = cfg.s_c * (cfg.s_b * cfg.delta_max) / denom
-        term_state = cfg.s_c * h_inf * cfg.s_delta * cfg.delta_max / denom
-        return torch.tensor(cfg.s_out * l_silu * (term_input + term_state))
+        return (cfg.s_out * L_SILU * cfg.s_c
+                * (cfg.x_max * tr.d_t.amax(dim=1) + tr.h_norm.amax(dim=1)))   # (B,)
+
+    @property
+    def last_trace(self) -> ScanTrace | None:
+        return self._last_trace
 
     @torch.no_grad()
     def lipschitz_state(self) -> dict[str, float]:
-        """Return current running estimates of recurrence radius ρ and β."""
-        return {
-            "rho_running": float(self._rho_running.item()),
-            "beta_running": float(self._beta_running.item()),
-            "block_bound": float(self.block_lipschitz_bound().item()),
-        }
+        out = {"L_block_worst_case": float(self.constraints.l_block), "H": self.constraints.H}
+        dd = self.data_dependent_block_bound()
+        if dd is not None:
+            out["L_block_data_dependent_max"] = float(dd.max())
+            out["rho_observed_max"] = float(self._last_trace.a_bar_max.max())
+            out["h_norm_observed_max"] = float(self._last_trace.h_norm.max())
+        return out

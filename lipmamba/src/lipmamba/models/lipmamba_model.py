@@ -1,16 +1,13 @@
-"""Full LipMamba language / classification model.
-
-Stack of :class:`LipMambaBlock` layers with a token-embedding, optional
-language-modelling head, and the GloroNet certification head used for
-classification fine-tuning.
-"""
+"""Full LipMamba language / classification model."""
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 
 import torch
 import torch.nn as nn
 
+from ..certificates.constants import ConstraintSet
 from .glorot_head import GloroNetHead
 from .lipmamba_block import LipMambaBlock, LipMambaBlockConfig
 
@@ -19,18 +16,19 @@ from .lipmamba_block import LipMambaBlock, LipMambaBlockConfig
 class LipMambaConfig:
     """Top-level model configuration.
 
-    The three reference points from the paper:
+    ============   ========   =========   ========
+    Variant        n_layers   d_model     d_inner
+    ============   ========   =========   ========
+    LipMamba-130M  24         768         1536
+    LipMamba-370M  48         1024        2048
+    LipMamba-1.3B  48         2048        4096
+    ============   ========   =========   ========
 
-    ============   ========   =========   ========   ========
-    Variant        n_layers   d_model     d_inner    L_SSM cap
-    ============   ========   =========   ========   ========
-    LipMamba-130M  24         768         1536       5.0
-    LipMamba-370M  48         1024        2048       8.0
-    LipMamba-1.3B  64         2048        4096       12.0
-    ============   ========   =========   ========   ========
+    These match the public ``state-spaces/mamba-{130m,370m,1.4b}`` shapes so
+    that a base checkpoint can be converted (scripts/todo3_init_from_hf_mamba.py).
     """
 
-    vocab_size: int = 50257
+    vocab_size: int = 50280
     n_layers: int = 24
     d_model: int = 768
     d_inner: int = 1536
@@ -40,135 +38,128 @@ class LipMambaConfig:
     s_c: float = 1.0
     s_delta: float = 0.5
     s_out: float = 1.0
+    delta_min: float = 1e-3
     delta_max: float = 0.5
     lambda_min: float = 0.05
     lambda_max: float = 1.0
+    x_max: float = 1.0
     n_power_iters: int = 1
     track_lipschitz: bool = True
+    residual: bool = True
+    # ablations
+    clamp_delta: bool = True
+    reparam_eigen: bool = True
+    spectral_norm: bool = True
+    sn_in_proj: bool = False
+    gloro_head: bool = True
 
-    # Heads
-    n_classes: int = 0          # 0 ⇒ language-modelling head only
+    # heads
+    n_classes: int = 0
     s_head: float = 1.0
     epsilon_train: float = 0.18
-
-    # Network-level cap on the certified Lipschitz constant L_SSM
-    l_ssm_cap: float = 5.0
     extras: dict = field(default_factory=dict)
 
     @classmethod
-    def lipmamba_130m(cls, **overrides) -> "LipMambaConfig":
-        cfg = cls(n_layers=24, d_model=768, d_inner=1536, l_ssm_cap=5.0)
-        for k, v in overrides.items():
-            setattr(cfg, k, v)
-        return cfg
+    def lipmamba_130m(cls, **o) -> "LipMambaConfig":
+        return cls(**{**dict(n_layers=24, d_model=768, d_inner=1536), **o})
 
     @classmethod
-    def lipmamba_370m(cls, **overrides) -> "LipMambaConfig":
-        cfg = cls(n_layers=48, d_model=1024, d_inner=2048, l_ssm_cap=8.0)
-        for k, v in overrides.items():
-            setattr(cfg, k, v)
-        return cfg
+    def lipmamba_370m(cls, **o) -> "LipMambaConfig":
+        return cls(**{**dict(n_layers=48, d_model=1024, d_inner=2048), **o})
 
     @classmethod
-    def lipmamba_1300m(cls, **overrides) -> "LipMambaConfig":
-        cfg = cls(n_layers=64, d_model=2048, d_inner=4096, l_ssm_cap=12.0)
-        for k, v in overrides.items():
-            setattr(cfg, k, v)
-        return cfg
+    def lipmamba_1300m(cls, **o) -> "LipMambaConfig":
+        return cls(**{**dict(n_layers=48, d_model=2048, d_inner=4096), **o})
+
+    def block_config(self) -> LipMambaBlockConfig:
+        return LipMambaBlockConfig(
+            d_model=self.d_model, d_inner=self.d_inner, state_dim=self.state_dim,
+            conv_kernel=self.conv_kernel, s_b=self.s_b, s_c=self.s_c, s_delta=self.s_delta,
+            s_out=self.s_out, delta_min=self.delta_min, delta_max=self.delta_max,
+            lambda_min=self.lambda_min, lambda_max=self.lambda_max, x_max=self.x_max,
+            n_power_iters=self.n_power_iters, track_lipschitz=self.track_lipschitz,
+            residual=self.residual, clamp_delta=self.clamp_delta,
+            reparam_eigen=self.reparam_eigen, spectral_norm=self.spectral_norm,
+            sn_in_proj=self.sn_in_proj,
+        )
+
+    def constraints(self) -> ConstraintSet:
+        return self.block_config().ssm_config().constraints()
 
 
 class LipMambaModel(nn.Module):
-    """Stacked LipMamba blocks with optional LM and classification heads."""
-
     def __init__(self, cfg: LipMambaConfig) -> None:
         super().__init__()
         self.cfg = cfg
-
         self.embed_tokens = nn.Embedding(cfg.vocab_size, cfg.d_model)
-
-        block_cfg = LipMambaBlockConfig(
-            d_model=cfg.d_model,
-            d_inner=cfg.d_inner,
-            state_dim=cfg.state_dim,
-            conv_kernel=cfg.conv_kernel,
-            s_b=cfg.s_b,
-            s_c=cfg.s_c,
-            s_delta=cfg.s_delta,
-            s_out=cfg.s_out,
-            delta_max=cfg.delta_max,
-            lambda_min=cfg.lambda_min,
-            lambda_max=cfg.lambda_max,
-            n_power_iters=cfg.n_power_iters,
-            track_lipschitz=cfg.track_lipschitz,
-        )
-        self.blocks = nn.ModuleList(LipMambaBlock(block_cfg) for _ in range(cfg.n_layers))
+        self.blocks = nn.ModuleList(LipMambaBlock(cfg.block_config()) for _ in range(cfg.n_layers))
         self.norm_f = nn.LayerNorm(cfg.d_model)
-
-        # Language-modelling head — tied to the embedding for parameter efficiency.
         self.lm_head = nn.Linear(cfg.d_model, cfg.vocab_size, bias=False)
-        self.lm_head.weight = self.embed_tokens.weight  # weight tying
-
-        # Optional classification head with GloroNet certification.
+        self.lm_head.weight = self.embed_tokens.weight
         if cfg.n_classes > 0:
             self.cls_head: GloroNetHead | None = GloroNetHead(
-                d_model=cfg.d_model,
-                n_classes=cfg.n_classes,
-                s_head=cfg.s_head,
-                epsilon_train=cfg.epsilon_train,
+                cfg.d_model, cfg.n_classes, s_head=cfg.s_head,
+                epsilon_train=cfg.epsilon_train, spectral_norm=cfg.gloro_head,
             )
         else:
             self.cls_head = None
 
-    # ------------------------------------------------------------------ #
-    # Forward                                                             #
-    # ------------------------------------------------------------------ #
-
-    def encode(self, input_ids: torch.Tensor) -> torch.Tensor:
-        """Token IDs → final hidden states ``(B, T, d_model)``."""
-        h = self.embed_tokens(input_ids)
+    # -- forward -----------------------------------------------------------
+    def encode_from_embeddings(self, h: torch.Tensor) -> torch.Tensor:
         for blk in self.blocks:
             h = blk(h)
         return self.norm_f(h)
 
-    def forward(
-        self,
-        input_ids: torch.Tensor,
-        return_logits: bool = True,
-    ) -> dict[str, torch.Tensor]:
-        """Standard forward pass.
+    def encode(self, input_ids: torch.Tensor) -> torch.Tensor:
+        return self.encode_from_embeddings(self.embed_tokens(input_ids))
 
-        Returns a dict with the keys:
+    def logits_from_embeddings(self, emb: torch.Tensor) -> torch.Tensor:
+        """Differentiable path embeddings → classification logits (attacks / L_loc)."""
+        h = self.encode_from_embeddings(emb)
+        if self.cls_head is not None:
+            return self.cls_head(h[:, -1])
+        return self.lm_head(h[:, -1])
 
-        * ``hidden_states`` — ``(B, T, d_model)``
-        * ``lm_logits``     — ``(B, T, vocab)`` (only when ``return_logits``)
-        * ``cls_logits``    — ``(B, n_classes)`` if a classification head exists
-        """
+    def forward(self, input_ids: torch.Tensor, return_logits: bool = True) -> dict[str, torch.Tensor]:
         h = self.encode(input_ids)
         out = {"hidden_states": h}
         if return_logits:
             out["lm_logits"] = self.lm_head(h)
         if self.cls_head is not None:
-            # Use the final-position representation for classification.
-            pooled = h[:, -1]
-            out["cls_logits"] = self.cls_head(pooled)
+            out["cls_logits"] = self.cls_head(h[:, -1])
         return out
 
-    # ------------------------------------------------------------------ #
-    # Certificates                                                        #
-    # ------------------------------------------------------------------ #
+    # -- certificates --------------------------------------------------------
+    @property
+    def constraints(self) -> ConstraintSet:
+        return self.cfg.constraints()
 
-    def network_lipschitz_bound(self, h_inf: float = 1.0) -> torch.Tensor:
-        """Multiplicative network Lipschitz bound (Theorem 1, network level).
-
-        ``L_net = ∏_blocks L_block`` (residual pathways inflate by +1 — see
-        certificates.lipschitz for the exact formula used during training).
-        """
-        l = torch.tensor(1.0)
-        for blk in self.blocks:
-            l = l * (1.0 + blk.block_lipschitz_bound(h_inf=h_inf))
+    def network_lipschitz_bound(self, **_ignored) -> torch.Tensor:
+        """Worst-case Theorem-1 product L_SSM ≤ ∏ L_block (× s_head)."""
+        l = self.constraints.l_network(self.cfg.n_layers, residual=self.cfg.residual)
         if self.cls_head is not None:
-            l = l * float(self.cls_head.s_head)
-        return l
+            l *= float(self.cls_head.s_head)
+        return torch.tensor(l)
+
+    def log10_network_lipschitz_bound(self) -> float:
+        c = self.constraints
+        per = math.log10((1.0 + c.l_block) if self.cfg.residual else c.l_block)
+        extra = math.log10(self.cls_head.s_head) if self.cls_head is not None else 0.0
+        return self.cfg.n_layers * per + extra
+
+    @torch.no_grad()
+    def data_dependent_network_bound(self) -> torch.Tensor | None:
+        """Product of Algorithm-1 data-dependent block bounds from the last forward."""
+        prod = None
+        for blk in self.blocks:
+            b = blk.data_dependent_block_bound()
+            if b is None:
+                return None
+            b = (1.0 + b) if self.cfg.residual else b
+            prod = b if prod is None else prod * b
+        if self.cls_head is not None:
+            prod = prod * float(self.cls_head.s_head)
+        return prod
 
     def parameter_count(self) -> int:
         return sum(p.numel() for p in self.parameters())

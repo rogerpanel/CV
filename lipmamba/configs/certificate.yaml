@@ -8,10 +8,11 @@ eval:
   batch_size: 32
 
 immunity:
-  delta_min: 0.05
+  delta_min: 1.0e-3
   lambda_min: 0.05
+  lambda_max: 1.0
   s_b: 1.0
   delta_max: 0.5
   x_max: 1.0
   h0_norm: 1.0
-  alpha: 0.05
+  alpha: 0.5     # α_min retention threshold (Theorem 2)
