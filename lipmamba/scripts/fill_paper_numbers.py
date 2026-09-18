@@ -29,7 +29,7 @@ def main() -> None:
 
     if t1:
         w = t1["per_input_worst_case"]; d = t1["per_input_data_dependent"]; c = t1["constants"]
-        out.append(r"""% TODO 1 / 7 (Remark 5 + Fig. 4 caption)
+        out.append(r"""%% TODO 1 / 7 (Remark 5 + Fig. 4 caption)
 With the trained constraint values $(s_B,\Delta_{\max},\lambda_{\max},X_{\max})=(%(s_b)g,%(delta_max)g,%(lambda_max)g,%(x_max)g)$, $\rho_{\min}=%(rho_min).3f$ and $c=%(c).3g$, the worst-case bound \eqref{eq:lstar} certifies $\ell^\star\in[%(wmin).1f,%(wmax).1f]$ (median $%(wmed).1f$) over the observed pre-trigger norms $\norm{\h_{t_0}}_2$ (median $%(h0).2f$) at $\alpha_{\min}=%(alpha)g$; the data-dependent refinement that replaces $(\rho_{\min},c)$ by the observed $\sigmamin(\Abar_t)$ and $\norm{\Bbar_t\x_t}_2$ along the trigger gives $\ell^\star$ with $5$th percentile $%(dp05).1f$ and median $%(dmed).1f$. The shaded region of \cref{fig:hispa} is drawn at the worst-case integer $\ell^\star=%(wint)d$. Certifying $\ell^\star\ge%(target)d$ at $\alpha_{\min}=%(alpha)g$ would require $\Delta_{\max}\lambda_{\max}\le%(req).3f$ (currently $%(cur).3f$).
 """ % dict(s_b=c["s_b"], delta_max=c["delta_max"], lambda_max=c["lambda_max"], x_max=c["x_max"], rho_min=c["rho_min"], c=c["c"],
            wmin=w["ell_star_min"], wmax=w["ell_star_max"], wmed=w["ell_star_median"], h0=w["h0_norm_median"], alpha=t1["alpha_min"],
@@ -43,7 +43,7 @@ With the trained constraint values $(s_B,\Delta_{\max},\lambda_{\max},X_{\max})=
     if t2:
         r24 = next((r for r in t2["rows"] if r["trigger_length"] == 24), t2["rows"][-1])
         s = r24["adaptive_saturate_continuous"]; o = r24["adaptive_overwrite_continuous"]; m = r24["adaptive_margin_continuous"]
-        out.append(r"""% TODO 2 (Baselines and attacks; Discussion)
+        out.append(r"""%% TODO 2 (Baselines and attacks; Discussion)
 \paragraph{Adaptive attack.} Following \citet{athalye2018obfuscated,carlini2019evaluating} we also optimise the trigger directly against the clamp: a white-box adversary with gradient access through \eqref{eq:clamp} maximises the mean step over the trigger and minimises the post-trigger state norm (GCG-style objective on $\Delta_t$; continuous and token-level variants), and two further objectives target state \emph{content} (maximise $\norm{\h-\h^{\mathrm{clean}}}$ at fixed norm) and the classification margin. At $\ell=%(L)d$ the saturating adversary pins $\Delta_t$ to $%(sat).0f\%%$ of $\Delta_{\max}$ and reduces the retention ratio to $%(ret).2f$ (Theorem~\ref{thm:retention} lower bound holds), the content adversary moves the state by $%(ovw).2f$ relative units while keeping its norm, and the margin adversary flips $%(flip).0f\%%$ of predictions; the published Z-/M-HiSPA triggers reach $\alpha=%(z).2f$/$%(mh).2f$.
 """ % dict(L=r24["trigger_length"], sat=100 * s["delta_saturation_fraction"], ret=s["retention_ratio_mean"], ovw=o["overwrite_distance_mean"],
            flip=100 * m["label_flip_rate"], z=r24["z_hispa"]["alpha_mean"], mh=r24["m_hispa"]["alpha_mean"]))
@@ -51,7 +51,7 @@ With the trained constraint values $(s_B,\Delta_{\max},\lambda_{\max},X_{\max})=
         open_.append("TODO 2: run scripts/todo2_adaptive_attack.py")
 
     if t3:
-        out.append(r"""% TODO 3 (Implementation paragraph; Fig. 3 caption)
+        out.append(r"""%% TODO 3 (Implementation paragraph; Fig. 3 caption)
 \modelname{}-130M and -370M are initialised from the public \texttt{%(base)s} and \texttt{state-spaces/mamba-370m} checkpoints (revision \texttt{%(rev)s}; pre-trained on The Pile with the GPT-NeoX tokenizer) by mapping each tensor into the constrained parameterisation and projecting onto the constraint set (a fraction $%(clip).2f$ of the eigenvalues $|\lambda_i|$ fell outside $[\lambda_{\min},\lambda_{\max}]$ and were clipped), then fine-tuned with \eqref{eq:objective}. Perplexity overhead is measured on the WikiText-103 validation split (raw, GPT-NeoX tokenizer, block size 1024) relative to the unmodified base checkpoint evaluated through the same code path.
 """ % dict(base=t3["base_model_id"], rev=t3["base_revision"], clip=t3["conversion_stats"]["A_clipped_fraction_mean"]))
         if ppl:
@@ -63,7 +63,7 @@ With the trained constraint values $(s_B,\Delta_{\max},\lambda_{\max},X_{\max})=
         def row(name, label):
             t = t4["table_mean_std"][name]
             return f"{label} & {100*t['ACC'][0]:.1f} & {100*t['PACC'][0]:.1f} & --- & {100*t['LL_Acc_0.18'][0]:.1f} & {t['ECE'][0]:.3f} & {t['latency_ms_per_token'][0]:.2f}\\,ms \\\\"
-        out.append("% TODO 4 (Table 1 rows, mean over seeds %s; ASR column must come from the HarmBench run)\n" % t4["seeds"])
+        out.append("%% TODO 4 (Table 1 rows, mean over seeds %s; ASR column must come from the HarmBench run)\n" % t4["seeds"])
         out.append(row("unconstrained_mamba", "Mamba (unconstrained)") + "\n")
         out.append(row("gloro_mamba", "GloRo-Mamba (head only)") + "\n")
         out.append(row("lipmamba_arch", "\\modelname{}") + "\n")
@@ -77,7 +77,7 @@ With the trained constraint values $(s_B,\Delta_{\max},\lambda_{\max},X_{\max})=
 
     if t5:
         r = t5["rows"][-1]; pg = t5["pgfplots"]
-        out.append(r"""% TODO 5 (Fig. 2 caption)
+        out.append(r"""%% TODO 5 (Fig. 2 caption)
 Analytical constant of \cref{thm:lip} composed across depth ($\log_{10}$ scale) in its worst-case form ($10^{%(w).0f}$ at $L=%(L)d$ for the stated constants) and in the data-dependent form of \cref{alg:fwd} ($10^{%(d).1f}$), versus the bare operator-norm product ($10^{%(o).1f}$) and the attack-based lower estimate ($10^{%(e).1f}$, %(n)s attacks). The lower estimate lies %(gap).0f orders of magnitude below the data-dependent bound; the global GloRo radius under either analytical curve is vacuous (\cref{rem:scope}).
 %% pgfplots (log10 y): worst %(pw)s | data-dep %(pd)s | op-norm %(po)s | empirical %(pe)s
 """ % dict(w=r["log10_worst_case"], L=r["depth"], d=r["log10_data_dependent_max"], o=r["log10_op_norm_product"], e=r["log10_empirical_lb_max"],

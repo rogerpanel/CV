@@ -1,0 +1,248 @@
+{
+  "provenance": "DEMO: random 4-layer model, random tokens \u2014 numbers illustrate the pipeline only",
+  "constants": {
+    "s_b": 1.0,
+    "delta_min": 0.001,
+    "delta_max": 0.5,
+    "lambda_min": 0.05,
+    "lambda_max": 1.0,
+    "x_max": 1.0,
+    "c": 0.5,
+    "rho_max": 0.9999500012499791,
+    "rho_min": 0.6065306597126334,
+    "H": 10000.25000207509
+  },
+  "alpha_min": 0.5,
+  "t0": 32,
+  "worst_case_ell_star_at_h0_4": 0.9543073885270407,
+  "per_input_worst_case": {
+    "n": 64,
+    "alpha_min": 0.5,
+    "rho_min": 0.6065306597126334,
+    "c": 0.5,
+    "h0_norm_median": 0.1147630400955677,
+    "ell_star_min": 0.06261713287795888,
+    "ell_star_p05": 0.07057476700873191,
+    "ell_star_median": 0.08459500041953116,
+    "ell_star_p95": 0.10781176641251983,
+    "ell_star_max": 0.12471716829440187,
+    "ell_star_int_min": 0
+  },
+  "per_input_data_dependent": {
+    "n": 64,
+    "min": 0.4096522331237793,
+    "p05": 0.43359920382499695,
+    "median": 0.5334398746490479,
+    "p95": 0.6435617208480835,
+    "observed_rho_min": 0.6337329745292664,
+    "observed_injection_max": 0.08605585247278214
+  },
+  "required_delta_max_times_lambda_max_for_target": {
+    "target_ell": 24,
+    "product": 0.028881132523331063,
+    "current_product": 0.5
+  },
+  "sweep": [
+    {
+      "delta_max": 0.5,
+      "lambda_max": 1.0,
+      "rho_min": 0.6065306597126334,
+      "ell_star": 0.08446390929806462,
+      "L_block": 110029492.21419147
+    },
+    {
+      "delta_max": 0.5,
+      "lambda_max": 0.5,
+      "rho_min": 0.7788007830714049,
+      "ell_star": 0.097666246606031,
+      "L_block": 55036742.65700031
+    },
+    {
+      "delta_max": 0.5,
+      "lambda_max": 0.25,
+      "rho_min": 0.8824969025845955,
+      "ell_star": 0.1055713065012876,
+      "L_block": 27540367.878404714
+    },
+    {
+      "delta_max": 0.5,
+      "lambda_max": 0.1,
+      "rho_min": 0.951229424500714,
+      "ell_star": 0.11082739202182199,
+      "L_block": 11042543.011247365
+    },
+    {
+      "delta_max": 0.25,
+      "lambda_max": 1.0,
+      "rho_min": 0.7788007830714049,
+      "ell_star": 0.18845705195071583,
+      "L_block": 55020245.24457187
+    },
+    {
+      "delta_max": 0.25,
+      "lambda_max": 0.5,
+      "rho_min": 0.8824969025845955,
+      "ell_star": 0.2070528616858163,
+      "L_block": 27523870.465976294
+    },
+    {
+      "delta_max": 0.25,
+      "lambda_max": 0.25,
+      "rho_min": 0.9394130628134758,
+      "ell_star": 0.21760430867549366,
+      "L_block": 13775683.076678498
+    },
+    {
+      "delta_max": 0.25,
+      "lambda_max": 0.1,
+      "rho_min": 0.9753099120283326,
+      "ell_star": 0.22440202462141026,
+      "L_block": 5526770.643099823
+    },
+    {
+      "delta_max": 0.1,
+      "lambda_max": 1.0,
+      "rho_min": 0.9048374180359595,
+      "ell_star": 0.5040516667243699,
+      "L_block": 22014697.062800124
+    },
+    {
+      "delta_max": 0.1,
+      "lambda_max": 0.5,
+      "rho_min": 0.951229424500714,
+      "ell_star": 0.5363365611934359,
+      "L_block": 11016147.151361886
+    },
+    {
+      "delta_max": 0.1,
+      "lambda_max": 0.25,
+      "rho_min": 0.9753099120283326,
+      "ell_star": 0.5540194038776228,
+      "L_block": 5516872.195642769
+    },
+    {
+      "delta_max": 0.1,
+      "lambda_max": 0.1,
+      "rho_min": 0.9900498337491681,
+      "ell_star": 0.5651803758348979,
+      "L_block": 2217307.2222112985
+    },
+    {
+      "delta_max": 0.05,
+      "lambda_max": 1.0,
+      "rho_min": 0.951229424500714,
+      "ell_star": 1.0313622202164952,
+      "L_block": 11012847.668876203
+    },
+    {
+      "delta_max": 0.05,
+      "lambda_max": 0.5,
+      "rho_min": 0.9753099120283326,
+      "ell_star": 1.0855366448422434,
+      "L_block": 5513572.713157084
+    },
+    {
+      "delta_max": 0.05,
+      "lambda_max": 0.25,
+      "rho_min": 0.9875778004938814,
+      "ell_star": 1.1148194257387145,
+      "L_block": 2763935.235297526
+    },
+    {
+      "delta_max": 0.05,
+      "lambda_max": 0.1,
+      "rho_min": 0.9950124791926823,
+      "ell_star": 1.1331626461998014,
+      "L_block": 1114152.7485817906
+    },
+    {
+      "delta_max": 0.03,
+      "lambda_max": 1.0,
+      "rho_min": 0.9704455335485082,
+      "ell_star": 1.7347647352406004,
+      "L_block": 6612107.911306633
+    },
+    {
+      "delta_max": 0.03,
+      "lambda_max": 0.5,
+      "rho_min": 0.9851119396030626,
+      "ell_star": 1.8178976249121201,
+      "L_block": 3312542.9378751633
+    },
+    {
+      "delta_max": 0.03,
+      "lambda_max": 0.25,
+      "rho_min": 0.9925280548191384,
+      "ell_star": 1.8625783642678004,
+      "L_block": 1662760.451159428
+    },
+    {
+      "delta_max": 0.03,
+      "lambda_max": 0.1,
+      "rho_min": 0.997004495503373,
+      "ell_star": 1.8904766451610877,
+      "L_block": 672890.9591299869
+    },
+    {
+      "delta_max": 0.02,
+      "lambda_max": 1.0,
+      "rho_min": 0.9801986733067553,
+      "ell_star": 2.6141229788419853,
+      "L_block": 4411738.03252185
+    },
+    {
+      "delta_max": 0.02,
+      "lambda_max": 0.5,
+      "rho_min": 0.9900498337491681,
+      "ell_star": 2.733379401623209,
+      "L_block": 2212028.050234203
+    },
+    {
+      "delta_max": 0.02,
+      "lambda_max": 0.25,
+      "rho_min": 0.9950124791926823,
+      "ell_star": 2.797285297299528,
+      "L_block": 1112173.0590903796
+    },
+    {
+      "delta_max": 0.02,
+      "lambda_max": 0.1,
+      "rho_min": 0.9980019986673331,
+      "ell_star": 2.8371205303682583,
+      "L_block": 452260.06440408545
+    },
+    {
+      "delta_max": 0.01,
+      "lambda_max": 1.0,
+      "rho_min": 0.9900498337491681,
+      "ell_star": 5.252338969764955,
+      "L_block": 2211368.1537370663
+    },
+    {
+      "delta_max": 0.01,
+      "lambda_max": 0.5,
+      "rho_min": 0.9950124791926823,
+      "ell_star": 5.47986565022436,
+      "L_block": 1111513.1625932427
+    },
+    {
+      "delta_max": 0.01,
+      "lambda_max": 0.25,
+      "rho_min": 0.9975031223974601,
+      "ell_star": 5.601417135660135,
+      "L_block": 561585.6670213309
+    },
+    {
+      "delta_max": 0.01,
+      "lambda_max": 0.1,
+      "rho_min": 0.999000499833375,
+      "ell_star": 5.677054036473594,
+      "L_block": 231629.16967818383
+    }
+  ],
+  "figure4_shaded_region": {
+    "worst_case_ell_star_int": 0,
+    "data_dependent_p05": 0.43359920382499695,
+    "pgfplots": "\\addplot[fill=green!15,draw=none] coordinates {(0,0) (0,100) (0,100) (0,0)} \\closedcycle; % worst-case Theorem-2 region (constants only)"
+  }
+}

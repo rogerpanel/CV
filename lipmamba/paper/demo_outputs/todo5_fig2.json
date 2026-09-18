@@ -1,0 +1,75 @@
+{
+  "provenance": "DEMO random model",
+  "constants": {
+    "s_b": 1.0,
+    "s_c": 1.0,
+    "s_delta": 0.5,
+    "s_out": 1.0,
+    "delta_min": 0.001,
+    "delta_max": 0.5,
+    "lambda_min": 0.05,
+    "lambda_max": 1.0,
+    "x_max": 1.0,
+    "l_silu": 1.0998,
+    "c": 0.5,
+    "rho_max": 0.9999500012499791,
+    "rho_min": 0.6065306597126334,
+    "H": 10000.25000207509,
+    "gamma": 5001.625001037545,
+    "L_block": 110029492.21419147,
+    "L_network_product": 9.913308207092024e+192,
+    "log10_L_network": 192.9962186087062,
+    "kappa": 0.3176867603170998,
+    "ell_star": 0.9543073885270407,
+    "ell_star_int": 0
+  },
+  "rows": [
+    {
+      "depth": 4,
+      "log10_worst_case": 32.166036450572655,
+      "log10_data_dependent_max": 5.767336368560791,
+      "log10_data_dependent_median": 5.759146213531494,
+      "log10_op_norm_product": -1.2041199826559248,
+      "log10_empirical_lb_max": -0.02907414548099041,
+      "log10_empirical_lb_median": -0.25711557269096375
+    },
+    {
+      "depth": 8,
+      "log10_worst_case": 64.33207290114531,
+      "log10_data_dependent_max": 11.508687973022461,
+      "log10_data_dependent_median": 11.502516746520996,
+      "log10_op_norm_product": -2.4082399653118496,
+      "log10_empirical_lb_max": -0.023017670959234238,
+      "log10_empirical_lb_median": -0.25791847705841064
+    },
+    {
+      "depth": 16,
+      "log10_worst_case": 128.66414580229062,
+      "log10_data_dependent_max": 23.016590118408203,
+      "log10_data_dependent_median": 23.007770538330078,
+      "log10_op_norm_product": -4.816479930623699,
+      "log10_empirical_lb_max": -0.01672174036502838,
+      "log10_empirical_lb_median": -0.24991554021835327
+    },
+    {
+      "depth": 24,
+      "log10_worst_case": 192.99621870343594,
+      "log10_data_dependent_max": 34.543556213378906,
+      "log10_data_dependent_median": 34.52051544189453,
+      "log10_op_norm_product": -7.224719895935549,
+      "log10_empirical_lb_max": -0.0006099650636315346,
+      "log10_empirical_lb_median": -0.19930395483970642
+    }
+  ],
+  "consistency_check": {
+    "empirical_lb_well_below_bound": true,
+    "note": "If the empirical LB is within ~2% of an upper bound the plot is wrong (TODO 5)."
+  },
+  "pgfplots": {
+    "worst_case": "(4,32.17) (8,64.33) (16,128.66) (24,193.00)",
+    "data_dependent": "(4,5.77) (8,11.51) (16,23.02) (24,34.54)",
+    "op_norm": "(4,-1.20) (8,-2.41) (16,-4.82) (24,-7.22)",
+    "empirical_lb": "(4,-0.03) (8,-0.02) (16,-0.02) (24,-0.00)",
+    "axis_note": "y axis is log10(K); use ymode=normal with these coordinates or 10^y with ymode=log"
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "provenance": "DEMO random model",
+  "constants": {
+    "s_b": 1.0,
+    "s_c": 1.0,
+    "s_delta": 0.5,
+    "s_out": 1.0,
+    "delta_min": 0.001,
+    "delta_max": 0.5,
+    "lambda_min": 0.05,
+    "lambda_max": 1.0,
+    "x_max": 1.0,
+    "l_silu": 1.0998,
+    "c": 0.5,
+    "rho_max": 0.9999500012499791,
+    "rho_min": 0.6065306597126334,
+    "H": 10000.25000207509,
+    "gamma": 5001.625001037545,
+    "L_block": 110029492.21419147,
+    "L_network_product": 9.913308207092024e+192,
+    "log10_L_network": 192.9962186087062,
+    "kappa": 0.3176867603170998,
+    "ell_star": 0.9543073885270407,
+    "ell_star_int": 0
+  },
+  "rows": [
+    {
+      "trigger_length": 4,
+      "theorem2_worst_case_ell_star_h0_4": 0.9543073885270407,
+      "adaptive_saturate_continuous": {
+        "objective": "saturate",
+        "trigger_length": 4,
+        "mean_delta_over_trigger": 0.44136112928390503,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8827222585678101,
+        "retention_ratio_mean": 0.43437469005584717,
+        "retention_ratio_min": 0.3851725161075592,
+        "overwrite_distance_mean": 0.7615804672241211,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_saturate_discrete": {
+        "objective": "saturate",
+        "trigger_length": 4,
+        "mean_delta_over_trigger": 0.44120994210243225,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8824198842048645,
+        "retention_ratio_mean": 0.5313203930854797,
+        "retention_ratio_min": 0.45083364844322205,
+        "overwrite_distance_mean": 0.6600942611694336,
+        "label_flip_rate": 0.5,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_overwrite_continuous": {
+        "objective": "overwrite",
+        "trigger_length": 4,
+        "mean_delta_over_trigger": 0.44130784273147583,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8826156854629517,
+        "retention_ratio_mean": 1.0423741340637207,
+        "retention_ratio_min": 1.017286777496338,
+        "overwrite_distance_mean": 0.8287036418914795,
+        "label_flip_rate": 0.875,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_margin_continuous": {
+        "objective": "margin",
+        "trigger_length": 4,
+        "mean_delta_over_trigger": 0.4414478838443756,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8828957676887512,
+        "retention_ratio_mean": 0.932287335395813,
+        "retention_ratio_min": 0.8174397945404053,
+        "overwrite_distance_mean": 0.5130019187927246,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "z_hispa": {
+        "variant": "Z-HiSPA",
+        "alpha_mean": 1.043976902961731,
+        "alpha_min": 0.897592306137085,
+        "success_rate": 0.0,
+        "top_tokens": [
+          15,
+          43,
+          232,
+          0
+        ]
+      },
+      "m_hispa": {
+        "variant": "M-HiSPA",
+        "alpha_mean": 0.7629969120025635,
+        "alpha_min": 0.6642126441001892,
+        "success_rate": 0.0
+      }
+    },
+    {
+      "trigger_length": 8,
+      "theorem2_worst_case_ell_star_h0_4": 0.9543073885270407,
+      "adaptive_saturate_continuous": {
+        "objective": "saturate",
+        "trigger_length": 8,
+        "mean_delta_over_trigger": 0.44128796458244324,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8825759291648865,
+        "retention_ratio_mean": 0.26546934247016907,
+        "retention_ratio_min": 0.20379452407360077,
+        "overwrite_distance_mean": 0.8993860483169556,
+        "label_flip_rate": 0.875,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_saturate_discrete": {
+        "objective": "saturate",
+        "trigger_length": 8,
+        "mean_delta_over_trigger": 0.4411509335041046,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8823018670082092,
+        "retention_ratio_mean": 0.41301900148391724,
+        "retention_ratio_min": 0.3109169006347656,
+        "overwrite_distance_mean": 0.7980789542198181,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_overwrite_continuous": {
+        "objective": "overwrite",
+        "trigger_length": 8,
+        "mean_delta_over_trigger": 0.4413943290710449,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8827886581420898,
+        "retention_ratio_mean": 1.0556230545043945,
+        "retention_ratio_min": 1.0162749290466309,
+        "overwrite_distance_mean": 0.9598116278648376,
+        "label_flip_rate": 0.875,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_margin_continuous": {
+        "objective": "margin",
+        "trigger_length": 8,
+        "mean_delta_over_trigger": 0.44131001830101013,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8826200366020203,
+        "retention_ratio_mean": 0.8548467755317688,
+        "retention_ratio_min": 0.6475731134414673,
+        "overwrite_distance_mean": 0.6721158027648926,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "z_hispa": {
+        "variant": "Z-HiSPA",
+        "alpha_mean": 1.2871546745300293,
+        "alpha_min": 0.9266632199287415,
+        "success_rate": 0.0,
+        "top_tokens": [
+          15,
+          43,
+          232,
+          0
+        ]
+      },
+      "m_hispa": {
+        "variant": "M-HiSPA",
+        "alpha_mean": 0.6444081664085388,
+        "alpha_min": 0.5045477747917175,
+        "success_rate": 0.0
+      }
+    },
+    {
+      "trigger_length": 16,
+      "theorem2_worst_case_ell_star_h0_4": 0.9543073885270407,
+      "adaptive_saturate_continuous": {
+        "objective": "saturate",
+        "trigger_length": 16,
+        "mean_delta_over_trigger": 0.4412326216697693,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8824652433395386,
+        "retention_ratio_mean": 0.17297303676605225,
+        "retention_ratio_min": 0.15126939117908478,
+        "overwrite_distance_mean": 0.9692432284355164,
+        "label_flip_rate": 0.875,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_saturate_discrete": {
+        "objective": "saturate",
+        "trigger_length": 16,
+        "mean_delta_over_trigger": 0.4412018656730652,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8824037313461304,
+        "retention_ratio_mean": 0.4084165096282959,
+        "retention_ratio_min": 0.35852035880088806,
+        "overwrite_distance_mean": 0.7906277775764465,
+        "label_flip_rate": 0.5,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_overwrite_continuous": {
+        "objective": "overwrite",
+        "trigger_length": 16,
+        "mean_delta_over_trigger": 0.44144323468208313,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8828864693641663,
+        "retention_ratio_mean": 1.0781089067459106,
+        "retention_ratio_min": 1.0259110927581787,
+        "overwrite_distance_mean": 1.0700360536575317,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_margin_continuous": {
+        "objective": "margin",
+        "trigger_length": 16,
+        "mean_delta_over_trigger": 0.44134894013404846,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8826978802680969,
+        "retention_ratio_mean": 0.7704198956489563,
+        "retention_ratio_min": 0.576907753944397,
+        "overwrite_distance_mean": 0.7106243968009949,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "z_hispa": {
+        "variant": "Z-HiSPA",
+        "alpha_mean": 1.706778645515442,
+        "alpha_min": 1.08420729637146,
+        "success_rate": 0.0,
+        "top_tokens": [
+          15,
+          43,
+          232,
+          0
+        ]
+      },
+      "m_hispa": {
+        "variant": "M-HiSPA",
+        "alpha_mean": 0.472878634929657,
+        "alpha_min": 0.3992139995098114,
+        "success_rate": 0.0
+      }
+    },
+    {
+      "trigger_length": 24,
+      "theorem2_worst_case_ell_star_h0_4": 0.9543073885270407,
+      "adaptive_saturate_continuous": {
+        "objective": "saturate",
+        "trigger_length": 24,
+        "mean_delta_over_trigger": 0.44129252433776855,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8825850486755371,
+        "retention_ratio_mean": 0.14169274270534515,
+        "retention_ratio_min": 0.12383362650871277,
+        "overwrite_distance_mean": 0.9811808466911316,
+        "label_flip_rate": 0.625,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_saturate_discrete": {
+        "objective": "saturate",
+        "trigger_length": 24,
+        "mean_delta_over_trigger": 0.4411710500717163,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8823421001434326,
+        "retention_ratio_mean": 0.38850170373916626,
+        "retention_ratio_min": 0.2855035960674286,
+        "overwrite_distance_mean": 0.850919246673584,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_overwrite_continuous": {
+        "objective": "overwrite",
+        "trigger_length": 24,
+        "mean_delta_over_trigger": 0.4413266181945801,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8826532363891602,
+        "retention_ratio_mean": 1.0833221673965454,
+        "retention_ratio_min": 0.9599945545196533,
+        "overwrite_distance_mean": 1.178831696510315,
+        "label_flip_rate": 0.875,
+        "clean_label_agreement": 0.0
+      },
+      "adaptive_margin_continuous": {
+        "objective": "margin",
+        "trigger_length": 24,
+        "mean_delta_over_trigger": 0.4412754774093628,
+        "delta_max": 0.5,
+        "delta_saturation_fraction": 0.8825509548187256,
+        "retention_ratio_mean": 0.829666793346405,
+        "retention_ratio_min": 0.5315620303153992,
+        "overwrite_distance_mean": 0.9224625825881958,
+        "label_flip_rate": 1.0,
+        "clean_label_agreement": 0.0
+      },
+      "z_hispa": {
+        "variant": "Z-HiSPA",
+        "alpha_mean": 1.9831117391586304,
+        "alpha_min": 1.2101731300354004,
+        "success_rate": 0.0,
+        "top_tokens": [
+          15,
+          43,
+          232,
+          0
+        ]
+      },
+      "m_hispa": {
+        "variant": "M-HiSPA",
+        "alpha_mean": 0.5199243426322937,
+        "alpha_min": 0.32213014364242554,
+        "success_rate": 0.0
+      }
+    }
+  ],
+  "reading_guide": {
+    "retention_ratio_mean": "\u2016h_T\u2016/\u2016h_T^clean\u2016 after the trigger; Theorem 2 lower-bounds this for \u2113<\u2113*",
+    "delta_saturation_fraction": "mean \u0394_t over trigger / \u0394_max \u2014 1.0 means the adversary pinned every step at the clamp",
+    "overwrite_distance_mean": "\u2016h_T \u2212 h_T^clean\u2016/\u2016h_T^clean\u2016 \u2014 large values with retention\u22481 show the norm bound is not a content bound",
+    "label_flip_rate": "fraction of prefixes whose predicted label changed (behavioural harm)"
+  }
+}
