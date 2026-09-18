@@ -30,16 +30,16 @@ def main() -> None:
         shuffle=True,
     )
 
+    # lipschitz_mode="fixed" keeps the CPU demo fast; the paper's setting is
+    # "local" (Appendix-E estimator per batch), see configs/lipmamba_130m.yaml.
     trainer_cfg = TrainerConfig(
         max_steps=20, log_every=5, eval_every=10, save_every=10,
-        out_dir="runs/demo",
+        out_dir="runs/demo", lipschitz_mode="fixed", l_fixed=1.0,
         pac_bayes=PACBayesConfig(n_train=n),
     )
     LipMambaTrainer(model=model, train_loader=train_loader, cfg=trainer_cfg).train()
-    print(
-        "L_net (closed-form bound) =",
-        float(model.network_lipschitz_bound().item()),
-    )
+    print("log10 worst-case global bound (Theorem 1 product) =", model.log10_network_lipschitz_bound())
+    print("data-dependent bound after last forward =", model.data_dependent_network_bound())
 
 
 if __name__ == "__main__":
