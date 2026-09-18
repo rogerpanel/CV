@@ -103,6 +103,7 @@ class LipMambaModel(nn.Module):
             )
         else:
             self.cls_head = None
+        self.register_buffer("_verbalizer", None, persistent=False)
 
     # -- forward -----------------------------------------------------------
     def encode_from_embeddings(self, h: torch.Tensor) -> torch.Tensor:
@@ -113,20 +114,35 @@ class LipMambaModel(nn.Module):
     def encode(self, input_ids: torch.Tensor) -> torch.Tensor:
         return self.encode_from_embeddings(self.embed_tokens(input_ids))
 
+    # -- verbalizer (RoBench-25 true/false answering with the LM head) ------
+    def set_verbalizer(self, token_ids: list[int] | None) -> None:
+        """Restrict the LM head to ``token_ids`` (e.g. the ids of " true" and
+        " false") so that the model acts as a K-way classifier through its
+        language-modelling head.  Used for RoBench-25, where the answer is
+        read off the next-token logits after the question prompt.  The
+        GloRo radius, LL-Acc and the margin attack then operate on these
+        K logits.  ``None`` clears the verbalizer."""
+        dev = self.embed_tokens.weight.device
+        self._verbalizer = None if token_ids is None else torch.as_tensor(token_ids, dtype=torch.long, device=dev)
+
+    def _head(self, h_last: torch.Tensor) -> torch.Tensor:
+        if self.cls_head is not None:
+            return self.cls_head(h_last)
+        logits = self.lm_head(h_last)
+        v = getattr(self, "_verbalizer", None)
+        return logits[:, v] if v is not None else logits
+
     def logits_from_embeddings(self, emb: torch.Tensor) -> torch.Tensor:
         """Differentiable path embeddings → classification logits (attacks / L_loc)."""
-        h = self.encode_from_embeddings(emb)
-        if self.cls_head is not None:
-            return self.cls_head(h[:, -1])
-        return self.lm_head(h[:, -1])
+        return self._head(self.encode_from_embeddings(emb)[:, -1])
 
     def forward(self, input_ids: torch.Tensor, return_logits: bool = True) -> dict[str, torch.Tensor]:
         h = self.encode(input_ids)
         out = {"hidden_states": h}
         if return_logits:
             out["lm_logits"] = self.lm_head(h)
-        if self.cls_head is not None:
-            out["cls_logits"] = self.cls_head(h[:, -1])
+        if self.cls_head is not None or getattr(self, "_verbalizer", None) is not None:
+            out["cls_logits"] = self._head(h[:, -1])
         return out
 
     # -- certificates --------------------------------------------------------
