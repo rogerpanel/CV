@@ -8,7 +8,7 @@ Algorithm 1 (forward pass with online tracking of the analytical constant):
 
 with the *data-dependent refinement* of Theorem 1
 
-    γ_t = 2 s_B Δ_t X_max + s_Δ (λ_max ‖h_{t-1}‖₂ + s_B X_max)
+    γ_t = 2 s_B Δ_t X_max + s_Δ (λ_max ‖h_{t-1}‖₂ + s_B X_max²)
     D_t = ‖Ā_t‖₂ D_{t-1} + γ_t
     L_block(data) = s_out L_SiLU s_C ( X_max · max_t D_t + max_t ‖h_t‖₂ )
 
@@ -168,7 +168,7 @@ class SelectiveSSM(nn.Module):
                     inj_norm = inj_t.norm(dim=-1).amax(dim=-1)        # max over channels
                     hprev_norm = h_prev.norm(dim=-1).amax(dim=-1)
                     gamma_t = (2.0 * s_b_eff * delta[:, tt].amax(dim=-1) * cfg.x_max
-                               + s_d_eff * (cfg.lambda_max * hprev_norm + s_b_eff * cfg.x_max))
+                               + s_d_eff * (cfg.lambda_max * hprev_norm + s_b_eff * cfg.x_max**2))
                     D_t = am * D_prev + gamma_t
                     a_max[:, tt] = am; a_min[:, tt] = an; inj[:, tt] = inj_norm
                     hn[:, tt] = h.norm(dim=-1).amax(dim=-1); dt[:, tt] = D_t

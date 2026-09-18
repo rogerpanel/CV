@@ -44,7 +44,7 @@ Code: `ConstraintSet.H`; verified at run time by `ScanTrace.h_norm ≤ H`
 
     ‖f_block(x) − f_block(x′)‖ ≤ L_block ‖x − x′‖,
     L_block = s_out L_SiLU s_C ( X_max γ / (1 − ρ_max) + H ),
-    γ       = 2 s_B Δ_max X_max + s_Δ (λ_max H + s_B X_max),
+    γ       = 2 s_B Δ_max X_max + s_Δ (λ_max H + s_B X_max²),
     L_SSM  ≤ ∏_i L_block^{(i)}          (N blocks; × (1 + L_block) per block if the block has a residual).
 
 The ‖h‖_∞ term of the old version is replaced by the *derived* constant H

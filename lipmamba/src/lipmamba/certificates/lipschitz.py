@@ -59,7 +59,7 @@ class LipschitzTracker:
 
     def update(self, a_bar_norm: float, delta_t: float, h_prev_norm: float, h_norm: float) -> float:
         cs = self.cs
-        gamma_t = 2 * cs.s_b * delta_t * cs.x_max + cs.s_delta * (cs.lambda_max * h_prev_norm + cs.s_b * cs.x_max)
+        gamma_t = 2 * cs.s_b * delta_t * cs.x_max + cs.s_delta * (cs.lambda_max * h_prev_norm + cs.s_b * cs.x_max**2)
         self.D = a_bar_norm * self.D + gamma_t
         self.h_max = max(self.h_max, h_norm)
         return self.D

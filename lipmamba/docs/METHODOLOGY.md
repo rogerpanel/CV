@@ -13,7 +13,7 @@ Require: tokens x_1..x_L, params {W_B, W_C, W_Δ, α, W_out}, budgets (s_B,s_C,s
  6:    Δ_t ← Δ_min + (Δ_max−Δ_min) tanh(softplus(W̄_Δ x_t + τ)/(Δ_max−Δ_min))   (clipped_delta.py)
  7:    B_t ← W̄_B x_t; C_t ← W̄_C x_t; Ā_t ← exp(Δ_t A); B̄_t ← Δ_t B_t
  8:    h_t ← Ā_t h_{t−1} + B̄_t x_t;  y_t ← W̄_out SiLU(C_tᵀ h_t)
- 9:    γ_t ← 2 s_B Δ_t X_max + s_Δ(λ_max ‖h_{t−1}‖ + s_B X_max);  D_t ← ‖Ā_t‖₂ D_{t−1} + γ_t
+ 9:    γ_t ← 2 s_B Δ_t X_max + s_Δ(λ_max ‖h_{t−1}‖ + s_B X_max²);  D_t ← ‖Ā_t‖₂ D_{t−1} + γ_t
 10: L_block ← s_out L_SiLU s_C (X_max max_t D_t + max_t ‖h_t‖)        (data-dependent refinement)
 11: return y_{1:L}, L_block, margin z_ŷ − max_{k≠ŷ} z_k
 ```

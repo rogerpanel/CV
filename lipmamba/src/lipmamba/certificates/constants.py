@@ -8,7 +8,7 @@ Notation (Assumption 1)
     ρ_max    = exp(−Δ_min · λ_min)                 upper bound on ‖Ā_t‖₂
     ρ_min    = exp(−Δ_max · λ_max)                 lower bound on σ_min(Ā_t)
     H        = c / (1 − ρ_max)                    Lemma 1 (bounded state)
-    γ        = 2 s_B Δ_max X_max + s_Δ (λ_max H + s_B X_max)
+    γ        = 2 s_B Δ_max X_max + s_Δ (λ_max H + s_B X_max²)     (proof step (iii): |Δ−Δ′|‖B_t‖‖x_t‖ ≤ s_Δ‖δ‖·s_B X_max·X_max)
     L_block  = s_out · L_SiLU · s_C · ( X_max γ / (1 − ρ_max) + H )     Theorem 1
     κ        = c / ((1 − ρ_min) ‖h_{t0}‖)
     ℓ*       = log((α_min + κ)/(1 + κ)) / log(ρ_min)                     Theorem 2, Eq. (lstar)
@@ -66,7 +66,7 @@ class ConstraintSet:
     @property
     def gamma(self) -> float:
         return 2.0 * self.s_b * self.delta_max * self.x_max + self.s_delta * (
-            self.lambda_max * self.H + self.s_b * self.x_max
+            self.lambda_max * self.H + self.s_b * self.x_max**2
         )
 
     @property
