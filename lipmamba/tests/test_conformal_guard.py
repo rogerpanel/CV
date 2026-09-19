@@ -15,9 +15,12 @@ from lipmamba.monitoring import ConformalGuard, ConformalGuardConfig, mixture_e_
 def test_mixture_e_value_integrates_to_one_under_uniform_p() -> None:
     """E_{p~U(0,1)}[e(p)] = 1 (an e-value); checked by quadrature because the
     Monte-Carlo mean has infinite variance (e(p) ~ 1/(p ln²p) near 0)."""
+    from lipmamba.monitoring.conformal_guard import KAPPA_GRID
     f = lambda p: float(mixture_e_value(torch.tensor([p], dtype=torch.float64)))
-    val, err = quad(f, 0.0, 1.0, limit=200)
-    assert abs(val - 1.0) < 1e-3, (val, err)
+    delta = 1e-12                                           # numerical clamp inside mixture_e_value
+    val, err = quad(f, delta, 1.0, limit=400)
+    expected = 1.0 - float(np.mean([delta**k for k in KAPPA_GRID]))   # ∫_δ^1 κ p^{κ−1} dp = 1 − δ^κ
+    assert abs(val - expected) < 2e-3, (val, expected, err)
     assert f(1e-6) > 100.0 and abs(f(1.0) - 0.5) < 1e-6      # mean of κ over the grid = 0.5
 
 
