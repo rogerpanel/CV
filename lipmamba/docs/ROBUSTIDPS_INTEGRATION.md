@@ -39,6 +39,21 @@ LipMamba contributes:
   the *AI Active Defence* pages to exercise the system against synthetic
   HiSPA triggers nightly.
 
+## 1b. Module 5 — ConformalGuard agent monitor (platform component)
+
+The framework figure's Module 5 is implemented in
+`lipmamba.monitoring.ConformalGuard`: an anytime-valid e-value martingale
+over the scan's per-token telemetry (step saturation, norm loss, relative
+injection), calibrated on clean traffic and alarming at `M_t ≥ 1/α`.  The
+"agent telemetry" arrows of the figure are `recommend_delta_max()` (tighten
+the clamp on alarm, which raises ρ_min and the certified ℓ\*) and
+`dashboard_payload()` (the `(ŷ, ε*, M_t, alarm)` record consumed by the SOC
+dashboard).  It is a deployment component: it is not described or evaluated
+in the ICLR manuscript and its false-alarm guarantee holds under
+exchangeability of clean scores, so α is nominal until calibrated on
+held-out clean traffic.  Full module map: `docs/ARCHITECTURE.md`; the
+platform figure with the corrected formulas: `docs/figures/fig1_platform.tex`.
+
 ## 2. Model-zoo registration
 
 Add LipMamba to the existing `integrated_ai_ids/models/__init__.py`
