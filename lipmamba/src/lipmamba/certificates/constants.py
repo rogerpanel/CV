@@ -104,6 +104,29 @@ class ConstraintSet:
     def ell_star_int(self, h0_norm: float, alpha_min: float = 0.5) -> int:
         return int(math.floor(self.ell_star(h0_norm, alpha_min)))
 
+    def one_token_certified(self, h0_norm: float, alpha_min: float = 0.5) -> bool:
+        """Theorem 2 condition ℓ* ≥ 1  ⇔  ρ_min(1+κ) − κ ≥ α_min."""
+        k = self.kappa(h0_norm)
+        return self.rho_min * (1.0 + k) - k >= alpha_min
+
+    # -- Corollary (directional retention) ---------------------------------
+    def injected_norm_bound(self, ell: int) -> float:
+        """S_ℓ = c (1 − ρ_max^ℓ)/(1 − ρ_max) ≤ c ℓ: total norm the trigger can inject.
+
+        Uses the *upper* contraction ρ_max (each injection is only guaranteed to
+        shrink by ≤ ρ_max afterwards); the ρ_min-discounted sum of Theorem 2 is
+        valid for the norm recursion but not for the inner product."""
+        return self.c * (1.0 - self.rho_max**ell) / (1.0 - self.rho_max)
+
+    def directional_retention_lower_bound(self, h0_norm: float, ell: int) -> float:
+        """⟨h_{t0+ℓ}, h_{t0}⟩ ≥ ‖h_{t0}‖ (ρ_min^ℓ ‖h_{t0}‖ − S_ℓ)."""
+        return h0_norm * (self.rho_min**ell * h0_norm - self.injected_norm_bound(ell))
+
+    def certified_cosine(self, h0_norm: float, ell: int) -> float:
+        """cos∠(h_{t0+ℓ}, h_{t0}) ≥ (ρ_min^ℓ − S_ℓ/‖h0‖) / (1 + S_ℓ/‖h0‖)   (≤ 0 means no certificate)."""
+        s = self.injected_norm_bound(ell) / h0_norm
+        return (self.rho_min**ell - s) / (1.0 + s)
+
     # -- reporting ----------------------------------------------------------
     def summary(self, n_blocks: int = 24, h0_norm: float = 4.0, alpha_min: float = 0.5) -> dict:
         d = asdict(self)

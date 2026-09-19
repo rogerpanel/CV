@@ -103,6 +103,30 @@ smaller than the stated 0.5.  `scripts/todo1_ell_star.py` prints the
 (Δ_max, λ_max) sweep, the per-input distribution and the pgfplots command for
 the corrected Figure-4 shaded region.
 
+### One-token condition
+
+ℓ\* > 0 does not by itself certify any integer length. At least one token is
+certified iff ρ_min(1+κ) − κ ≥ α_min, i.e. ‖h_{t0}‖ ≥ c/(ρ_min − α_min) when
+ρ_min > α_min (4.69 for the paper's constants at α_min = 0.5).
+Code: `ConstraintSet.one_token_certified`.
+
+## Corollary (directional retention) — v4 addition
+
+With S_ℓ := c(1 − ρ_max^ℓ)/(1 − ρ_max) ≤ cℓ the total injected norm,
+
+    ⟨h_{t0+ℓ}, h_{t0}⟩ ≥ ‖h_{t0}‖ (ρ_min^ℓ ‖h_{t0}‖ − S_ℓ)
+    cos∠(h_{t0+ℓ}, h_{t0}) ≥ (ρ_min^ℓ − S_ℓ/‖h_{t0}‖) / (1 + S_ℓ/‖h_{t0}‖)
+
+Proof idea: the product of the diagonal transition matrices over the trigger
+has entries ≥ ρ_min^ℓ, so its quadratic form is ≥ ρ_min^ℓ ‖h_{t0}‖²; the
+injected terms contribute ≥ −S_ℓ‖h_{t0}‖ by Cauchy–Schwarz. **Note** the
+additive term uses ρ_max (each injection is only guaranteed to shrink by
+≤ ρ_max afterwards): the ρ_min-discounted recursion of Theorem 2 does not
+transfer to inner products. At ℓ = 1, S_1 = c and the directional and norm
+certificates coincide; certified cosine 0.43 for the paper's constants at
+‖h_{t0}‖ = 4. Code: `injected_norm_bound`, `directional_retention_lower_bound`,
+`certified_cosine`; test `tests/test_directional_retention.py`.
+
 ## Theorem 3 (PAC-Bayes bound on adversarial risk)
 
     E_Q[L_adv(θ;ε)] ≤ E_Q[L̂_S(θ)] + E_Q[L_ℓ L(θ)] ε + sqrt((KL(Q‖P) + ln(2√n/δ))/(2n)).
