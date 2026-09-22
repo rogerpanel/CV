@@ -1,0 +1,78 @@
+%% Title page for Artificial Intelligence in Medicine (Elsevier), double-blind review.
+%% This file is uploaded separately from the anonymised manuscript. Compile with pdflatex.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage{microtype}
+\usepackage[margin=2.4cm]{geometry}\usepackage{enumitem}\usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{0.5em}\setlength{\parindent}{0pt}
+\begin{document}
+\begin{center}
+{\large\bfseries Title page}\\[1.2em]
+{\LARGE\bfseries Machine Learning Models for Mental-Health Prediction from Actigraphy:\\[0.2em] A Systematic Appraisal and an Empirical Demonstration}\\[1.6em]
+{\large Aminat Abiola Ajibola$^{\,\mathrm{a},*}$}\\[0.8em]
+{\small $^{\mathrm{a}}$College of Computer Science and Engineering, University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia}\\[0.3em]
+{\small $^{*}$Corresponding author. E-mail: \href{mailto:aajibola@uhb.edu.sa}{aajibola@uhb.edu.sa}; telephone: +966\,550\,047\,554}
+\end{center}
+\vspace{0.8em}
+
+\textbf{Article type.} Research Paper. \quad \textbf{Word count.} Abstract 343 words; main text (excluding abstract, tables, figure captions and references) approximately 4800 words. \quad \textbf{Figures / tables.} 6 figures, 13 tables; one supplementary document.
+
+\textbf{Author.} Dr Aminat Abiola Ajibola, Assistant Professor, College of Computer Science and Engineering, University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia. ORCID: \textit{[insert]}.
+
+\textbf{Highlights.}
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item Systematic PROBAST+AI/TRIPOD+AI appraisal of 28 published models on open actigraphy cohorts
+\item Day-level cross-validation inflated AUROC by up to 0.17 and created signal where there was none
+\item Frozen cross-cohort transfer lost up to 0.21 AUROC with collapse of calibration
+\item No published model on these cohorts reports calibration; honest slopes were 0.53 to 0.95
+\item Subject-wise, calibrated baselines with public code and run manifests for future comparison
+\end{itemize}
+
+\textbf{Abstract.} \textbf{Background and objective.} The open actigraphy cohorts DEPRESJON (depression), PSYKOSE
+(schizophrenia) and HYPERAKTIV (ADHD), harmonised in 2025 as OBF-Psychiatric, are the most used
+public benchmarks for machine-learning (ML) detection of mental disorders from wearables.
+Reported accuracies have risen from the dataset authors' leave-one-patient-out 0.7 to above 0.9.
+We asked whether that reflects better models or weaker evaluation, and measured what the
+prevalent evaluation practices cost.
+\textbf{Methods.} Part~I appraises every published supervised model on the four cohorts with
+PROBAST+AI and TRIPOD+AI, extracting the unit of train/test splitting, external validation,
+calibration reporting, events per predictor, code availability, and whether the control group
+shared by DEPRESJON and PSYKOSE was double counted. Part~II re-evaluates the cohorts with models
+fixed a priori (logistic regression, random forest, XGBoost, 1D-CNN), ten seeds and subject-level
+bias-corrected bootstrap intervals, in six experiments: E1 record-wise versus subject-wise
+cross-validation on identical data; E2 frozen cross-cohort transfer with shared controls assigned
+to one cohort; E3 calibration (slope, intercept, Brier, ECE, reliability curves, recalibration);
+E4 sex strata; E5 transdiagnostic and five-class tasks on OBF-Psychiatric; E6 feature-group,
+resampling and cross-validation-scheme ablation.
+\textbf{Results.} Of 28 eligible published models, 7 split by participant, 9 by day or
+window and 12 did not state the unit; none reported calibration or
+validated on a second cohort; 4 released code. Record-wise splitting inflated window-level AUROC by
+0.065 to 0.114 on DEPRESJON, 0.020 to 0.044 on PSYKOSE and 0.130 to 0.169 on HYPERAKTIV, where the
+honest estimate was at chance (0.44 to 0.45) and the leaky one reached 0.60 to 0.65 at participant
+level. Models trained on PSYKOSE lost 0.13 to 0.21 AUROC on DEPRESJON with calibration slopes of
+0.27 to 0.63; honest slopes were 0.53 to 0.95 and ECE 0.06 to 0.22; recalibration from the training
+cohort did not repair the transfer. Participant-level events per predictor were 0.6 to 0.8. Honest
+performance was stable across feature subsets and cross-validation schemes (E6).
+\textbf{Conclusions.} Reported progress on these benchmarks is largely an artefact of evaluation
+design. We provide subject-wise, calibrated, cross-cohort baselines with public code, manifests
+and a TRIPOD+AI self-audit against which future claims on these cohorts can be checked.
+
+\textbf{Keywords.} actigraphy; depression; schizophrenia; ADHD; DEPRESJON; PSYKOSE; HYPERAKTIV; OBF-Psychiatric; data leakage; external validation; calibration; PROBAST+AI; TRIPOD+AI; reproducibility.
+
+\textbf{Declaration of competing interest.} The author declares that she has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\textbf{Funding.} This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\textbf{Ethics.} The study is a secondary analysis of publicly available, de-identified datasets (DEPRESJON, PSYKOSE, HYPERAKTIV, OBF-Psychiatric) released for research use by their custodians; no new data were collected and no ethical approval was required.
+
+\textbf{Data availability.} The datasets are available from their custodians: DEPRESJON (\url{https://datasets.simula.no/depresjon/}), PSYKOSE (\url{https://datasets.simula.no/psykose/}), HYPERAKTIV (\url{https://datasets.simula.no/hyperaktiv/}) and OBF-Psychiatric (\url{https://zenodo.org/records/13754984}). SHA-256 checksums of every file used are recorded in the code repository.
+
+\textbf{Code availability.} All analysis code, configuration files, run manifests, per-window predictions and the scripts that generate every table and figure are available at \url{https://github.com/rogerpanel/cv/tree/main/mlmh-appraisal} (release \texttt{v1.0.0-submission}; Zenodo DOI to be added on acceptance). An anonymised copy is provided to the editor for review.
+
+\textbf{CRediT author statement.} Aminat Abiola Ajibola: Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing -- original draft, Writing -- review \& editing, Visualization, Project administration.
+
+\textbf{Declaration of generative AI in the writing process.} During the preparation of this work the author used an AI coding assistant (Claude Code, Anthropic) to scaffold the analysis code and to draft text under the author's direction. After using this tool, the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.
+
+\textbf{Acknowledgements.} The author thanks the custodians of the DEPRESJON, PSYKOSE, HYPERAKTIV and OBF-Psychiatric datasets for making them openly available.
+
+\textbf{Note for double-blind review.} The manuscript file has been anonymised: author names, affiliations, the acknowledgements and the repository address have been removed from it and appear only on this title page.
+\end{document}
