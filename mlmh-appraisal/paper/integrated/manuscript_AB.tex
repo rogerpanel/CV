@@ -62,59 +62,96 @@ and a TRIPOD+AI self-audit against which future claims on these cohorts can be c
 \noindent\textbf{Keywords:} actigraphy; depression; schizophrenia; ADHD; DEPRESJON; PSYKOSE; HYPERAKTIV; OBF-Psychiatric; data leakage; external validation; calibration; PROBAST+AI; TRIPOD+AI; reproducibility.
 
 \section{Introduction}
-\subsection{Background}
-Wearable actigraphy records motor activity continuously and unobtrusively, and disturbed
-activity and circadian rhythm are among the best-replicated objective correlates of depression,
-psychosis and ADHD. Three open datasets from Haukeland University Hospital and collaborating
-Norwegian sites made this signal available to the ML community: DEPRESJON (23 depressed
-in- and outpatients, 32 healthy controls) \cite{garciaceja2018}, PSYKOSE (22 inpatients with
-schizophrenia and the same 32 controls) \cite{jakobsen2020} and HYPERAKTIV (adults with ADHD and
-clinical controls) \cite{hicks2021}, all recorded with one device family at one-minute
-resolution and re-released in 2025 as the harmonised OBF-Psychiatric collection of 162 participants
-\cite{obf2025}. They are now the default benchmarks for detecting mental disorders from
-wearables, and the reported numbers have climbed: the dataset authors' leave-one-patient-out F1 of
-0.73 for depression \cite{garciaceja2018} has been followed by accuracies of 0.85 to 0.96
-\cite{jmir2025,arxiv2303,zanella2019} and, for schizophrenia, of 0.92 to 0.94
-\cite{psykose_dl2024,psykose_bspc2024}.
+\subsection{Background: prediction models on wearable activity data}
+A clinical prediction model takes measurements from an individual and returns a probability, or a
+class label, for a health state. In mental health the measurements increasingly come from
+wearables. \emph{Actigraphy} is the simplest of these: a wrist-worn accelerometer counts movement
+once a minute, for days or weeks, without any action by the wearer. The resulting series carries
+information that clinicians have long associated with mental disorders: lower and flatter daytime
+activity and disrupted sleep in depression, blunted and fragmented circadian rhythm in psychosis,
+and restlessness in attention-deficit/hyperactivity disorder (ADHD). Machine learning (ML) offers a
+way to turn that series into a screening score, and the appeal for AI researchers is obvious: the
+data are dense, objective, cheap, and publicly available.
 
-\subsection{The evaluation problem}
-Each participant contributes many days of data. If days are shuffled into cross-validation
-folds regardless of participant (\emph{record-wise} splitting), a flexible model can recognise
-the person rather than the disorder, and performance is inflated; this is documented in wearable,
-EEG and neuroimaging research \cite{saeb2017,jmirai2026} but has not been quantified on these
-cohorts. Two further practices compound it. Models are almost never applied to a second cohort,
-so the loss of discrimination and calibration under population shift is unknown. And calibration,
-the agreement between predicted probability and observed frequency, is essentially never
-reported, although a screening tool is used through its probabilities and not its rank order
-\cite{vancalster2019}. The PROBAST+AI risk-of-bias tool \cite{moons2025} and the TRIPOD+AI
-reporting statement \cite{collins2024} now make these explicit requirements for ML prediction
-models; a field-wide appraisal of psychiatric prediction models found calibration reported in
-22\% and adequate internal validation in 11\% \cite{meehan2022}. A dataset-specific hazard adds
-to the general ones: the PSYKOSE control group is the DEPRESJON control group, so any study that
-combines the two cohorts, or trains on one and tests on the other, without recognising the overlap
-has scored part of its test set on training participants.
+Three open datasets from Haukeland University Hospital and collaborating Norwegian sites made this
+possible. DEPRESJON contains 23 in- and outpatients with unipolar or bipolar depression and 32
+healthy controls \cite{garciaceja2018}; PSYKOSE contains 22 inpatients with schizophrenia and the
+same 32 controls \cite{jakobsen2020}; HYPERAKTIV contains adults referred for ADHD assessment, of
+whom some received the diagnosis and the rest serve as clinical controls \cite{hicks2021}. All were
+recorded with one device family at one-minute resolution and were re-released in 2025 as the
+harmonised OBF-Psychiatric collection of 162 participants \cite{obf2025}. They have become the
+default benchmarks for detecting mental disorders from wearables, and the numbers reported on them
+have climbed: the dataset authors' leave-one-patient-out F1 of 0.73 for depression
+\cite{garciaceja2018} has been followed by accuracies of 0.85 to 0.96
+\cite{jmir2025,arxiv2303,zanella2019} and, for schizophrenia, of 0.92 to 0.94
+\cite{psykose_dl2024,psykose_bspc2024}. Read at face value, that is a field approaching clinical
+usefulness.
+
+\subsection{The evaluation problem, stated for a general reader}
+Whether a reported number means what it appears to mean depends on how the model was tested, and
+three aspects of testing decide it here.
+
+\emph{Which unit is held out.} Each participant contributes many days of data, and the days from
+one person resemble each other far more than they resemble anyone else's: wake time, weekday
+routine, overall activity level and the pattern of rest are personal signatures. If the days are
+shuffled into cross-validation folds without regard to who they belong to (\emph{record-wise} or
+day-level splitting), a flexible model sees other days from the same person in training and can
+recognise the person rather than the disorder. The estimate that results is not an estimate of
+performance on a new patient. Holding out whole participants (\emph{subject-wise} splitting)
+removes the shortcut. The gap between the two is a form of data leakage; it is documented in
+wearable, EEG and neuroimaging research \cite{saeb2017,jmirai2026}, but it has not been measured on
+these cohorts, and many papers do not say which unit they used.
+
+\emph{Whether the model was tested on a second population.} A model that performs well on the
+people it was developed on may not transfer to a different clinic, a different diagnostic group or
+a different severity range. Applying a frozen model to an independent cohort, called external
+validation, is the standard test of that transfer, and it is rarely done. On these cohorts there is
+an added trap: because PSYKOSE reuses DEPRESJON's control participants, a study that trains on one
+and tests on the other, or pools them, has scored part of its test set on people it trained on
+unless it noticed the overlap.
+
+\emph{Whether the probabilities are calibrated.} Discrimination (AUROC, accuracy) measures whether
+cases are ranked above controls. Calibration measures whether a predicted probability of 0.8
+corresponds to about 80\,\% of such patients actually having the condition. A screening tool is
+used through its probabilities, and a miscalibrated model gives confident advice that is wrong in
+a systematic direction \cite{vancalster2019}. Calibration is essentially never reported for
+wearable-based mental-health models.
+
+These three requirements are not new to clinical prediction research. The PROBAST+AI tool
+\cite{moons2025} scores a study's risk of bias on exactly these points, and the TRIPOD+AI statement
+\cite{collins2024} lists what an ML prediction study must report so that a reader can judge them;
+both were published for regression and machine-learning models alike. A field-wide appraisal of
+psychiatric prediction models found calibration reported in 22\,\% and adequate internal validation
+in 11\,\% \cite{meehan2022}. What is missing is the link between the two literatures: an appraisal
+tells us how common a practice is, but not how much it changes the numbers; a re-analysis on one
+dataset gives a number, but not a sense of how widespread the problem is. This paper supplies the
+link on the cohorts where the problem is most visible.
 
 \subsection{Gaps and contributions}
 No study has (i) appraised the published models on these cohorts systematically, (ii) measured the
 paired difference between record-wise and subject-wise evaluation on the same data, models and
 seeds, (iii) reported cross-cohort transfer with the shared controls handled, or (iv) reported
-calibration for any model on these cohorts. This paper does all four, in one design
-(Figure~\ref{fig:framework}), and contributes:
+calibration for any model on these cohorts. This paper does all four in one design
+(Figure~\ref{fig:framework}) and contributes:
 \begin{enumerate}[nosep]
-\item a closed-scope systematic appraisal (Part~I) with PROBAST+AI and TRIPOD+AI, whose outcomes are
-chosen so that each can be priced on the data (Section~\ref{sec:part1});
+\item a closed-scope systematic appraisal (Part~I) with PROBAST+AI and TRIPOD+AI, whose outcomes
+are chosen so that each can be priced on the data (Section~\ref{sec:part1});
 \item a controlled re-evaluation (Part~II) that quantifies leakage inflation (E1), cross-cohort
 loss with calibration collapse (E2), the calibration blind spot with a recalibration test (E3),
 sex-stratified performance (E4), transdiagnostic and five-class tasks on the de-duplicated
 162-participant release (E5), and an ablation over feature groups, resampling and
-cross-validation scheme (E6), with subject-level bootstrap uncertainty throughout;
+cross-validation scheme (E6), with participant-level bootstrap uncertainty throughout;
 \item a comparison of every published claim against the measured honest and leaky bands
 (Table~\ref{tab:sota}, Figure~\ref{fig:part1}), a calibration comparison (Figure~\ref{fig:ece})
 and a multi-metric profile of the models (Figure~\ref{fig:radar});
-\item a public, tested codebase in which subject-wise splitting is enforced by a build-failing test,
-cross-cohort overlap is detected from the data, every run writes a manifest, and every table in this
-paper is generated from those manifests, together with a TRIPOD+AI self-audit.
+\item a public, tested codebase in which subject-wise splitting is enforced by a build-failing
+test, cross-cohort overlap is detected from the data, every run writes a manifest, and every table
+in this paper is generated from those manifests, together with a TRIPOD+AI self-audit.
 \end{enumerate}
+The paper is written for readers who build and evaluate ML models; the clinical background is kept
+to what is needed to interpret the results, and every evaluation concept is defined where it is
+first used. Section~\ref{sec:part1} reports the appraisal; Section~3 reports the re-evaluation;
+Section~4 discusses mechanism, implications and limitations.
 
 \input{fig_framework}
 
@@ -160,9 +197,9 @@ than the number of cases, and no study reported the quantity.
 \begin{figure}[!htbp]\centering\includegraphics[width=\linewidth]{part1_claims_vs_bands.pdf}
 \caption{Published best accuracies (points, labelled by study ID in Table~\ref{tab:part1}, coloured
 by the unit of splitting) against the window-level accuracy bands measured in Part~II under
-subject-wise and record-wise cross-validation (shaded; range over logistic regression, random
-forest and XGBoost). Studies whose best metric is not accuracy, or whose value awaits full-text
-verification, are not plotted.}\label{fig:part1}\end{figure}
+subject-wise and record-wise five-fold cross-validation (shaded; range over logistic regression,
+random forest and XGBoost). The vertical axis is classification accuracy for both. Studies that report a metric other than accuracy, or no numeric value in the
+available text, are not plotted; all are listed in Table~\ref{tab:part1}.}\label{fig:part1}\end{figure}
 
 \subsection{Conclusion of Part I}
 The published literature on these cohorts reports discrimination that, where it exceeds the
@@ -493,8 +530,10 @@ SHA-256 checksums in the repository. Code:
 CRediT: A.A.A.\ conceptualisation, methodology, investigation, writing; R.N.A.\ software,
 validation, data curation, visualisation, writing.
 \section*{Supplementary material}
-S1 TRIPOD+AI checklist; S2 feature definitions; S3 identification sources and S4 study sources (files \path{supplement_tripod_checklist.tex}, \path{supplement_features.tex} and \path{supplement_part1_sources.tex} in the repository);
-S5 per-window predictions and run manifests.
+A single supplementary document (\path{supplementary.pdf}) accompanies this article: Table S1,
+TRIPOD+AI checklist; Table S2, feature definitions; Table S3, identification sources for Part~I;
+Table S4, study sources and extraction basis; Table S5, run-manifest fields and the per-window
+prediction files; Figures S1 to S3, ROC and reliability curves for every cohort and cohort pair.
 
 \begin{thebibliography}{99}\footnotesize
 \bibitem{garciaceja2018} Garcia-Ceja E, Riegler M, Jakobsen P, et al. Depresjon: a motor activity database of depression episodes in unipolar and bipolar patients. ACM MMSys. 2018. doi:10.1145/3204949.3208125

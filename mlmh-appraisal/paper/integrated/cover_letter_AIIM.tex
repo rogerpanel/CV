@@ -2,52 +2,58 @@
 \documentclass[11pt,a4paper]{letter}
 \usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage{microtype}
 \usepackage[margin=2.5cm]{geometry}\usepackage[hidelinks]{hyperref}
-\signature{Dr Aminat Abiola Ajibola\\Assistant Professor\\College of Computer Science and Engineering\\University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia\\aajibola@uhb.edu.sa\\[0.6em]on behalf of the co-author Roger Nick Anaedevha\\Institute of Cyber Intelligence Systems, National Research Nuclear University MEPhI, Moscow\\roger@robustidps.ai}
+\signature{Dr Aminat Abiola Ajibola\\Assistant Professor\\College of Computer Science and Engineering\\University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia\\aajibola@uhb.edu.sa\\[0.6em]on behalf of the co-author Roger Nick Anaedevha\\Institute of Cyber Intelligence Systems, National Research Nuclear University MEPhI\\Moscow, Russian Federation\\roger@robustidps.ai}
 \address{College of Computer Science and Engineering\\University of Hafr Al-Batin\\Eastern Province, Kingdom of Saudi Arabia\\aajibola@uhb.edu.sa}
 \date{\today}
 \begin{document}
 \begin{letter}{The Editor-in-Chief\\\emph{Artificial Intelligence in Medicine}\\Elsevier}
 \opening{Dear Editor,}
 
-We submit the manuscript \textbf{``Machine Learning Models for Mental-Health Prediction from Actigraphy: A Systematic
-Appraisal and an Empirical Demonstration''} for consideration as a Research Paper in
-\emph{Artificial Intelligence in Medicine}.
+We submit the manuscript \textbf{``Machine Learning Models for Mental-Health Prediction from
+Actigraphy: A Systematic Appraisal and an Empirical Demonstration''} for consideration as a
+Research Paper in \emph{Artificial Intelligence in Medicine}.
 
-\textbf{Why this paper.} The open actigraphy cohorts DEPRESJON, PSYKOSE and HYPERAKTIV, now
-harmonised as OBF-Psychiatric, are the most used public benchmarks for machine-learning detection
-of mental disorders from wearables, and the accuracies reported on them have climbed from the
-dataset authors' leave-one-patient-out 0.7 to above 0.9. Our paper asks whether that is progress.
-Part~I is a closed-scope systematic appraisal of the 28 published models on these cohorts with
-PROBAST+AI and TRIPOD+AI, using outcomes that can be checked against the data: unit of train/test
-splitting, external validation, calibration reporting, participant-level events per predictor,
-code availability, and double counting of the control group that DEPRESJON and PSYKOSE share.
-Part~II re-evaluates the cohorts with models fixed a priori, ten seeds and participant-level
-bootstrap intervals under the designs the appraisal scores as high and low risk.
+\textbf{Why this paper.} The open actigraphy cohorts DEPRESJON, PSYKOSE and HYPERAKTIV
+(Garcia-Ceja et al., 2018; Jakobsen et al., 2020; Hicks et al., 2021), now harmonised as
+OBF-Psychiatric (Garcia-Ceja et al., \emph{Scientific Data}, 2025), are the most used public
+benchmarks for machine-learning detection of mental disorders from wearable activity data.
+Accuracies reported on them have climbed from the dataset authors' leave-one-patient-out 0.7 to
+above 0.9. Our paper asks whether that reflects better models or weaker evaluation. Part~I is a
+closed-scope systematic appraisal of the 28 published models on these cohorts, using the
+PROBAST+AI risk-of-bias tool and the TRIPOD+AI reporting checklist. For each study we record
+five things that can be checked against the data: whether training and test folds were split by
+participant or by day, whether the model was tested on a second cohort, whether calibration was
+reported, how many participants with the outcome were available per candidate predictor, and
+whether code was released; we also record whether studies that combined DEPRESJON and PSYKOSE
+noticed that the two share the same 32 control participants. Part~II re-evaluates the cohorts
+with models fixed a priori, ten random seeds and participant-level bootstrap intervals, under
+exactly the evaluation designs the appraisal scores as high and low risk.
 
-\textbf{Main findings.} Record-wise splitting inflates AUROC by up to 0.17 and turns a chance-level
-ADHD classifier into an apparently useful one; frozen cross-cohort transfer loses up to 0.21 AUROC
-in one direction with collapse of calibration; calibration is poor even under honest validation,
-is not repairable from the training cohort, and is never reported in the literature on these
-cohorts; honest performance is stable across feature subsets, resampling and cross-validation
-schemes. Every published claim above the honest band coincides with a day-level or unstated
-splitting unit.
+\textbf{Main findings.} Splitting by day rather than by participant inflates AUROC by up to 0.17
+and turns a chance-level ADHD classifier into an apparently useful one. Applying a frozen model to
+a second cohort loses up to 0.21 AUROC in one direction, with collapse of calibration. Calibration
+is poor even under honest validation, is not repairable from the training cohort alone, and is
+never reported in the literature on these cohorts. Honest performance is stable across feature
+subsets, resampling and cross-validation schemes. Every published claim above the honest band
+coincides with a day-level or unstated splitting unit.
 
-\textbf{Fit to the journal.} The paper is a methodological contribution to the evaluation of AI
-prediction models in medicine, provides reference baselines for widely used clinical benchmarks,
-and follows TRIPOD+AI as authors. All analysis code, run manifests and generated tables are
-public, and the figures were regenerated independently on Google Colab from the repository with
-identical results. The TRIPOD+AI checklist and feature definitions are supplied as supplementary
-material.
+\textbf{Fit to the journal.} This is a methodological contribution to the evaluation of AI
+prediction models in medicine. It provides reference baselines for widely used clinical
+benchmarks and is itself reported according to the TRIPOD+AI guideline. All analysis code, run
+manifests and generated tables are public, and the figures were regenerated independently on
+Google Colab from the repository with identical results. The supplementary material contains the
+TRIPOD+AI checklist, feature definitions, identification sources and the study list.
 
 \textbf{Declarations.} The manuscript is original, is not under consideration elsewhere, and has
 not been published in any form. Both authors approved the submission. No funding was received. We
 declare no conflicts of interest. The study is a secondary analysis of publicly available,
-de-identified datasets released for research use by their custodians. We choose the subscription
-publication route.
+de-identified datasets that their custodians released for research use, cited above and in the
+manuscript. We wish to publish under the subscription (non-open-access) option.
 
-\textbf{Suggested reviewers.} Methodologists from the PROBAST/TRIPOD community and researchers in
-digital phenotyping of mood and psychotic disorders would be well placed to assess the work; we
-have no exclusions.
+\textbf{Suggested reviewers.} Because the contribution concerns the evaluation methodology of
+machine-learning models, reviewers with expertise in machine learning for health data, model
+validation and calibration, and reproducibility of AI systems are most appropriate; clinical
+expertise in psychiatry is helpful but not required to assess the work. We have no exclusions.
 
 Thank you for considering our manuscript.
 

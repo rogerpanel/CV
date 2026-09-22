@@ -32,7 +32,7 @@ for ax, metric, lab in zip(axes, ("window_ece_est", "window_calibration_slope_es
     if "slope" in metric:
         ax.axhline(1.0, color="grey", lw=0.8, ls="--")
 axes[0].legend(fontsize=5.5, frameon=False, ncol=2)
-fig.tight_layout(); fig.savefig(FIG / "e3_ece_slope_comparison.pdf"); plt.close(fig)
+fig.tight_layout(); fig.savefig(FIG / "e3_ece_slope_comparison.pdf", bbox_inches="tight", pad_inches=0.05); plt.close(fig)
 
 # --- Radar: per model, subject-wise vs record-wise, DEPRESJON and PSYKOSE
 def radar_vals(row):
@@ -52,7 +52,7 @@ for ax, c in zip(axes, cohorts):
     ax.set_xticks(ang[:-1]); ax.set_xticklabels(labels, fontsize=6.5); ax.set_ylim(0, 1); ax.set_yticks([0.25, 0.5, 0.75, 1.0]); ax.set_yticklabels(["", ".5", "", "1"], fontsize=6)
     ax.set_title(c, fontsize=9, pad=12)
 axes[2].legend(fontsize=5.5, frameon=False, loc="lower right", bbox_to_anchor=(1.35, -0.15))
-fig.tight_layout(); fig.savefig(FIG / "e1_radar_models.pdf"); plt.close(fig)
+fig.tight_layout(); fig.savefig(FIG / "e1_radar_models.pdf", bbox_inches="tight", pad_inches=0.05); plt.close(fig)
 
 # --- SOTA comparison table: published best claims vs Part II honest / leaky (accuracy and AUROC where reported)
 st = pd.read_csv(ROOT / "paper/integrated/part1_studies.csv")

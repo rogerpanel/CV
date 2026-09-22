@@ -31,7 +31,7 @@ def unit(s):
     if s.startswith("day"): return "day/window"
     return "unstated"
 
-fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.2), sharey=True)
+fig, axes = plt.subplots(1, 3, figsize=(9.6, 3.4), sharey=True)
 for ax, coh in zip(axes, cohort_map):
     key = cohort_map[coh]
     for splitter, colr, lab in (("subject_wise", "#1f4e5f", "Part II subject-wise"), ("record_wise", "#8c2f1e", "Part II record-wise")):
@@ -49,13 +49,13 @@ for ax, coh in zip(axes, cohort_map):
     ax.set_ylim(0.4, 1.0)
     ax.set_xlabel("Year")
     ax.spines[["top", "right"]].set_visible(False)
-axes[0].set_ylabel("Reported accuracy (published) / window accuracy (Part II bands)")
+axes[0].set_ylabel("Accuracy")
 h = [plt.Line2D([], [], marker="o", ls="", color=c, label=f"published, split unit: {k}") for k, c in colors.items()]
 axes[2].legend(handles=h, fontsize=6, frameon=False, loc="lower right")
-fig.tight_layout()
+fig.tight_layout(rect=(0.01, 0, 1, 1))
 out = ROOT / "paper/integrated/figures/part1_claims_vs_bands.pdf"
 out.parent.mkdir(parents=True, exist_ok=True)
-fig.savefig(out)
+fig.savefig(out, bbox_inches="tight", pad_inches=0.05)
 print("wrote", out)
 
 # LaTeX table (red where the extraction must be verified against the full text)

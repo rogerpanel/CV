@@ -36,7 +36,7 @@ def reliability_plot(preds: dict[str, pd.DataFrame], path: Path, title: str = ""
     _mark(fig, synthetic)
     fig.tight_layout()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path)
+    fig.savefig(path, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
     return Path(path)
 
@@ -56,7 +56,7 @@ def roc_plot(preds: dict[str, pd.DataFrame], path: Path, title: str = "", synthe
     _mark(fig, synthetic)
     fig.tight_layout()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path)
+    fig.savefig(path, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
     return Path(path)
 
@@ -80,6 +80,6 @@ def inflation_plot(table: pd.DataFrame, path: Path, metric: str = "auroc", synth
     _mark(fig, synthetic)
     fig.tight_layout()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path)
+    fig.savefig(path, bbox_inches="tight", pad_inches=0.05)
     plt.close(fig)
     return Path(path)
