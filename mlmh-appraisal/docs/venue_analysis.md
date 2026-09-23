@@ -104,3 +104,21 @@ citation-closed (tens of papers, not thousands), and each appraisal outcome is p
 data. Draft: `paper/integrated/manuscript_AB.tex`. The field-wide review (Paper A) remains a
 separate, later paper. Recommended: submit the integrated paper to Artificial Intelligence in
 Medicine.
+
+## 6. Update (23 Sept 2026): after the AIIM transfer offer
+
+Artificial Intelligence in Medicine returned the submission with an Elsevier Article Transfer
+offer. The offered titles (typically Intelligence-Based Medicine, Informatics in Medicine Unlocked
+and Computers in Biology and Medicine) are fully open access or APC-bearing and were declined.
+Alternatives that satisfy all three constraints (JCR/Scimago Q1, optional APC via a hybrid model,
+scope covering AI model evaluation on wearable health data), verified on public pages on 23 Sept 2026:
+
+| Rank | Venue | Model / fee | Quartile, IF | Why it fits | Reformatting |
+|---|---|---|---|---|---|
+| 1 | **IEEE Journal of Biomedical and Health Informatics (J-BHI)** | Hybrid; traditional route no fee; OA optional (USD 2,800) | Q1; 2025 IF ~8.2 | Scope names wearable systems, ML, validation; readership is AI-for-health engineers, matching the reviewer profile; the Simula cohorts are well known there | IEEEtran double column, single-blind (merge title page back), regular papers ~13 pp. |
+| 2 | **International Journal of Medical Informatics (Elsevier)** | Hybrid; subscription route no fee; OA optional (USD 3,210) | Q1; 2026 IF 5.0 | Scope emphasises *evaluation* of systems and AI decision support; the appraisal-plus-re-evaluation design fits its editorial line exactly | elsarticle; same files as AIIM with a new cover letter |
+| 3 | Computer Methods and Programs in Biomedicine (Elsevier) | Hybrid; subscription route no fee; OA optional | Q1 (Scimago); IF 4.8 | Methods and programs in biomedicine; the public codebase and manifests are a first-class contribution here | elsarticle; same files |
+| – | Journal of Biomedical Informatics | Hybrid | Q2 (2026) | Drops out on the Q1 criterion | – |
+| – | Expert Systems with Applications | Hybrid | Q1 | General AI applications; reviewer pool less attuned to PROBAST/TRIPOD framing | fallback only |
+
+Recommendation: J-BHI first (best readership fit and highest impact among the qualifying venues), IJMI second. The manuscript, supplement and title page need no content change for either.
