@@ -11,7 +11,7 @@ rm -f "$OUT"/paperA_review_overleaf.zip "$OUT"/paperB_empirical_overleaf.zip "$O
 TMP=$(mktemp -d); mkdir -p "$TMP/tables" "$TMP/figures"
 sed -e 's|\\graphicspath{.*}|\\graphicspath{{figures/}}|' -e 's|\\makeatletter\\def\\input@path{.*}\\makeatother||' paper/integrated/manuscript_AB.tex > "$TMP/manuscript_AB.tex"
 for f in paper/integrated/*.tex; do [ "$(basename "$f")" = manuscript_AB.tex ] || cp "$f" "$TMP/"; done
-cp paper/integrated/part1_studies.csv paper/integrated/PART1_INSTRUCTIONS.md paper/integrated/cover_letter_AIIM.pdf paper/integrated/supplementary.pdf paper/integrated/title_page_AIIM.pdf "$TMP/"
+cp paper/integrated/part1_studies.csv paper/integrated/PART1_INSTRUCTIONS.md paper/integrated/cover_letter_AIIM.pdf paper/integrated/supplementary.pdf paper/integrated/title_page_AIIM.pdf paper/integrated/highlights_AIIM.pdf "$TMP/"
 cp paper/empirical/tables/*.tex "$TMP/tables/"; cp paper/empirical/figures/*.pdf paper/integrated/figures/*.pdf "$TMP/figures/"; cp paper/empirical/supplement_*.tex "$TMP/"
 ( cd "$TMP" && zip -qr "$OUT/integrated_AB_overleaf.zip" . )
 rm -rf "$TMP"

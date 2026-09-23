@@ -1,0 +1,17 @@
+% Highlights page (Elsevier: 3 to 5 bullet points, maximum 85 characters each including spaces).
+% Uploaded as a separate file. Compile with pdflatex.
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}\usepackage{enumitem}
+\setlength{\parindent}{0pt}
+\begin{document}
+{\large\bfseries Highlights}\\[0.8em]
+\textbf{Machine Learning Models for Mental-Health Prediction from Actigraphy: A Systematic Appraisal and an Empirical Demonstration}\\[1em]
+\begin{itemize}[leftmargin=1.4em,itemsep=0.5em]
+\item PROBAST+AI/TRIPOD+AI appraisal of 28 published models on open actigraphy cohorts
+\item Day-level cross-validation inflated AUROC by up to 0.17 and created signal from none
+\item Frozen cross-cohort transfer lost up to 0.21 AUROC with collapse of calibration
+\item No published model reports calibration; honest slopes ranged from 0.53 to 0.95
+\item Subject-wise, calibrated baselines released with public code and run manifests
+\end{itemize}
+\end{document}
