@@ -14,7 +14,7 @@
 \end{center}
 \vspace{0.8em}
 
-\textbf{Article type.} Research Paper. \quad \textbf{Word count.} Abstract 343 words; main text (excluding abstract, tables, figure captions and references) approximately 4800 words. \quad \textbf{Figures / tables.} 6 figures, 13 tables; one supplementary document.
+\textbf{Article type.} Research Paper. \quad \textbf{Word count.} Abstract 267 words; main text (excluding abstract, tables, figure captions and references) approximately 4800 words. \quad \textbf{Figures / tables.} 6 figures, 13 tables; one supplementary document.
 
 \textbf{Author.} Dr Aminat Abiola Ajibola, Assistant Professor, College of Computer Science and Engineering, University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia. ORCID: \textit{[insert]}.
 
@@ -27,34 +27,7 @@
 \item Subject-wise, calibrated baselines with public code and run manifests for future comparison
 \end{itemize}
 
-\textbf{Abstract.} \textbf{Background and objective.} The open actigraphy cohorts DEPRESJON (depression), PSYKOSE
-(schizophrenia) and HYPERAKTIV (ADHD), harmonised in 2025 as OBF-Psychiatric, are the most used
-public benchmarks for machine-learning (ML) detection of mental disorders from wearables.
-Reported accuracies have risen from the dataset authors' leave-one-patient-out 0.7 to above 0.9.
-We asked whether that reflects better models or weaker evaluation, and measured what the
-prevalent evaluation practices cost.
-\textbf{Methods.} Part~I appraises every published supervised model on the four cohorts with
-PROBAST+AI and TRIPOD+AI, extracting the unit of train/test splitting, external validation,
-calibration reporting, events per predictor, code availability, and whether the control group
-shared by DEPRESJON and PSYKOSE was double counted. Part~II re-evaluates the cohorts with models
-fixed a priori (logistic regression, random forest, XGBoost, 1D-CNN), ten seeds and subject-level
-bias-corrected bootstrap intervals, in six experiments: E1 record-wise versus subject-wise
-cross-validation on identical data; E2 frozen cross-cohort transfer with shared controls assigned
-to one cohort; E3 calibration (slope, intercept, Brier, ECE, reliability curves, recalibration);
-E4 sex strata; E5 transdiagnostic and five-class tasks on OBF-Psychiatric; E6 feature-group,
-resampling and cross-validation-scheme ablation.
-\textbf{Results.} Of 28 eligible published models, 7 split by participant, 9 by day or
-window and 12 did not state the unit; none reported calibration or
-validated on a second cohort; 4 released code. Record-wise splitting inflated window-level AUROC by
-0.065 to 0.114 on DEPRESJON, 0.020 to 0.044 on PSYKOSE and 0.130 to 0.169 on HYPERAKTIV, where the
-honest estimate was at chance (0.44 to 0.45) and the leaky one reached 0.60 to 0.65 at participant
-level. Models trained on PSYKOSE lost 0.13 to 0.21 AUROC on DEPRESJON with calibration slopes of
-0.27 to 0.63; honest slopes were 0.53 to 0.95 and ECE 0.06 to 0.22; recalibration from the training
-cohort did not repair the transfer. Participant-level events per predictor were 0.6 to 0.8. Honest
-performance was stable across feature subsets and cross-validation schemes (E6).
-\textbf{Conclusions.} Reported progress on these benchmarks is largely an artefact of evaluation
-design. We provide subject-wise, calibrated, cross-cohort baselines with public code, manifests
-and a TRIPOD+AI self-audit against which future claims on these cohorts can be checked.
+\textbf{Abstract.} \textbf{Background and objective.} The open actigraphy cohorts DEPRESJON (depression), PSYKOSE (schizophrenia) and HYPERAKTIV (ADHD), harmonised as OBF-Psychiatric, are the most used public benchmarks for machine-learning detection of mental disorders from wearables, and reported accuracies have risen from the dataset authors' leave-one-patient-out 0.7 to above 0.9. We asked whether this reflects better models or weaker evaluation, and measured what the prevalent practices cost. \textbf{Methods.} Part~I appraises every published supervised model on the four cohorts with PROBAST+AI and TRIPOD+AI, recording the unit of train/test splitting, external validation, calibration reporting, events per predictor, code availability and handling of the control group shared by DEPRESJON and PSYKOSE. Part~II re-evaluates the cohorts with models fixed a priori, ten seeds and participant-level bootstrap intervals: record-wise versus subject-wise cross-validation (E1), frozen cross-cohort transfer (E2), calibration and recalibration (E3), sex strata (E4), transdiagnostic and five-class tasks (E5), and ablation (E6). \textbf{Results.} Of 28 published models, 7 split by participant, 9 by day and 12 did not state the unit; none reported calibration or validated on a second cohort. Record-wise splitting inflated AUROC by 0.065 to 0.114 (DEPRESJON), 0.020 to 0.044 (PSYKOSE) and 0.130 to 0.169 (HYPERAKTIV), where the honest estimate was at chance. Models trained on PSYKOSE lost 0.13 to 0.21 AUROC on DEPRESJON with calibration slopes of 0.27 to 0.63; honest slopes were 0.53 to 0.95, and recalibration from the training cohort did not repair the transfer. Honest performance was stable across feature subsets and cross-validation schemes. \textbf{Conclusions.} Reported progress on these benchmarks is largely an artefact of evaluation design. We provide subject-wise, calibrated, cross-cohort baselines with public code and manifests against which future claims can be checked.
 
 \textbf{Keywords.} actigraphy; depression; schizophrenia; ADHD; DEPRESJON; PSYKOSE; HYPERAKTIV; OBF-Psychiatric; data leakage; external validation; calibration; PROBAST+AI; TRIPOD+AI; reproducibility.
 
