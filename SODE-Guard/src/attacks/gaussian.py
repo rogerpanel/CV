@@ -8,4 +8,4 @@ class GaussianNoise:
         self.sigma = float(sigma)
 
     def __call__(self, x: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
-        return (x + self.sigma * torch.randn_like(x)).clamp(0.0, 1.0)
+        return x + self.sigma * torch.randn_like(x)

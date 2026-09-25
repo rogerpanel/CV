@@ -19,21 +19,22 @@ SODE-Guard treats network flows as paths of an Itô stochastic differential equa
 ```
 dX_t = f_θ(X_t, t) dt + g_θ(X_t, t) dW_t,    t ∈ [0, 1]
 ```
-with jointly learned drift `f_θ` and diffusion `g_θ`. Flow records are embedded to ℝ¹²⁸ via an
-**E-GraphSAGE** edge encoder, evolved under the SDE for unit horizon, and classified by a
-linear head on the expected terminal state. The diffusion satisfies an ellipticity floor
-`g g^⊤ ⪰ λ₀ I` (default λ₀=10⁻³), which together with spectral normalisation of the drift
-yields a **Bismut–Elworthy–Li** gradient estimator and, via a Wiener-chaos / Carbery–Wright
-argument, the anti-concentration certificate
+with jointly learned drift `f_θ` and diffusion `g_θ`. Flow records are embedded to ℝ¹²⁸,
+evolved under the SDE for unit horizon with Euler–Maruyama, and classified by the mean
+logits F(x) = E[ψ(X_T)] of a linear head.
 
-> **Proposition (Anti-Concentration Certificate).** For any classifier margin `g`, smoothed
-> through SODE-Guard with chaos degree `d*`, the perturbation `δ` satisfies
-> `Pr[ |g(x+δ) − g(x)| ≤ β ] ≤ C · d* · (β / (L_g · ε))^{1/d*}`.
+Robustness guarantees (`src/certify/`):
 
-The dimension enters only via the chaos degree `d*` (default 4) rather than linearly,
-which is what allows SODE-Guard to keep 93.1% macro-F1 under PGD-40 at `ε=0.03` on
-flow benchmarks containing 18.9M records, against 87.2% for the strongest internal
-baseline SDE-TGNN.
+- **Theorem A (mean-predictor certificate).** F is L-Lipschitz, with L computed from the
+  exact spectral norms of the trained weights; a logit margin M(x) certifies every
+  ℓ2 perturbation of norm below M(x) / (√2 L). `certify_mean` adds a Monte-Carlo
+  confidence correction (Hoeffding or empirical Bernstein, fresh CSPRNG seeds).
+- **Proposition B (path-wise flip bound).** For a single Brownian path and a fixed δ,
+  P[flip] ≤ P[G(x) ≤ β] + 2L²‖δ‖²/β², with the first term bounded by Clopper–Pearson.
+
+The earlier Carbery–Wright "probabilistic robustness radius" bounded the wrong tail and
+has been removed; see [`docs/RESULTS_PROVENANCE.md`](docs/RESULTS_PROVENANCE.md), which
+also lists the numbers in `manuscript/` that were never produced by a run.
 
 ## 2. Repository layout
 
@@ -50,7 +51,7 @@ SODE-Guard/
 │   │                          # SurrogateIDS-7B, Llama-Guard adapter, Snort/Suricata stubs
 │   ├── data/                  # Loaders for ICS3D, IIS3D, IDS-PQC, CIC-IDS2017/2018/2023,
 │   │                          # UNSW-NB15, NSL-KDD, NF-ToN-IoT-V2, CIC-DDoS-2019
-│   ├── evaluation/            # Macro-F1, ECE, certified radius, Friedman + McNemar
+│   ├── evaluation/            # Macro-F1, ECE, attacks, gradient-masking checks, stats
 │   ├── models/                # SODE-Guard, E-GraphSAGE encoder, classifier heads
 │   ├── regularizers/          # Anti-concentration loss, spectral normalisation, ellipticity
 │   ├── sde/                   # Euler–Maruyama, virtual Brownian tree, stochastic adjoint
@@ -96,10 +97,10 @@ bash scripts/download_data.sh --datasets nslkdd
 # 3. Train SODE-Guard on the smoke set with all five reproducibility seeds
 python -m src.training.train --config configs/sode_guard_smoke.yaml
 
-# 4. Evaluate clean + PGD-40 robustness and compute the anti-concentration certificate
+# 4. Evaluate clean + PGD-40 robustness and certify the mean predictor (Theorem A)
 python -m src.evaluation.run_eval --config configs/sode_guard_smoke.yaml \
     --attacks pgd40 --epsilons 0.005 0.01 0.02 0.03 0.05 0.10 \
-    --certify --chaos-degree 4
+    --certify --cert-paths 512
 ```
 
 The full TNNLS reproduction (Tables 2–4, Figure 5) is launched with

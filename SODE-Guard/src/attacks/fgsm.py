@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 class FGSM:
     def __init__(self, model: nn.Module, eps: float,
-                 clip_min: float = 0.0, clip_max: float = 1.0):
+                 clip_min: float | None = None, clip_max: float | None = None):
         self.model = model
         self.eps = float(eps)
         self.clip = (clip_min, clip_max)
@@ -16,8 +16,10 @@ class FGSM:
         x = x.clone().detach().requires_grad_(True)
         loss = F.cross_entropy(self.model(x), y)
         grad = torch.autograd.grad(loss, x)[0]
-        x_adv = (x + self.eps * grad.sign()).clamp(*self.clip).detach()
-        return x_adv
+        x_adv = x + self.eps * grad.sign()
+        if self.clip != (None, None):
+            x_adv = x_adv.clamp(*self.clip)
+        return x_adv.detach()
 
 
 def fgsm_attack(model, x, y, eps):

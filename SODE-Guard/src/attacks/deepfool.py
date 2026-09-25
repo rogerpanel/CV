@@ -35,4 +35,4 @@ class DeepFool:
                 r = (f_k[l_hat].abs() / (w_norm[l_hat] ** 2 + 1e-12)) * w_k[l_hat]
                 xb = (xb + (1 + self.overshoot) * r).detach().requires_grad_(True)
             x_adv[b] = xb.detach()
-        return x_adv.clamp(0.0, 1.0)
+        return x_adv

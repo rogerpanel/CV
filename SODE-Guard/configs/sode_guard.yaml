@@ -29,6 +29,7 @@ encoder:                              # E-GraphSAGE edge encoder
   dropout: 0.10
   edge_features: 83
   output_dim: 128
+  certifiable: true                   # spectral-normalised encoder + head, no LayerNorm (Theorem A)
 
 sde:
   drift:

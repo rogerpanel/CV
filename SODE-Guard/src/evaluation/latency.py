@@ -43,7 +43,7 @@ def run_eval_cli():                                     # pragma: no cover
     from ..training.train import build_model, evaluate
     from ..data.registry import get_loader
     from .robustness import evaluate_attacks
-    from .certificate import certify_dataset
+    from ..certify import model_lipschitz, certify_mean
 
     p = argparse.ArgumentParser()
     p.add_argument("--config", required=True)
@@ -53,7 +53,8 @@ def run_eval_cli():                                     # pragma: no cover
     p.add_argument("--epsilons", nargs="*", type=float,
                    default=[0.005, 0.01, 0.02, 0.03, 0.05, 0.10])
     p.add_argument("--certify", action="store_true")
-    p.add_argument("--chaos-degree", type=int, default=4)
+    p.add_argument("--cert-paths", type=int, default=512)
+    p.add_argument("--cert-B", type=float, default=20.0)
     args = p.parse_args()
 
     cfg = load_config(args.config)
@@ -71,12 +72,15 @@ def run_eval_cli():                                     # pragma: no cover
                for a in args.attacks}
     out["adversarial"] = evaluate_attacks(model, test_loader, device=device, attack_cfg=atk_cfg)
     if args.certify:
-        out["certificate"] = certify_dataset(
-            model, test_loader, device=device,
-            chaos_degree=args.chaos_degree,
-            smoothing_paths=cfg.evaluation.certified_radius.smoothing_paths,
-            beta=cfg.evaluation.certified_radius.margin_threshold,
-        )
+        lip = model_lipschitz(model)
+        radii = []
+        for x, _ in test_loader:
+            cert = certify_mean(model, x.to(device), L=lip.L, B=args.cert_B, n=args.cert_paths)
+            radii.append(cert.radius_l2.cpu())
+        r = torch.cat(radii)
+        out["certificate"] = {"lipschitz": lip.as_dict(),
+                              "median_radius_l2": float(r.median()),
+                              "certified_fraction": float((r > 0).float().mean())}
     out["latency"] = benchmark_latency(model, test_loader, device=device)
     print(json.dumps(out, indent=2))
     Path(args.checkpoint).with_suffix(".eval.json").write_text(json.dumps(out, indent=2))

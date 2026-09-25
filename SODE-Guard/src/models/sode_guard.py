@@ -2,22 +2,22 @@
 
 Pipeline:
     flow features (B, 83) → E-GraphSAGE encoder → h_0 ∈ ℝ¹²⁸
-    h_0 → Euler–Maruyama integrate dX = f dt + g dW to T=1 → h_T (or path)
-    h_T → linear classifier → logits ∈ ℝ^K
-    For inference we average softmax over N_mc Monte-Carlo paths.
+    h_0 → Euler–Maruyama integration of dX = f dt + g dW to T = 1 → X_T
+    X_T → linear head ψ → logits ∈ ℝ^K
 
-The model exposes hooks so that downstream code can:
-    * train the AC regulariser jointly (``forward_with_paths``),
-    * compute certified radii (``certified_score``), and
-    * be plugged into ``torchattacks`` style PGD without modification
-      (``forward(x)`` accepts the raw 83-dim vector and returns logits).
+The mean predictor is F(x) = E[ψ(X_T) | X_0 = h(x)] and the class is
+argmax F(x) (softmax of the mean logits, Eq. (6) of the paper). Deployment
+estimates F with ``mc_paths_eval`` paths; certification uses many more paths
+with fresh randomness (``src/certify``).
 """
 from __future__ import annotations
+import secrets
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Sequence
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.parametrizations import spectral_norm
 
 from .egraphsage import EGraphSAGE
 from .drift_diffusion import DriftNet, DiffusionNet
@@ -43,27 +43,12 @@ class SODEGuardConfig:
     encoder_dropout: float = 0.10
     activation: str = "gelu"
     virtual_brownian: bool = True
+    certifiable: bool = False   # Lipschitz encoder + spectral-normalised head
 
 
-class _SDEModule(nn.Module):
-    """Wrap drift & diffusion for the optional torchsde adjoint path."""
-    noise_type = "general"
-    sde_type = "ito"
-
-    def __init__(self, drift: DriftNet, diffusion: DiffusionNet):
-        super().__init__()
-        self.drift = drift
-        self.diffusion = diffusion
-
-    def f(self, t: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        if t.ndim == 0:
-            t = t.expand(x.shape[0])
-        return self.drift(x, t.view(-1, 1))
-
-    def g(self, t: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
-        if t.ndim == 0:
-            t = t.expand(x.shape[0])
-        return self.diffusion(x, t.view(-1, 1))
+def fresh_seeds(n: int) -> list[int]:
+    """Seeds drawn from the OS CSPRNG, so path samples are not predictable."""
+    return [secrets.randbits(31) for _ in range(n)]
 
 
 class SODEGuard(nn.Module):
@@ -77,6 +62,7 @@ class SODEGuard(nn.Module):
             hidden_dim=c.hidden_dim,
             num_layers=c.encoder_layers,
             dropout=c.encoder_dropout,
+            lipschitz=c.certifiable,
         )
         self.drift = DriftNet(
             dim=c.hidden_dim, hidden=c.drift_hidden,
@@ -88,8 +74,8 @@ class SODEGuard(nn.Module):
             num_layers=c.diff_layers, noise_dim=c.noise_dim,
             spectral=c.spectral_norm, activation=c.activation,
         )
-        self.sde_module = _SDEModule(self.drift, self.diffusion)
-        self.head = nn.Linear(c.hidden_dim, c.num_classes)
+        head = nn.Linear(c.hidden_dim, c.num_classes)
+        self.head = spectral_norm(head) if c.certifiable else head
 
         self._em = EulerMaruyama(EMConfig(
             t0=0.0, t1=c.horizon, dt=c.dt,
@@ -99,10 +85,6 @@ class SODEGuard(nn.Module):
             save_trajectory=False,
         ))
 
-    # ---------------------------------------------------------------
-    # Forward variants
-    # ---------------------------------------------------------------
-
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x)
 
@@ -110,27 +92,37 @@ class SODEGuard(nn.Module):
         return self._em(h0, self.drift, self.diffusion, seed=seed)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Single-path forward (training and gradient-based attacks)."""
+        """Single-path logits (seed 0). Used inside training losses."""
+        return self.head(self._integrate(self.encode(x), seed=0))
+
+    def sample_logits(self, x: torch.Tensor, seeds: Sequence[int]) -> torch.Tensor:
+        """Per-path logits, shape (B, N, K); differentiable in x and θ.
+
+        Each seed drives one Brownian path per example (the virtual Brownian
+        tree draws independent increments for every row of the batch).
+        """
         h0 = self.encode(x)
-        hT = self._integrate(h0)
-        return self.head(hT)
+        return torch.stack([self.head(self._integrate(h0, seed=s)) for s in seeds], dim=1)
+
+    def forward_mean(self, x: torch.Tensor, n_paths: Optional[int] = None,
+                     seeds: Optional[Sequence[int]] = None) -> torch.Tensor:
+        """Monte-Carlo estimate of the mean logits F(x); differentiable.
+
+        With ``seeds=None`` the paths use fresh CSPRNG seeds, which is what an
+        expectation-over-transformation attacker should differentiate through.
+        """
+        if seeds is None:
+            seeds = fresh_seeds(n_paths or self.cfg.mc_paths_eval)
+        return self.sample_logits(x, seeds).mean(dim=1)
 
     @torch.no_grad()
     def forward_mc(self, x: torch.Tensor, n_paths: Optional[int] = None) -> torch.Tensor:
-        """Evaluation forward: average softmax across n_paths samples."""
+        """Deployed predictor: softmax of the mean logits over fixed seeds 0..N-1."""
         n = n_paths or self.cfg.mc_paths_eval
-        h0 = self.encode(x)
-        probs = 0
-        for s in range(n):
-            hT = self._integrate(h0, seed=s)
-            probs = probs + F.softmax(self.head(hT), dim=-1)
-        return probs / n
+        return F.softmax(self.forward_mean(x, seeds=range(n)), dim=-1)
 
     def forward_with_paths(self, x: torch.Tensor, n_paths: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Return logits stack and terminal-state stack for the AC regulariser.
-
-        Used by ``regularizers.anti_concentration.AntiConcentrationLoss``.
-        """
+        """Per-path logits and terminal states for the anti-concentration regulariser."""
         h0 = self.encode(x)
         logits_list, states = [], []
         for s in range(n_paths):
@@ -138,21 +130,3 @@ class SODEGuard(nn.Module):
             states.append(hT)
             logits_list.append(self.head(hT))
         return torch.stack(logits_list, dim=1), torch.stack(states, dim=1)
-
-    # ---------------------------------------------------------------
-    # Smoothed prediction + certified score
-    # ---------------------------------------------------------------
-
-    @torch.no_grad()
-    def certified_score(self, x: torch.Tensor, n_paths: int = 256,
-                        margin_threshold: float = 0.05) -> torch.Tensor:
-        """Compute the margin of the smoothed classifier.
-
-        ``returns`` the gap between top-1 and top-2 averaged softmax. The
-        anti-concentration certificate (``regularizers.anti_concentration``)
-        converts this margin into a robust radius.
-        """
-        probs = self.forward_mc(x, n_paths=n_paths)
-        top2, _ = torch.topk(probs, k=2, dim=-1)
-        margin = top2[:, 0] - top2[:, 1]
-        return margin

@@ -41,6 +41,7 @@ def build_model(cfg) -> SODEGuard:
         encoder_dropout=cfg.encoder.dropout,
         activation=cfg.sde.drift.activation,
         virtual_brownian=cfg.sde.integrator.virtual_brownian_tree,
+        certifiable=bool(cfg.encoder.get("certifiable", False)),
     ))
     return m
 
