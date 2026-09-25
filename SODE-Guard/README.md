@@ -100,7 +100,7 @@ python -m src.training.train --config configs/sode_guard_smoke.yaml
 # 4. Evaluate clean + PGD-40 robustness and certify the mean predictor (Theorem A)
 python -m src.evaluation.run_eval --config configs/sode_guard_smoke.yaml \
     --attacks pgd40 --epsilons 0.005 0.01 0.02 0.03 0.05 0.10 \
-    --certify --cert-paths 512
+    --certify --cert-paths 4096
 ```
 
 The full TNNLS reproduction (Tables 2–4, Figure 5) is launched with

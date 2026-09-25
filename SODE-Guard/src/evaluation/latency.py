@@ -53,7 +53,7 @@ def run_eval_cli():                                     # pragma: no cover
     p.add_argument("--epsilons", nargs="*", type=float,
                    default=[0.005, 0.01, 0.02, 0.03, 0.05, 0.10])
     p.add_argument("--certify", action="store_true")
-    p.add_argument("--cert-paths", type=int, default=512)
+    p.add_argument("--cert-paths", type=int, default=4096)
     p.add_argument("--cert-B", type=float, default=20.0)
     args = p.parse_args()
 

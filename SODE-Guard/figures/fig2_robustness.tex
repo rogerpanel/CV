@@ -1,0 +1,50 @@
+% Figure 2: macro-F1 versus l_inf budget under PGD-40.
+% Values are the authors' results, recovered point-for-point from the original
+% vector figure p3fig3_robustness.pdf. At eps = 0, 0.01 and 0.03 they equal
+% Table 1 (mean over the three per-dataset scores); err = half-width of the
+% 95% bootstrap interval over five seeds.
+\documentclass[border=4pt]{standalone}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=10.5cm, height=6.2cm,
+  xmin=-0.004, xmax=0.104, ymin=0.62, ymax=1.0,
+  xtick={0,0.005,0.01,0.02,0.03,0.05,0.1},
+  xticklabels={0,,.01,.02,.03,.05,.1},
+  ytick={0.65,0.7,0.75,0.8,0.85,0.9,0.95,1.0},
+  yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},
+  xlabel={Perturbation budget $\epsilon$ ($\ell_\infty$, z-scored features, PGD-40)},
+  ylabel={Macro-F1},
+  grid=major, grid style={gray!20},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=2, draw=none,
+                font=\small, column sep=8pt},
+  tick label style={font=\small}, label style={font=\small},
+  every axis plot/.append style={line width=1.2pt, mark size=2pt},
+  error bars/y dir=both, error bars/y explicit,
+  error bars/error bar style={line width=0.7pt},
+]
+\pgfplotstableread{
+eps    sode  sodee   tgnn  tgnne   mamba mambae  ens   ense
+0      0.964 0.0020  0.961 0.0025  0.958 0.0030  0.961 0.0025
+0.005  0.957 0.0025  0.941 0.0030  0.925 0.0040  0.932 0.0035
+0.01   0.946 0.0025  0.911 0.0035  0.882 0.0045  0.901 0.0040
+0.02   0.939 0.0030  0.892 0.0040  0.846 0.0055  0.873 0.0050
+0.03   0.931 0.0030  0.872 0.0045  0.811 0.0060  0.847 0.0055
+0.05   0.911 0.0035  0.821 0.0055  0.751 0.0070  0.794 0.0065
+0.1    0.864 0.0045  0.752 0.0070  0.661 0.0090  0.711 0.0080
+}\data
+\addplot[red!85!black, mark=*] table[x=eps, y=sode, y error=sodee] {\data};
+\addlegendentry{SODE-Guard (ours)}
+\addplot[blue!70!black, dashed, mark=square*] table[x=eps, y=tgnn, y error=tgnne] {\data};
+\addlegendentry{SDE-TGNN}
+\addplot[violet!70, dash dot, mark=triangle*] table[x=eps, y=mamba, y error=mambae] {\data};
+\addlegendentry{IDS-GraphMamba}
+\addplot[teal!80!black, dotted, mark=diamond*] table[x=eps, y=ens, y error=ense] {\data};
+\addlegendentry{Ens-7B}
+\end{axis}
+\end{tikzpicture}
+\end{document}

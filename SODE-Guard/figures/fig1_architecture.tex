@@ -1,0 +1,10 @@
+% Standalone build of Figure 1 (produces fig1_architecture.pdf / .png).
+% The paper does not need this file: it \input{}s fig1_architecture_body.tex.
+\documentclass[tikz,border=4pt]{standalone}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,backgrounds}
+\newcommand{\FigRef}[2]{#2}
+\begin{document}
+\input{fig1_architecture_body.tex}
+\end{document}

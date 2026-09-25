@@ -1,0 +1,44 @@
+% Figure 4 (E4): certified accuracy of the mean predictor (Theorem A) versus
+% randomised smoothing at matched l2 radius. It reads the CSV written by
+%   python scripts/run_revision_experiments.py e4 ... --smoothing-base ens7b=CKPT
+% (experiments/revision/fig_e4_ics3d.csv). Copy that file next to this one as
+% fig4_certified_accuracy.csv, compile, and set \resultsEfourtrue in the paper.
+% Columns: r  sode  rs012  rs025  rs05   (certified accuracy at l2 radius r)
+\documentclass[border=4pt]{standalone}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=10.5cm, height=6.2cm, xmin=0, ymin=0, ymax=1,
+  xlabel={certified $\ell_2$ radius $r$ (z-scored features)},
+  ylabel={certified accuracy},
+  grid=major, grid style={gray!20},
+  legend pos=north east, legend style={font=\small, draw=none, fill=white, fill opacity=0.85},
+  tick label style={font=\small}, label style={font=\small},
+  every axis plot/.append style={line width=1.2pt, no marks},
+  axis x line*=bottom,
+]
+\addplot[red!85!black] table[x=r, y=sode] {fig4_certified_accuracy.csv};
+\addlegendentry{SODE-Guard, Theorem A}
+\addplot[blue!70!black, dashed] table[x=r, y=rs012] {fig4_certified_accuracy.csv};
+\addlegendentry{Rand.\ smoothing, $\sigma=0.12$}
+\addplot[blue!50, dash dot] table[x=r, y=rs025] {fig4_certified_accuracy.csv};
+\addlegendentry{Rand.\ smoothing, $\sigma=0.25$}
+\addplot[teal!80!black, dotted] table[x=r, y=rs05] {fig4_certified_accuracy.csv};
+\addlegendentry{Rand.\ smoothing, $\sigma=0.5$}
+\end{axis}
+% implied l_inf radius r / sqrt(83) on the top axis
+\begin{axis}[
+  width=10.5cm, height=6.2cm, xmin=0, ymin=0, ymax=1,
+  axis x line*=top, axis y line=none,
+  xlabel={implied $\ell_\infty$ radius $r/\sqrt{83}$}, tick label style={font=\small},
+  label style={font=\small},
+  x coord trafo/.code={\pgfmathparse{#1}}, xticklabel={\pgfmathparse{\tick/9.110}\pgfmathprintnumber[fixed,precision=3]{\pgfmathresult}},
+]
+\addplot[draw=none] table[x=r, y=sode] {fig4_certified_accuracy.csv};
+\end{axis}
+\end{tikzpicture}
+\end{document}

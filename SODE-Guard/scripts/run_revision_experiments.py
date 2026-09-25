@@ -221,6 +221,12 @@ def plot_e4(res: dict, path: Path, feature_dim: int) -> None:
     ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(path)
+    cols = {"sode": radii}
+    cols.update({"rs" + s.replace(".", ""): np.asarray(r) for s, r in res.get("smoothing", {}).items()})
+    with open(path.with_suffix(".csv"), "w") as f:
+        f.write("r " + " ".join(cols) + "\n")
+        for g in grid:
+            f.write(f"{g:.5f} " + " ".join(f"{(v >= g).mean():.4f}" for v in cols.values()) + "\n")
 
 
 def main():
@@ -242,7 +248,7 @@ def main():
     p.add_argument("--at-baseline", default="ens7b", choices=list(BASELINES))
     p.add_argument("--methods", nargs="+", default=["pgd_at", "trades"])
     p.add_argument("--epochs", type=int, default=40)
-    p.add_argument("--cert-paths", type=int, default=512)
+    p.add_argument("--cert-paths", type=int, default=4096)
     p.add_argument("--alpha", type=float, default=1e-3)
     p.add_argument("--B", type=float, default=None)
     p.add_argument("--flip-eps", type=float, nargs="+", default=[0.01, 0.03, 0.1, 0.3])

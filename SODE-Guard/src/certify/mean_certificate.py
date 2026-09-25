@@ -55,7 +55,7 @@ class MeanCertificate:
 
 @torch.no_grad()
 def certify_mean(model, x: torch.Tensor, *, L: float, B: float,
-                 n0: int = 64, n: int = 512, alpha: float = 1e-3,
+                 n0: int = 64, n: int = 4096, alpha: float = 1e-3,
                  bound: str = "bernstein", feature_dim: int | None = None,
                  chunk: int = 64) -> MeanCertificate:
     if bound not in {"hoeffding", "bernstein"}:

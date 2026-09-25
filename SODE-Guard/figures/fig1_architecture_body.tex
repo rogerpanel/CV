@@ -1,0 +1,111 @@
+% SODE-Guard architecture (Figure 1). TikZ body shared by the paper and the
+% standalone wrapper fig1_architecture.tex. \FigRef{label}{text} prints a
+% live \cref in the paper and the fixed text in the standalone build.
+% Needs: \usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  panel/.style={draw, rounded corners=6pt, line width=1pt, minimum height=4.3cm},
+  sub/.style={draw, rounded corners=3pt, line width=0.6pt, fill=white, align=center, inner sep=3pt},
+  ttl/.style={font=\sffamily\bfseries, align=center},
+  fwd/.style={-{Stealth[length=2.8mm]}, line width=1.2pt, blue!45!black},
+  thm/.style={-{Stealth[length=2.4mm]}, line width=1pt, dashed, red!65!black},
+  gbox/.style={draw=red!60!black, rounded corners=4pt, line width=0.9pt, fill=red!5,
+               align=center, text width=4.7cm, minimum height=1.75cm, inner sep=4pt},
+  neuron/.style={circle, line width=0.6pt, inner sep=1.4pt},
+]
+%% ---------------- panels (drawn first, contents on top) ----------------
+\node[panel, draw=blue!55!black,  fill=blue!4,   minimum width=3.0cm] (P1) at (0,0.5)     {};
+\node[panel, draw=blue!55!black,  fill=blue!4,   minimum width=3.3cm] (P2) at (3.75,0.5)  {};
+\node[panel, draw=green!40!black, fill=green!4,  minimum width=5.8cm] (P3) at (8.75,0.5)  {};
+\node[panel, draw=violet!70!black,fill=violet!4, minimum width=3.1cm] (P4) at (13.55,0.5) {};
+\node[panel, draw=red!65!black,   fill=red!4,    minimum width=3.0cm] (P5) at (16.95,0.5) {};
+\foreach \P/\t/\c in {P1/Datasets/blue!55!black, P2/Feature stage/blue!55!black,
+                      P3/NSDE block (It\^o SDE)/green!40!black,
+                      P4/Mean-logit classifier/violet!70!black, P5/Decision/red!65!black}
+  \node[ttl, text=\c, below=3pt of \P.north] {\t};
+%% ---------------- column 1: datasets ----------------
+\foreach \y/\a/\b in {1.45/ICS3D/18.9M flows, 0.3/IIS3D/13.4M (UNSW+CIC), -0.85/IDS-PQC/{3.1M, TLS+PQ}} {
+  \node[sub, draw=blue!50!black, minimum width=2.6cm, minimum height=0.98cm, text width=1.7cm, xshift=0.25cm]
+      at (0,\y) {\textbf{\a}\\[-1pt]{\scriptsize\b}};
+  \begin{scope}[shift={(-0.8,\y)}]
+    \fill[blue!55!black] (-0.2,-0.24) rectangle (0.2,0.18);
+    \fill[blue!55!black] (0,-0.24) ellipse (0.2 and 0.07);
+    \fill[blue!30] (0,0.18) ellipse (0.2 and 0.07);
+    \draw[white, line width=0.6pt] (-0.2,0.03) arc (180:360:0.2 and 0.07);
+    \draw[white, line width=0.6pt] (-0.2,-0.11) arc (180:360:0.2 and 0.07);
+  \end{scope}
+}
+%% ---------------- column 2: feature stage ----------------
+\node[sub, draw=blue!50!black, text width=2.8cm, minimum height=1.3cm] (feat) at (3.75,1.2)
+  {83-dim flow features\\[1pt]$x\in\mathbb R^{83}$ (z-scored)};
+\node[sub, draw=blue!50!black, text width=2.8cm, minimum height=1.55cm] (enc) at (3.75,-0.55)
+  {Lipschitz encoder $h$\\ (E-GraphSAGE style)\\[1pt]$X_0=h(x)\in\mathbb R^{128}$};
+\draw[-{Stealth[length=1.8mm]}, blue!45!black, line width=0.8pt] (feat) -- (enc);
+%% ---------------- column 3: NSDE block ----------------
+\node[sub, draw=green!40!black, text width=5.3cm] (eq) at (8.75,1.75)
+  {$dX_t=f_\theta(X_t,t)\,dt+g_\theta(X_t,t)\,dW_t$};
+\foreach \cx/\k/\lab in {7.3/L/{Drift $f_\theta(X_t,t)$}, 10.2/R/{Diffusion $g_\theta(X_t,t)$}} {
+  \node[sub, draw=green!40!black, fill=green!6, minimum width=2.75cm, minimum height=1.55cm, text width=2.6cm,
+        anchor=north] at (\cx,1.2) {\lab\\[26pt]\ };
+  \foreach \i/\yy in {a/0.5,b/0.1} \node[neuron, draw=green!40!black] (l\i\k) at (\cx-0.5,\yy) {};
+  \foreach \i/\yy in {a/0.6,b/0.3,c/0.0} \node[neuron, draw=green!40!black] (m\i\k) at (\cx,\yy) {};
+  \foreach \i/\yy in {a/0.5,b/0.1} \node[neuron, draw=green!40!black] (r\i\k) at (\cx+0.5,\yy) {};
+  \foreach \p in {a,b} \foreach \q in {a,b,c}
+    {\draw[green!40!black, line width=0.35pt] (l\p\k) -- (m\q\k) -- (r\p\k);}
+}
+\node[font=\sffamily\scriptsize] at (8.75,-0.72)
+  {state $X_t\in\mathbb R^{128}$, noise $W_t\in\mathbb R^{16}$};
+\node[font=\sffamily\scriptsize] at (8.75,-1.1)
+  {Euler--Maruyama, $\Delta t=0.05$; diffusion floor $\sqrt{\lambda_0}$};
+%% ---------------- column 4: mean-logit classifier ----------------
+\foreach \i/\yy in {1/1.35,2/0.95,3/0.55} {
+  \node[neuron, draw=violet!70!black, fill=violet!25, inner sep=1.8pt] (a\i) at (13.1,\yy) {};
+  \node[neuron, draw=violet!70!black, fill=violet!25, inner sep=1.8pt] (b\i) at (14.0,\yy) {};}
+\foreach \i in {1,2,3} \foreach \j in {1,2,3} \draw[violet!70!black, line width=0.4pt] (a\i) -- (b\j);
+\node[align=center] at (13.55,-0.55)
+  {$F(x)=\mathbb E\bigl[\psi_\eta(X_T)\bigr]$\\[1pt]$\in\mathbb R^{34}$\\[2pt]
+   {\footnotesize mean over $N_{\mathrm{mc}}{=}8$}\\[-1pt]{\footnotesize Brownian paths}};
+%% ---------------- column 5: decision ----------------
+\begin{scope}[shift={(16.95,0.1)}]
+\draw[red!65!black, line width=1.4pt, fill=red!10]
+  (0,1.62) -- (0.5,1.43) -- (0.47,0.98) .. controls (0.42,0.62) and (0.17,0.43) .. (0,0.36)
+  .. controls (-0.17,0.43) and (-0.42,0.62) .. (-0.47,0.98) -- (-0.5,1.43) -- cycle;
+\fill[red!65!black] (-0.16,0.72) rectangle (0.16,1.0);
+\draw[red!65!black, line width=1.1pt] (-0.1,1.0) -- (-0.1,1.1) arc (180:0:0.1) -- (0.1,1.0);
+\end{scope}
+\node[align=center] at (16.95,-0.6)
+  {\textbf{34 classes}\\allow / block\\[3pt]$\hat y=\arg\max_k F_k(x)$};
+%% ---------------- forward arrows ----------------
+\draw[fwd] (P1.east) -- (P2.west);
+\draw[fwd] (P2.east) -- (P3.west);
+\draw[fwd] (P3.east) -- (P4.west);
+\draw[fwd] (P4.east) -- (P5.west);
+\node[font=\sffamily\bfseries, text=blue!45!black] at (8.75,-2.05) {Forward (inference) path};
+%% ---------------- analytical path ----------------
+\node[gbox] (bel) at (3.9,-3.55)
+  {\textbf{\color{red!60!black}Regularised BEL estimator}\\
+   input gradients $\nabla_x\mathbb E[\phi(X_T)]$ (\FigRef{prop:bel}{Proposition 1});
+   exact only if $m=d$; $\theta_g$ trained path-wise};
+\node[gbox] (mc) at (9.25,-3.55)
+  {\textbf{\color{red!60!black}Monte-Carlo certification}\\
+   $n_0{=}64$ selection + $n{=}4096$ fresh paths;
+   Hoeffding or empirical Bernstein (\FigRef{cor:mc}{Corollary 1})};
+\node[gbox] (cert) at (14.6,-3.55)
+  {\textbf{\color{red!60!black}Guarantees}\\
+   certified radius $r(x)=M(x)/(\sqrt2L)$ (\FigRef{thm:mean-cert}{Theorem A});
+   path-wise flip bound (\FigRef{prop:flip}{Proposition 2})};
+\draw[thm] (bel.north |- P3.south) -- (bel.north);
+\draw[thm] (P4.south) |- ($(mc.north)+(0,0.45)$) -- (mc.north);
+\draw[thm] (mc.east) -- (cert.west);
+\draw[thm] (cert.north -| P5.south) -- (P5.south);
+\node[font=\sffamily\bfseries, text=red!60!black] at (9.25,-4.75)
+  {Analytical path: gradients, certification and guarantees};
+%% ---------------- legend ----------------
+\node[draw=gray!70, dashed, rounded corners=3pt, inner sep=5pt, font=\sffamily\footnotesize] at (8.75,-5.45) {%
+  \tikz[baseline=-0.6ex]\draw[fwd] (0,0) -- (0.75,0); forward (inference) flow\qquad
+  \tikz[baseline=-0.6ex]\draw[thm] (0,0) -- (0.75,0); analytical path\qquad
+  \tikz[baseline=-0.6ex]\node[solid, sharp corners, draw=blue!55!black, fill=blue!4, minimum size=2.4mm, inner sep=0pt]{}; data \& features\qquad
+  \tikz[baseline=-0.6ex]\node[solid, sharp corners, draw=green!40!black, fill=green!4, minimum size=2.4mm, inner sep=0pt]{}; dynamics (NSDE)\qquad
+  \tikz[baseline=-0.6ex]\node[solid, sharp corners, draw=violet!70!black, fill=violet!4, minimum size=2.4mm, inner sep=0pt]{}; classifier\qquad
+  \tikz[baseline=-0.6ex]\node[solid, sharp corners, draw=red!65!black, fill=red!4, minimum size=2.4mm, inner sep=0pt]{}; decision \& guarantees};
+\end{tikzpicture}
