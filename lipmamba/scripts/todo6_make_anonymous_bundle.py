@@ -32,10 +32,12 @@ IDENTIFYING = [
     r"Trofimov", r"Borodachev", r"torchroger", r"campus\.mephi", r"github\.com/rogerpanel", r"MambaShield",
     r"anaedevha20\d\d", r"Moscow",
 ]
-OMIT = {"docs/ROBUSTIDPS_INTEGRATION.md", "docs/MODEL_CARD.md", "docs/ICLR2027_AUDIT_RESPONSE.md",
+OMIT = {"docs/ROBUSTIDPS_INTEGRATION.md", "docs/MODEL_CARD.md", "docs/ICLR2027_AUDIT_RESPONSE.md", "docs/ICLR2027_PAT_RESPONSE.md",
         "scripts/todo6_make_anonymous_bundle.py", "paper", ".git", "runs", "data_cache", "__pycache__",
         ".pytest_cache", "lipmamba.egg-info"}
 REPLACEMENTS = [
+    (r"`?(docs/)?ROBUSTIDPS_INTEGRATION\.md`?", "the deployment notes (omitted)"),
+    (r"`?(docs/)?MODEL_CARD\.md`?", "the model card (omitted)"),
     (r"Copyright \(c\) \d{4} .*", "Copyright (c) 2026 Anonymous Authors"),
     (r"author=\"[^\"]*\"", 'author="Anonymous Authors"'),
     (r"https://github\.com/rogerpanel/CV/tree/[^\s)>\]]*", "https://anonymous.4open.science/r/LipMamba-ICLR27"),
@@ -53,7 +55,7 @@ TEXT_EXT = {".md", ".py", ".txt", ".yaml", ".yml", ".toml", ".cfg", ".tex", ".bi
 
 def scrub(text: str) -> str:
     for pat, rep in REPLACEMENTS:
-        text = re.sub(pat, rep, text)
+        text = re.sub(pat, rep, text, flags=re.IGNORECASE)
     return text
 
 
@@ -82,7 +84,7 @@ def main() -> None:
                 except UnicodeDecodeError:
                     continue
                 for pat in IDENTIFYING:
-                    for m in re.finditer(pat, t):
+                    for m in re.finditer(pat, t, flags=re.IGNORECASE):
                         leaks.append((str(p.relative_to(dst)), pat, t[max(0, m.start() - 30): m.end() + 30].replace("\n", " ")))
         if leaks:
             print("ABORT — identifying strings remain:", file=sys.stderr)
