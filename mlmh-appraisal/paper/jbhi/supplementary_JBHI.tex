@@ -5,7 +5,7 @@
 \graphicspath{{../empirical/figures/}{../integrated/figures/}}
 \makeatletter\def\input@path{{../empirical/}{../integrated/}{./}}\makeatother
 \let\origtable\table\let\endorigtable\endtable
-\renewenvironment{table}{\begin{origtable}[!htbp]}{\end{origtable}}
+\renewenvironment{table}[1][]{\begin{origtable}[!htbp]}{\end{origtable}} % [1][] absorbs the generated placement option
 \renewcommand{\thetable}{S\arabic{table}}\renewcommand{\thefigure}{S\arabic{figure}}
 \begin{document}
 \title{Supplementary Material for ``Leakage-Safe Evaluation of Machine-Learning Models for Mental-Health Prediction from Actigraphy: Protocol, Benchmark and Appraisal of Published Claims''}

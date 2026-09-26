@@ -8,11 +8,11 @@
 \definecolor{accent}{HTML}{8C2F1E}
 \graphicspath{{../empirical/figures/}{../integrated/figures/}}
 \makeatletter\def\input@path{{../empirical/}{../integrated/}{./}}\makeatother
-% generated tables use table; IEEE two-column: let wide ones float across columns
-% Generated tables use the `table' environment; in two-column layout the wide ones must span both columns.
+% Generated tables open with \begin{table}[!htbp]. The redefinitions below take (and discard) that optional
+% placement argument -- without the [1][] slot the string `[htbp]' is typeset as text above the table.
 \let\origtable\table\let\endorigtable\endtable
-\newcommand{\wideon}{\renewenvironment{table}{\begin{table*}[!t]}{\end{table*}}}
-\newcommand{\wideoff}{\renewenvironment{table}{\begin{origtable}[!t]}{\end{origtable}}}
+\newcommand{\wideon}{\renewenvironment{table}[1][]{\begin{table*}[!t]}{\end{table*}}}
+\newcommand{\wideoff}{\renewenvironment{table}[1][]{\begin{origtable}[!t]}{\end{origtable}}}
 \begin{document}
 \title{Leakage-Safe Evaluation of Machine-Learning Models for Mental-Health Prediction from Actigraphy: Protocol, Benchmark and Appraisal of Published Claims}
 \author{Aminat~Abiola~Ajibola%
