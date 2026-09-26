@@ -1,0 +1,1 @@
+Actigraphy models for depression, schizophrenia and ADHD lose 0.04 to 0.15 AUROC when evaluated subject-wise instead of day-wise. Day-wise models score above chance on shuffled labels and re-identify participants from one day at 27 to 40 percent, showing they learn identity; published accuracies above the honest band used day-level splits.
