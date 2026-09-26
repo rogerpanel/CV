@@ -127,6 +127,42 @@ def e6_section(rdir: Path) -> str:
     return "\n".join(lines) + "\n"
 
 
+def e7_section(rdir: Path) -> str:
+    p = rdir / "E7" / "e7_permutation.csv"
+    if not p.exists():
+        return "_E7 not run yet._\n"
+    t = pd.read_csv(p)
+    g = t.groupby(["cohort", "model", "splitter"]).agg(w=("window_auroc_est", "mean"), wmin=("window_auroc_est", "min"), wmax=("window_auroc_est", "max"), s=("subject_auroc_est", "mean")).reset_index()
+    lines = ["| Cohort | Model | Split | AUROC on permuted labels, mean (min-max) | Participant-level AUROC |", "|---|---|---|---|---|"]
+    for _, r in g.iterrows():
+        lines.append(f"| {r['cohort']} | {LABELS.get(r['model'], r['model'])} | {r['splitter']} | {r['w']:.3f} ({r['wmin']:.3f}-{r['wmax']:.3f}) | {r['s']:.3f} |")
+    return "\n".join(lines) + "\n"
+
+
+def e8_section(rdir: Path) -> str:
+    p = rdir / "E8" / "e8_reidentification.csv"
+    if not p.exists():
+        return "_E8 not run yet._\n"
+    t = pd.read_csv(p)
+    lines = ["| Cohort | Model | Participants (days) | Chance | Top-1 accuracy (SD) | Top-5 accuracy |", "|---|---|---|---|---|---|"]
+    for _, r in t.iterrows():
+        lines.append(f"| {r['cohort']} | {LABELS.get(r['model'], r['model'])} | {r['n_participants']} ({r['n_days']}) | {r['chance']:.3f} | {r['top1_accuracy']:.3f} ({r['top1_sd']:.3f}) | {r['top5_accuracy']:.3f} |")
+    return "\n".join(lines) + "\n"
+
+
+def e9_section(rdir: Path) -> str:
+    p = rdir / "E9" / "e9_rocket.csv"
+    if not p.exists():
+        return "_E9 not run yet._\n"
+    t = pd.read_csv(p)
+    lines = ["| Cohort | Split | AUROC [95% CI] | Participant AUROC | Cal. slope |", "|---|---|---|---|---|"]
+    for _, r in t[t["splitter"].isin(["subject_wise", "record_wise"])].iterrows():
+        lines.append(f"| {r['cohort']} | {r['splitter']} | {_ci(r, 'auroc')} | {_f(r['subject_auroc_est'])} | {_f(r['window_calibration_slope_est'], 2)} |")
+    for _, r in t[(t["splitter"] == "inflation") & t["window_auroc_mean"].notna()].iterrows():
+        lines.append(f"| {r['cohort']} | inflation (paired) | {r['window_auroc_mean']:.3f} [{r['window_auroc_ci_lo']:.3f}, {r['window_auroc_ci_hi']:.3f}] | | |")
+    return "\n".join(lines) + "\n"
+
+
 def manifests(rdir: Path) -> str:
     rows = []
     for m in sorted(rdir.glob("*/manifest.json")):
@@ -157,6 +193,9 @@ def main() -> None:
         + "#### E4: sex-stratified performance (subject-wise E1 models)\n\n" + e4_section(rdir) + "\n"
         + "#### E5: OBF-Psychiatric transdiagnostic and five-class arms\n\n" + e5_section(rdir) + "\n"
         + "#### E6: ablation (feature groups, SMOTE inside folds, LOSO)\n\n" + e6_section(rdir) + "\n"
+        + "#### E7: label-permutation test (record-wise scores memorisation)\n\n" + e7_section(rdir) + "\n"
+        + "#### E8: participant re-identification from one day\n\n" + e8_section(rdir) + "\n"
+        + "#### E9: ROCKET time-series baseline\n\n" + e9_section(rdir) + "\n"
         + "#### Supplementary arm: 1D-CNN on the raw 1440-minute series (5 seeds)\n\n" + cnn_section(rdir) + "\n"
         + "#### Run manifests\n\n" + manifests(rdir)
         + "<!-- RESULTS:END -->"

@@ -15,4 +15,13 @@ cp paper/integrated/part1_studies.csv paper/integrated/PART1_INSTRUCTIONS.md pap
 cp paper/empirical/tables/*.tex "$TMP/tables/"; cp paper/empirical/figures/*.pdf paper/integrated/figures/*.pdf "$TMP/figures/"; cp paper/empirical/supplement_*.tex "$TMP/"
 ( cd "$TMP" && zip -qr "$OUT/integrated_AB_overleaf.zip" . )
 rm -rf "$TMP"
+# J-BHI package: self-contained
+TMP=$(mktemp -d); mkdir -p "$TMP/tables" "$TMP/figures"
+sed -e 's|\\graphicspath{.*}|\\graphicspath{{figures/}}|' -e 's|\\makeatletter\\def\\input@path{.*}\\makeatother||' paper/jbhi/manuscript_JBHI.tex > "$TMP/manuscript_JBHI.tex"
+sed -e 's|\\graphicspath{.*}|\\graphicspath{{figures/}}|' -e 's|\\makeatletter\\def\\input@path{.*}\\makeatother||' paper/jbhi/supplementary_JBHI.tex > "$TMP/supplementary_JBHI.tex"
+cp paper/jbhi/fig_framework_wide.tex paper/jbhi/cover_letter_JBHI.tex paper/jbhi/cover_letter_JBHI.pdf "$TMP/" 2>/dev/null || true
+cp paper/integrated/e*_paragraph.tex paper/integrated/part1_studies.tex paper/integrated/supplement_part1_sources.tex paper/empirical/supplement_*.tex "$TMP/"
+cp paper/empirical/tables/*.tex "$TMP/tables/"; cp paper/empirical/figures/*.pdf paper/integrated/figures/*.pdf "$TMP/figures/"
+( cd "$TMP" && zip -qr "$OUT/jbhi_submission.zip" . )
+rm -rf "$TMP"
 ls -la "$OUT"

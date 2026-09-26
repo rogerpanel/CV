@@ -1,0 +1,18 @@
+\documentclass[11pt,a4paper]{letter}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage[margin=2.5cm]{geometry}\usepackage[hidelinks]{hyperref}
+\signature{Dr Aminat Abiola Ajibola\\Assistant Professor\\College of Computer Science and Engineering\\University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia\\aajibola@uhb.edu.sa}
+\address{College of Computer Science and Engineering\\University of Hafr Al-Batin\\Eastern Province, Kingdom of Saudi Arabia}
+\date{\today}
+\begin{document}
+\begin{letter}{The Editor-in-Chief\\\emph{IEEE Journal of Biomedical and Health Informatics}}
+\opening{Dear Editor,}
+I submit the regular paper \textbf{``Leakage-Safe Evaluation of Machine-Learning Models for Mental-Health Prediction from Actigraphy: Protocol, Benchmark and Appraisal of Published Claims''} for consideration in J-BHI.
+
+\textbf{Contribution.} Wearable actigraphy models for depression, schizophrenia and ADHD are benchmarked almost exclusively on the open DEPRESJON, PSYKOSE and HYPERAKTIV cohorts, on which reported accuracies have risen from 0.7 to above 0.9. The paper contributes (1) a leakage-safe evaluation protocol for repeated-measures wearable data, released as a tested codebase in which participant-level splitting is enforced by a build-failing test, participants shared across cohorts are detected from the data, and every table is generated from run manifests; (2) reference baselines on the three cohorts and the harmonised OBF-Psychiatric release, including cross-cohort transfer and calibration, for tabular models, a 1D-CNN and ROCKET; (3) a mechanistic demonstration that day-level cross-validation scores participant memorisation: it yields AUROC of 0.69 to 0.90 on labels randomly reassigned across participants, and one day of activity re-identifies its owner with 27 to 40\% top-1 accuracy among up to 80 people; (4) an appraisal of the 28 published models on these cohorts against the measured bands, showing that every accuracy above the honest band used or did not state a day-level unit, none reports calibration and none validates on a second cohort.
+
+\textbf{Fit.} The work sits in J-BHI's scope on wearable systems, machine learning and validation, and is intended for readers who build and evaluate health-ML models. The manuscript follows the TRIPOD+AI reporting guideline; a supplementary file carries the checklist, feature definitions, study list and additional tables and figures. All code and results are public and the figures were regenerated independently on Google Colab with identical output.
+
+\textbf{Declarations.} The manuscript is original, not under consideration elsewhere and not previously published; an earlier version was declined without review at two Elsevier journals as outside their scope. No funding was received; no conflicts of interest; secondary analysis of public de-identified datasets. I select the traditional (non-open-access) publication option. Suggested reviewers: researchers in machine learning for wearable health data, model validation and calibration, and reproducibility of health AI.
+\closing{Yours sincerely,}
+\end{letter}
+\end{document}

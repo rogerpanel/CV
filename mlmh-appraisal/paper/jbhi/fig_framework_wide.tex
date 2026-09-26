@@ -1,0 +1,36 @@
+% Figure 1: architectural framework of the study (TikZ). Included by manuscript_AB.tex.
+\begin{figure*}[!t]\centering
+\resizebox{\textwidth}{!}{\begin{tikzpicture}[x=1cm,y=1cm,
+  font=\sffamily\scriptsize,
+  box/.style={draw, rounded corners=1pt, align=center, inner sep=3pt, minimum height=7mm, fill=white, line width=0.5pt},
+  data/.style={box, fill=gray!8, text width=30mm},
+  p1/.style={box, fill=blue!5, text width=48mm},
+  p2/.style={box, fill=accent!6, text width=72mm},
+  arr/.style={-{Latex[length=1.6mm]}, line width=0.5pt}]
+% ----- data layer
+\node[data] (dep) at (-5.3,0) {DEPRESJON\\23 depression + 32 controls};
+\node[data] (psy) at (-1.8,0) {PSYKOSE\\22 schizophrenia + \emph{the same} 32 controls};
+\node[data] (hyp) at (1.8,0) {HYPERAKTIV\\45 ADHD + 40 clinical controls};
+\node[data] (obf) at (5.3,0) {OBF-Psychiatric\\162 participants, harmonised};
+\node[box, fill=accent!10, text width=96mm] (hash) at (0,-1.55) {\textbf{Data integrity layer:} activity-series hashing detects shared participants from the data itself (32 controls byte-identical in DEPRESJON and PSYKOSE; OBF contains each participant once)};
+\foreach \n in {dep,psy,hyp,obf} \draw[arr] (\n.south) -- (\n.south|-hash.north);
+% ----- Part I (left column)
+\node[p1] (p1a) at (-3.9,-3.55) {\textbf{Appraisal of published claims (Sec.~VI)}\\every published supervised model on the four cohorts (citation tracing + dataset-name searches)\\PROBAST+AI $\cdot$ TRIPOD+AI criteria, fixed codebook};
+\node[p1, below=3mm of p1a] (p1b) {\textbf{Outcomes per study:} unit of splitting $\cdot$ external validation $\cdot$ calibration $\cdot$ AUROC vs accuracy $\cdot$ participant-level EPV $\cdot$ shared-control double counting $\cdot$ code};
+\node[p1, below=3mm of p1b] (p1c) {\textbf{Output:} published claims vs the measured honest and leaky bands (Fig.~\ref{fig:part1}, Table~\ref{tab:sota})};
+% ----- Part II (right column)
+\node[p2] (p2a) at (2.9,-3.55) {\textbf{Leakage-safe protocol and benchmark (Sec.~III--V)}\\calendar-day windows ($\geq$80\% valid) $\rightarrow$ 28 statistical + circadian features (raw series for 1D-CNN and ROCKET)\\models fixed a priori: majority, logistic regression, random forest, XGBoost, 1D-CNN, ROCKET};
+\node[p2, below=3mm of p2a] (p2b) {\textbf{E1} record-wise vs subject-wise CV (paired inflation) \quad \textbf{E2} frozen cross-cohort transfer, shared controls split\\\textbf{E3} slope, intercept, Brier, ECE, reliability, recalibration \quad \textbf{E4} sex strata\\\textbf{E5} OBF transdiagnostic + five-class \quad \textbf{E6} feature / SMOTE / LOSO ablation\\\textbf{E7} label permutation \quad \textbf{E8} participant re-identification \quad \textbf{E9} ROCKET baseline};
+\node[p2, below=3mm of p2b] (p2c) {\textbf{Estimation:} 10 seeds $\cdot$ subject-level BCa bootstrap $\cdot$ window and participant level\\\textbf{Guards:} leakage test fails the build $\cdot$ cross-cohort overlap refused $\cdot$ preprocessing inside folds};
+\node[p2, below=3mm of p2c, fill=gray!8] (p2d) {\textbf{Outputs:} run manifests (commit, config hash, seeds, versions, checksums) $\rightarrow$ LaTeX tables, figures, TRIPOD+AI self-audit};
+\draw[arr] ([xshift=-2.5cm]hash.south) -- ([xshift=-2.5cm]hash.south|-p1a.north);
+\draw[arr] ([xshift=2.9cm]hash.south) -- (p2a.north);
+\draw[arr] (p1a) -- (p1b); \draw[arr] (p1b) -- (p1c);
+\draw[arr] (p2a) -- (p2b); \draw[arr] (p2b) -- (p2c); \draw[arr] (p2c) -- (p2d);
+% ----- synthesis
+\node[box, fill=green!6, text width=100mm] (syn) at ($(p2d.south)+(-2.9,-1.05)$) {\textbf{Synthesis:} each appraisal criterion is priced on the same data; a published claim above the honest band is explained by the evaluation design that produced it};
+\draw[arr] (p1c.south) -- (p1c.south|-syn.north);
+\draw[arr] (p2d.south) -- (p2d.south|-syn.north);
+\end{tikzpicture}}
+\caption{Architecture of the study. Four open actigraphy cohorts pass through a data-level integrity check (participant hashing) into the leakage-safe protocol and benchmark (Sections III to V) and the appraisal of published claims (Section VI); the synthesis maps every appraisal criterion to a measured cost.}\label{fig:framework}
+\end{figure*}

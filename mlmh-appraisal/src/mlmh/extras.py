@@ -360,7 +360,7 @@ def run_e8(cfg: dict) -> pd.DataFrame:
     table.to_csv(out / "e8_reidentification.csv", index=False)
     show = pd.DataFrame({"Cohort": table["cohort"], "Model": table["model"].map(lambda m: MODEL_LABELS.get(m, m)), "Participants (days)": [f"{a} ({b})" for a, b in zip(table["n_participants"], table["n_days"])],
                          "Chance": table["chance"].map(lambda v: f"{v:.3f}"), "Top-1 accuracy (SD)": [f"{a:.3f} ({b:.3f})" for a, b in zip(table["top1_accuracy"], table["top1_sd"])], "Top-5 accuracy": table["top5_accuracy"].map(lambda v: f"{v:.3f}")})
-    write_latex_table(show, ROOT / cfg.get("tables_dir", "paper/empirical/tables") / "e8_reidentification.tex", "E8: participant re-identification from a single day of activity features (day-level stratified five-fold CV, three seeds). Top-1 accuracy far above chance quantifies the participant fingerprint that record-wise splitting exploits.", "tab:e8", synthetic=bool(cfg.get("synthetic")), column_format="llccc")
+    write_latex_table(show, ROOT / cfg.get("tables_dir", "paper/empirical/tables") / "e8_reidentification.tex", "E8: participant re-identification from a single day of activity features (day-level stratified five-fold CV, three seeds). Top-1 accuracy far above chance quantifies the participant fingerprint that record-wise splitting exploits.", "tab:e8", synthetic=bool(cfg.get("synthetic")), column_format="llcccc")
     write_manifest(out, cfg, extra={"experiment": "E8", "n_rows": len(table)}, checksums_path=processed_dir(cfg) / "checksums.json")
     return table
 
