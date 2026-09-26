@@ -1,0 +1,45 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage{microtype}
+\usepackage[margin=2.4cm]{geometry}\usepackage{enumitem}\usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{0.5em}\setlength{\parindent}{0pt}
+\begin{document}
+\begin{center}
+{\large\bfseries Title page}\\[1.2em]
+{\LARGE\bfseries Leakage-Safe Evaluation of Machine-Learning Models for Mental-Health Prediction from Actigraphy:\\[0.2em] Protocol, Benchmark and Appraisal of Published Claims}\\[1.6em]
+{\large Aminat Abiola Ajibola$^{\,\mathrm{a},*}$}\\[0.8em]
+{\small $^{\mathrm{a}}$College of Computer Science and Engineering, University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia}\\[0.3em]
+{\small $^{*}$Corresponding author. E-mail: \href{mailto:aajibola@uhb.edu.sa}{aajibola@uhb.edu.sa}; telephone: +966\,550\,047\,554}
+\end{center}
+\vspace{0.8em}
+
+\textbf{Journal.} IEEE Journal of Biomedical and Health Informatics. \quad \textbf{Article type.} Regular paper. \quad \textbf{Word count.} Abstract 260 words; main text (excluding abstract, tables, figure captions and references) approximately 2000 words. \quad \textbf{Figures / tables.} 6 figures, 10 tables in the manuscript; one supplementary document (Tables S1 to S10, Figures S1 to S4).
+
+\textbf{Author.} Dr Aminat Abiola Ajibola, Assistant Professor, College of Computer Science and Engineering, University of Hafr Al-Batin, Eastern Province, Kingdom of Saudi Arabia. ORCID: \textit{[insert]}. Sole author; all work was carried out by the author.
+
+\textbf{Highlights.}
+\begin{itemize}[nosep,leftmargin=1.4em]
+\item Leakage-safe evaluation protocol for repeated-measures wearable data, released as tested code
+\item Day-level cross-validation inflated AUROC by up to 0.17 and scored 0.69 to 0.90 on random labels
+\item One day of activity re-identifies a participant with 27 to 40\% top-1 accuracy (chance 1 to 2\%)
+\item Frozen cross-cohort transfer lost up to 0.21 AUROC with collapse of calibration
+\item Every published claim above the honest band used or did not state a day-level unit
+\end{itemize}
+
+\textbf{Keywords.} Actigraphy, calibration, data leakage, depression, external validation, machine learning, reproducibility, schizophrenia, wearable sensing.
+
+\textbf{Declaration of competing interest.} The author declares that she has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\textbf{Funding.} This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\textbf{Ethics.} The study is a secondary analysis of publicly available, de-identified datasets (DEPRESJON, PSYKOSE, HYPERAKTIV, OBF-Psychiatric) released for research use by their custodians; no new data were collected and no ethical approval was required.
+
+\textbf{Data availability.} The datasets are available from their custodians: DEPRESJON (\url{https://datasets.simula.no/depresjon/}), PSYKOSE (\url{https://datasets.simula.no/psykose/}), HYPERAKTIV (\url{https://datasets.simula.no/hyperaktiv/}) and OBF-Psychiatric (\url{https://zenodo.org/records/13754984}). SHA-256 checksums of every file used are recorded in the code repository.
+
+\textbf{Code availability.} All analysis code, configuration files, run manifests, per-window predictions and the scripts that generate every table and figure are available at \url{https://github.com/rogerpanel/cv} (folder \texttt{mlmh-appraisal}, release \texttt{v1.1.0-jbhi}); a Zenodo DOI will be added on acceptance.
+
+\textbf{Prior submission history.} An earlier version was declined without external review at two Elsevier journals as outside their scope; the present version adds the label-permutation, re-identification and ROCKET experiments and is reframed around the evaluation protocol.
+
+\textbf{Declaration of generative AI.} During the preparation of this work the author used an AI coding assistant (Claude Code, Anthropic) for code scaffolding and language editing under the author's direction. The author reviewed and edited all content and takes full responsibility for the publication.
+
+\textbf{Acknowledgements.} The author thanks the custodians of the DEPRESJON, PSYKOSE, HYPERAKTIV and OBF-Psychiatric datasets for making them openly available.
+\end{document}

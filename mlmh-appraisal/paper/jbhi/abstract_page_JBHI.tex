@@ -1,0 +1,13 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}\usepackage[utf8]{inputenc}\usepackage{lmodern}\usepackage{microtype}
+\usepackage[margin=2.4cm]{geometry}\usepackage{enumitem}\usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{0.5em}\setlength{\parindent}{0pt}
+\begin{document}
+\begin{center}
+{\large\bfseries Abstract}\\[1.0em]
+{\Large\bfseries Leakage-Safe Evaluation of Machine-Learning Models for Mental-Health Prediction from Actigraphy: Protocol, Benchmark and Appraisal of Published Claims}\\[1.2em]
+\end{center}
+Machine-learning models that detect mental disorders from wrist actigraphy are benchmarked almost exclusively on three open cohorts, DEPRESJON, PSYKOSE and HYPERAKTIV, and reported accuracies have risen from the dataset authors' leave-one-patient-out 0.7 to above 0.9. We present a leakage-safe evaluation protocol for repeated-measures wearable data, apply it to these cohorts to establish reference baselines, and use it to explain the published claims. The protocol enforces participant-level splitting by a build-failing test, detects participants shared across cohorts from the activity series themselves, fits all preprocessing inside folds, reports discrimination and calibration at window and participant level, and quantifies uncertainty with participant-level bootstrap intervals; every run writes a manifest from which the tables are generated. Nine experiments on 162 participants show that day-level cross-validation inflates AUROC by 0.02 to 0.17 relative to participant-level splitting, that it yields AUROC of 0.69 to 0.90 on labels randomly reassigned across participants, and that one day of activity re-identifies a participant with 27 to 40\% top-1 accuracy against 1 to 2\% chance: the inflation is memorisation. A state-of-the-art time-series method (ROCKET) reproduces the pattern. Frozen cross-cohort transfer loses up to 0.21 AUROC in one direction with calibration slopes of 0.27 to 0.63; honest slopes are 0.53 to 0.95 and are never reported in the literature; results are stable under feature, resampling and cross-validation ablations. Of 28 published models on these cohorts, every accuracy above the honest band used or did not state a day-level unit, none reports calibration, and none validates on a second cohort. The protocol and baselines are released for future comparison.
+
+\vspace{0.8em}\textbf{Index terms.} Actigraphy, calibration, data leakage, depression, external validation, machine learning, reproducibility, schizophrenia, wearable sensing.
+\end{document}
