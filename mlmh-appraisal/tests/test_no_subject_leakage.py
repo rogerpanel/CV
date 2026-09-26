@@ -68,7 +68,7 @@ def test_every_non_e1_config_uses_non_leaking_splitter():
         cfg = yaml.safe_load(path.read_text())
         if not isinstance(cfg, dict) or "experiment" not in cfg:
             continue  # base.yaml carries defaults only
-        is_e1 = cfg.get("experiment") in ("E1", "E5")  # E5 = E1 design on OBF-Psychiatric
+        is_e1 = cfg.get("experiment") in ("E1", "E5", "E7", "E9")  # experiments whose object of study is the record-wise design
         splitters = cfg.get("splitters", [cfg.get("splitter", "subject_wise")])
         for name in splitters:
             leaks = make_splitter(name).leaks_subjects

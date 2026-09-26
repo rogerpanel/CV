@@ -1,0 +1,9 @@
+inherit: base.yaml
+experiment: E7
+description: Participant-level label permutation under subject-wise vs record-wise CV (record-wise is the object of study).
+cohorts: [depresjon, psykose, hyperaktiv]
+models: [logreg, xgboost]
+splitters: [subject_wise, record_wise]
+seeds: [0, 1, 2]
+n_permutations: 5
+n_boot: 300

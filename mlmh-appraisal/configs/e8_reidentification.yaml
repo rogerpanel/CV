@@ -1,0 +1,5 @@
+inherit: base.yaml
+experiment: E8
+description: Participant re-identification from one day of features (day-level folds are inherent to the task).
+cohorts: [depresjon, psykose, hyperaktiv]
+splitter: subject_wise
