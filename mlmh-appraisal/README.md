@@ -320,6 +320,48 @@ _Last refreshed by `scripts/update_readme.py` from `results/real`._
 | hyperaktiv | XGBoost | all_features+smote_in_fold | 28 | 0.454 [0.379, 0.543] | 0.453 | -0.18 | 0.208 |
 | hyperaktiv | XGBoost | all_features+loso | 28 | 0.424 [0.344, 0.503] | 0.399 | -0.25 | 0.275 |
 
+#### E7: label-permutation test (record-wise scores memorisation)
+
+| Cohort | Model | Split | AUROC on permuted labels, mean (min-max) | Participant-level AUROC |
+|---|---|---|---|---|
+| depresjon | Logistic regression | record_wise | 0.646 (0.616-0.689) | 0.740 |
+| depresjon | Logistic regression | subject_wise | 0.508 (0.450-0.582) | 0.528 |
+| depresjon | XGBoost | record_wise | 0.744 (0.721-0.768) | 0.898 |
+| depresjon | XGBoost | subject_wise | 0.517 (0.447-0.587) | 0.539 |
+| hyperaktiv | Logistic regression | record_wise | 0.621 (0.591-0.633) | 0.666 |
+| hyperaktiv | Logistic regression | subject_wise | 0.528 (0.490-0.550) | 0.530 |
+| hyperaktiv | XGBoost | record_wise | 0.671 (0.641-0.703) | 0.753 |
+| hyperaktiv | XGBoost | subject_wise | 0.533 (0.485-0.592) | 0.537 |
+| psykose | Logistic regression | record_wise | 0.638 (0.554-0.714) | 0.719 |
+| psykose | Logistic regression | subject_wise | 0.525 (0.409-0.637) | 0.534 |
+| psykose | XGBoost | record_wise | 0.733 (0.701-0.799) | 0.895 |
+| psykose | XGBoost | subject_wise | 0.506 (0.421-0.639) | 0.510 |
+
+#### E8: participant re-identification from one day
+
+| Cohort | Model | Participants (days) | Chance | Top-1 accuracy (SD) | Top-5 accuracy |
+|---|---|---|---|---|---|
+| depresjon | Logistic regression | 55 (1034) | 0.018 | 0.330 (0.020) | 0.645 |
+| depresjon | Random forest | 55 (1034) | 0.018 | 0.388 (0.031) | 0.718 |
+| psykose | Logistic regression | 54 (1021) | 0.019 | 0.334 (0.029) | 0.651 |
+| psykose | Random forest | 54 (1021) | 0.019 | 0.397 (0.043) | 0.721 |
+| hyperaktiv | Logistic regression | 80 (490) | 0.013 | 0.271 (0.043) | 0.561 |
+| hyperaktiv | Random forest | 80 (490) | 0.013 | 0.265 (0.030) | 0.572 |
+
+#### E9: ROCKET time-series baseline
+
+| Cohort | Split | AUROC [95% CI] | Participant AUROC | Cal. slope |
+|---|---|---|---|---|
+| depresjon | subject_wise | 0.717 [0.624, 0.799] | 0.857 | 0.36 |
+| depresjon | record_wise | 0.831 [0.769, 0.871] | 0.976 | 0.67 |
+| psykose | subject_wise | 0.865 [0.749, 0.908] | 0.949 | 0.67 |
+| psykose | record_wise | 0.905 [0.817, 0.935] | 0.980 | 0.87 |
+| hyperaktiv | subject_wise | 0.506 [0.436, 0.571] | 0.535 | 0.00 |
+| hyperaktiv | record_wise | 0.575 [0.505, 0.627] | 0.657 | 0.14 |
+| depresjon | inflation (paired) | 0.114 [0.066, 0.167] | | |
+| psykose | inflation (paired) | 0.040 [0.021, 0.068] | | |
+| hyperaktiv | inflation (paired) | 0.069 [0.041, 0.092] | | |
+
 #### Supplementary arm: 1D-CNN on the raw 1440-minute series (5 seeds)
 
 | Cohort | AUROC subject-wise (window) | AUROC record-wise (window) | Inflation (paired) |
@@ -339,6 +381,9 @@ _Last refreshed by `scripts/update_readme.py` from `results/real`._
 | E4 | `e4e110ed68` (dirty) | `dca705bf16030746` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T04:54:43 | no |
 | E5 | `2ffe795380` (dirty) | `3717e32497af3ad6` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-15T06:37:51 | no |
 | E6 | `149e52ccc3` (dirty) | `10dbbe3fc2b60a12` | [0, 1, 2, 3, 4] | 500 | 2026-09-15T10:05:59 | no |
+| E7 | `14fecd4e8e` (dirty) | `e5e95e90c60e5401` | [0, 1, 2] | 300 | 2026-09-26T02:48:55 | no |
+| E8 | `4f85e8b4dc` (dirty) | `a9d5a661a6c5f1ed` | [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] | 1000 | 2026-09-26T02:10:27 | no |
+| E9 | `9abdc12f13` (dirty) | `1cace91d1269b12d` | [0, 1, 2] | 300 | 2026-09-26T02:29:55 | no |
 <!-- RESULTS:END -->
 
 ## Roadmap
