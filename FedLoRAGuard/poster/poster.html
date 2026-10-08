@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FedLoRAGuard Poster</title>
+<style>
+  @page { size: 841mm 1189mm; margin: 0; }
+  :root{
+    --red:#D22432; --navy:#2B3044; --green:#4A7C59; --ink:#1f2333;
+    --soft:#F4F5F8; --line:#D9DCE5; --accent:#FCEBEC; --gsoft:#EAF2EC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:841mm;height:1189mm;background:#fff;color:var(--ink);
+    font-family:"DejaVu Sans","Liberation Sans",Arial,sans-serif;}
+  .poster{width:841mm;height:1189mm;display:flex;flex-direction:column;overflow:hidden}
+
+  /* Header */
+  header{display:flex;align-items:center;gap:14mm;padding:12mm 22mm 9mm;
+    border-bottom:4mm solid var(--red);}
+  header .logo{height:40mm}
+  header .titles{flex:1}
+  h1{font-size:27mm;line-height:1.05;color:var(--navy);font-weight:800;letter-spacing:-.3mm}
+  h1 span{color:var(--red)}
+  .subtitle{font-size:12mm;color:var(--navy);margin-top:3mm;font-weight:600;line-height:1.15}
+  .authors{font-size:11mm;margin-top:6mm;color:var(--ink)}
+  .affil{font-size:8.2mm;color:#4b5068;margin-top:1.5mm}
+  .qr{width:56mm;text-align:center;font-size:6.2mm;color:var(--navy);font-weight:600}
+  .qr img{width:56mm;height:56mm;display:block;margin-bottom:2mm}
+  .badge{display:inline-block;background:var(--navy);color:#fff;font-size:7.5mm;
+    padding:1.8mm 5mm;border-radius:3mm;margin-top:5mm;font-weight:600}
+
+  /* Body */
+  main{flex:1;padding:9mm 22mm 0;display:flex;flex-direction:column;gap:6.5mm}
+  .row{display:flex;gap:9mm}
+  .col{flex:1;display:flex;flex-direction:column;gap:6.5mm}
+  section{background:var(--soft);border-radius:6mm;padding:7mm 10mm;border-top:3mm solid var(--navy)}
+  section.hl{background:var(--accent);border-top-color:var(--red)}
+  section.gr{background:var(--gsoft);border-top-color:var(--green)}
+  h2{font-size:12.5mm;color:var(--navy);margin-bottom:3.5mm;font-weight:800}
+  h2 .n{display:inline-block;background:var(--red);color:#fff;border-radius:50%;
+    width:13mm;height:13mm;line-height:13mm;text-align:center;font-size:9mm;margin-right:4mm;vertical-align:middle}
+  p,li{font-size:7.7mm;line-height:1.33}
+  ul{padding-left:9mm} li{margin-bottom:1.4mm}
+  b{color:var(--navy)} .red{color:var(--red)} .grn{color:var(--green)}
+  .big{font-size:9.6mm;font-weight:700;color:var(--navy);line-height:1.3}
+
+  /* KPI tiles */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:7mm}
+  .kpi{background:var(--navy);color:#fff;border-radius:6mm;padding:6mm 4mm;text-align:center}
+  .kpi .v{font-size:18mm;font-weight:800;line-height:1}
+  .kpi .v small{font-size:10mm}
+  .kpi .l{font-size:6.6mm;margin-top:3mm;line-height:1.25;opacity:.95}
+  .kpi.r{background:var(--red)} .kpi.g{background:var(--green)}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:7.1mm}
+  th,td{padding:1.7mm 2.5mm;text-align:center;border-bottom:.5mm solid var(--line)}
+  th{background:var(--navy);color:#fff;font-weight:700}
+  td:first-child,th:first-child{text-align:left}
+  tr.ours td{background:#fde2e4;font-weight:800;color:var(--navy)}
+  .note{font-size:6.6mm;color:#555b70;margin-top:3mm;line-height:1.3}
+
+  .eq{background:#fff;border:.6mm solid var(--line);border-radius:4mm;padding:5mm 6mm;
+    font-family:"DejaVu Serif",Georgia,serif;font-size:8.6mm;text-align:center;margin:3mm 0}
+  .pill{display:inline-block;background:#fff;border:.6mm solid var(--navy);border-radius:10mm;
+    padding:1mm 4mm;font-size:7mm;margin:1mm 1.5mm 1mm 0;color:var(--navy);font-weight:600}
+
+  footer{margin-top:6mm;position:relative}
+  footer .bar{display:flex;justify-content:space-between;align-items:flex-end;padding:0 22mm 5mm;font-size:6.6mm;color:#4b5068;line-height:1.35}
+  footer img.sky{width:100%;height:62mm;object-fit:cover;object-position:bottom;display:block;opacity:.9}
+  .refs{font-size:5.9mm;color:#4b5068;line-height:1.35}
+</style>
+</head>
+<body>
+<div class="poster">
+
+<header>
+  <img class="logo" src="assets/emnlp2026_logo.webp" alt="EMNLP 2026 Budapest">
+  <div class="titles">
+    <h1>Fed<span>LoRA</span>Guard</h1>
+    <div class="subtitle">Federated Dynamic Graph Neural Networks with Differential-Privacy Certificates for LoRA Adapter Integrity Verification</div>
+    <div class="authors"><b>Roger Nick Anaedevha</b><sup>1</sup> · Alexander G. Trofimov<sup>1</sup> · Yuri V. Borodachev<sup>2</sup></div>
+    <div class="affil"><sup>1</sup>Institute of Cyber Intelligence Systems, NRNU MEPhI, Moscow &nbsp;·&nbsp; <sup>2</sup>AI Research Center, NRNU MEPhI, Moscow &nbsp;·&nbsp; ar006@campus.mephi.ru</div>
+    <span class="badge">Findings of EMNLP 2026 · Paper 5651</span>
+  </div>
+  <div class="qr"><img src="assets/qr_code.svg" alt="QR code to code repository">Code &amp; benchmark</div>
+</header>
+
+<main>
+
+  <!-- Row 1: problem + idea -->
+  <div class="row">
+    <section class="hl" style="flex:1.15">
+      <h2><span class="n">1</span>The problem</h2>
+      <ul>
+        <li><b>LoRA</b> is the dominant way to fine-tune LLMs, and public hubs now host <b>tens of thousands</b> of shared adapters.</li>
+        <li>Backdoored adapters <b>merge silently</b> into task adapters and keep their benign utility; a cheap LoRA fine-tune can strip a chat model's safety alignment.</li>
+        <li>Centralised detectors (e.g. PEFTGuard) need marketplaces to <b>hand over raw weights</b>. That conflicts with proprietary practice, creates a single point of trust, and misses <b>cross-marketplace lineage</b>.</li>
+      </ul>
+    </section>
+    <section class="gr" style="flex:1">
+      <h2><span class="n">2</span>Our idea</h2>
+      <p class="big">Model the whole adapter ecosystem as a <span class="grn">dynamic graph</span>, learn a detector <span class="grn">federatedly</span> under <span class="grn">differential privacy</span>, and <span class="red">certify</span> how many colluding marketplaces it can withstand.</p>
+      <p style="margin-top:4mm">No marketplace ever shares raw adapter weights; only clipped, noised, securely aggregated updates leave a client.</p>
+    </section>
+  </div>
+
+  <!-- Architecture -->
+  <section>
+    <h2><span class="n">3</span>Framework</h2>
+    <svg viewBox="0 0 2000 520" width="100%" style="max-height:165mm" xmlns="http://www.w3.org/2000/svg" font-family="DejaVu Sans, Arial" >
+      <defs>
+        <marker id="ar" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#2B3044"/></marker>
+      </defs>
+      <!-- clients -->
+      <g font-size="27" font-weight="700" fill="#fff" text-anchor="middle">
+        <rect x="4" y="40" width="292" height="110" rx="18" fill="#2B3044"/><text x="150" y="88">Marketplace C<tspan baseline-shift="sub" font-size="19">1</tspan></text><text x="150" y="126" font-size="21" font-weight="400">local graph + adapters</text>
+        <rect x="4" y="205" width="292" height="110" rx="18" fill="#2B3044"/><text x="150" y="253">Marketplace C<tspan baseline-shift="sub" font-size="19">2</tspan></text><text x="150" y="291" font-size="21" font-weight="400">local graph + adapters</text>
+        <rect x="4" y="370" width="292" height="110" rx="18" fill="#2B3044"/><text x="150" y="418">Marketplace C<tspan baseline-shift="sub" font-size="19">N</tspan></text><text x="150" y="456" font-size="21" font-weight="400">local graph + adapters</text>
+      </g>
+      <!-- per-client pipeline box -->
+      <rect x="322" y="20" width="1018" height="480" rx="24" fill="none" stroke="#9aa0b5" stroke-width="4" stroke-dasharray="14 10"/>
+      <text x="830" y="58" text-anchor="middle" font-size="28" fill="#4b5068" font-weight="700">runs inside each marketplace (no raw weights leave)</text>
+      <g font-size="28" font-weight="700" text-anchor="middle">
+        <rect x="350" y="150" width="290" height="220" rx="18" fill="#FCEBEC" stroke="#D22432" stroke-width="4"/>
+        <text x="495" y="215" fill="#2B3044">Multimodal</text><text x="495" y="250" fill="#2B3044">encoder</text>
+        <text x="495" y="295" font-size="22" font-weight="400" fill="#2B3044">spectral σ₁…σᵣ of BA</text>
+        <text x="495" y="325" font-size="22" font-weight="400" fill="#2B3044">model-card text</text>
+        <text x="495" y="355" font-size="22" font-weight="400" fill="#2B3044">usage statistics</text>
+        <rect x="690" y="150" width="300" height="220" rx="18" fill="#EAF2EC" stroke="#4A7C59" stroke-width="4"/>
+        <text x="840" y="215" fill="#2B3044">DyGFormer</text><text x="840" y="250" fill="#2B3044">+ HGT attention</text>
+        <text x="840" y="300" font-size="22" font-weight="400" fill="#2B3044">temporal neighbours,</text>
+        <text x="840" y="330" font-size="22" font-weight="400" fill="#2B3044">relation-aware</text>
+        <rect x="1040" y="150" width="270" height="220" rx="18" fill="#F4F5F8" stroke="#2B3044" stroke-width="4"/>
+        <text x="1175" y="215" fill="#2B3044">Client-level</text><text x="1175" y="250" fill="#2B3044">DP-SGD</text>
+        <text x="1175" y="300" font-size="22" font-weight="400" fill="#2B3044">clip update to S</text>
+        <text x="1175" y="330" font-size="22" font-weight="400" fill="#2B3044">+ N(0, σ²S²I)</text>
+      </g>
+      <g stroke="#2B3044" stroke-width="5" fill="none" marker-end="url(#ar)">
+        <path d="M296 95 C 325 95, 325 260, 346 260"/><path d="M296 260 L346 260"/><path d="M296 425 C 325 425, 325 260, 346 260"/>
+        <path d="M640 260 L686 260"/><path d="M990 260 L1036 260"/><path d="M1310 260 L1396 260"/>
+        <path d="M1700 200 L1746 120"/><path d="M1700 320 L1746 400"/>
+      </g>
+      <g text-anchor="middle" font-weight="700" font-size="28">
+        <rect x="1400" y="150" width="300" height="220" rx="18" fill="#2B3044"/>
+        <text x="1550" y="225" fill="#fff">Secure</text><text x="1550" y="260" fill="#fff">aggregation</text><text x="1550" y="305" fill="#fff">+ FLTrust</text>
+        <text x="1550" y="340" fill="#fff" font-size="22" font-weight="400">trust-weighted</text>
+        <rect x="1750" y="40" width="240" height="160" rx="18" fill="#D22432"/>
+        <text x="1870" y="105" fill="#fff">Global verifier</text><text x="1870" y="150" fill="#fff" font-size="26">p̂ₘₐₗ(θ)</text>
+        <rect x="1750" y="320" width="240" height="160" rx="18" fill="#4A7C59"/>
+        <text x="1870" y="385" fill="#fff">Certificate</text><text x="1870" y="430" fill="#fff" font-size="26">k* and ε<tspan baseline-shift="sub" font-size="18">T</tspan></text>
+      </g>
+    </svg>
+    <p style="margin-top:3mm">The ecosystem is a <b>heterogeneous continuous-time dynamic graph</b>:
+      <span class="pill">adapters</span><span class="pill">base models</span><span class="pill">contributors</span><span class="pill">applications</span>
+      linked by time-stamped
+      <span class="pill">contributes</span><span class="pill">derives_from</span><span class="pill">fine_tunes</span><span class="pill">deploys</span><span class="pill">cites</span><span class="pill">co_uses</span> edges.</p>
+  </section>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi"><div class="v">96.4<small>%</small></div><div class="l">macro-F1 on<br>LoRAchain-2026</div></div>
+    <div class="kpi r"><div class="v">25<small>/50</small></div><div class="l">certified coalition bound k*<br>(ε<sub>r</sub>=0.5, bounded-update)</div></div>
+    <div class="kpi g"><div class="v">1.7<small> pp</small></div><div class="l">from centralised PEFTGuard,<br>with no weight sharing</div></div>
+    <div class="kpi"><div class="v">≈13.6</div><div class="l">training-time ε<sub>T</sub> (δ=10⁻⁵)<br>Opacus PRV, T=100</div></div>
+    <div class="kpi"><div class="v">0.7<small> s</small></div><div class="l">per adapter on A100<br>(1.6 s A10G · 2.9 s T4)</div></div>
+  </div>
+
+  <!-- two columns -->
+  <div class="row" style="flex:1">
+    <div class="col">
+      <section>
+        <h2><span class="n">4</span>Training round</h2>
+        <ul>
+          <li>Server Poisson-samples marketplaces at rate <b>q = 0.2</b> (10 of N = 50).</li>
+          <li>Each client computes its update, <b>clips the whole update</b> to S = 1.0 and adds one Gaussian draw (σ = 1.1).</li>
+          <li>Updates travel through <b>secure aggregation</b>; <b>FLTrust</b> weights each by ReLU(cos) to a vetted 200-adapter root set.</li>
+          <li>An <b>Opacus PRV accountant</b> tracks the cumulative privacy budget: ε<sub>T</sub> ≈ 13.6 at T = 100.</li>
+          <li>Measured cost of DP + SecAgg: <b>≈4%</b> extra wall-clock per round vs. non-private FedAvg.</li>
+        </ul>
+      </section>
+      <section class="hl">
+        <h2><span class="n">5</span>Theory</h2>
+        <p><b>Thm 1 (client-update sensitivity).</b> With GELU (ρ≈1.13) and relation weights ‖W<sub>R</sub>‖ ≤ B<sub>W</sub>:</p>
+        <div class="eq">Δ₂ ≤ min( 2S , 2S·(ρ B<sub>W</sub> d<sub>max</sub>)<sup>L</sup>·|R|<sup>½</sup> )</div>
+        <p><b>Thm 2 (certified poisoning radius).</b> Under a bounded-update attack, the verdict on an adapter is invariant w.p. ≥ 1−Tδ for any coalition of size</p>
+        <div class="eq">k ≤ k* = ⌊ N(Φ⁻¹(p̂₁) − Φ⁻¹(p̂₂)) / (2e<sup>ε<sub>r</sub></sup>) ⌋</div>
+        <p>With N = 50, p̂₁−p̂₂ ≈ 0.6, ε<sub>r</sub> = 0.5: <b class="red">k* = 25</b>. The certificate uses the per-query smoothing budget ε<sub>r</sub>, not the cumulative ε<sub>T</sub>.</p>
+        <p class="note">Certified bound (50%, bounded-update threat) and empirical label-flip tolerance (ρ ≤ 0.33) are distinct results.</p>
+      </section>
+      <section>
+        <h2><span class="n">6</span>Mechanism: the spectral signature</h2>
+        <p>Backdoored adapters concentrate trigger information in one direction: the <b>top singular value of BA is 2.43× larger</b> than for benign adapters, while trailing values are indistinguishable (KS test D = 0.71, p &lt; 10⁻³). The weight modality extracts this; the graph propagates it along lineage.</p>
+        <p style="margin-top:3mm">A <b>spectral-only (SVD) baseline</b> reaches 90.2% on simple rank-1 backdoors but only <b>71.4%</b> on composite, weight-poisoning and trigger-free merging attacks, and gives no certificate.</p>
+      </section>
+    </div>
+
+    <div class="col">
+      <section>
+        <h2><span class="n">7</span>Main results</h2>
+        <table>
+          <tr><th>Method</th><th>ACC</th><th>Macro-F1</th><th>AUROC</th><th>k*</th><th>ε<sub>T</sub></th></tr>
+          <tr><td>PEFTGuard (centralised)</td><td>98.3</td><td>98.1</td><td>0.991</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>ShadowGenes (centralised)</td><td>95.1</td><td>94.7</td><td>0.967</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>FedAvg-MLP</td><td>89.6</td><td>88.4</td><td>0.924</td><td>0</td><td>N/A</td></tr>
+          <tr><td>DP-FedAvg-MLP</td><td>86.8</td><td>85.7</td><td>0.901</td><td>13</td><td>13.6</td></tr>
+          <tr><td>FedGraphNN-HGT</td><td>92.7</td><td>91.6</td><td>0.951</td><td>0</td><td>N/A</td></tr>
+          <tr><td>Krum-DyGFormer</td><td>93.5</td><td>92.8</td><td>0.962</td><td>6</td><td>N/A</td></tr>
+          <tr class="ours"><td>FedLoRAGuard (ours)</td><td>97.1</td><td>96.4</td><td>0.984</td><td>25</td><td>13.6</td></tr>
+        </table>
+        <p class="note">LoRAchain-2026: 13,500 benign + backdoored adapters · 4 base-model families (Llama-2/3, Mistral, Qwen) · 10 attack types · ranks 4–32. Mean of 3 seeds; Friedman χ²<sub>F</sub>(6) = 51.4, p &lt; 10⁻⁸.</p>
+      </section>
+      <section>
+        <h2><span class="n">8</span>Ablation: what matters</h2>
+        <table>
+          <tr><th>Configuration</th><th>Macro-F1</th><th>k*</th></tr>
+          <tr class="ours"><td>Full FedLoRAGuard</td><td>96.4</td><td>25</td></tr>
+          <tr><td>w/o DyGFormer (static GAT)</td><td>92.0</td><td>16</td></tr>
+          <tr><td>w/o HGT attention</td><td>93.4</td><td>19</td></tr>
+          <tr><td>w/o multimodal (weights only)</td><td>94.7</td><td>22</td></tr>
+          <tr><td>w/o FLTrust</td><td>95.6</td><td>19</td></tr>
+          <tr><td>w/o DP-SGD</td><td>96.9</td><td><b class="red">0</b></td></tr>
+        </table>
+        <p class="note" style="font-size:7.2mm">Temporal lineage (DyGFormer) carries the most signal. Removing DP gains only 0.5 pp but <b>destroys the certificate</b>: the privacy cost buys the guarantee.</p>
+      </section>
+      <section class="gr">
+        <h2><span class="n">9</span>Robustness</h2>
+        <ul>
+          <li><b>Stricter splits:</b> lineage-disjoint 95.1 · base-model-disjoint 93.7 · attack-family held-out 92.3 (vs. 96.4 random split).</li>
+          <li><b>Missing lineage edges:</b> 95.6 / 93.8 / 91.1 at 10 / 30 / 50% removed.</li>
+          <li><b>Stronger privacy:</b> 94.1% macro-F1 at ε<sub>T</sub> = 1.0.</li>
+          <li><b>Byzantine label-flip:</b> no certificate loss up to ρ ≤ 0.33.</li>
+          <li><b>Transfer:</b> same backbone reaches 95.8% macro-F1 on 4 network-IDS datasets.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="row">
+    <section class="hl" style="flex:1.2">
+      <h2><span class="n">10</span>Take-aways</h2>
+      <ul>
+        <li>Adapter integrity can be verified <b>across marketplaces without sharing weights</b>, within 1.7 pp of a centralised detector.</li>
+        <li><b>Lineage over time</b> is the key signal beyond each adapter's own weights.</li>
+        <li>DP turns into a <b>verifiable guarantee</b>: a certified bound on colluding marketplaces.</li>
+      </ul>
+    </section>
+    <section style="flex:1">
+      <h2><span class="n">11</span>Scope &amp; limits</h2>
+      <ul>
+        <li>Certificate covers <b>bounded-update</b> adversaries, not arbitrary Byzantine gradients.</li>
+        <li>Lineage edges are partly <b>synthesised</b> from HuggingGraph and PADBench.</li>
+        <li>50/50 benchmark split is a design choice; deploy with a low-FPR threshold and human review.</li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="bar">
+    <div class="refs"><b>Key references.</b> Sun et al., PEFTGuard, IEEE S&amp;P 2025 · Yu et al., DyGFormer, NeurIPS 2023 · Hu et al., Heterogeneous Graph Transformer, WWW 2020 · Cao et al., FLTrust, NDSS 2021 · Xie et al., CRFL, ICML 2021 · Lecuyer et al., PixelDP, IEEE S&amp;P 2019 · Gopi et al., Numerical Composition of DP, NeurIPS 2021.<br>
+    Supported by the Ministry of Economic Development of the Russian Federation (agreement 000000C313925P3Q0002).</div>
+  </div>
+  <img class="sky" src="assets/emnlp2026_skyline.webp" alt="">
+</footer>
+
+</div>
+</body>
+</html>
