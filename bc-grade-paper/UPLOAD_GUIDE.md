@@ -4,10 +4,10 @@
 
 | File | Use |
 |---|---|
-| `bc-grade-opendata_v1.0.1_github.zip` | The full experimentation package (code, configs, tests, results, manuscript sources). **Identity-free**: safe for the anonymous mirror. This is what goes on GitHub. |
-| `manuscript_v1.0.1_overleaf.zip` | Overleaf project: named + blinded manuscript, title page, highlights, graphical abstract (contains your details). |
+| `bc-grade-opendata_v1.0.2_github.zip` | The full experimentation package (code, configs, tests, results, manuscript sources). **Identity-free**: safe for the anonymous mirror. This is what goes on GitHub. |
+| `manuscript_v1.0.2_overleaf.zip` | Overleaf project: named + blinded manuscript, title page, highlights, graphical abstract (contains your details). |
 | `submission/` | Ready-to-upload PDFs for *Computers in Biology and Medicine* (see §4). |
-| `manuscript_v1.0.1.tex`, `manuscript_v1.0.1_anonymised.tex` | Single-file (flattened) LaTeX of each version; compile next to the `generated/data` folder from the Overleaf zip. |
+| `manuscript_v1.0.2.tex`, `manuscript_v1.0.2_anonymised.tex` | Single-file (flattened) LaTeX of each version; compile next to the `generated/data` folder from the Overleaf zip. |
 | `ASSESSMENT.md`, `anchors_verification.md` | Internal notes (not for the repository). |
 
 ## 1. Create the GitHub repository (5 minutes)
@@ -17,11 +17,11 @@
    (A username that reveals your identity is fine: the anonymous mirror in step 3 hides it.)
 2. Upload with Git (the browser uploader is limited to 100 files at a time; the package has ~130):
    ```bash
-   unzip bc-grade-opendata_v1.0.1_github.zip
+   unzip bc-grade-opendata_v1.0.2_github.zip
    cd bc-grade-opendata
    git init -b main
    git add .
-   git commit -m "bc-grade-opendata v1.0.1 (submission build)"
+   git commit -m "bc-grade-opendata v1.0.2 (submission build)"
    git remote add origin https://github.com/<your-username>/bc-grade-opendata.git
    git push -u origin main
    ```
@@ -55,7 +55,7 @@ Upload, in Editorial Manager:
 - **Title page (separate file):** `submission/title_page.pdf`.
 - **Highlights:** `submission/highlights.pdf` (5 bullets, ≤ 85 characters each).
 - **Graphical abstract:** `submission/graphical_abstract.pdf` (Figure 1).
-- **LaTeX source** (requested at revision/acceptance): `manuscript_v1.0.1_overleaf.zip`.
+- **LaTeX source** (requested at revision/acceptance): `manuscript_v1.0.2_overleaf.zip`.
 - Choose the subscription (non open-access) publishing option to avoid the APC.
 - Before submitting, check the current *Guide for Authors* (abstract length, review model, reference style)
   and fill the `[Confirm]` placeholders on the title page (funding, competing interests, AI-use statement).

@@ -58,3 +58,15 @@ one row per patient) are the right ones for this paper. Problems found:
 - **Internal history removed:** text about the earlier MOH drafts was replaced by neutral "design
   principles", which is appropriate for a journal and preserves blinding.
 - **TabPFN:** `make tabpfn` now adds it in one command once a Hugging Face token is available.
+
+## 5. Update v1.0.2 (23 October 2026)
+
+- **New title (one line):** "Breast cancer grade from routine clinical data: open multi-cohort validation
+  and transport to Saudi patients".
+- **Language:** Introduction, Methods, Results, Discussion and abstract rewritten in shorter sentences and
+  active voice. The Introduction now has an explicit *Problem statement* (three gaps) and five research
+  questions (RQ1–RQ5). A new *Conclusions* section states the contribution to knowledge, to practice and to
+  Saudi Arabia.
+- **Alamri 2024 (Najran)** verified from the PDF and added as a sensitivity analysis only. The series grades
+  in-situ and benign lesions as well, which conflicts with the invasive-only rule.
+- Every number is unchanged apart from the new sensitivity estimate.

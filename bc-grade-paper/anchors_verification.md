@@ -13,8 +13,8 @@
 | | IDC 244, ILC 21, micropapillary 17, other 14 | Table 1 | Counts sum to 296 (not 294); proportions of 296 used |
 | | ≤ 50 y: 52 + 81 = 133/294 (45.2%) | Table 1 | Confirmed |
 | Albasri 2014, Saudi Med J 35(12):1489–1493 (Al-Madinah; Saudi patients) | IDC grade I/II/III = 60/114/165 (17.7/33.6/48.7%) | Results and Table 3, p. 1491 | Confirmed; IDC only, no receptor data → pooled grade estimate only |
-| Alamri 2024 (Najran, Cureus) | — | Could not be located | **Removed** from the analysis and the bibliography |
+| Alamri 2024, Cureus 16(8):e67621 (Najran; Saudi patients, n = 61) | Grade I/II/III = 18/25/18; ER+ 40, PR+ 33, HER2+ 21 of 61; age < 50 y 36/61 | Table 4 p. 4; Table 5 p. 5 | Confirmed, **but grade is given for all 61 lesions, including 3 DCIS, 2 benign intraductal papillomas and 1 inflammatory fibroblastic tumour** → used only in a sensitivity pooled estimate (42.1%, 34.5–50.0%), not in the main estimate or raking |
 
 Effect on results: Riyadh-weighted METABRIC grade 3 changed from 58.4% to 57.3%; the pooled published
-Saudi grade-3 share is now 44.7% (95% CI 37.2–52.5%; 3 series, 908 patients). All other results are
+Saudi grade-3 share is 44.7% (95% CI 37.2–52.5%; 3 series, 908 patients); adding Najran gives 42.1% (34.5–50.0%). All other results are
 unchanged.
