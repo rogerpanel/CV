@@ -36,3 +36,25 @@ one row per patient) are the right ones for this paper. Problems found:
 3. PDFs (or a double-read) of the Saudi anchor papers: Kussaibi 2021 (Tables 1–2), Durrani 2025, Alamri 2024, Albasri 2014, and ideally Elkum 2025 / Almohanna 2025 / Aamir 2026 which may report grade with larger n.
 4. For R5/R8–R9: a run on a machine with internet access to Hugging Face (TabPFN token), Kaggle and TCIA; or a network policy for this environment that allows those hosts.
 5. GitHub repository name + Zenodo DOI for the Code availability statement.
+
+## 4. Update v1.0.1 (23 October 2026)
+
+- **Anchors verified** against the three PDFs supplied (see `anchors_verification.md`). Kussaibi 2021 is
+  confirmed in full. Durrani 2025 counts are confirmed, but its printed ER/HER2 percentages do not match
+  its counts, so the counts are used. Albasri 2014 now enters the pooled estimate with full grade counts
+  (IDC only). Alamri 2024 could not be located and was removed.
+- **Author** set to Dr Aminat Abiola Ajibola (University of Hafr Al-Batin), corresponding author.
+- **Target journal:** *Computers in Biology and Medicine*. It is Elsevier, Q1 (JIF ≈ 6.3, 5-year 6.5, per
+  third-party metrics; check JCR) and hybrid, so the subscription route has no APC. The manuscript now
+  uses the `elsarticle` template, with:
+  - an abstract ≤ 250 words;
+  - 5 highlights;
+  - a graphical abstract;
+  - a separate title page;
+  - CRediT, competing-interest, funding and generative-AI declarations.
+  IEEE JBHI was rejected because of mandatory overlength page charges beyond 8 pages.
+- **Double-anonymised build:** `manuscript_anonymised.tex` produces a line-numbered PDF with no
+  identifying information. The repository export is identity-free; the author files are kept out of it.
+- **Internal history removed:** text about the earlier MOH drafts was replaced by neutral "design
+  principles", which is appropriate for a journal and preserves blinding.
+- **TabPFN:** `make tabpfn` now adds it in one command once a Hugging Face token is available.
