@@ -51,6 +51,7 @@ make all            # ≈ 1 h on 4 cores; regenerates every number; `git diff pa
 ## 4. Submitting to *Computers in Biology and Medicine* (Elsevier; Q1; hybrid, so the subscription route has no APC)
 
 Upload, in Editorial Manager:
+- **Cover letter:** `submission/cover_letter.pdf` (editable copy: `submission/cover_letter.docx`; fill the date, repository link and optional suggested reviewers).
 - **Manuscript (anonymised):** `submission/manuscript_anonymised.pdf` (line-numbered, no names; supplement included at the end).
 - **Title page (separate file):** `submission/title_page.pdf`.
 - **Highlights:** `submission/highlights.pdf` (5 bullets, ≤ 85 characters each).
