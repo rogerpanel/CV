@@ -13,7 +13,10 @@ artifact. Place each one under `data/raw/<name>/` before running
 | MCPTox | arXiv:2508.14925 (AAAI 2026) | 1,312 tool-poisoning cases over 45 live MCP servers and 353 tools |
 | A2A sandbox | built from the 11 vulnerability classes in arXiv:2609.10871 | generated locally, no outbound network access |
 
-Obtain the released code and data from the links given in each paper.
+Download commands, pinned commits, licenses, the episode construction for each
+benchmark and the expected counts are in `PROTOCOL_BENCHMARKS.md`. MCPTox and
+MCP-SafetyBench have no license file: use your own clone and do not
+redistribute them. The A2A sandbox is generated locally and needs no download.
 
 ## Agent-tool corpora
 

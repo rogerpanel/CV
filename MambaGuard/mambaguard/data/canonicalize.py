@@ -128,6 +128,45 @@ class MessageCanonicaliser:
         return emb.float()
 
 
+class HashingCanonicaliser:
+    """Offline stand-in for :class:`MessageCanonicaliser`, for smoke tests only.
+
+    Hashes lower-cased token unigrams and bigrams into ``d_p`` signed buckets
+    and L2-normalises. Needs no download, so the pipeline can be exercised
+    without network access. It is not the paper's encoder; never report results
+    obtained with it.
+    """
+
+    def __init__(self, d_p: int = 384) -> None:
+        self.d_p = d_p
+
+    def encode_batch(self, payloads: list[str]) -> "torch.Tensor":
+        import hashlib
+        import re
+
+        import torch
+
+        out = torch.zeros((len(payloads), self.d_p), dtype=torch.float32)
+        for i, text in enumerate(payloads):
+            toks = re.findall(r"[a-z0-9_]+|[^\sa-z0-9_]", text.lower())
+            for feat in toks + [a + " " + b for a, b in zip(toks, toks[1:])]:
+                h = int.from_bytes(hashlib.blake2b(feat.encode(), digest_size=8).digest(), "little")
+                out[i, h % self.d_p] += 1.0 if (h >> 63) & 1 else -1.0
+            n = out[i].norm()
+            if n > 0:
+                out[i] /= n
+        return out
+
+
+def make_canonicaliser(kind: str = "minilm", **kwargs: Any) -> Any:
+    """``"minilm"``: the paper's frozen sentence-transformer. ``"hash"``: offline smoke tests."""
+    if kind == "hash":
+        return HashingCanonicaliser(d_p=kwargs.get("d_p", 384))
+    if kind == "minilm":
+        return MessageCanonicaliser(**kwargs)
+    raise ValueError(f"unknown embedder {kind!r}; expected 'minilm' or 'hash'")
+
+
 # ---------------------------------------------------------------------------
 # Metadata vectorisation
 # ---------------------------------------------------------------------------

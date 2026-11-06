@@ -124,6 +124,12 @@ class MambaGuard(nn.Module):
 
         Returns dict with ``logits`` (A, num_classes) and ``agent_features``.
         """
+        if "p" not in messages and "payload_emb" in messages:
+            # Batch produced by mambaguard.data.protocol_collate: one row per window.
+            messages = {"p": messages["payload_emb"], "mu": messages["metadata"],
+                        "mask": messages.get("attention_mask")}
+        if graph is not None and not isinstance(graph, Mapping):
+            graph = None
         p = messages["p"]
         mu = messages["mu"]
         if p.dim() != 3 or mu.dim() != 3:

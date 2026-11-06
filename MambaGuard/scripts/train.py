@@ -29,13 +29,34 @@ except Exception:  # pragma: no cover
 import yaml
 
 
+def _read_yaml(path: str) -> dict[str, Any]:
+    with open(path, "r", encoding="utf-8") as fh:
+        return yaml.safe_load(fh) or {}
+
+
 def _load_config(path: str) -> dict[str, Any]:
+    """Load a config and compose its Hydra-style ``defaults`` list.
+
+    ``defaults: [{model: mambaguard}, ...]`` pulls ``<config dir>/model/mambaguard.yaml``
+    into ``cfg["model"]``; keys in the top-level file override composed ones.
+    """
     if not os.path.exists(path):
         raise FileNotFoundError(f"Config file not found: {path}")
-    if _HAS_OMEGACONF:
-        return OmegaConf.to_container(OmegaConf.load(path), resolve=True)  # type: ignore[return-value]
-    with open(path, "r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+    top = _read_yaml(path)
+    base = os.path.dirname(os.path.abspath(path))
+    cfg: dict[str, Any] = {}
+    for entry in top.pop("defaults", []) or []:
+        if isinstance(entry, dict):
+            for group, name in entry.items():
+                sub = os.path.join(base, group, f"{name}.yaml")
+                if os.path.exists(sub):
+                    cfg[group] = _read_yaml(sub)
+    for k, v in top.items():
+        if isinstance(v, dict) and isinstance(cfg.get(k), dict):
+            cfg[k].update(v)
+        else:
+            cfg[k] = v
+    return cfg
 
 
 def _save_config(cfg: dict[str, Any], path: Path) -> None:
@@ -58,11 +79,25 @@ def _setup_logger(log_path: Path) -> logging.Logger:
     return logger
 
 
+_MODEL_KEY_MAP = {"d_metadata": "d_mu", "n_layers": "n_blocks", "n_heads": "gat_heads"}
+
+
 def _model_kwargs(cfg: dict[str, Any]) -> dict[str, Any]:
-    """Flatten the model section of a Hydra-style config for MambaGuardConfig."""
-    model_cfg = cfg.get("model", {}) or {}
-    # Strip Hydra ``_target_`` / nested namespace keys if present.
-    return {k: v for k, v in model_cfg.items() if not k.startswith("_")}
+    """Map the model YAML onto :class:`MambaGuardConfig` fields."""
+    from dataclasses import fields
+
+    from mambaguard.models import MambaGuardConfig
+
+    known = {f.name for f in fields(MambaGuardConfig)}
+    out: dict[str, Any] = {}
+    for k, v in (cfg.get("model", {}) or {}).items():
+        k = _MODEL_KEY_MAP.get(k, k)
+        if k in known:
+            out[k] = v
+    graph = (cfg.get("model", {}) or {}).get("graph") or {}
+    if "n_layers" in graph:
+        out["n_gat_layers"] = int(graph["n_layers"]) if graph.get("enabled", True) else 0
+    return out
 
 
 def _training_cfg(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -112,6 +147,10 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--resume", type=str, default=None)
     p.add_argument("--device", type=str, default="cuda")
+    p.add_argument("--epochs", type=int, default=None, help="override training.epochs")
+    p.add_argument("--batch-size", type=int, default=None, help="override training.batch_size")
+    p.add_argument("--embedder", choices=["minilm", "hash"], default="minilm",
+                   help="payload encoder: the paper's frozen MiniLM, or 'hash' for offline smoke tests only")
     return p
 
 
@@ -124,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
     cfg = _load_config(args.config)
     cfg["dataset"] = args.dataset
     cfg["seed"] = args.seed
+    if args.epochs is not None:
+        cfg.setdefault("training", {})["epochs"] = args.epochs
+    if args.batch_size is not None:
+        cfg.setdefault("training", {})["batch_size"] = args.batch_size
     _save_config(cfg, out_dir / "config.yaml")
 
     from mambaguard.data import (  # noqa: WPS433 - lazy
@@ -131,15 +174,11 @@ def main(argv: list[str] | None = None) -> int:
         ProtocolMessageDataset,
         protocol_collate,
     )
-    from mambaguard.data.splits import temporal_split
     from mambaguard.models import MambaGuard
     from mambaguard.training import MambaGuardTrainer
     from mambaguard.utils.seed import set_seed
 
     set_seed(args.seed)
-    logger.info("Building model")
-    model = MambaGuard.from_config(_model_kwargs(cfg))
-
     if args.dataset not in DATASET_REGISTRY:
         raise KeyError(
             f"Unknown dataset '{args.dataset}'. "
@@ -151,12 +190,26 @@ def main(argv: list[str] | None = None) -> int:
         )
     loader_fn = DATASET_REGISTRY[args.dataset]
     logger.info("Loading dataset %s from %s", args.dataset, args.data_root)
-    all_msgs = list(loader_fn(args.data_root, split="train"))
-    train_idx, val_idx, _ = temporal_split(all_msgs, train_frac=0.7, val_frac=0.15)
-    train_msgs = [all_msgs[i] for i in train_idx]
-    val_msgs = [all_msgs[i] for i in val_idx]
-    train_ds = ProtocolMessageDataset(train_msgs)
-    val_ds = ProtocolMessageDataset(val_msgs)
+    # Every registered loader implements its own leak-free train/val/test split.
+    train_msgs = list(loader_fn(args.data_root, split="train"))
+    val_msgs = list(loader_fn(args.data_root, split="val"))
+
+    from mambaguard.data.canonicalize import DEFAULT_METADATA_SCHEMA
+
+    model_cfg = cfg.setdefault("model", {})
+    model_cfg["d_metadata"] = len(DEFAULT_METADATA_SCHEMA)  # width produced by protocol_collate
+    labels = {m.label for m in train_msgs + val_msgs if m.label is not None}
+    if labels and labels <= {0, 1}:
+        model_cfg["num_classes"] = 2  # binary attack/benign benchmarks
+    logger.info("Building model (num_classes=%s)", model_cfg.get("num_classes"))
+    model = MambaGuard.from_config(_model_kwargs(cfg))
+    from mambaguard.data.canonicalize import make_canonicaliser
+
+    embedder = make_canonicaliser(args.embedder)
+    if args.embedder == "hash":
+        logger.warning("Using the hashing embedder: smoke test only, do not report these numbers.")
+    train_ds = ProtocolMessageDataset(train_msgs, canonicaliser=embedder, compute_embeddings=True)
+    val_ds = ProtocolMessageDataset(val_msgs, canonicaliser=embedder, compute_embeddings=True)
 
     import torch
     from torch.utils.data import DataLoader
@@ -167,7 +220,7 @@ def main(argv: list[str] | None = None) -> int:
         batch_size=bs,
         shuffle=True,
         collate_fn=protocol_collate,
-        num_workers=int(cfg.get("training", {}).get("num_workers", 0)),
+        num_workers=int(cfg.get("training", {}).get("num_workers", 0)) if torch.cuda.is_available() else 0,
     )
     val_loader = DataLoader(
         val_ds, batch_size=bs, shuffle=False, collate_fn=protocol_collate
@@ -176,6 +229,8 @@ def main(argv: list[str] | None = None) -> int:
     trainer_cfg = _training_cfg(cfg)
     trainer_cfg["out_dir"] = str(out_dir / "checkpoints")
     device = args.device if torch.cuda.is_available() else "cpu"
+    trainer_cfg["model_config"] = _model_kwargs(cfg)
+    trainer_cfg["embedder"] = args.embedder
     trainer = MambaGuardTrainer(
         model=model,
         train_loader=train_loader,

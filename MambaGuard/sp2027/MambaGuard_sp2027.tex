@@ -294,17 +294,19 @@ Theorem~\ref{thm:composed} guarantees a lower bound on long-run expected defende
 
 \subsection{Benchmarks}
 \label{sec:benchmarks}
-We evaluate on six benchmarks that span the agent-protocol attack surface.
+We evaluate on six benchmarks that span the agent-protocol attack surface. None of them records protocol traffic with timestamps, so each case is rendered as an \emph{episode}: the JSON-RPC messages an observer between host and servers would see around one user task, with a per-message label marking attacker-controlled content (construction, pinned source commits and counts in Appendix~\ref{app:canon}). Splits are grouped and stratified so that no server, case or attack/benign pair appears in two splits.
 
-\textbf{MCPSecBench}~\cite{Yang2025MCPSec}: 17 attack types across 4 MCP surfaces (tool, server, host, user) with 15 runs per attack on three LLM platforms (Claude Desktop, GPT-4.1, Cursor).
+\textbf{MCPTox}~\cite{Wang2025MCPTox}: 1,312 tool-poisoning instances over 10 risk categories on 45 real MCP servers (353 tools). Each attack episode lists the server's clean tools plus one poisoned tool; 533 benign episodes replay the same user queries with the clean tool list. Split by server (train/val/test 1,263/283/299 episodes), so test servers are unseen.
 
-\textbf{MCP-SafetyBench}~\cite{Zong2026SafetyBench}: 245 multi-turn test cases over 5 domains and 20 attack types; the published average ASR across 13 LLMs ranges from 29.80\% (Qwen3-235B) to 48.16\% (o4-mini), with host-side attacks reaching 81.94\%.
+\textbf{MCP-SafetyBench}~\cite{Zong2026SafetyBench}: 245 attack cases over 5 domains and 20 attack types. Clean tool lists are taken from the benchmark's own server sources; each attack is placed on the message that carries it (poisoned description, added tool, injected or forged tool result, replayed or spoofed call, or the user request). We use the 238 cases whose attack is visible on the wire (the 7 rug-pull cases change tool code but no message) plus 162 exact benign twins for the description-borne attacks.
 
-\textbf{MCPTox}~\cite{Wang2025MCPTox}: 1,312 malicious tool-poisoning cases over 10 risk categories across 45 live real-world MCP servers and 353 authentic tools.
+\textbf{MCPSecBench}~\cite{Yang2025MCPSec}: the 11 attacks for which the benchmark provides prompts, rendered against its benign and malicious playground servers, with 7 benign twins. Because the twins differ in the number of servers, episode length alone separates the classes, so we report only message-level detection on this set.
 
-\textbf{A2A-sandbox}: a reproduction of the 11 A2ABreak~\cite{Lotfi2026A2ABreak} vulnerability classes, including cross-client context injection and rogue-agent capability advertisement, generated in a local sandbox with no outbound network access.
+\textbf{A2A-sandbox}: synthetic A2A v1.0 traces we generate for the 11 vulnerability classes of A2ABreak~\cite{Lotfi2026A2ABreak}, whose artifact analyses the specification and contains no traffic. Each of 2,200 attack episodes has a benign twin with the same participants and task that differs only in the decisive field (requested scope, reused \texttt{contextId}, webhook host, chunk index, \ldots); both receive identical random background exchanges. We report results on the default pair-grouped split and leave-one-finding-out.
 
-\textbf{AgentDojo}~\cite{Debenedetti2024AgentDojo} and \textbf{InjecAgent}~\cite{Zhan2024InjecAgent}: 629 and 1054 indirect-prompt-injection scenarios respectively, canonicalised into our protocol-graph representation via the mapping documented in Appendix~\ref{app:canon}.
+\textbf{AgentDojo}~\cite{Debenedetti2024AgentDojo} and \textbf{InjecAgent}~\cite{Zhan2024InjecAgent}: 629 and 1054 indirect-prompt-injection scenarios. \TBD{[Their loaders have not yet been checked against the released file formats; verify before use, as was done for the four benchmarks above.]}
+
+\paragraph{Shortcut baselines.} A one-threshold classifier on episode length reaches balanced test accuracy 0.50 on MCPTox and MCP-SafetyBench and 0.53 on the A2A-sandbox (0.86 on its interrupted-task class, where the attack itself removes messages); we report these next to every detector.
 
 \textbf{Network-IDS transfer (appendix only).} For completeness we also include a transfer evaluation on CSE-CIC-IDS2018~\cite{Sharafaldin2018CICIDS}, CIC-IoT2023~\cite{Neto2023CICIoT}, and UNSW-NB15~\cite{Moustafa2015UNSW} with 70/15/15 strict temporal splits; those numbers are in Appendix~\ref{app:netids} and are \emph{not} used in the headline claims, because the datasets do not represent agent-protocol threats.
 
@@ -647,7 +649,7 @@ $N=16$, $d_{z}=256$, expansion $E=2$, kernel width $k=4$, 4 stacked SSM layers; 
 
 \section{Protocol-Benchmark Canonicalisation}
 \label{app:canon}
-Mapping tables from AgentDojo/InjecAgent, MCPSecBench and MCP-SafetyBench raw formats into the six-tuple $(\tau,s,d,p,\mu,t_{m})$. Published in the artifact under \texttt{mambaguard/data/protocol\_traces/}.
+Loaders for MCPTox, MCP-SafetyBench, MCPSecBench and the A2A-sandbox are in \texttt{mambaguard/data/protocol\_traces/}; \texttt{reproducibility/PROTOCOL\_BENCHMARKS.md} gives the pinned source commits, the episode construction for each benchmark, expected counts, and the shortcut baselines. Server source files are parsed statically and never executed. MCPTox and MCP-SafetyBench carry no license and are read from the user's own clone, not redistributed.
 
 \section{Graph-Edit Certified Budgets}
 \label{app:graph-cert}

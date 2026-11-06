@@ -279,6 +279,8 @@ class MambaGuardTrainer:
             "scheduler": self.scheduler.state_dict(),
             "state": self.state.__dict__,
             "metrics": metrics,
+            "config": {"model": dict(_cfg_get(self.cfg, "model_config", {}) or {}),
+                       "embedder": _cfg_get(self.cfg, "embedder", "minilm")},
         }
         torch.save(payload, path)
 

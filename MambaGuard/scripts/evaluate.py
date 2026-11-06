@@ -21,6 +21,8 @@ def build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--split", type=str, default="test")
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--output-dir", type=str, default="outputs/eval")
+    p.add_argument("--embedder", choices=["minilm", "hash"], default=None,
+                   help="defaults to the encoder recorded in the checkpoint")
     return p
 
 
@@ -66,7 +68,10 @@ def main(argv: list[str] | None = None) -> int:
         raise KeyError(f"Unknown dataset '{args.dataset}'.")
     loader_fn = DATASET_REGISTRY[args.dataset]
     msgs = list(loader_fn(args.data_root, split=args.split))
-    ds = ProtocolMessageDataset(msgs)
+    from mambaguard.data.canonicalize import make_canonicaliser
+
+    embedder = make_canonicaliser(args.embedder or cfg.get("embedder", "minilm"))
+    ds = ProtocolMessageDataset(msgs, canonicaliser=embedder, compute_embeddings=True)
     loader = DataLoader(
         ds,
         batch_size=args.batch_size,

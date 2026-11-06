@@ -438,6 +438,19 @@ def load_tgb2_temporal(root: str, split: str = "train") -> Iterator[ProtocolMess
 # Split application
 # ---------------------------------------------------------------------------
 
+def _protocol_loader(name: str) -> Callable[..., Iterator[ProtocolMessage]]:
+    """Defer importing ``protocol_traces`` until the loader is called."""
+
+    def _load(root: str, split: str = "train") -> Iterator[ProtocolMessage]:
+        from . import protocol_traces
+
+        yield from getattr(protocol_traces, name)(root, split)
+
+    _load.__name__ = name
+    _load.__doc__ = f"See mambaguard.data.protocol_traces.{name}."
+    return _load
+
+
 def _apply_split(messages: list[ProtocolMessage], split: str) -> Iterator[ProtocolMessage]:
     if split == "all":
         yield from messages
@@ -454,6 +467,11 @@ def _apply_split(messages: list[ProtocolMessage], split: str) -> Iterator[Protoc
 # ---------------------------------------------------------------------------
 
 DATASET_REGISTRY: Dict[str, Callable[..., Iterator[ProtocolMessage]]] = {
+    # Protocol-native agent-security benchmarks (mambaguard/data/protocol_traces).
+    "mcpsecbench": _protocol_loader("load_mcpsecbench"),
+    "mcp_safetybench": _protocol_loader("load_mcp_safetybench"),
+    "mcptox": _protocol_loader("load_mcptox"),
+    "a2a_sandbox": _protocol_loader("load_a2a_sandbox"),
     "cse_cic_ids2018": load_cse_cic_ids2018,
     "cic_iot2023": load_cic_iot2023,
     "unsw_nb15": load_unsw_nb15,
@@ -505,9 +523,11 @@ class CompositeDataset:
 class ProtocolMessageDataset(_TorchDataset):  # type: ignore[misc, valid-type]
     """``torch.utils.data.Dataset`` wrapper materialising ProtocolMessages.
 
-    The dataset stores messages grouped into fixed-size *windows* of length
-    ``window_size`` so that ``__getitem__`` returns a temporally-coherent
-    sequence. Materialisation is eager (the iterator is drained at init).
+    The dataset stores messages grouped into *windows*. When every message
+    carries ``extras["episode_id"]`` (the protocol-trace loaders), each episode
+    is one window, so a window's label is its episode's label. Otherwise
+    messages are cut into fixed-size windows of length ``window_size``.
+    Materialisation is eager (the iterator is drained at init).
     """
 
     def __init__(
@@ -526,7 +546,17 @@ class ProtocolMessageDataset(_TorchDataset):  # type: ignore[misc, valid-type]
             emb = canonicaliser.encode_batch(payloads)
             for i, m in enumerate(self.messages):
                 m.payload_emb = emb[i]
-        self._n_windows = max(1, (len(self.messages) + self.window_size - 1) // self.window_size)
+        self._bounds: list[tuple[int, int]] = []
+        if self.messages and all("episode_id" in m.extras for m in self.messages):
+            start = 0
+            for i in range(1, len(self.messages) + 1):
+                if i == len(self.messages) or self.messages[i].extras["episode_id"] != self.messages[start].extras["episode_id"]:
+                    self._bounds.append((start, i))
+                    start = i
+        else:
+            for lo in range(0, max(1, len(self.messages)), self.window_size):
+                self._bounds.append((lo, min(lo + self.window_size, len(self.messages))))
+        self._n_windows = len(self._bounds)
 
     def __len__(self) -> int:
         return self._n_windows
@@ -534,8 +564,7 @@ class ProtocolMessageDataset(_TorchDataset):  # type: ignore[misc, valid-type]
     def __getitem__(self, idx: int) -> list[ProtocolMessage]:
         if idx < 0 or idx >= self._n_windows:
             raise IndexError(idx)
-        lo = idx * self.window_size
-        hi = min(lo + self.window_size, len(self.messages))
+        lo, hi = self._bounds[idx]
         return self.messages[lo:hi]
 
 

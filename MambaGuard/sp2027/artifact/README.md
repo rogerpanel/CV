@@ -16,7 +16,9 @@ mambaguard/
   models/          selective SSM block (S4D-Real), Lipschitz-normalised
                    temporal GATv2, Bochner time encoding, detection head
   data/            protocol-message canonicaliser, heterogeneous protocol
-                   graph, temporal splits, dataset loaders
+                   graph, splits, dataset loaders
+  data/protocol_traces/  loaders for MCPTox, MCP-SafetyBench, MCPSecBench,
+                   and the A2A-sandbox generator (11 A2ABreak findings)
   certification/   smoothing.py           Cohen two-stage certificate
                    sparse_smoothing.py    graph-edit (edge add/delete) certificate
                    certificate.py         composed bound (composed_certificate_v2)
@@ -34,8 +36,8 @@ scripts/               train, evaluate, certify, prepare_data,
                        benchmark_latency, run_sp2027_experiments,
                        reproduce_all.sh
 reproducibility/       experiments_sp2027.json (recorded outputs),
-                       DATASETS.md, ENVIRONMENT.md
-tests/                 35 unit and end-to-end tests
+                       PROTOCOL_BENCHMARKS.md, DATASETS.md, ENVIRONMENT.md
+tests/                 41 unit and end-to-end tests
 ```
 
 ## Install
@@ -65,16 +67,29 @@ adaptive attacks on synthetic inputs, and writes
 committed copy of that file; values agree up to seed-independent rounding and
 machine-dependent timing.
 
+## Benchmarks
+
+Clone the benchmark repositories at the pinned commits listed in
+`reproducibility/PROTOCOL_BENCHMARKS.md`, then check each one:
+
+```bash
+python -m mambaguard.data.protocol_traces mcptox data/raw/MCPTox-Benchmark --show 1
+```
+
+The A2A sandbox needs no download (`root = builtin`).
+
 ## Full reproduction
 
 ```bash
 bash scripts/reproduce_all.sh --full --data-root data/raw
 ```
 
-`--full` additionally trains, evaluates and certifies MambaGuard on each
-benchmark found under `data/raw/` (see `reproducibility/DATASETS.md`) with
-seeds 0–4. It needs one GPU with at least 24 GB of memory; the paper used a
-single A100 80 GB.
+`--full` additionally trains, evaluates and certifies MambaGuard with seeds
+0–4 on every benchmark whose clone is present under `data/raw/`, plus the A2A
+sandbox. It needs `sentence-transformers` (the frozen MiniLM payload encoder)
+and one GPU with at least 24 GB of memory; the paper used a single A100 80 GB.
+For a CPU pipeline check without downloading MiniLM, set `EMBEDDER=hash`; those
+numbers are not comparable to the paper's.
 
 ## Where each paper result comes from
 
