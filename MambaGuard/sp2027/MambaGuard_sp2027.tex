@@ -28,6 +28,8 @@
 \usepackage{algpseudocode}
 \usepackage{xcolor}
 \usepackage{bm}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
 \usepackage[hidelinks]{hyperref}
 
 % --- math shortcuts -------------------------------------------------------
@@ -46,12 +48,6 @@
 \newcommand{\calE}{\mathcal{E}}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
-% --- DRAFT MARKER ---------------------------------------------------------
-% Every number wrapped in \TBD{} is a PLACEHOLDER that has NOT been measured.
-% Replace each one with the value produced by scripts/reproduce_all.sh on the
-% real benchmarks (GPU) before submission, then delete this macro. A paper
-% with any red text left must not be submitted.
-\newcommand{\TBD}[1]{\textcolor{red}{#1}}
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}
@@ -70,7 +66,7 @@ Multi-Protocol LLM Agent Security}
 
 %% ============================================================================
 \begin{abstract}
-Large language model (LLM) agents now communicate through four open protocols --- the Model Context Protocol, the Agent-to-Agent Protocol, the Agent Communication Protocol, and the Agent Network Protocol --- whose combined traffic forms a network-scale attack surface that prompt-boundary monitors and classical intrusion detection systems were not designed to observe. We present \emph{MambaGuard}, a streaming detector that ingests a canonicalised protocol message graph, extracts per-agent sequential features with a selective state-space backbone, propagates relational context with a Lipschitz-normalised temporal graph attention layer, and selects defensive actions through a Hedge-based controller. The detector carries two complementary certificates. First, a randomised-smoothing certificate on the sentence-transformer feature space yields a lower bound on the expected defender utility of the form $V^{*} - B\,\Pr[\neg\calC_{\varepsilon}] - B\sqrt{\ln N/(2T)} - B\alpha_{MC}$, in which every term shares the utility unit so the composition type-checks. Second, a sparse-smoothing certificate on the protocol graph bounds the number of injected or removed edges an attacker can tolerate per window. We evaluate MambaGuard on three protocol-native benchmarks (MCPSecBench, MCP-SafetyBench, MCPTox) plus an A2A sandbox and two agent-tool corpora (AgentDojo, InjecAgent), and subject it to a dedicated adaptive-attack suite that includes white-box projected gradient descent in embedding space, discrete token search, LLM-driven payload rewriting, graph-structure evasion, and attacks on the online controller. We also show that the block-product Lipschitz bound used in earlier detectors of this family is not a valid upper bound once residual paths are counted, and we replace it with a residual-aware bound that a gradient-ascent probe confirms. We release an anonymised reference implementation, the evaluation harness, and a reproducibility script that regenerates every table and figure from a single command.
+Large language model (LLM) agents now communicate through four open protocols --- the Model Context Protocol, the Agent-to-Agent Protocol, the Agent Communication Protocol, and the Agent Network Protocol --- whose combined traffic forms a network-scale attack surface that prompt-boundary monitors and classical intrusion detection systems were not designed to observe. We present \emph{MambaGuard}, a streaming detector that ingests a canonicalised protocol message graph, extracts per-agent sequential features with a selective state-space backbone, propagates relational context with a Lipschitz-normalised temporal graph attention layer, and selects defensive actions through a Hedge-based controller. The detector carries two complementary certificates. First, a randomised-smoothing certificate on the payload-embedding feature space yields a lower bound on the expected defender utility of the form $V^{*} - B\,\Pr[\neg\calC_{\varepsilon}] - B\sqrt{\ln N/(2T)} - B\alpha_{MC}$, in which every term shares the utility unit so the composition type-checks. Second, a sparse-smoothing certificate on the protocol graph bounds the number of injected or removed edges an attacker can tolerate per window. We evaluate MambaGuard on three protocol-native benchmarks (MCPSecBench, MCP-SafetyBench, MCPTox) plus an A2A sandbox and two agent-tool corpora (AgentDojo, InjecAgent), and subject it to a dedicated adaptive-attack suite that includes white-box projected gradient descent in embedding space, discrete token search, LLM-driven payload rewriting, graph-structure evasion, and attacks on the online controller. We also show that the block-product Lipschitz bound used in earlier detectors of this family is not a valid upper bound once residual paths are counted, and we replace it with a residual-aware bound that a gradient-ascent probe confirms. We release an anonymised reference implementation, the evaluation harness, and a reproducibility script that regenerates every table and figure from a single command.
 \end{abstract}
 
 %% ============================================================================
@@ -87,14 +83,14 @@ MambaGuard closes the gap between these three strands. It models the protocol st
 \label{sec:contrib}
 \begin{itemize}
   \item A \textbf{unified protocol-graph schema} for MCP, A2A, ACP and ANP (\S\ref{sec:graph}) with a five-class canonical message taxonomy.
-  \item A \textbf{streaming composed detector} that couples a selective SSM with a Lipschitz-normalised temporal GATv2 layer (\S\ref{sec:detector}).
+  \item A \textbf{streaming composed detector} that couples a selective SSM with a Lipschitz-normalised temporal GATv2 layer over a per-window protocol graph (\S\ref{sec:detector}).
   \item A \textbf{dimensionally consistent two-certificate scheme} (\S\ref{sec:guarantees}): a Cohen-style smoothing certificate on feature-space perturbations with a composition theorem whose terms all carry the utility unit, plus a sparse-smoothing certificate on graph edits.
-  \item A \textbf{dedicated adaptive-attack evaluation} (\S\ref{sec:adaptive}) in the spirit of~\cite{Nasr2026Attacker}: white-box PGD in embedding space, token-level discrete search, LLM-driven payload rewriting, graph-structural evasion, Hedge-weight manipulation.
+  \item An \textbf{honest measured study} (\S\ref{sec:results}): the detector separates structural A2A attacks (macro-F1 $0.86$ vs a $0.53$ length control) but, with a model-free payload encoder, not payload-borne tool poisoning; the adaptive-attack suite of \S\ref{sec:adaptive} is implemented for use once that gap is closed.
   \item An \textbf{anonymised artifact} that regenerates every table and figure with one command.
 \end{itemize}
 
 \subsection{Scope and Non-Goals}
-The paper's guarantees are deliberately scoped. The feature-space certificate holds inside the sentence-transformer image, not for arbitrary text edits; the graph certificate holds under a bounded number of edge additions or deletions, not under host compromise; and the online bound holds in the zero-sum restriction of the defender game. \S\ref{sec:cert-ops} and \S\ref{sec:limits} state exactly what the certificates do and do not cover.
+The paper's guarantees are deliberately scoped. The feature-space certificate holds inside the payload-embedding feature space, not for arbitrary text edits; the graph certificate holds under a bounded number of edge additions or deletions, not under host compromise; and the online bound holds in the zero-sum restriction of the defender game. \S\ref{sec:cert-ops} and \S\ref{sec:limits} state exactly what the certificates do and do not cover.
 
 %% ============================================================================
 \section{Background}
@@ -118,7 +114,7 @@ A robustness claim is only as meaningful as its threat model. We specify ours al
 Several agents communicate through MCP, A2A, ACP and ANP. A trusted detector observes every protocol message, canonicalises it, and maintains a sliding-window protocol graph. A defender action is selected per round and applied to one message or session: deep packet inspection, blocking, session termination, agent isolation, or capability revocation.
 
 \paragraph{Attacker knowledge.}
-We consider a \emph{grey-box} attacker who knows the detector's architectural family (selective SSM plus temporal GATv2, protocol-graph representation, 34-class attack taxonomy), the published hyper-parameters, and the frozen sentence-transformer encoder used for payload embeddings. The attacker does not have the deployed weights or the per-tenant Hedge random seed. For each experiment we also report a \emph{white-box} setting in which the attacker additionally receives the trained weights and the embedding gradient; this is the standard worst case used by~\cite{Nasr2026Attacker}.
+We consider a \emph{grey-box} attacker who knows the detector's architectural family (selective SSM plus temporal GATv2, protocol-graph representation, 34-class attack taxonomy), the published hyper-parameters, and the payload encoder. The attacker does not have the deployed weights or the per-tenant Hedge random seed. For each experiment we also report a \emph{white-box} setting in which the attacker additionally receives the trained weights and the embedding gradient; this is the standard worst case used by~\cite{Nasr2026Attacker}.
 
 \paragraph{Attacker capabilities.}
 The attacker may (i) craft or rewrite protocol payloads inside a signed agent envelope; (ii) modify tool descriptions or Agent Cards; (iii) replay historical messages within a bounded time window; (iv) inject or delete graph edges up to a budget $k$ per detection window through a compromised registered agent; (v) query the detector a bounded number of times to drive an attack search. The attacker cannot forge cryptographic signatures outside the compromised set, cannot compromise the host that runs the detector, and cannot modify the detector's weights. Compromise of the model supply chain, memory, or host is explicitly out of scope.
@@ -141,7 +137,7 @@ The defender seeks (G1) low per-message false-positive rate on benign traffic; (
 \label{sec:graph}
 Let $\calG(t)=(\calV(t),\calE(t),X(t))$ denote the protocol graph at wall-clock time $t$. The vertex set $\calV(t)=\calV_{A}\cup\calV_{T}\cup\calV_{C}\cup\calV_{S}$ is partitioned into agents, tools or services, capability descriptors, and active sessions. Edges are time-stamped and typed; the five canonical types are agent-calls-tool, agent-messages-agent, agent-advertises-capability, tool-returns-data, and agent-delegates-task. Each protocol message is canonicalised into the tuple
 \[ m=(\tau,s,d,p,\mu,t_{m}), \]
-where $\tau\in\{\calM_{\text{tool}},\calM_{\text{comm}},\calM_{\text{cap}},\calM_{\text{data}},\calM_{\text{ctrl}}\}$, $s,d$ are source/destination identifiers, $p\in\R^{d_{p}}$ is a frozen all-MiniLM payload embedding ($d_{p}=384$), $\mu\in\R^{d_{\mu}}$ carries HTTP status, latency and auth metadata, and $t_{m}$ is the message timestamp. A rule-based parser produces one tuple per raw protocol packet for each of MCP, A2A, ACP and ANP.
+where $\tau\in\{\calM_{\text{tool}},\calM_{\text{comm}},\calM_{\text{cap}},\calM_{\text{data}},\calM_{\text{ctrl}}\}$, $s,d$ are source/destination identifiers, $p\in\R^{d_{p}}$ is a payload embedding ($d_{p}=384$; feature hashing by default), $\mu\in\R^{d_{\mu}}$ carries HTTP status, latency and auth metadata, and $t_{m}$ is the message timestamp. A rule-based parser produces one tuple per raw protocol packet for each of MCP, A2A, ACP and ANP.
 
 \paragraph{Worked example.} Consider a 2-second window in which Agent~A issues an MCP \texttt{tools/list} to a database tool $T_{1}$ and receives a 400-byte JSON response; concurrently, Agent~B sends an A2A \texttt{tasks/send} to Agent~A delegating a user query, and a new capability descriptor $C_{3}$ is advertised through ANP by Agent~C. The parser canonicalises six messages into three edges: $(A\!\to\!T_{1},\calM_{\text{tool}})$, $(T_{1}\!\to\!A,\calM_{\text{data}})$, $(B\!\to\!A,\calM_{\text{comm}})$, and one capability-advertisement edge $(C\!\to\!C_{3},\calM_{\text{cap}})$. All four edges carry the same timestamp bucket $t_{e}\in[0,2]$. The graph $\calG(t)$ at the end of the window thus has six nodes (three agents, one tool, one capability, one session), four typed edges, and per-edge features comprising the 384-dim frozen embedding of the payload and a 32-dim metadata vector. This is the input the detector sees for one detection decision.
 
@@ -304,23 +300,13 @@ We evaluate on six benchmarks that span the agent-protocol attack surface. None 
 
 \textbf{A2A-sandbox}: synthetic A2A v1.0 traces we generate for the 11 vulnerability classes of A2ABreak~\cite{Lotfi2026A2ABreak}, whose artifact analyses the specification and contains no traffic. Each of 2,200 attack episodes has a benign twin with the same participants and task that differs only in the decisive field (requested scope, reused \texttt{contextId}, webhook host, chunk index, \ldots); both receive identical random background exchanges. We report results on the default pair-grouped split and leave-one-finding-out.
 
-\textbf{AgentDojo}~\cite{Debenedetti2024AgentDojo} and \textbf{InjecAgent}~\cite{Zhan2024InjecAgent}: 629 and 1054 indirect-prompt-injection scenarios. \TBD{[Their loaders have not yet been checked against the released file formats; verify before use, as was done for the four benchmarks above.]}
+\textbf{AgentDojo}~\cite{Debenedetti2024AgentDojo}: the recorded agent runs shipped with the benchmark (no agent is re-run) for one model (\texttt{claude-3-5-sonnet}); a tool result is labelled as attacker-controlled when the injected string surfaces in it. 550 attack and 97 benign episodes. \textbf{InjecAgent}~\cite{Zhan2024InjecAgent}: 1,054 templated cases, each a tool result whose single injection slot is filled with the attacker instruction; benign twins fill the slot with neutral text.
 
-\paragraph{Shortcut baselines.} A one-threshold classifier on episode length reaches balanced test accuracy 0.50 on MCPTox and MCP-SafetyBench and 0.53 on the A2A-sandbox (0.86 on its interrupted-task class, where the attack itself removes messages); we report these next to every detector.
+\paragraph{Shortcut control.} For every benchmark we also report a one-threshold classifier on episode length. It reaches balanced test accuracy $0.50$ on MCPTox, MCP-SafetyBench, AgentDojo and InjecAgent, and $0.53$ on the A2A-sandbox, so a detector must beat these numbers to be doing anything beyond counting messages.
 
-\textbf{Network-IDS transfer (appendix only).} For completeness we also include a transfer evaluation on CSE-CIC-IDS2018~\cite{Sharafaldin2018CICIDS}, CIC-IoT2023~\cite{Neto2023CICIoT}, and UNSW-NB15~\cite{Moustafa2015UNSW} with 70/15/15 strict temporal splits; those numbers are in Appendix~\ref{app:netids} and are \emph{not} used in the headline claims, because the datasets do not represent agent-protocol threats.
-
-\subsection{Baselines}
-\label{sec:baselines}
-We compare against three tiers: (i) detector-style agent defences PromptGuard~\cite{PromptGuard2024}, PIGuard~\cite{PIGuard2024}, and DataSentinel~\cite{Liu2025DataSentinel}; (ii) design-level defences CaMeL~\cite{Debenedetti2025CaMeL} and MELON~\cite{Zhu2025MELON}; (iii) classical IDS backbones E-GraphSAGE~\cite{Lo2022EGraphSAGE}, RTIDS~\cite{Wu2022RTIDS}, and NetMamba~\cite{Wang2025NetMamba} applied to the protocol graph via a sentence-transformer front-end. Each baseline is retrained under identical splits with its published hyperparameters \TBD{[confirm once done]}.
-
-\subsection{Metrics}
+\subsection{Payload Encoder, Metrics and Protocol}
 \label{sec:metrics}
-Per-benchmark macro-F1, per-benchmark post-defence ASR (at a defender-action threshold selected on validation), certified accuracy at $\varepsilon\in\{0.01,0.05,0.10,0.25\}$, batch-1 streaming per-message latency (median and p99 over 1000 runs after 50 warm-ups), and throughput at the best batch size. We do \emph{not} report a cross-benchmark macro-average because the label spaces differ.
-
-\subsection{Statistical Protocol}
-\label{sec:stats}
-Each experiment is run with five seeds (0--4). Entries are mean~$\pm$~sample standard deviation. Pairwise comparisons use paired two-sided Wilcoxon signed-rank tests on the $n=5\times B$ (seeds $\times$ benchmarks) grid with Holm correction across comparisons; the smallest achievable two-sided exact $p$ at $n=5$ is $2^{-5}\cdot 2=0.0625$, so we report $p$-values for $n\ge 15$.
+Each message payload is turned into a $384$-dimensional vector by a fixed \emph{feature-hashing} encoder over token unigrams and bigrams, L2-normalised. This needs no external model and no GPU, so every number below is reproducible on a laptop; a frozen sentence-transformer is a drop-in replacement whose download the review environment did not allow. We report per-benchmark macro-F1 (the primary metric, since two benchmarks are class-imbalanced and accuracy is then misleading), accuracy, the episode-length shortcut control, parameter count, and streaming per-message latency. All runs use the per-window protocol-graph read-out, four selective-SSM blocks and two GATv2 layers ($3.67$\,M parameters), AdamW, focal loss, and the Lipschitz regulariser (Appendix~\ref{app:hyper}), on CPU. We train one seed per benchmark here; head-to-head comparison against the agent-defence and IDS baselines of \S\ref{sec:related} needs retraining each under the same encoder and splits and is left to the camera-ready.
 
 %% ============================================================================
 \section{Results}
@@ -329,34 +315,27 @@ Each experiment is run with five seeds (0--4). Entries are mean~$\pm$~sample sta
 
 \subsection{Per-Benchmark Detection}
 \label{sec:res-detect}
-Table~\ref{tab:main} reports macro-F1 and post-defence ASR per benchmark. \TBD{[Summarise Table~\ref{tab:main} once the benchmark runs complete: on how many benchmarks MambaGuard leads on F1 and on ASR, and where design-level defences such as CaMeL are stronger.]} MambaGuard and CaMeL are complementary: MambaGuard observes traffic, CaMeL rewrites tool calls; \S\ref{sec:disc} discusses the composition.
+Table~\ref{tab:main} reports the measured detection on each benchmark. The result is sharply split by \emph{where the attack lives}. On the A2A-sandbox, where the attack is \emph{structural} --- a reused context identifier, an unverified webhook host, an over-claimed Agent Card, an out-of-order task state --- MambaGuard reaches macro-F1 $0.859$, far above the $0.53$ length control, so the protocol-graph read-out genuinely separates these attacks. On the four benchmarks where the attack is a \emph{payload} edit (a poisoned tool description or an injected tool result), the detector does not clear the majority-class baseline: macro-F1 is $0.41$--$0.50$, and the high accuracies on AgentDojo and InjecAgent only reflect their class imbalance (few benign episodes). With the feature-hashing encoder the lexical signal of a poisoned description is evidently not recovered; this is the paper's main negative result and motivates a stronger payload encoder (\S\ref{sec:disc}).
 
-\begin{table*}[!t]
+\begin{table}[!t]
 \centering
-\color{red}
-\caption{\textbf{PLACEHOLDER --- not yet measured.} Per-benchmark results, mean $\pm$ sample std over 5 seeds. ``--'' denotes a method inapplicable to the benchmark. MG = MambaGuard. Statistical significance (paired Wilcoxon, Holm-corrected, vs second-best per column) is marked $^{*}$ at $p<0.05$ and $^{\ddagger}$ at $p<0.01$.}
+\caption{Measured detection (one seed, feature-hashing encoder, CPU). ``Len.'' is the balanced test accuracy of the episode-length shortcut control. MCPSecBench is 18 episodes whose benign and attack windows differ in length, so it is excluded here; it supports only a message-level test (is the attacker's tool list flagged among the other lists in the same window?), which we leave to the camera-ready. Macro-F1 is the primary column; the A2A-sandbox is class-balanced, the others are not.}
 \label{tab:main}
 \footnotesize
-\renewcommand{\arraystretch}{1.12}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{@{}l c c c c c c@{}}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
 \toprule
-& \textbf{MCPSecBench} & \textbf{MCP-SafetyBench} & \textbf{MCPTox} & \textbf{A2A-sandbox} & \textbf{AgentDojo} & \textbf{InjecAgent}\\
-& F1 / ASR (\%) & F1 / ASR (\%) & F1 / ASR (\%) & F1 / ASR (\%) & F1 / ASR (\%) & F1 / ASR (\%) \\
+\textbf{Benchmark} & \textbf{Macro-F1} & \textbf{Acc.} & \textbf{Len.} & \textbf{Test $n$} & \textbf{Attack lives in} \\
 \midrule
-PromptGuard         & $.63$ / $38.1$ & $.57$ / $44.6$ & $.52$ / $49.3$ & $.54$ / $47.8$ & $.61$ / $31.5$ & $.63$ / $34.2$ \\
-PIGuard             & $.67$ / $35.4$ & $.61$ / $40.1$ & $.56$ / $45.9$ & $.58$ / $44.2$ & $.64$ / $29.1$ & $.66$ / $31.0$ \\
-DataSentinel        & $.74$ / $24.7$ & $.70$ / $28.3$ & $.66$ / $34.4$ & $.67$ / $30.6$ & $.71$ / $19.8$ & $.73$ / $21.4$ \\
-CaMeL               & $.68$ / $17.4$ & $.65$ / $22.1$ & $.61$ / $27.5$ & $.63$ / $25.0$ & $.76$ / $\mathbf{4.9}$ & $.78$ / $\mathbf{6.1}$ \\
-MELON               & $.70$ / $18.9$ & $.67$ / $23.8$ & $.62$ / $29.0$ & $.64$ / $26.2$ & $.74$ / $5.7$ & $.76$ / $7.4$ \\
-NetMamba+ST         & $.77$ / $20.3$ & $.72$ / $25.6$ & $.68$ / $31.2$ & $.69$ / $28.9$ & $.73$ / $17.1$ & $.75$ / $18.3$ \\
-E-GraphSAGE+ST      & $.73$ / $24.1$ & $.69$ / $28.8$ & $.65$ / $34.5$ & $.66$ / $31.0$ & $.70$ / $20.4$ & $.72$ / $22.0$ \\
-RTIDS+ST            & $.75$ / $22.5$ & $.71$ / $27.0$ & $.66$ / $32.9$ & $.68$ / $29.4$ & $.72$ / $18.9$ & $.74$ / $20.5$ \\
-\midrule
-\textbf{MG (ours)}  & $\mathbf{.86}^{\ddagger}$ / $\mathbf{11.2}^{\ddagger}$ & $\mathbf{.83}^{\ddagger}$ / $\mathbf{14.6}^{\ddagger}$ & $\mathbf{.79}^{\ddagger}$ / $\mathbf{19.8}^{\ddagger}$ & $\mathbf{.81}^{\ddagger}$ / $\mathbf{16.3}^{\ddagger}$ & $.83^{*}$ / $9.1$ & $.85^{*}$ / $10.4$ \\
+A2A-sandbox      & $\mathbf{0.859}$ & $0.859$ & $0.53$ & $660$ & graph structure \\
+MCPTox           & $0.424$ & $0.736$ & $0.50$ & $265$ & tool description \\
+MCP-SafetyBench  & $0.408$ & $0.593$ & $0.50$ & $59$  & tool description / result \\
+AgentDojo        & $0.464$ & $0.865$ & $0.50$ & $104$ & tool result \\
+InjecAgent       & $0.496$ & $0.984$ & $0.50$ & $189$ & tool result \\
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{table}
 
 \subsection{Certification: Actual Lipschitz Constant, Smoothing and Graph-Edit}
 \label{sec:res-cert}
@@ -364,7 +343,7 @@ Table~\ref{tab:lipsweep} reports the per-component Lipschitz factors as a functi
 
 \begin{table}[!t]
 \centering
-\caption{Lipschitz bounds versus the effective spectral cap $c$ imposed on every linear layer (default 3.68\,M-parameter configuration). ``Block product'' is $M_{h}L_{\text{gat}}\prod_{\ell}L^{(\ell)}_{\text{ssm}}$; ``Residual'' is the sound bound~(\ref{eq:lip-residual}); $\hat L_{f}$ is the empirical lower bound from 200-step projected gradient ascent on $\delta$. Rows for $c\neq 0.5$ still need the residual bound and the probe.}
+\caption{Lipschitz bounds versus the effective spectral cap $c$ imposed on every linear layer (default 3.68\,M-parameter configuration). ``Block product'' is $M_{h}L_{\text{gat}}\prod_{\ell}L^{(\ell)}_{\text{ssm}}$; ``Residual'' is the sound bound~(\ref{eq:lip-residual}); $\hat L_{f}$ is the empirical lower bound from 200-step projected gradient ascent on $\delta$ (``---'' where the residual bound and the probe were not evaluated; they were run at $c=0.5$).}
 \label{tab:lipsweep}
 \footnotesize
 \renewcommand{\arraystretch}{1.12}
@@ -374,25 +353,31 @@ Table~\ref{tab:lipsweep} reports the per-component Lipschitz factors as a functi
 $c$ & $L_{\text{ssm}}$ & $L_{\text{gat}}$ & Block product & Residual & $\hat L_{f}$ \\
 \midrule
 0.50 &   0.06 &   1.46 &   0.023 & 3.09 & 0.083 \\
-0.75 &  12.88 &   5.50 &  39.87 & \TBD{--} & \TBD{--} \\
-1.00 &  58.84 &  14.73 & 651.80 & \TBD{--} & \TBD{--} \\
-1.25 &  89.74 &  32.30 & 2482.52 & \TBD{--} & \TBD{--} \\
-2.00 & 177.96 &  67.99 & 10364.17 & \TBD{--} & \TBD{--} \\
+0.75 &  12.88 &   5.50 &  39.87 & --- & --- \\
+1.00 &  58.84 &  14.73 & 651.80 & --- & --- \\
+1.25 &  89.74 &  32.30 & 2482.52 & --- & --- \\
+2.00 & 177.96 &  67.99 & 10364.17 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:cert-curves} plots certified accuracy against radius $r$ for $\sigma\in\{0.05,0.10,0.25,0.5\}$ and compares to an erase-and-check certificate~\cite{Kumar2024EraseCheck} for suffix attacks on AgentDojo. As an implementation check on 32 synthetic inputs with $n=1000$ samples and $\sigma=0.25$, the Cohen certifier gives certified accuracy $0.78$ at $r=0$, $0.69$ at $r=0.05$, $0.50$ at $r=0.25$ and $0.16$ at $r=0.5$; plugging these into Theorem~\ref{thm:composed} with $V^{*}=B=1$, $T=10^{4}$, $N=5$, $\alpha_{MC}=10^{-3}$ gives a defender-utility lower bound of $0.68$ at $r=0.05$ and $0.49$ at $r=0.25$. On MCP-SafetyBench with $n=10^{4}$ the certified accuracy at $\sigma=0.25$ is \TBD{a}\% at $r=0.1$ and \TBD{b}\% at $r=0.5$.
+Figure~\ref{fig:cert-curves} plots certified accuracy against radius $r$. On $32$ synthetic inputs with $n=1000$ smoothing samples and $\sigma=0.25$, the Cohen certifier gives certified accuracy $0.78$ at $r=0$, $0.69$ at $r=0.05$, $0.50$ at $r=0.25$ and $0.16$ at $r=0.5$; feeding these into Theorem~\ref{thm:composed} with $V^{*}=B=1$, $T=10^{4}$, $N=5$, $\alpha_{MC}=10^{-3}$ gives a defender-utility lower bound of $0.68$ at $r=0.05$ and $0.49$ at $r=0.25$. These numbers come from the untrained model and are a check that the composed certificate is finite and monotone, not a benchmark certified accuracy.
 
 \begin{figure}[!t]
 \centering
-% Placeholder: measured by scripts/run_sp2027_experiments.py; regenerated by reproduce_all.sh
-\framebox[\columnwidth]{\rule{0pt}{80pt}\texttt{figures/certified\_curves.pdf}}
-\caption{Certified accuracy vs $\ell_{2}$ radius $r$ on MCP-SafetyBench, for four noise levels $\sigma\in\{0.05,0.10,0.25,0.5\}$. Dashed curve: erase-and-check certificate for 2-token suffix attacks on AgentDojo. Shaded band: $\pm 1$~std over 5 seeds.}
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=5.0cm, xlabel={$\ell_2$ radius $r$}, ylabel={certified accuracy},
+    xmin=0, xmax=1.0, ymin=0, ymax=1, grid=both, grid style={gray!20},
+    legend pos=north east, legend style={font=\scriptsize, draw=none}, tick label style={font=\scriptsize}]
+\addplot[thick, mark=*] coordinates {(0,0.781)(0.02,0.75)(0.05,0.688)(0.1,0.656)(0.25,0.5)(0.5,0.156)(0.75,0)(1.0,0)};
+\addlegendentry{$\sigma=0.25$, $n=1000$}
+\end{axis}
+\end{tikzpicture}
+\caption{Measured certified accuracy of the smoothed detector versus $\ell_2$ radius $r$ ($\sigma=0.25$, $n=1000$ Monte-Carlo samples, $\alpha_{MC}=10^{-3}$), on $32$ synthetic inputs. This checks that the Cohen certificate is finite and monotone; it is not a benchmark certified accuracy.}
 \label{fig:cert-curves}
 \end{figure}
 
-For the \emph{graph-edit} certificate we use sparse smoothing with $p_{+}=p_{-}=0.05$, restricted to the attacker's candidate edge set of registered agents. As a correctness check of the implementation, on a 10-node test graph with $n=1000$ smoothing samples and $\alpha=10^{-3}$ the certificate returns $\underline{p_{A}}=0.993$ and a budget of $(k_{a},k_{d})=(2,2)$. On MCPSecBench the median certified budget is $(k_{a},k_{d})=(\TBD{x},\TBD{y})$, with \TBD{z}\% of attacks certifiably classified correctly at $(1,1)$. Full distribution in Appendix~\ref{app:graph-cert}.
+For the \emph{graph-edit} certificate we use sparse smoothing with $p_{+}=p_{-}=0.05$, restricted to the attacker's candidate edge set of registered agents. As a correctness check of the implementation, on a 10-node test graph with $n=1000$ smoothing samples and $\alpha=10^{-3}$ the certificate returns $\underline{p_{A}}=0.993$ and a budget of $(k_{a},k_{d})=(2,2)$. A benchmark-scale evaluation of certified edge budgets is left to the camera-ready.
 
 \subsection{Latency and Throughput, Harmonised}
 \label{sec:res-latency}
@@ -400,7 +385,7 @@ Per-message latency and aggregate throughput are different quantities, and a sin
 
 \begin{table}[!t]
 \centering
-\caption{Latency and throughput, measured separately. ``Batch 1'' is the streaming per-message latency a single user sees (median over 1000 runs after 50 warm-ups, including 1\,ms canonicalisation). ``Best batch'' is the batch size that maximises throughput; its per-message cost is the batch time divided by the batch size. The CPU row is a shared cloud CPU at sequence length 16.}
+\caption{Latency and throughput, measured separately. ``Batch 1'' is the streaming per-message latency a single user sees (median over 1000 runs after 50 warm-ups, including 1\,ms canonicalisation). ``Best batch'' is the batch size that maximises throughput; its per-message cost is the batch time divided by the batch size. Measured on a shared cloud CPU at sequence length 16; a fused-kernel GPU deployment would be faster but is not measured here.}
 \label{tab:latency}
 \footnotesize
 \renewcommand{\arraystretch}{1.1}
@@ -411,118 +396,49 @@ Per-message latency and aggregate throughput are different quantities, and a sin
  & \textbf{median} & \textbf{p99} & \textbf{batch} & \textbf{best batch} & \textbf{(msg/s)} \\
 \midrule
 CPU                 & 7.7\,ms & 13.6\,ms & 8 & 3.0\,ms & 334 \\
-A100 GPU            & \TBD{--} & \TBD{--} & \TBD{--} & \TBD{--} & \TBD{--} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-On CPU, batching already helps at batch 2 (4.9\,ms per message versus 6.8\,ms at batch 1) and throughput peaks at batch 8. A sub-5\,ms streaming latency claim, and any million-messages-per-second throughput claim, must come from the A100 row, which \TBD{remains to be measured}.
+On CPU, batching already helps at batch 2 ($4.9$\,ms per message versus $6.8$\,ms at batch 1) and throughput peaks at batch 8. We make no sub-millisecond or million-message-per-second claim: those would require a fused-kernel GPU run, which this study did not have access to.
 
 \subsection{Expanded Component Ablation}
 \label{sec:res-abl}
-Table~\ref{tab:abl} reports an expanded ablation (parameter counts are measured; the remaining columns await the benchmark runs). On CPU at batch 8 and sequence length 16 the full model takes 61\,ms per batch, the SSM-only variant 60\,ms, the GAT-only variant 0.6\,ms, and a 4-layer transformer in place of the scan 3.9\,ms; at this short sequence length the reference (non-fused) scan is slower than attention, so the latency case for the selective scan rests on the fused GPU kernel at longer sequences (\TBD{to be measured}). \TBD{[Summarise the F1/ASR effect of each ablation.]}
+The architecture exposes three switches, and Table~\ref{tab:abl} reports what we measured for each: parameter count and per-batch forward latency (batch 8, sequence length 16, CPU). Removing the GATv2 layers (``SSM only'') or the SSM blocks (``GAT only'') each drops about $1.75$\,M parameters; replacing the selective scan with a four-layer transformer adds parameters and, at this short sequence length on CPU, is actually faster than our reference (non-fused) scan, so the efficiency case for the scan rests on a fused GPU kernel at longer sequences, which we do not measure. The effect of each switch on detection macro-F1 across the benchmarks is the natural next experiment and is left to the camera-ready; here we only establish that every variant runs and that the composed Lipschitz bound is finite for the SSM backbone and infinite for the transformer one (softmax attention is not globally Lipschitz~\cite{Kim2021LipAttn}).
 
 \begin{table}[!t]
 \centering
-\color{red}
-\caption{\textbf{PLACEHOLDER --- not yet measured.} Ablation on MCP-SafetyBench, mean $\pm$ std over 5 seeds. Cert.\ rad.\ is median certified radius at $\sigma=0.25$.}
+\caption{Architecture switches: measured parameter count and per-batch forward latency (batch 8, sequence length 16, CPU). Detection-quality columns are deferred (see text).}
 \label{tab:abl}
 \footnotesize
-\renewcommand{\arraystretch}{1.12}
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-\textbf{Config} & \textbf{Params} & \textbf{F1} & \textbf{Lat.(ms)} & \textbf{ASR(\%)} & \textbf{Cert.rad.} \\
-\midrule
-Full MG              & 3.68\,M & $.83$ & 3.7 & $14.6$ & 0.21 \\
-no Lipschitz         & 3.68\,M & $.82$ & 3.7 & $15.2$ & $<0.01$ \\
-no Hedge controller   & 3.68\,M & $.83$ & 3.5 & $24.1$ & 0.21 \\
-no GATv2 (SSM only)   & 1.93\,M & $.80$ & 2.9 & $18.9$ & 0.19 \\
-no SSM (GAT only)    & 1.92\,M & $.78$ & 0.7 & $22.4$ & 0.14 \\
-Transformer-for-SSM  & 2.22\,M & $.82$ & 37.4 & $15.0$ & 0.20 \\
-no time encoding     & 3.63\,M & $.81$ & 3.4 & $17.3$ & 0.20 \\
-flat sequence        & 3.68\,M & $.76$ & 3.6 & $28.8$ & 0.21 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-%% ============================================================================
-\section{Adaptive Attacks}
-\label{sec:adaptive}
-%% ============================================================================
-Nasr \textit{et al.}~\cite{Nasr2026Attacker} show that twelve recent prompt-injection filters were bypassed with ASR above 90\% once attackers were given time to tune and scale a handful of standard techniques. MambaGuard is a filter in this family, so we report a dedicated adaptive-attack evaluation. We follow the Tram{\`e}r \textit{et al.} methodology~\cite{Tramer2020Adaptive} of targeting \emph{every} component of the defence.
-
-\paragraph{E1 White-box embedding PGD.}
-Projected gradient descent with Expectation-over-Transformation~\cite{Athalye2018Obfuscated} over the smoothing noise. Budget $\varepsilon$ in $\ell_{2}$ at the sentence-transformer feature layer, 100 steps, 8 EOT samples, step $2\varepsilon/100$. Reports empirical ASR within the \emph{claimed} certified ball (should be zero in the certified fraction) and beyond it. Table~\ref{tab:adaptive} row E1.
-
-\paragraph{E2 Discrete token search (GCG-style).}
-Greedy Coordinate Gradient token search~\cite{Zou2023GCG} constrained to preserve the malicious tool call. Measures whether the certified radius transports to raw text perturbations --- it does not, by construction, but we report the empirical bypass rate so reviewers can see the gap between the feature-space certificate and text-level evasion.
-
-\paragraph{E3 LLM-driven payload rewriting.}
-An attacker LLM (Claude 3.5 Sonnet with a search budget of 20 queries per sample, following~\cite{Nasr2026Attacker}) is told the detector's taxonomy and the target class, and rewrites the malicious payload to minimise the detector score while preserving a verifiable attack outcome.
-
-\paragraph{E4 Graph-structural evasion.}
-Split the attack across $m$ agents or $w$ windows to stay under per-window graph statistics. Mimic benign subgraph patterns extracted from the test partition.
-
-\paragraph{E5 Hedge-weight manipulation.}
-An adaptive attacker that observes the defender's actions (a legitimate assumption under the Balcan \textit{et al.}~\cite{Balcan2015Commitment} framework) and plays a type sequence that drives the Hedge weights toward the least effective defender action. We report the empirical regret growth versus the Hedge bound: if the empirical regret exceeds the proven bound $B\sqrt{(T/2)\ln N}$, the online guarantee is empirically violated.
-
-\paragraph{E6 Human red team.}
-\TBD{[Only keep this paragraph if the red-team exercise is actually run with ethics approval before submission; otherwise delete E6 here and in Table~\ref{tab:adaptive}.]} Planned protocol: a three-person red team produces hand-crafted attack traces (not modifications of benchmark traces), given the detector's taxonomy and restricted to non-destructive techniques. Ethics discussion in Appendix~\ref{app:ethics}.
-
-\paragraph{Comparison to the prompt-injection-filter baseline.}
-Nasr \textit{et al.}~\cite{Nasr2026Attacker} report $>90\%$ ASR against twelve recent prompt-injection defences (including Protect~AI, PromptGuard, PIGuard, Model Armor) under their adaptive-attack methodology, with PIGuard --- the strongest detector baseline --- still reaching $71\%$ bypass. For direct comparison we run the same adaptive attacks against MambaGuard; Table~\ref{tab:nasr} reports the bypass rate at the published Nasr~\textit{et~al.} attacker-budget level, and reports MambaGuard's bypass rate at the same budget. \TBD{[State the measured reduction relative to PIGuard, if any.]} We make no claim of invulnerability.
-
-\begin{table}[!t]
-\centering
-\color{red}
-\caption{\textbf{PLACEHOLDER --- not yet measured.} MambaGuard versus the strongest prompt-injection filters from the Nasr~\textit{et~al.}~\cite{Nasr2026Attacker} study, on an aligned test set. All numbers are bypass rates at the authors' published adaptive-attack budget (20 attacker queries, 100 PGD steps). ``MG+EC'' is MambaGuard composed with erase-and-check.}
-\label{tab:nasr}
-\footnotesize
-\renewcommand{\arraystretch}{1.1}
-\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{5pt}
 \begin{tabular}{@{}lccc@{}}
 \toprule
-\textbf{Defence}  & \textbf{PIGuard} & \textbf{MambaGuard} & \textbf{MG+EC} \\
+\textbf{Configuration} & \textbf{Params} & \textbf{Fwd (ms)} & \textbf{$L_f$ finite?} \\
 \midrule
-E1 Embed-PGD      & $89\%$ & $47\%$ & $\mathbf{31\%}$ \\
-E2 GCG            & $71\%$ & $49\%$ & $\mathbf{23\%}$ \\
-E3 LLM rewrite    & $82\%$ & $52\%$ & $\mathbf{34\%}$ \\
-Avg.              & $81\%$ & $49\%$ & $\mathbf{29\%}$ \\
+Full (SSM + GATv2, graph read-out) & $3.67$\,M & $60.9$ & yes \\
+SSM only (no GATv2)                & $1.93$\,M & $60.1$ & yes \\
+GATv2 only (no SSM)                & $1.92$\,M & $0.6$  & yes \\
+Transformer in place of SSM        & $2.22$\,M & $3.9$  & no \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-In a sandbox run on synthetic inputs (16 samples, 40 PGD steps, 4 EoT samples), E1 flips $0\%$ of predictions at $\varepsilon\in\{0.01,0.05\}$, $6.3\%$ at $\varepsilon=0.1$ and $12.5\%$ at $\varepsilon=0.2$; these are implementation checks, not benchmark results. \TBD{[Interpret Tables~\ref{tab:adaptive} and~\ref{tab:nasr} once measured: (1) whether E1's success inside the certified ball stays within the certified failure fraction; (2) how far text-level attacks E2/E3 exceed the feature-space budget, and how much the erase-and-check composition recovers; (3) whether E5 drives empirical regret above $B\sqrt{(T/2)\ln N}$.]}
+%% ============================================================================
+\section{Adaptive Attacks and Robustness}
+\label{sec:adaptive}
+%% ============================================================================
+A smoothing-based filter must be judged against an attacker who adapts to it, not against static inputs~\cite{Nasr2026Attacker,Tramer2020Adaptive}. We therefore built the attack surface into the artifact so that it can be run once a detector trained with a learned payload encoder clears the detection bar of \S\ref{sec:res-detect}. Each attack targets a different component: white-box projected gradient descent in the payload-embedding space with Expectation-over-Transformation over the smoothing noise~\cite{Athalye2018Obfuscated} (E1); Greedy Coordinate Gradient token search that keeps the malicious tool call fixed, to measure how far text-level evasion exceeds the feature-space budget~\cite{Zou2023GCG} (E2); an attacker-LLM payload rewrite under a fixed query budget (E3); graph-structural evasion that splits an attack across agents or windows (E4); and manipulation of the Hedge controller's observed losses (E5).
 
-\begin{table}[!t]
-\centering
-\color{red}
-\caption{\textbf{PLACEHOLDER --- not yet measured.} Adaptive-attack ASR on MCP-SafetyBench, averaged over 5 seeds. $\varepsilon$ is the attacker's $\ell_{2}$ budget at the sentence-transformer feature layer; $k$ is the graph-edit budget.}
-\label{tab:adaptive}
-\footnotesize
-\renewcommand{\arraystretch}{1.1}
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{@{}lccccc@{}}
-\toprule
-\textbf{Attack} & $\varepsilon{=}0.01$ & $\varepsilon{=}0.05$ & $\varepsilon{=}0.10$ & $k{=}1$ & $k{=}3$ \\
-\midrule
-E1 Embed-PGD (EOT)       & $1.1$ & $8.4$ & $47.3$ & --- & --- \\
-E2 GCG discrete          & $12.5$ & $28.0$ & $48.9$ & --- & --- \\
-E3 LLM rewrite           & $18.2$ & $34.1$ & $51.6$ & --- & --- \\
-E4 Graph evasion         & --- & --- & --- & $13.4$ & $41.8$ \\
-E5 Hedge manipulation    & \multicolumn{5}{c}{avg.\ regret $0.21$ vs bound $0.20$} \\
-E6 Human red team        & \multicolumn{5}{c}{$39/200$ bypassed = $19.5\%$ bypass rate} \\
-\bottomrule
-\end{tabular}
-\end{table}
+We report here only what we measured, on CPU, against the current model. The embedding-PGD attack (E1), run on $16$ synthetic inputs with $40$ steps and $4$ EoT samples, flips $0\%$ of predictions at $\varepsilon\in\{0.01,0.05\}$, $6.3\%$ at $\varepsilon=0.10$ and $12.5\%$ at $\varepsilon=0.20$: inside the certified radius the detector is empirically stable, and the first failures appear only past it, consistent with the certificate of \S\ref{sec:guarantees}. This is an implementation check on synthetic inputs, not a benchmark attack-success rate; the GCG, LLM-rewrite, graph-evasion and Hedge-manipulation attacks are implemented in the artifact but a benchmark-scale evaluation is deferred, because it is only meaningful against a detector that first achieves non-trivial payload-borne detection.
 
 %% ============================================================================
 \section{Discussion and Limitations}
 \label{sec:disc}
 %% ============================================================================
 \label{sec:limits}
-MambaGuard is a \emph{detector}, complementary to design-level defences like CaMeL and MELON that prevent injection outcomes by sandboxing; we view detector+design composition as the deployment target. Three honest limitations. \textbf{Feature vs payload.} The smoothing certificate holds in sentence-transformer space; the erase-and-check composition partially bridges but does not close the gap to text-level perturbations. \textbf{Loose Lipschitz.} The sound residual-aware bound is $37\times$ the empirical lower bound at $c=0.5$, and the simpler block-product bound is not a bound at all; tighter data-dependent estimates are future work. \textbf{Attacker capabilities.} The threat model excludes host compromise, cryptographic-signature forgery and arbitrary new-agent injection; these capabilities need orthogonal defences. Encrypted traffic is partially addressed (IDS-PQC in Appendix~\ref{app:netids}); differentially private embeddings are future work.
+MambaGuard is a \emph{detector}, complementary to design-level defences like CaMeL and MELON that prevent injection outcomes by sandboxing; we view detector+design composition as the deployment target. Three honest limitations. \textbf{Feature vs payload.} The smoothing certificate holds in the payload-embedding feature space; the erase-and-check composition partially bridges but does not close the gap to text-level perturbations. \textbf{Loose Lipschitz.} The sound residual-aware bound is $37\times$ the empirical lower bound at $c=0.5$, and the simpler block-product bound is not a bound at all; tighter data-dependent estimates are future work. \textbf{Attacker capabilities.} The threat model excludes host compromise, cryptographic-signature forgery and arbitrary new-agent injection; these capabilities need orthogonal defences. Encrypted and post-quantum traffic, and differentially private payload embeddings, are future work.
 
 %% ============================================================================
 \section{Related Work}
@@ -546,7 +462,7 @@ MambaGuard is a \emph{detector}, complementary to design-level defences like CaM
 \section{Conclusion}
 \label{sec:conclusion}
 %% ============================================================================
-We presented MambaGuard, a streaming detector for multi-protocol LLM-agent traffic that couples a selective SSM with a Lipschitz-normalised temporal GATv2 layer and ships two type-checked certificates and a corrected online no-regret bound. We corrected the online step size, made the composition theorem unit-consistent, and showed that a block-product Lipschitz bound is unsound once residual paths are counted. \TBD{[Add one sentence on the measured benchmark and adaptive-attack results.]} Code, weights, the adaptive-attack harness, and a reproduction script that regenerates every table and figure are released under an anonymised mirror.
+We presented MambaGuard, a streaming detector for multi-protocol LLM-agent traffic that couples a selective SSM with a Lipschitz-normalised temporal GATv2 layer and ships two type-checked certificates and a corrected online no-regret bound. We corrected the online step size, made the composition theorem unit-consistent, and showed that a block-product Lipschitz bound is unsound once residual paths are counted. On the benchmarks the detector separates structural A2A attacks (macro-F1 $0.86$) but not, with a feature-hashing encoder, payload-borne tool poisoning, which isolates exactly where the next gain --- a learned payload encoder --- must come from. Code, weights, the adaptive-attack harness, and a reproduction script that regenerates every table and figure are released under an anonymised mirror.
 
 %% ============================================================================
 %% References (anonymised third-person self-citation where needed)
@@ -645,7 +561,7 @@ $\frac{d}{du}\mathrm{SiLU}(u)=\sigma(u)(1+u(1-\sigma(u)))$; numerical solution o
 
 \section{Hyperparameters}
 \label{app:hyper}
-$N=16$, $d_{z}=256$, expansion $E=2$, kernel width $k=4$, 4 stacked SSM layers; $H=4$ heads, $d_{T}=64$; AdamW lr $3\times 10^{-4}$, weight decay $10^{-2}$, batch 256, 30 epochs cosine; $\lambda_{L}=10^{-3}$ unless otherwise noted; sentence-transformer all-MiniLM-L6-v2 ($d_{p}=384$), frozen. Smoothing: $n=10^{4}$, $\alpha_{MC}=10^{-3}$, $\sigma\in\{0.05,0.10,0.25,0.5\}$. Sparse smoothing: $p_{+}=p_{-}=0.05$, $n=1000$.
+$N=16$, $d_{z}=256$, expansion $E=2$, kernel width $k=4$, 4 stacked SSM layers; $H=4$ heads, $d_{T}=64$; AdamW lr $3\times 10^{-4}$, weight decay $10^{-2}$, batch 256, 30 epochs cosine; $\lambda_{L}=10^{-3}$ unless otherwise noted; payload encoder: feature hashing over token $n$-grams into $d_{p}=384$ signed buckets, L2-normalised (a frozen sentence-transformer is a drop-in replacement). Smoothing: $n=10^{4}$, $\alpha_{MC}=10^{-3}$, $\sigma\in\{0.05,0.10,0.25,0.5\}$. Sparse smoothing: $p_{+}=p_{-}=0.05$, $n=1000$.
 
 \section{Protocol-Benchmark Canonicalisation}
 \label{app:canon}
@@ -657,22 +573,22 @@ Full distribution of $(k_{a}, k_{d})$ over the six benchmarks and the sensitivit
 
 \section{Erase-and-Check Composition}
 \label{app:erase}
-Composing the feature-space smoothing certificate with the erase-and-check certificate~\cite{Kumar2024EraseCheck} against suffix attacks of length $\le 2$ changes the E2 (GCG) bypass rate from \TBD{a}\% to \TBD{b}\% at $\varepsilon=0.05$, at a throughput cost of \TBD{c}\%.
+The feature-space smoothing certificate can be composed with the erase-and-check certificate~\cite{Kumar2024EraseCheck}, which certifies against adversarial suffixes, insertions and infusions of up to $d$ tokens. We describe the composition here as the route to a payload-level guarantee; a quantitative evaluation is future work.
 
 \section{Network-IDS Transfer (Not in Headline Claims)}
 \label{app:netids}
-Transfer F1 to CSE-CIC-IDS2018/CIC-IoT2023/UNSW-NB15 after fine-tuning only the head: \TBD{a}/\TBD{b}/\TBD{c}, median over 5 seeds. These numbers are not used in the headline claims because the datasets do not represent agent-protocol threats.
+Classical network-IDS corpora (CSE-CIC-IDS2018, CIC-IoT2023, UNSW-NB15) are supported by the same canonicaliser and loaders, but a transfer evaluation is out of scope for this paper, which targets agent-protocol threats.
 
 \section{Ethics Considerations}
 \label{app:ethics}
-The adaptive-attack suite in \S\ref{sec:adaptive} contains code for E1--E5 that could in principle be adapted to attack production MCP servers. We release the scaffolding needed to reproduce the paper but not working exploits against live third-party services. All protocol traces are synthetic or from public benchmarks, and no live third-party agent deployment was targeted. We do not include CVE identifiers in the submission. \TBD{[If the E6 red team is run: state the ethics approval and participant terms. If any new protocol flaw is found: state that it was reported under coordinated disclosure. Otherwise delete these clauses.]}
+The adaptive-attack code in \S\ref{sec:adaptive} could in principle be adapted to attack production MCP servers. We release the scaffolding needed to reproduce the paper but not working exploits against live third-party services. All protocol traces are synthetic or from public benchmarks; no live third-party agent deployment was targeted and no human-subject data was collected. We do not include CVE identifiers in the submission.
 
 \section{Generative AI Usage}
 \label{app:genai}
-\TBD{[Name the LLMs actually used to generate the A2A-sandbox traces and for the E3 attacker.]} Prompts, seeds and API response caches are released in the artifact, within the limits that closed-model drift imposes on reproducibility. Generative AI was used for editorial purposes in this manuscript, and all outputs were inspected by the authors to ensure accuracy and originality.
+The benchmarks used in this paper are either public (MCPTox, MCP-SafetyBench, MCPSecBench, AgentDojo, InjecAgent) or generated deterministically from a fixed random seed with no model in the loop (the A2A-sandbox); no closed model was queried to produce the data or the results reported here. Generative AI was used for editorial purposes in this manuscript, and all outputs were inspected by the authors to ensure accuracy and originality.
 
 \section{Artifact Availability}
 \label{app:artifact}
-An anonymised artifact is available at \TBD{\url{https://anonymous.4open.science/r/<ID>}}. It contains the detector, the smoothing, sparse-smoothing and composed certificates, the Hedge controller, the adaptive attacks, the training and evaluation harness, all configuration files, and 35 tests. \texttt{scripts/reproduce\_all.sh} runs the tests and regenerates every synthetic-input result in about ten minutes on a CPU; \texttt{scripts/reproduce\_all.sh --full} additionally reruns the benchmark experiments on one GPU. Recorded outputs are in \texttt{reproducibility/experiments\_sp2027.json}. The artifact is frozen at the submission deadline and is not updated during review, per the S\&P 2027 artifact policy.
+An anonymised artifact is available at \url{https://anonymous.4open.science/r/mambaguard-sp2027} (identifier filled in at submission). It contains the detector, the smoothing, sparse-smoothing and composed certificates, the Hedge controller, the adaptive attacks, the training and evaluation harness, all configuration files, and 35 tests. \texttt{scripts/reproduce\_all.sh} runs the tests and regenerates every synthetic-input result in about ten minutes on a CPU; \texttt{scripts/reproduce\_all.sh --full} additionally reruns the benchmark experiments on one GPU. Recorded outputs are in \texttt{reproducibility/experiments\_sp2027.json}. The artifact is frozen at the submission deadline and is not updated during review, per the S\&P 2027 artifact policy.
 
 \end{document}

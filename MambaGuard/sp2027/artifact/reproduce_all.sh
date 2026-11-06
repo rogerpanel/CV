@@ -41,7 +41,7 @@ if [ "$FULL" -eq 0 ]; then
 fi
 
 # registry name : folder under DATA_ROOT ("builtin" = generated, no download)
-BENCHES="mcptox:MCPTox-Benchmark mcp_safetybench:MCPSafety mcpsecbench:MCPSecBench a2a_sandbox:builtin"
+BENCHES="mcptox:MCPTox-Benchmark mcp_safetybench:MCPSafety agentdojo:agentdojo injecagent:InjecAgent a2a_sandbox:builtin"
 extra=()
 [ -n "$EPOCHS" ] && extra+=(--epochs "$EPOCHS")
 

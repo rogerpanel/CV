@@ -1,0 +1,103 @@
+{
+  "encoder": "hashing-384 (feature hashing over token n-grams; no external model)",
+  "device": "cpu",
+  "readout": "graph",
+  "params": 3667074,
+  "benchmarks": {
+    "mcptox": {
+      "length_baseline_bal_acc": 0.5,
+      "runs": [
+        {
+          "seed": 0,
+          "epochs": 4,
+          "train_time_s": 49.8,
+          "n_train": 1219,
+          "n_test": 265,
+          "test_macro_f1": 0.4239,
+          "test_accuracy": 0.7358,
+          "test_recall_attack": NaN,
+          "test_fpr": NaN,
+          "latency_ms_per_msg": 1.708
+        }
+      ],
+      "macro_f1_mean": 0.4239,
+      "macro_f1_std": 0.0
+    },
+    "mcp_safetybench": {
+      "length_baseline_bal_acc": 0.5,
+      "runs": [
+        {
+          "seed": 0,
+          "epochs": 6,
+          "train_time_s": 104.5,
+          "n_train": 281,
+          "n_test": 59,
+          "test_macro_f1": 0.408,
+          "test_accuracy": 0.5932,
+          "test_recall_attack": NaN,
+          "test_fpr": NaN,
+          "latency_ms_per_msg": 5.707
+        }
+      ],
+      "macro_f1_mean": 0.408,
+      "macro_f1_std": 0.0
+    },
+    "agentdojo": {
+      "length_baseline_bal_acc": 0.5,
+      "runs": [
+        {
+          "seed": 0,
+          "epochs": 6,
+          "train_time_s": 922.2,
+          "n_train": 448,
+          "n_test": 104,
+          "test_macro_f1": 0.4639,
+          "test_accuracy": 0.8654,
+          "test_recall_attack": NaN,
+          "test_fpr": NaN,
+          "latency_ms_per_msg": 10.022
+        }
+      ],
+      "macro_f1_mean": 0.4639,
+      "macro_f1_std": 0.0
+    },
+    "injecagent": {
+      "length_baseline_bal_acc": 0.5,
+      "runs": [
+        {
+          "seed": 0,
+          "epochs": 5,
+          "train_time_s": 46.7,
+          "n_train": 756,
+          "n_test": 189,
+          "test_macro_f1": 0.496,
+          "test_accuracy": 0.9841,
+          "test_recall_attack": NaN,
+          "test_fpr": NaN,
+          "latency_ms_per_msg": 2.786
+        }
+      ],
+      "macro_f1_mean": 0.496,
+      "macro_f1_std": 0.0
+    },
+    "a2a_sandbox": {
+      "length_baseline_bal_acc": 0.5333,
+      "runs": [
+        {
+          "seed": 0,
+          "epochs": 4,
+          "train_time_s": 4250.0,
+          "n_train": 3080,
+          "n_test": 660,
+          "test_macro_f1": 0.8591,
+          "test_accuracy": 0.8591,
+          "test_recall_attack": NaN,
+          "test_fpr": NaN,
+          "latency_ms_per_msg": 11.42
+        }
+      ],
+      "macro_f1_mean": 0.8591,
+      "macro_f1_std": 0.0
+    }
+  }
+}
