@@ -1,8 +1,6 @@
 """Cohen-Rosenfeld-Kolter (2019) randomised-smoothing certificate.
 
-S&P 2027 audit (Part C.8): the paper previously claimed a smoothing
-certificate without actually implementing one. This module adds the
-canonical two-stage procedure:
+Implements the canonical two-stage procedure:
 
     1. Draw ``n0`` noisy samples of ``f(x + N(0, sigma^2 I))`` and let
        ``cA`` be the most-frequent predicted class.

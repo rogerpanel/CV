@@ -1,7 +1,7 @@
 """Empirical lower bound on the Lipschitz constant via gradient ascent.
 
-S&P 2027 audit (Part C.5): the analytic composed Lipschitz bound
-``L_f`` from :mod:`lipschitz_bounds` is only an upper bound. To
+The analytic composed Lipschitz bound ``L_f`` from
+:mod:`lipschitz_bounds` is only claimed to be an upper bound. To
 quantify how loose the bound is we also need an empirical *lower*
 bound, obtained by attacking the Lipschitz ratio directly.
 

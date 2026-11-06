@@ -249,7 +249,7 @@ where the pointwise bound is taken over the Neyman-Pearson regions $\mathcal{H}$
 
 \subsection{Online No-Regret Guarantee}
 \label{sec:noregret}
-We correct an error present in prior MambaGuard drafts. For losses in $[0,B]$ the Hedge regret bound $R_{T}\le(\ln N)/\eta+\eta T B^{2}/8$ is minimised at
+For losses in $[0,B]$ the Hedge regret bound $R_{T}\le(\ln N)/\eta+\eta T B^{2}/8$ is minimised at
 \begin{equation}
 \eta^{*} \;=\; \sqrt{8\ln N / T} \;/\; B,
 \label{eq:eta-correct}
@@ -259,7 +259,7 @@ giving
 R_{T} \;\le\; B\sqrt{(T/2)\ln N}.
 \label{eq:hedge-bound}
 \end{equation}
-(This is the classical Cesa-Bianchi--Lugosi tuning~\cite{CesaBianchi2006Prediction}; earlier MambaGuard drafts quoted $\eta=\sqrt{2\ln N/T}$, which minimises a looser bound and yields a factor-$\sqrt{2}$ larger constant.) For an anytime variant with $\eta_{t}=\sqrt{8\ln N/t}/B$, the regret is at most $B(\sqrt{2T\ln N}+\ln N/8)$.
+(This is the classical Cesa-Bianchi--Lugosi tuning~\cite{CesaBianchi2006Prediction}; the frequently quoted $\eta=\sqrt{2\ln N/T}$ minimises the cruder bound $(\ln N)/\eta+\eta T/2$ and gives $\sqrt{2T\ln N}$, twice the constant.) For an anytime variant with $\eta_{t}=\sqrt{8\ln N/t}/B$, the regret is at most $B(\sqrt{2T\ln N}+\ln N/8)$.
 
 \begin{theorem}[No-regret]
 \label{thm:regret}
@@ -671,6 +671,6 @@ The adaptive-attack suite in \S\ref{sec:adaptive} contains code for E1--E5 that 
 
 \section{Artifact Availability}
 \label{app:artifact}
-An anonymised reference implementation is available at \url{https://anonymous.4open.science/r/mambaguard-sp2027}. The artifact contains the model, the certification framework, the benchmarks, the adaptive-attack harness, and a one-line reproduction script \texttt{scripts/reproduce\_all.sh} that regenerates every table and figure in this paper. Expected CSV outputs are included so that reviewers can diff against the regenerated numbers. The artifact is frozen at the submission deadline and will not be updated during the review period, per the S\&P 2027 artifact policy.
+An anonymised artifact is available at \TBD{\url{https://anonymous.4open.science/r/<ID>}}. It contains the detector, the smoothing, sparse-smoothing and composed certificates, the Hedge controller, the adaptive attacks, the training and evaluation harness, all configuration files, and 35 tests. \texttt{scripts/reproduce\_all.sh} runs the tests and regenerates every synthetic-input result in about ten minutes on a CPU; \texttt{scripts/reproduce\_all.sh --full} additionally reruns the benchmark experiments on one GPU. Recorded outputs are in \texttt{reproducibility/experiments\_sp2027.json}. The artifact is frozen at the submission deadline and is not updated during review, per the S\&P 2027 artifact policy.
 
 \end{document}

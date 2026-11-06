@@ -1,4 +1,4 @@
-"""Adaptive adversaries for MambaGuard (S&P 2027 audit C.12).
+"""Adaptive adversaries for MambaGuard.
 
 These attackers are intended to defeat the certified defence, not just
 report an arbitrary ASR number. Two modules are provided:

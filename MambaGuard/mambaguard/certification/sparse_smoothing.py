@@ -1,6 +1,6 @@
 """Sparse (edge) randomised smoothing for graph-structured inputs.
 
-S&P 2027 audit (Part C.10): MambaGuard reasons about the agent
+MambaGuard reasons about the agent
 communication graph, so the certificate must also cover **edge edits**
 (additions and deletions), not just L2 perturbations of node features.
 This module implements a sparse-smoothing driver following

@@ -1,11 +1,10 @@
 """Hedge / multiplicative-weights online defence (Algorithm 1 in the paper).
 
-S&P 2027 audit (Part C.1) correction
-------------------------------------
-The previous tuning used ``eta = sqrt(2 ln N / T)`` while claiming the
-bound ``R_T <= B * sqrt((T/2) * ln N)``. That eta is the tuning for
-losses in [0, 1]; for losses in [0, B] the step size must be scaled by
-1/B so that the Hoeffding exponential inequality
+Step-size tuning
+----------------
+The frequently quoted ``eta = sqrt(2 ln N / T)`` minimises the cruder
+bound ``ln N / eta + eta T / 2`` and gives ``sqrt(2 T ln N)``. For losses
+in [0, B] the step size must also be scaled by 1/B so that the Hoeffding exponential inequality
 ``exp(-eta L) <= 1 - eta L + (eta B)^2 L / 8`` produces the standard
 Cesa-Bianchi--Lugosi bound. The correct fixed-horizon tuning is
 
@@ -65,7 +64,6 @@ class HedgeDefender:
         self.horizon: int = int(horizon)
         self.B: float = float(B)
         # eta chosen to minimise the CBL 2006 regret bound for losses in [0, B].
-        # Corrected per S&P 2027 audit (Part C.1): the 1/B scaling was missing.
         self.eta: float = math.sqrt(8.0 * math.log(len(self.actions)) / self.horizon) / self.B
         self.weights: np.ndarray = np.ones(len(self.actions), dtype=float)
         self._t: int = 0  # round counter

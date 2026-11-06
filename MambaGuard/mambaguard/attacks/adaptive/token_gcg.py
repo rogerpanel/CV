@@ -1,7 +1,6 @@
 """GCG-style discrete token search -- scaffold only.
 
-S&P 2027 audit (C.12): the manuscript claims adaptive robustness in
-token space, which EmbedPGD does not cover (continuous relaxation).
+Token-space attacks are not covered by EmbedPGD (a continuous relaxation).
 The GCG attack (Zou et al. 2023) performs a greedy coordinate-descent
 search over discrete tokens via first-order substitution scores:
 

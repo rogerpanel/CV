@@ -1,7 +1,8 @@
-"""Substantiating experiments for the IEEE S&P 2027 Cycle-2 resubmission.
+"""Sandbox-scale checks of the MambaGuard certification and attack code.
 
-Reproduces the twelve corrections requested by the reviewer-style
-audit for MambaGuard. All measurements are serialised to
+Runs every certificate, the corrected Hedge controller, the latency
+harness and the adaptive-attack checks on synthetic inputs (CPU, < 10 min).
+All measurements are serialised to
 ``reproducibility/experiments_sp2027.json``.
 
 Sections
@@ -31,7 +32,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-PROJECT_ROOT = Path("/home/user/CV/MambaGuard")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 

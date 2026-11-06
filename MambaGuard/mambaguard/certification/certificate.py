@@ -35,7 +35,7 @@ def composed_certificate(
     T: int,
     num_actions: int,
 ) -> float:
-    """DEPRECATED (S&P 2027 audit C.3): dimensionally inconsistent.
+    """DEPRECATED: dimensionally inconsistent.
 
     This function subtracts ``L_f * epsilon`` (a logit-space Lipschitz
     quantity) from a utility-valued quantity ``V*``. Use
@@ -79,7 +79,7 @@ def composed_certificate(
 
 
 # ------------------------------------------------------------------ #
-# Dimensionally consistent v2 (S&P 2027 audit C.3)                   #
+# Dimensionally consistent v2                                        #
 # ------------------------------------------------------------------ #
 def composed_certificate_v2(
     V_star: float,

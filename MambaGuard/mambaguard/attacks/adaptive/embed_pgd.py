@@ -1,9 +1,8 @@
 """Embedding-space PGD with Expectation-Over-Transformation (EoT).
 
-S&P 2027 audit (C.12): the certified smoothing defence breaks whenever
-the attacker averages gradients across the smoothing noise distribution
-(Athalye-Carlini-Wagner 2018). This module implements the adaptive
-baseline the manuscript must defeat:
+A smoothing defence must be evaluated against an attacker that averages
+gradients across the smoothing noise distribution (Athalye-Carlini-Wagner
+2018). This module implements that adaptive attack:
 
     delta_{t+1} = Proj_{||.||_2 <= eps} (
         delta_t + alpha * sign( (1/K) sum_k  grad_{delta} L(f(x + delta + eta_k), y) )
