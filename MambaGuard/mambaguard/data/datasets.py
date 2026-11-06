@@ -335,44 +335,8 @@ def load_microsoft_cloud_telemetry(root: str, split: str = "train") -> Iterator[
 # LLM-agent benchmark loaders
 # ---------------------------------------------------------------------------
 
-def load_agentdojo(root: str, split: str = "train") -> Iterator[ProtocolMessage]:
-    """AgentDojo benchmark (https://github.com/ethz-spylab/agentdojo)."""
-    _require_root(root)
-    msgs: list[ProtocolMessage] = []
-    for path in _find_files(root, [".jsonl", ".json"]):
-        rows = _jsonl_rows(path) if path.endswith(".jsonl") else [json.load(open(path))]
-        for row in rows:
-            for i, turn in enumerate(row.get("trace", [row])):
-                rec = {
-                    "method": f"tools/{turn.get('tool','call')}",
-                    "params": {"client": turn.get("agent", "agent"), "server": turn.get("tool", "tool"),
-                               "args": turn.get("args", {})},
-                    "ts": float(i),
-                    "label": 1 if row.get("injection_successful") else 0,
-                    "id": f"{row.get('id','')}-{i}",
-                }
-                msgs.append(from_mcp(rec))
-    yield from _apply_split(msgs, split)
 
 
-def load_injecagent(root: str, split: str = "train") -> Iterator[ProtocolMessage]:
-    """InjecAgent benchmark (https://github.com/uiuc-kang-lab/InjecAgent)."""
-    _require_root(root)
-    msgs: list[ProtocolMessage] = []
-    for path in _find_files(root, [".jsonl", ".json"]):
-        rows = _jsonl_rows(path) if path.endswith(".jsonl") else [json.load(open(path))]
-        for row in rows:
-            rec = {
-                "method": "tools/invoke",
-                "params": {"client": "user", "server": row.get("Tool", "tool"),
-                           "args": row.get("User Instruction", row.get("instruction", ""))},
-                "ts": 0.0,
-                "label": 1 if row.get("Attack Type") else 0,
-                "id": row.get("id"),
-                "meta": {"auth": True},
-            }
-            msgs.append(from_mcp(rec))
-    yield from _apply_split(msgs, split)
 
 
 def load_protocolbench(root: str, split: str = "train") -> Iterator[ProtocolMessage]:
@@ -482,8 +446,8 @@ DATASET_REGISTRY: Dict[str, Callable[..., Iterator[ProtocolMessage]]] = {
     "nf_cse_cic_ids2018_v3_pqc": load_nf_cse_cic_ids2018_v3_pqc,
     "kubernetes_audit": load_kubernetes_audit,
     "microsoft_cloud_telemetry": load_microsoft_cloud_telemetry,
-    "agentdojo": load_agentdojo,
-    "injecagent": load_injecagent,
+    "agentdojo": _protocol_loader("load_agentdojo"),
+    "injecagent": _protocol_loader("load_injecagent"),
     "protocolbench": load_protocolbench,
     "robustidps_pqc": load_robustidps_pqc,
     "tgb2_temporal": load_tgb2_temporal,
@@ -581,6 +545,9 @@ def protocol_collate(batch: list[list[ProtocolMessage]]) -> dict[str, Any]:
     * ``labels``       -- LongTensor ``(B,)`` (-1 if window has no label;
                           window label = max over non-null message labels)
     * ``lengths``      -- LongTensor ``(B,)`` original window lengths
+    * ``src_idx`` / ``dst_idx`` -- LongTensor ``(B, T_max)``: window-local node
+                          index of each message's source / destination
+    * ``n_nodes``      -- LongTensor ``(B,)`` number of distinct endpoints per window
     * ``graph``        -- :class:`ProtocolGraph` built from the union of all
                           messages in the batch (use ``.to_pyg_data()`` to
                           tensorise for GNN consumption).
@@ -601,11 +568,19 @@ def protocol_collate(batch: list[list[ProtocolMessage]]) -> dict[str, Any]:
     timestamps = torch.zeros((B, T_max), dtype=torch.float32)
     attention_mask = torch.zeros((B, T_max), dtype=torch.bool)
     labels = torch.full((B,), -1, dtype=torch.long)
+    src_idx = torch.zeros((B, T_max), dtype=torch.long)
+    dst_idx = torch.zeros((B, T_max), dtype=torch.long)
+    n_nodes = torch.zeros((B,), dtype=torch.long)
 
     graph = ProtocolGraph(d_p=d_p)
 
     for b, window in enumerate(batch):
         win_label = -1
+        node_ids: dict[str, int] = {}
+        for t, m in enumerate(window):
+            src_idx[b, t] = node_ids.setdefault(m.src, len(node_ids))
+            dst_idx[b, t] = node_ids.setdefault(m.dst, len(node_ids))
+        n_nodes[b] = len(node_ids)
         for t, m in enumerate(window):
             if m.payload_emb is not None:
                 pe = m.payload_emb
@@ -629,6 +604,9 @@ def protocol_collate(batch: list[list[ProtocolMessage]]) -> dict[str, Any]:
         "attention_mask": attention_mask,
         "labels": labels,
         "lengths": torch.tensor(lengths, dtype=torch.long),
+        "src_idx": src_idx,
+        "dst_idx": dst_idx,
+        "n_nodes": n_nodes,
         "graph": graph,
     }
 

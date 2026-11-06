@@ -28,6 +28,14 @@ git -C MCPTox-Benchmark checkout f85189f9ad12504c197c7f920ab818a40657b1fa
 # only used to check the number of findings. 177 MB, most of it unrelated
 # RFC benchmarks; a shallow clone is enough.
 git clone --depth 1 https://github.com/arlotfi79/A2ABreak.git
+
+# AgentDojo (MIT) --- ships recorded agent runs under runs/ (about 525 MB)
+git clone https://github.com/ethz-spylab/agentdojo.git
+git -C agentdojo checkout 089ed468cf3ed0322acc66b0211f26d9d90dbf60
+
+# InjecAgent (MIT)
+git clone https://github.com/uiuc-kang-lab/InjecAgent.git
+git -C InjecAgent checkout f19c9f2c79a41046eb13c03c51a24c567a8ffa07
 cd ../..
 ```
 
@@ -43,7 +51,14 @@ python -m mambaguard.data.protocol_traces mcp_safetybench data/raw/MCPSafety
 python -m mambaguard.data.protocol_traces mcptox          data/raw/MCPTox-Benchmark
 python -m mambaguard.data.protocol_traces a2a_sandbox     data/raw/A2ABreak \
     --out data/processed/a2a_sandbox.jsonl
+python -m mambaguard.data.protocol_traces agentdojo      data/raw/agentdojo
+python -m mambaguard.data.protocol_traces injecagent     data/raw/InjecAgent
 ```
+
+AgentDojo loads one model's recorded runs at a time; the loader picks
+``claude-3-5-sonnet-20241022`` if present, else ``gpt-4o-2024-05-13``. Pass a
+different one with ``model=...`` in ``load_agentdojo_episodes``;
+``available_models(root)`` lists them.
 
 Add `--show 2` to print two episodes message by message, and `--split test` to
 restrict to one split. In Python:
@@ -61,10 +76,14 @@ test = load_mcptox_episodes("data/raw/MCPTox-Benchmark", split="test")
 | MCP-SafetyBench | 238 | 162 | 2,359 | 238 | case |
 | MCPTox | 1,312 | 533 | 5,535 | 45 | server |
 | A2A sandbox | 2,200 | 2,200 | 48,947 | 2,200 | attack/benign pair |
+| AgentDojo (1 model) | 550 | 97 | 5,748 | 97 | (suite, user task) |
+| InjecAgent | 1,054 | 17 | 5,355 | 17 | response template |
 
 Train / val / test sizes (episodes): MCP-SafetyBench 281 / 60 / 59,
-MCPTox 1,263 / 283 / 299, A2A sandbox 3,080 / 660 / 660. Splits are
-deterministic, grouped (no group appears in two splits) and stratified.
+MCPTox 1,263 / 283 / 299, A2A sandbox 3,080 / 660 / 660, AgentDojo
+459 / 93 / 95, InjecAgent 756 / 126 / 189. Splits are deterministic, grouped
+(no group appears in two splits) and stratified. AgentDojo counts are for the
+default model; others differ slightly.
 
 ## 4. What each loader builds
 
@@ -118,6 +137,26 @@ unlabelled attack message appears verbatim, in order, in the twin (checked for
 all 2,200 pairs). Both twins get the same random background exchanges. This
 is synthetic data and must be described as such.
 
+**AgentDojo.** Recorded agent runs (no re-running agents) for one model, under
+`runs/<model>/<suite>/<user_task>/<attack>/<injection_task>.json`. Each episode
+is the run's message turns: user task, assistant `tools/call`s, tool results.
+A tool result is labelled 1 when a distinctive slice of an injected string
+appears in it after whitespace/escape normalisation (the benchmark reformats
+injected text). By default only attacked runs whose injection actually
+surfaced are kept, so every attack episode has a labelled message; benign
+episodes are the `none/none.json` runs. The `injection_task_*` ground-truth
+runs are skipped (their "user task" is the attacker goal). Grouped by
+`(suite, user_task)`; one model at a time, the model is not a label.
+
+**InjecAgent.** Each test case is a user instruction, the user tool, and a
+tool-response template with a single `<Attacker Instruction>` slot. An episode
+is `tools/list` (user tool plus attacker tools, from `tools.json`), the user
+instruction, the `tools/call`, then the tool result with the slot filled by the
+attacker instruction (label 1); the `enhanced` files prepend a fixed
+"ignore previous instructions" prefix. Benign twins fill the slot with neutral
+text, so attack and benign differ only in the final payload. The 17 response
+templates are the split groups; only 17 benign twins exist (one per template).
+
 ## 5. Shortcut check
 
 Balanced test accuracy of a one-threshold classifier on episode length:
@@ -128,6 +167,8 @@ Balanced test accuracy of a one-threshold classifier on episode length:
 | MCP-SafetyBench | 0.50 | 0.52 |
 | MCPTox | 0.50 | 0.54 |
 | A2A sandbox (all) | 0.53 | 0.56 |
+| AgentDojo | 0.50 | (payload-borne) |
+| InjecAgent | 0.50 | (payload-borne) |
 
 Within the A2A sandbox, length is informative for `unbounded_delegation_depth`
 (0.80), `indefinite_interrupted_tasks` (0.86), `post_revocation_stream` and

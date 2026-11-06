@@ -45,6 +45,8 @@ class MambaGuardConfig:
     dropout: float = 0.1
     dt_min: float = 1e-3
     dt_max: float = 1e-1
+    readout: str = "graph"          # "graph": per-agent SSM + temporal GATv2; "flat": window as one sequence
+    backbone: str = "ssm"           # "ssm" (selective scan) or "transformer" (attention ablation)
 
 
 class MambaGuard(nn.Module):
@@ -59,8 +61,15 @@ class MambaGuard(nn.Module):
         self.input_norm = RMSNorm(cfg.d_model)
 
         # Stack of 4 selective SSM blocks with residual + RMSNorm (pre-norm Mamba layout).
+        if cfg.backbone not in ("ssm", "transformer"):
+            raise ValueError(f"unknown backbone {cfg.backbone!r}")
+        if cfg.readout not in ("graph", "flat"):
+            raise ValueError(f"unknown readout {cfg.readout!r}")
         self.blocks = nn.ModuleList(
             [
+                nn.TransformerEncoderLayer(cfg.d_model, nhead=4, dim_feedforward=2 * cfg.d_model,
+                                           dropout=cfg.dropout, batch_first=True)
+                if cfg.backbone == "transformer" else
                 SelectiveSSMBlock(
                     d_model=cfg.d_model,
                     d_state=cfg.d_state,
@@ -96,13 +105,85 @@ class MambaGuard(nn.Module):
         )
 
     # ------------------------------------------------------------------
-    def _encode_agent(self, p: torch.Tensor, mu: torch.Tensor) -> torch.Tensor:
-        """Per-agent SSM stack. ``p``: (B, L, d_p); ``mu``: (B, L, d_mu)."""
+    def _encode_agent(self, p: torch.Tensor, mu: torch.Tensor,
+                      mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """Per-agent sequence stack. ``p``: (B, L, d_p); ``mu``: (B, L, d_mu)."""
         x = torch.cat([p, mu], dim=-1)
         x = self.input_norm(self.input_proj(x))
         for blk, norm in zip(self.blocks, self.norms):
-            x = x + blk(norm(x))           # pre-norm residual; causality preserved by blk
+            if isinstance(blk, nn.TransformerEncoderLayer):
+                L = x.shape[1]
+                causal = torch.triu(torch.ones(L, L, dtype=torch.bool, device=x.device), 1)
+                pad = None if mask is None else ~mask
+                x = blk(norm(x), src_mask=causal, src_key_padding_mask=pad)
+            else:
+                x = x + blk(norm(x))       # pre-norm residual; causality preserved by blk
         return self.final_norm(x)
+
+    @staticmethod
+    def _masked_mean(h: torch.Tensor, mask: Optional[torch.Tensor]) -> torch.Tensor:
+        if mask is None:
+            return h.mean(dim=1)
+        m = mask.to(h.dtype).unsqueeze(-1)
+        return (h * m).sum(dim=1) / m.sum(dim=1).clamp(min=1.0)
+
+    def _forward_graph(self, batch: Mapping[str, Any]) -> Dict[str, torch.Tensor]:
+        """Per-window protocol graph: every endpoint is a node whose incident
+        messages (in time order) are encoded by the sequence stack; every message
+        is a typed, time-stamped edge for the temporal GATv2 layers."""
+        pe, mu = batch["payload_emb"], batch["metadata"]
+        mask, et, ts = batch["attention_mask"], batch["edge_type"], batch["timestamps"]
+        src, dst, n_nodes = batch["src_idx"], batch["dst_idx"], batch["n_nodes"]
+        B, T, _ = pe.shape
+        dev = pe.device
+        offsets = torch.cumsum(n_nodes, 0) - n_nodes
+        V = int(n_nodes.sum().item())
+
+        seqs: list[list[tuple[int, int]]] = [[] for _ in range(V)]
+        e_src, e_dst, e_b, e_t = [], [], [], []
+        lengths = mask.sum(dim=1).tolist()
+        src_l, dst_l, off_l = src.tolist(), dst.tolist(), offsets.tolist()
+        for b in range(B):
+            for t in range(int(lengths[b])):
+                u, v = off_l[b] + src_l[b][t], off_l[b] + dst_l[b][t]
+                seqs[u].append((b, t))
+                if v != u:
+                    seqs[v].append((b, t))
+                e_src.append(u); e_dst.append(v); e_b.append(b); e_t.append(t)
+        Lmax = max(1, max(len(q) for q in seqs))
+        gb = torch.zeros((V, Lmax), dtype=torch.long)
+        gt = torch.zeros((V, Lmax), dtype=torch.long)
+        nmask = torch.zeros((V, Lmax), dtype=torch.bool)
+        for v, q in enumerate(seqs):
+            if q:
+                bb, tt = zip(*q)
+                gb[v, :len(q)] = torch.tensor(bb)
+                gt[v, :len(q)] = torch.tensor(tt)
+                nmask[v, :len(q)] = True
+        gb, gt, nmask = gb.to(dev), gt.to(dev), nmask.to(dev)
+        h = self._encode_agent(pe[gb, gt], mu[gb, gt], nmask)       # (V, Lmax, d_model)
+        z = self._masked_mean(h, nmask)                              # (V, d_model)
+
+        if self.gat_layers and e_src:
+            eb = torch.tensor(e_b, device=dev)
+            etq = torch.tensor(e_t, device=dev)
+            edge_index = torch.tensor([e_src, e_dst], dtype=torch.long, device=dev)
+            onehot = F.one_hot(et[eb, etq], num_classes=5).to(pe.dtype)
+            edge_attr = torch.cat([onehot, mu[eb, etq]], dim=-1)[:, : self.cfg.edge_dim]
+            if edge_attr.shape[1] < self.cfg.edge_dim:
+                edge_attr = F.pad(edge_attr, (0, self.cfg.edge_dim - edge_attr.shape[1]))
+            t_end = (ts * mask).max(dim=1).values
+            edge_time = (t_end[eb] - ts[eb, etq]).clamp(min=0.0)
+            for layer in self.gat_layers:
+                z = z + layer(z, edge_index, edge_attr=edge_attr, edge_time=edge_time)
+
+        node_win = torch.repeat_interleave(torch.arange(B, device=dev), n_nodes.to(dev))
+        mean = torch.zeros((B, z.shape[1]), device=dev, dtype=z.dtype).index_add_(0, node_win, z)
+        mean = mean / n_nodes.to(dev).clamp(min=1).unsqueeze(-1).to(z.dtype)
+        mx = torch.full((B, z.shape[1]), -1e4, device=dev, dtype=z.dtype).scatter_reduce(
+            0, node_win.unsqueeze(-1).expand_as(z), z, reduce="amax", include_self=True)
+        pooled = mean + mx
+        return {"logits": self.head(pooled), "agent_features": z, "token_features": h}
 
     def forward(
         self,
@@ -125,7 +206,9 @@ class MambaGuard(nn.Module):
         Returns dict with ``logits`` (A, num_classes) and ``agent_features``.
         """
         if "p" not in messages and "payload_emb" in messages:
-            # Batch produced by mambaguard.data.protocol_collate: one row per window.
+            # Batch produced by mambaguard.data.protocol_collate.
+            if self.cfg.readout == "graph" and "src_idx" in messages:
+                return self._forward_graph(messages)
             messages = {"p": messages["payload_emb"], "mu": messages["metadata"],
                         "mask": messages.get("attention_mask")}
         if graph is not None and not isinstance(graph, Mapping):
@@ -135,15 +218,9 @@ class MambaGuard(nn.Module):
         if p.dim() != 3 or mu.dim() != 3:
             raise ValueError("messages['p'] and ['mu'] must be (A, L, *) tensors")
 
-        h = self._encode_agent(p, mu)  # (A, L, d_model)
-
-        # Per-agent temporal pooling: mean over valid positions (or last token).
         mask = messages.get("mask")
-        if mask is not None:
-            m = mask.to(h.dtype).unsqueeze(-1)
-            z = (h * m).sum(dim=1) / m.sum(dim=1).clamp(min=1.0)
-        else:
-            z = h.mean(dim=1)            # (A, d_model)
+        h = self._encode_agent(p, mu, mask)  # (A, L, d_model)
+        z = self._masked_mean(h, mask)       # (A, d_model)
 
         if graph is not None and "edge_index" in graph:
             edge_index = graph["edge_index"]
@@ -163,6 +240,8 @@ class MambaGuard(nn.Module):
         # multiplies, but residual gives (1 + L_blk) per block).
         block_bound = 1.0
         for blk in self.blocks:
+            if not hasattr(blk, "lipschitz_bound"):
+                return float("inf")  # softmax attention is not globally Lipschitz
             lb = blk.lipschitz_bound()
             if lb == float("inf"):
                 return float("inf")

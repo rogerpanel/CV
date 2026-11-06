@@ -18,6 +18,8 @@ download commands, pinned commits and expected counts.
 """
 from __future__ import annotations
 
+from .agentdojo import available_models, load_agentdojo, load_agentdojo_episodes
+from .injecagent import load_injecagent, load_injecagent_episodes
 from .a2a_sandbox import generate_a2a_sandbox, load_a2a_sandbox, load_a2a_sandbox_episodes, write_a2a_sandbox
 from .common import Episode, episodes_from_jsonl, episodes_to_jsonl, flatten, split_episodes, summarise
 from .mcp_safetybench import load_mcp_safetybench, load_mcp_safetybench_episodes
@@ -29,9 +31,16 @@ EPISODE_LOADERS = {
     "mcp_safetybench": load_mcp_safetybench_episodes,
     "mcptox": load_mcptox_episodes,
     "a2a_sandbox": load_a2a_sandbox_episodes,
+    "agentdojo": load_agentdojo_episodes,
+    "injecagent": load_injecagent_episodes,
 }
 
 __all__ = [
+    "load_injecagent_episodes",
+    "load_injecagent",
+    "load_agentdojo_episodes",
+    "load_agentdojo",
+    "available_models",
     "Episode",
     "EPISODE_LOADERS",
     "episodes_from_jsonl",
