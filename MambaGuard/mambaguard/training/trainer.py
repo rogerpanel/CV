@@ -129,7 +129,8 @@ class MambaGuardTrainer:
         self.scheduler = build_scheduler(
             self.optimizer,
             num_steps=total_steps,
-            warmup_steps=int(_cfg_get(self.cfg, "warmup_steps", 500)),
+            # Short runs (small benchmarks, smoke tests) would otherwise never leave warmup.
+            warmup_steps=min(int(_cfg_get(self.cfg, "warmup_steps", 500)), max(1, total_steps // 10)),
         )
         self.scaler = torch.amp.GradScaler("cuda", enabled=(self.amp_dtype == torch.float16))
         os.makedirs(self.out_dir, exist_ok=True)
