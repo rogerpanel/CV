@@ -27,7 +27,12 @@ from .stackelberg import (
     default_utility_matrix,
 )
 from .hedge import HedgeDefender, run_hedge_defence
-from .certificate import CompositeCertificate, composed_certificate, report
+from .certificate import (
+    CompositeCertificate,
+    composed_certificate,
+    composed_certificate_v2,
+    report,
+)
 
 __all__ = [
     # Lipschitz
@@ -49,5 +54,6 @@ __all__ = [
     # Composed certificate
     "CompositeCertificate",
     "composed_certificate",
+    "composed_certificate_v2",
     "report",
 ]

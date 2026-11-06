@@ -35,9 +35,18 @@ def composed_certificate(
     T: int,
     num_actions: int,
 ) -> float:
-    """Return the RHS of the composed-certificate inequality.
+    """DEPRECATED (S&P 2027 audit C.3): dimensionally inconsistent.
 
-        V* − L_f·ε − B·sqrt(ln|A_D|/(2T)).
+    This function subtracts ``L_f * epsilon`` (a logit-space Lipschitz
+    quantity) from a utility-valued quantity ``V*``. Use
+    :func:`composed_certificate_v2`, which replaces the Lipschitz gap by
+    ``B * Pr[~C_eps] = B * (1 - CertAcc(eps))`` coming from a
+    Cohen-style smoothing certificate and adds a Monte-Carlo failure
+    term ``B * alpha_MC``.
+
+    Kept for backward compatibility of the legacy driver.
+
+        V* - L_f*eps - B*sqrt(ln|A_D|/(2T)).
 
     Parameters
     ----------
@@ -67,6 +76,62 @@ def composed_certificate(
     robustness_gap = L_f * epsilon
     online_gap = B * math.sqrt(math.log(num_actions) / (2.0 * T))
     return V_star - robustness_gap - online_gap
+
+
+# ------------------------------------------------------------------ #
+# Dimensionally consistent v2 (S&P 2027 audit C.3)                   #
+# ------------------------------------------------------------------ #
+def composed_certificate_v2(
+    V_star: float,
+    cert_acc: float,
+    B: float,
+    T: int,
+    num_actions: int,
+    alpha_mc: float = 1e-3,
+) -> float:
+    """Dimensionally-consistent composed certificate.
+
+        E[V_ach] >= V*  -  B * Pr[~C_eps]
+                        -  B * sqrt(ln|A_D| / (2T))
+                        -  B * alpha_MC
+
+    where ``Pr[~C_eps] = 1 - cert_acc(eps)`` is the fraction of inputs
+    for which the Cohen-style randomised-smoothing certificate fails to
+    certify at radius epsilon, and ``alpha_MC`` is the Monte-Carlo
+    failure probability of the smoothing procedure itself.
+
+    Parameters
+    ----------
+    V_star : float
+        Strong Stackelberg equilibrium value in utility units (same
+        units as B).
+    cert_acc : float
+        CertAcc(epsilon): fraction of test points correctly certified at
+        the chosen epsilon. Must lie in [0, 1].
+    B : float
+        Per-round utility range; losses/utilities are bounded in [0, B].
+    T : int
+        Online-defence horizon (Hedge rounds).
+    num_actions : int
+        Cardinality of the defender action set.
+    alpha_mc : float
+        Monte-Carlo failure probability of the smoothing certificate
+        (default 1e-3, matching Cohen et al. 2019).
+    """
+    if not 0.0 <= cert_acc <= 1.0:
+        raise ValueError(f"cert_acc must be in [0, 1], got {cert_acc}")
+    if B < 0:
+        raise ValueError(f"B must be >= 0, got {B}")
+    if T <= 0:
+        raise ValueError(f"T must be positive, got {T}")
+    if num_actions < 2:
+        raise ValueError(f"num_actions must be >= 2, got {num_actions}")
+    if not 0.0 <= alpha_mc <= 1.0:
+        raise ValueError(f"alpha_mc must be in [0, 1], got {alpha_mc}")
+    robustness_gap = B * (1.0 - cert_acc)
+    online_gap = B * math.sqrt(math.log(num_actions) / (2.0 * T))
+    mc_gap = B * alpha_mc
+    return V_star - robustness_gap - online_gap - mc_gap
 
 
 # ------------------------------------------------------------------ #

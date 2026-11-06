@@ -1,0 +1,497 @@
+{
+  "hedge_corrected": {
+    "num_actions": 5,
+    "B": 1.0,
+    "eta_formula": "sqrt(8 ln N / T) / B",
+    "bound_formula": "B * sqrt((T/2) ln N)",
+    "runs": [
+      {
+        "T": 1000,
+        "eta": 0.11347027495988896,
+        "empirical_regret": 10.012044102819516,
+        "theoretical_bound_cum": 28.36756873997224,
+        "avg_empirical_regret": 0.010012044102819516,
+        "avg_theoretical_bound": 0.02836756873997224,
+        "empirical_le_theoretical": true
+      },
+      {
+        "T": 5000,
+        "eta": 0.050745449647180786,
+        "empirical_regret": 37.564480299384286,
+        "theoretical_bound_cum": 63.43181205897598,
+        "avg_empirical_regret": 0.007512896059876857,
+        "avg_theoretical_bound": 0.012686362411795197,
+        "empirical_le_theoretical": true
+      },
+      {
+        "T": 10000,
+        "eta": 0.035882451559882025,
+        "empirical_regret": 43.128627126906395,
+        "theoretical_bound_cum": 89.70612889970508,
+        "avg_empirical_regret": 0.00431286271269064,
+        "avg_theoretical_bound": 0.008970612889970506,
+        "empirical_le_theoretical": true
+      },
+      {
+        "T": 50000,
+        "eta": 0.016047120177447916,
+        "empirical_regret": 81.85057781330033,
+        "theoretical_bound_cum": 200.58900221809895,
+        "avg_empirical_regret": 0.0016370115562660066,
+        "avg_theoretical_bound": 0.004011780044361979,
+        "empirical_le_theoretical": true
+      }
+    ]
+  },
+  "cohen_smoothing": {
+    "num_points": 32,
+    "num_classes": 34,
+    "spec_cap": 0.5,
+    "note": "MambaGuard with per-layer spectral cap 0.5. n reduced from 10^5 spec to 10^3 for CPU runtime budget; a GPU run should use n>=10^4.",
+    "per_sigma": {
+      "sigma_0.05": {
+        "sigma": 0.05,
+        "n0": 50,
+        "n": 1000,
+        "alpha": 0.001,
+        "abstain_rate": 0.0625,
+        "cert_acc_curve": [
+          {
+            "radius": 0.0,
+            "cert_acc": 0.9375
+          },
+          {
+            "radius": 0.02,
+            "cert_acc": 0.90625
+          },
+          {
+            "radius": 0.05,
+            "cert_acc": 0.84375
+          },
+          {
+            "radius": 0.1,
+            "cert_acc": 0.71875
+          },
+          {
+            "radius": 0.25,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 0.5,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 0.75,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 1.0,
+            "cert_acc": 0.0
+          }
+        ],
+        "median_radius_non_abstain": 0.12316313073904057
+      },
+      "sigma_0.1": {
+        "sigma": 0.1,
+        "n0": 50,
+        "n": 1000,
+        "alpha": 0.001,
+        "abstain_rate": 0.09375,
+        "cert_acc_curve": [
+          {
+            "radius": 0.0,
+            "cert_acc": 0.90625
+          },
+          {
+            "radius": 0.02,
+            "cert_acc": 0.875
+          },
+          {
+            "radius": 0.05,
+            "cert_acc": 0.84375
+          },
+          {
+            "radius": 0.1,
+            "cert_acc": 0.71875
+          },
+          {
+            "radius": 0.25,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 0.5,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 0.75,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 1.0,
+            "cert_acc": 0.0
+          }
+        ],
+        "median_radius_non_abstain": 0.24632626147808115
+      },
+      "sigma_0.25": {
+        "sigma": 0.25,
+        "n0": 50,
+        "n": 1000,
+        "alpha": 0.001,
+        "abstain_rate": 0.21875,
+        "cert_acc_curve": [
+          {
+            "radius": 0.0,
+            "cert_acc": 0.78125
+          },
+          {
+            "radius": 0.02,
+            "cert_acc": 0.75
+          },
+          {
+            "radius": 0.05,
+            "cert_acc": 0.6875
+          },
+          {
+            "radius": 0.1,
+            "cert_acc": 0.65625
+          },
+          {
+            "radius": 0.25,
+            "cert_acc": 0.5
+          },
+          {
+            "radius": 0.5,
+            "cert_acc": 0.15625
+          },
+          {
+            "radius": 0.75,
+            "cert_acc": 0.0
+          },
+          {
+            "radius": 1.0,
+            "cert_acc": 0.0
+          }
+        ],
+        "median_radius_non_abstain": 0.32267481167487677
+      },
+      "sigma_0.5": {
+        "sigma": 0.5,
+        "n0": 50,
+        "n": 1000,
+        "alpha": 0.001,
+        "abstain_rate": 0.4375,
+        "cert_acc_curve": [
+          {
+            "radius": 0.0,
+            "cert_acc": 0.5625
+          },
+          {
+            "radius": 0.02,
+            "cert_acc": 0.5625
+          },
+          {
+            "radius": 0.05,
+            "cert_acc": 0.5
+          },
+          {
+            "radius": 0.1,
+            "cert_acc": 0.4375
+          },
+          {
+            "radius": 0.25,
+            "cert_acc": 0.3125
+          },
+          {
+            "radius": 0.5,
+            "cert_acc": 0.15625
+          },
+          {
+            "radius": 0.75,
+            "cert_acc": 0.0625
+          },
+          {
+            "radius": 1.0,
+            "cert_acc": 0.0
+          }
+        ],
+        "median_radius_non_abstain": 0.26657397907042746
+      }
+    },
+    "cert_acc_summary": [
+      {
+        "radius": 0.0,
+        "cert_acc": 0.78125
+      },
+      {
+        "radius": 0.02,
+        "cert_acc": 0.75
+      },
+      {
+        "radius": 0.05,
+        "cert_acc": 0.6875
+      },
+      {
+        "radius": 0.1,
+        "cert_acc": 0.65625
+      },
+      {
+        "radius": 0.25,
+        "cert_acc": 0.5
+      },
+      {
+        "radius": 0.5,
+        "cert_acc": 0.15625
+      },
+      {
+        "radius": 0.75,
+        "cert_acc": 0.0
+      },
+      {
+        "radius": 1.0,
+        "cert_acc": 0.0
+      }
+    ]
+  },
+  "composed_certificate_v2": {
+    "V_star": 1.0,
+    "B": 1.0,
+    "T": 10000,
+    "num_actions": 5,
+    "alpha_mc": 0.001,
+    "formula": "V* - B*(1 - CertAcc(eps)) - B*sqrt(ln N / 2T) - B*alpha_MC",
+    "sweep": [
+      {
+        "radius": 0.0,
+        "cert_acc": 0.78125,
+        "lower_bound_v2": 0.7712793871100295
+      },
+      {
+        "radius": 0.02,
+        "cert_acc": 0.75,
+        "lower_bound_v2": 0.7400293871100295
+      },
+      {
+        "radius": 0.05,
+        "cert_acc": 0.6875,
+        "lower_bound_v2": 0.6775293871100295
+      },
+      {
+        "radius": 0.1,
+        "cert_acc": 0.65625,
+        "lower_bound_v2": 0.6462793871100295
+      },
+      {
+        "radius": 0.25,
+        "cert_acc": 0.5,
+        "lower_bound_v2": 0.49002938711002947
+      },
+      {
+        "radius": 0.5,
+        "cert_acc": 0.15625,
+        "lower_bound_v2": 0.1462793871100295
+      },
+      {
+        "radius": 0.75,
+        "cert_acc": 0.0,
+        "lower_bound_v2": -0.009970612889970507
+      },
+      {
+        "radius": 1.0,
+        "cert_acc": 0.0,
+        "lower_bound_v2": -0.009970612889970507
+      }
+    ]
+  },
+  "empirical_lipschitz": {
+    "spec_cap": 0.5,
+    "analytic_upper_bound_L_f_composed_block_product": 0.022940287484954875,
+    "analytic_upper_bound_L_f_top_level_residual": 3.0931182119710434,
+    "empirical_lower_bound_L_f": 0.08268231898546219,
+    "looseness_ratio_composed_over_empirical": 0.27745094436681683,
+    "looseness_ratio_top_over_empirical": 37.40966932138053,
+    "note": "The composed-block-product bound omits the input projection and assumes direct block composition; the top-level residual bound includes W_in and uses (1 + L_blk) per residual block. For a sound upper bound, cite the top-level value.",
+    "detail": {
+      "empirical_L_lower": 0.08268231898546219,
+      "best_delta_norm": 0.9999999403953552,
+      "best_output_shift": 0.08268231153488159,
+      "n_steps": 120,
+      "n_restarts": 3,
+      "lr": 0.02,
+      "bound": 1.0,
+      "per_restart_best": [
+        0.08268231898546219,
+        0.08268231898546219,
+        0.08268231898546219
+      ]
+    }
+  },
+  "latency_harmonised": {
+    "device": "cpu",
+    "seq_len": 16,
+    "canonicalisation_ms": 1.0,
+    "streaming_batch_1": {
+      "iters": 1000,
+      "warmup": 50,
+      "median_ms": 6.741698500036364,
+      "p99_ms": 13.565632010077024,
+      "per_message_latency_ms": 7.741698500036364,
+      "note": "end-to-end incl. 1 ms canonicalisation placeholder"
+    },
+    "batch_sweep": [
+      {
+        "batch_size": 1,
+        "batch_latency_ms_mean": 7.024289074973922,
+        "batch_latency_ms_p50": 6.771119499944689,
+        "per_message_latency_ms": 6.771119499944689,
+        "throughput_msg_per_s": 142.36316149954473
+      },
+      {
+        "batch_size": 2,
+        "batch_latency_ms_mean": 10.152749075001566,
+        "batch_latency_ms_p50": 9.798608999858516,
+        "per_message_latency_ms": 4.899304499929258,
+        "throughput_msg_per_s": 196.99098098705758
+      },
+      {
+        "batch_size": 4,
+        "batch_latency_ms_mean": 15.56709060000685,
+        "batch_latency_ms_p50": 15.353594500084,
+        "per_message_latency_ms": 3.838398625021,
+        "throughput_msg_per_s": 256.95231708860484
+      },
+      {
+        "batch_size": 8,
+        "batch_latency_ms_mean": 23.932760374998452,
+        "batch_latency_ms_p50": 23.926548000076764,
+        "per_message_latency_ms": 2.9908185000095955,
+        "throughput_msg_per_s": 334.26984078097666
+      },
+      {
+        "batch_size": 16,
+        "batch_latency_ms_mean": 86.37719907501946,
+        "batch_latency_ms_p50": 81.82229650003592,
+        "per_message_latency_ms": 5.113893531252245,
+        "throughput_msg_per_s": 185.2340683807522
+      },
+      {
+        "batch_size": 32,
+        "batch_latency_ms_mean": 216.17424292501823,
+        "batch_latency_ms_p50": 215.19232699995428,
+        "per_message_latency_ms": 6.724760218748571,
+        "throughput_msg_per_s": 148.02873629630082
+      },
+      {
+        "batch_size": 64,
+        "batch_latency_ms_mean": 501.3177125250251,
+        "batch_latency_ms_p50": 500.88546699998915,
+        "per_message_latency_ms": 7.8263354218748304,
+        "throughput_msg_per_s": 127.6635522763525
+      },
+      {
+        "batch_size": 128,
+        "batch_latency_ms_mean": 1009.8938990750015,
+        "batch_latency_ms_p50": 1007.6780005000501,
+        "per_message_latency_ms": 7.872484378906641,
+        "throughput_msg_per_s": 126.74598798669825
+      }
+    ],
+    "best_throughput": {
+      "batch_size": 8,
+      "throughput": 334.26984078097666,
+      "per_message_latency_ms": 2.9908185000095955
+    },
+    "crossover_batch_size": 1,
+    "identity": "per_msg_at_batch_B = batch_latency_at_B / B"
+  },
+  "sparse_smoothing": {
+    "n_nodes": 10,
+    "p_plus": 0.05,
+    "p_minus": 0.05,
+    "n_samples": 1000,
+    "result": {
+      "predicted_class": 1,
+      "k_add": 2,
+      "k_del": 2,
+      "n_samples": 1000,
+      "p_plus": 0.05,
+      "p_minus": 0.05,
+      "nA": 1000,
+      "nB": 0,
+      "pA_lower": 0.9931160484209338,
+      "abstain": false
+    }
+  },
+  "embed_pgd_asr": {
+    "num_samples": 16,
+    "seq_len": 8,
+    "embed_pgd_sweep": [
+      {
+        "epsilon": 0.01,
+        "steps": 40,
+        "eot_sigma": 0.05,
+        "eot_samples": 4,
+        "asr": 0.0,
+        "mean_delta_norm": 0.009999994188547134,
+        "max_delta_norm": 0.010000040754675865
+      },
+      {
+        "epsilon": 0.05,
+        "steps": 40,
+        "eot_sigma": 0.05,
+        "eot_samples": 4,
+        "asr": 0.0,
+        "mean_delta_norm": 0.04999999701976776,
+        "max_delta_norm": 0.05000003054738045
+      },
+      {
+        "epsilon": 0.1,
+        "steps": 40,
+        "eot_sigma": 0.05,
+        "eot_samples": 4,
+        "asr": 0.0625,
+        "mean_delta_norm": 0.10000000149011612,
+        "max_delta_norm": 0.1000000610947609
+      },
+      {
+        "epsilon": 0.2,
+        "steps": 40,
+        "eot_sigma": 0.05,
+        "eot_samples": 4,
+        "asr": 0.125,
+        "mean_delta_norm": 0.20000001788139343,
+        "max_delta_norm": 0.2000000774860382
+      }
+    ],
+    "token_gcg_scaffold": {
+      "required_plugins": [
+        "token_embedder",
+        "substitution_loss",
+        "projection_step"
+      ],
+      "was_noop": true
+    }
+  },
+  "metadata": {
+    "python": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v242-x86_64-with-glibc2.39",
+    "torch": "2.15.0+cu132",
+    "numpy": "2.5.3",
+    "missing_dependencies": [],
+    "known_absent": [
+      "mamba_ssm",
+      "torch_geometric",
+      "sentence_transformers"
+    ],
+    "measurement_provenance": {
+      "hedge_corrected": "real (pure numpy, no model)",
+      "cohen_smoothing": "real MambaGuard model with spec-cap 0.5, CPU",
+      "composed_certificate_v2": "formula only; reuses cohen_smoothing CertAcc(eps)",
+      "empirical_lipschitz": "real MambaGuard model with spec-cap 0.5, CPU",
+      "latency_harmonised": "real MambaGuard model, CPU only (no GPU available)",
+      "sparse_smoothing": "tiny TinyEdgeNet proxy (NOT MambaGuard)",
+      "embed_pgd_asr": "real MambaGuard model (capped); labels = clean predictions",
+      "token_gcg": "scaffold; token_embedder etc. not provided in this sandbox"
+    }
+  }
+}

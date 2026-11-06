@@ -1,23 +1,33 @@
 """Hedge / multiplicative-weights online defence (Algorithm 1 in the paper).
 
-Reference (paper Section: Online Defence):
+S&P 2027 audit (Part C.1) correction
+------------------------------------
+The previous tuning used ``eta = sqrt(2 ln N / T)`` while claiming the
+bound ``R_T <= B * sqrt((T/2) * ln N)``. That eta is the tuning for
+losses in [0, 1]; for losses in [0, B] the step size must be scaled by
+1/B so that the Hoeffding exponential inequality
+``exp(-eta L) <= 1 - eta L + (eta B)^2 L / 8`` produces the standard
+Cesa-Bianchi--Lugosi bound. The correct fixed-horizon tuning is
 
-    Algorithm 1 — Multiplicative-weights Hedge
-    ------------------------------------------
-    Initialise w_1(s) = 1 for all s ∈ A_D
-    η = sqrt(2 · ln|A_D| / T)
+    eta  = sqrt(8 * ln N / T) / B,
+    R_T <= B * sqrt((T/2) * ln N).
+
+For an anytime version one uses eta_t = sqrt(8 * ln N / t) / B giving
+``R_T <= B * (sqrt(2 T ln N) + ln N / 8)``.
+
+    Algorithm 1 -- Multiplicative-weights Hedge
+    -------------------------------------------
+    Initialise w_1(s) = 1 for all s in A_D
+    eta = sqrt(8 ln N / T) / B
     For t = 1..T:
-        observe game state G(t)
-        compute attacker scores via MambaGuard
-        sample s_t ~ p_t(s) = w_t(s) / Σ_{s'} w_t(s')
-        observe loss ℓ_t(s) ∈ [0, B]
-        w_{t+1}(s) = w_t(s) · exp(−η · ℓ_t(s))
+        sample s_t ~ p_t(s) = w_t(s) / Z_t
+        observe loss l_t(s) in [0, B]
+        w_{t+1}(s) = w_t(s) * exp(-eta * l_t(s))
 
-Tight regret bound (Cesa-Bianchi & Lugosi, *Prediction, Learning, and
-Games*, 2006, Theorem 2.2 / Corollary 4.2):
+Tight regret bound (Cesa-Bianchi & Lugosi 2006, Theorem 2.2/Cor 4.2):
 
-    R(T) ≤ B · sqrt((T/2) · ln|A_D|)
-    R(T)/T ≤ B · sqrt(ln|A_D| / (2T))   (average regret → 0).
+    R(T)   <= B * sqrt((T/2) * ln N)
+    R(T)/T <= B * sqrt(ln N / (2T))     (average regret -> 0).
 """
 from __future__ import annotations
 
@@ -54,8 +64,9 @@ class HedgeDefender:
         self.actions: list[str] = list(actions)
         self.horizon: int = int(horizon)
         self.B: float = float(B)
-        # η chosen to minimise the standard regret bound; see CBL 2006 §2.
-        self.eta: float = math.sqrt(2.0 * math.log(len(self.actions)) / self.horizon)
+        # eta chosen to minimise the CBL 2006 regret bound for losses in [0, B].
+        # Corrected per S&P 2027 audit (Part C.1): the 1/B scaling was missing.
+        self.eta: float = math.sqrt(8.0 * math.log(len(self.actions)) / self.horizon) / self.B
         self.weights: np.ndarray = np.ones(len(self.actions), dtype=float)
         self._t: int = 0  # round counter
 
