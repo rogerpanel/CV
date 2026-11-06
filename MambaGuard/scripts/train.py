@@ -198,6 +198,7 @@ def main(argv: list[str] | None = None) -> int:
 
     model_cfg = cfg.setdefault("model", {})
     model_cfg["d_metadata"] = len(DEFAULT_METADATA_SCHEMA)  # width produced by protocol_collate
+    model_cfg["edge_dim"] = 5 + len(DEFAULT_METADATA_SCHEMA)  # edge type one-hot + metadata
     labels = {m.label for m in train_msgs + val_msgs if m.label is not None}
     if labels and labels <= {0, 1}:
         model_cfg["num_classes"] = 2  # binary attack/benign benchmarks
