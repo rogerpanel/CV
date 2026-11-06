@@ -38,7 +38,7 @@ class TrainerConfig:
     weight_decay: float = 1e-2
     warmup_steps: int = 500
     grad_clip: float = 1.0
-    amp_dtype: str = "bfloat16"
+    amp_dtype: str = "auto"
     monitor: str = "macro_f1"
     monitor_mode: str = "max"
     out_dir: str = "outputs/checkpoints"
@@ -58,9 +58,18 @@ def _cfg_get(cfg: Any, key: str, default: Any) -> Any:
 
 
 def _amp_dtype(name: str) -> torch.dtype:
-    return {"bfloat16": torch.bfloat16, "float16": torch.float16, "float32": torch.float32}.get(
-        str(name).lower(), torch.bfloat16
-    )
+    """Autocast dtype. ``auto`` uses bf16 only on GPUs that support it (A100/H100/L4)
+    and full precision otherwise (T4, P100); fp16 is opt-in."""
+    key = str(name).lower()
+    table = {"bfloat16": torch.bfloat16, "bf16": torch.bfloat16, "float16": torch.float16, "fp16": torch.float16,
+             "float32": torch.float32, "fp32": torch.float32, "none": torch.float32, "off": torch.float32}
+    if key in table:
+        return table[key]
+    if key == "auto":
+        if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+            return torch.bfloat16
+        return torch.float32
+    raise ValueError(f"unknown amp_dtype {name!r}")
 
 
 def _to_device(batch: Any, device: str | torch.device) -> Any:
@@ -105,7 +114,7 @@ class MambaGuardTrainer:
 
         self.epochs = int(_cfg_get(self.cfg, "epochs", 30))
         self.grad_clip = float(_cfg_get(self.cfg, "grad_clip", 1.0))
-        self.amp_dtype = _amp_dtype(str(_cfg_get(self.cfg, "amp_dtype", "bfloat16")))
+        self.amp_dtype = _amp_dtype(str(_cfg_get(self.cfg, "amp_dtype", "auto")))
         self.monitor = str(_cfg_get(self.cfg, "monitor", "macro_f1"))
         self.monitor_mode = str(_cfg_get(self.cfg, "monitor_mode", "max"))
         self.out_dir = str(_cfg_get(self.cfg, "out_dir", "outputs/checkpoints"))
@@ -155,7 +164,7 @@ class MambaGuardTrainer:
         batch = _to_device(batch, self.device)
         labels = _extract_labels(batch)
         self.optimizer.zero_grad(set_to_none=True)
-        amp_enabled = self.device.type == "cuda"
+        amp_enabled = self.device.type == "cuda" and self.amp_dtype != torch.float32
         with torch.amp.autocast(device_type=self.device.type, dtype=self.amp_dtype, enabled=amp_enabled):
             out = self.model(batch)
             logits = _extract_logits(out)
@@ -236,7 +245,7 @@ class MambaGuardTrainer:
             if self.device.type == "cuda":
                 torch.cuda.synchronize()
             ti = time.perf_counter()
-            with torch.amp.autocast(device_type=self.device.type, dtype=self.amp_dtype, enabled=self.device.type == "cuda"):
+            with torch.amp.autocast(device_type=self.device.type, dtype=self.amp_dtype, enabled=self.device.type == "cuda" and self.amp_dtype != torch.float32):
                 out = self.model(batch)
             if self.device.type == "cuda":
                 torch.cuda.synchronize()
@@ -286,7 +295,7 @@ class MambaGuardTrainer:
         torch.save(payload, path)
 
     def load(self, path: str, strict: bool = True) -> None:
-        payload = torch.load(path, map_location=self.device)
+        payload = torch.load(path, map_location=self.device, weights_only=False)
         self.model.load_state_dict(payload["model"], strict=strict)
         if "optimizer" in payload:
             self.optimizer.load_state_dict(payload["optimizer"])

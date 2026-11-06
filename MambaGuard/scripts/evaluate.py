@@ -55,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
 
     logger = get_logger("mambaguard.eval")
     logger.info("Loading checkpoint %s", args.checkpoint)
-    ckpt = torch.load(args.checkpoint, map_location="cpu")
+    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     cfg = ckpt.get("config", {})
     model = MambaGuard.from_config(cfg.get("model", cfg))
     model.load_state_dict(ckpt["model"])

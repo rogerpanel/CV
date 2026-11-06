@@ -1,0 +1,5 @@
+# Extra packages for a Kaggle GPU notebook.
+# Kaggle images already ship torch (with CUDA), numpy, scipy, scikit-learn,
+# pandas, pyyaml and networkx -- do NOT reinstall torch, it breaks the CUDA build.
+einops>=0.7
+sentence-transformers>=2.6

@@ -172,6 +172,14 @@ mambaguard-certify --config-name=certify \
 
 Each command accepts standard [Hydra](https://hydra.cc) overrides; the configuration tree lives under `configs/`.
 
+### GPU study on Kaggle
+
+[`kaggle/KAGGLE_GUIDE.md`](kaggle/KAGGLE_GUIDE.md) walks through running the
+full benchmark study (5 benchmarks × 3 seeds, ablations, certificates,
+latency) in a free Kaggle GPU notebook (`kaggle/mambaguard_kaggle.ipynb`) and
+summarising the returned `results.zip` with
+`scripts/summarise_kaggle_results.py`.
+
 ---
 
 ## Repository layout

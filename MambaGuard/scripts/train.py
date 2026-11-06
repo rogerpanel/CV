@@ -242,7 +242,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.resume:
         logger.info("Resuming from %s", args.resume)
-        ckpt = torch.load(args.resume, map_location="cpu")
+        ckpt = torch.load(args.resume, map_location="cpu", weights_only=False)
         model.load_state_dict(ckpt["model"])
 
     logger.info("Starting training")

@@ -30,7 +30,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # pragma: no cover
         raise RuntimeError(f"mambaguard import failed: {exc}") from exc
 
-    ckpt = torch.load(args.checkpoint, map_location="cpu")
+    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     cfg = ckpt.get("config", {})
     model = MambaGuard.from_config(cfg)
     model.load_state_dict(ckpt["model"])

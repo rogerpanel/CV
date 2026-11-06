@@ -508,6 +508,8 @@ class ProtocolMessageDataset(_TorchDataset):  # type: ignore[misc, valid-type]
         if compute_embeddings and canonicaliser is not None:
             payloads = [m.payload for m in self.messages]
             emb = canonicaliser.encode_batch(payloads)
+            if hasattr(emb, "detach"):
+                emb = emb.detach().float().cpu()
             for i, m in enumerate(self.messages):
                 m.payload_emb = emb[i]
         self._bounds: list[tuple[int, int]] = []

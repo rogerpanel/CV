@@ -50,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     from mambaguard.models import MambaGuard
 
-    ckpt = torch.load(args.checkpoint, map_location="cpu")
+    ckpt = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
     cfg = ckpt.get("config", {})
     model = MambaGuard.from_config(cfg.get("model", cfg))
     model.load_state_dict(ckpt["model"])
