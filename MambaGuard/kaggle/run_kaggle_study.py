@@ -79,7 +79,7 @@ def env_info(args: argparse.Namespace) -> dict[str, Any]:
         "python": platform.python_version(), "torch": torch.__version__,
         "cuda": torch.version.cuda, "device": args.device,
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
-        "bf16": bool(torch.cuda.is_available() and torch.cuda.is_bf16_supported()),
+        "bf16_native": bool(torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8),
         "encoder": args.encoder, "seeds": args.seeds, "balance": args.balance,
         "started": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -197,8 +197,9 @@ def tune_threshold(y: np.ndarray, p: np.ndarray) -> float:
     if len(np.unique(y)) < 2:
         return 0.5
     grid = np.unique(np.concatenate([np.linspace(0.01, 0.99, 99), p]))
-    scores = [f1_score(y, (p >= t).astype(int), average="macro", zero_division=0) for t in grid]
-    return float(grid[int(np.argmax(scores))])
+    scores = np.array([f1_score(y, (p >= t).astype(int), average="macro", zero_division=0) for t in grid])
+    best = grid[scores >= scores.max() - 1e-12]  # ties: take the middle of the best range, not its lowest end
+    return float(np.median(best))
 
 
 def bootstrap_ci(y: np.ndarray, p: np.ndarray, thr: float, n: int = 1000, seed: int = 0) -> dict[str, list[float]]:

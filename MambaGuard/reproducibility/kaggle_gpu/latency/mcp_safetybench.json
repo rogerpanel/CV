@@ -1,0 +1,30 @@
+{
+  "benchmark": "mcp_safetybench",
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 7,
+      "median_batch_ms": 8.866082999702485,
+      "p99_batch_ms": 9.829554369080144,
+      "per_message_ms": 1.2665832856717836,
+      "messages_per_s": 789.5256563958285
+    },
+    "8": {
+      "windows": 8,
+      "messages": 54,
+      "median_batch_ms": 11.455727999418741,
+      "p99_batch_ms": 12.15546677938619,
+      "per_message_ms": 0.21214311110034706,
+      "messages_per_s": 4713.799070887501
+    },
+    "32": {
+      "windows": 32,
+      "messages": 179,
+      "median_batch_ms": 31.35746000043582,
+      "p99_batch_ms": 32.7369548702336,
+      "per_message_ms": 0.17518134078455766,
+      "messages_per_s": 5708.370512073113
+    }
+  }
+}

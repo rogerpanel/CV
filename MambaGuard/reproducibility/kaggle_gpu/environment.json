@@ -1,0 +1,19 @@
+{
+  "python": "3.13.16",
+  "torch": "2.11.0+cu130",
+  "cuda": "13.0",
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "bf16": true,
+  "encoder": "minilm",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "balance": true,
+  "started": "2026-11-07 12:11:41",
+  "code_commit": "c51933621c047b7fe9a5b8e0e430fed6f006a832",
+  "sentence_transformers": "5.7.0",
+  "finished": "2026-11-07 16:09:41"
+}

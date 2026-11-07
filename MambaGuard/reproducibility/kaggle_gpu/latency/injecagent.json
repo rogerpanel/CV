@@ -1,0 +1,38 @@
+{
+  "benchmark": "injecagent",
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 5,
+      "median_batch_ms": 8.339146499565686,
+      "p99_batch_ms": 9.39803359897269,
+      "per_message_ms": 1.6678292999131372,
+      "messages_per_s": 599.5817437984099
+    },
+    "8": {
+      "windows": 8,
+      "messages": 40,
+      "median_batch_ms": 9.34381899969594,
+      "p99_batch_ms": 10.196329518748827,
+      "per_message_ms": 0.23359547499239852,
+      "messages_per_s": 4280.904842153048
+    },
+    "32": {
+      "windows": 32,
+      "messages": 160,
+      "median_batch_ms": 18.693371500376088,
+      "p99_batch_ms": 19.455967219655577,
+      "per_message_ms": 0.11683357187735055,
+      "messages_per_s": 8559.183665545886
+    },
+    "128": {
+      "windows": 128,
+      "messages": 640,
+      "median_batch_ms": 62.55779450020782,
+      "p99_batch_ms": 65.35083283910355,
+      "per_message_ms": 0.09774655390657472,
+      "messages_per_s": 10230.53969714156
+    }
+  }
+}

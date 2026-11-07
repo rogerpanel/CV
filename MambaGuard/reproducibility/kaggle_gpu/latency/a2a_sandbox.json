@@ -1,0 +1,38 @@
+{
+  "benchmark": "a2a_sandbox",
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 8,
+      "median_batch_ms": 8.499295499859727,
+      "p99_batch_ms": 10.212594219283348,
+      "per_message_ms": 1.0624119374824659,
+      "messages_per_s": 941.254483990118
+    },
+    "8": {
+      "windows": 8,
+      "messages": 70,
+      "median_batch_ms": 10.277857500113896,
+      "p99_batch_ms": 11.920184469872765,
+      "per_message_ms": 0.1468265357159128,
+      "messages_per_s": 6810.757981342345
+    },
+    "32": {
+      "windows": 32,
+      "messages": 238,
+      "median_batch_ms": 26.420043000143778,
+      "p99_batch_ms": 28.208759199442287,
+      "per_message_ms": 0.11100858403421755,
+      "messages_per_s": 9008.31236340928
+    },
+    "128": {
+      "windows": 128,
+      "messages": 1106,
+      "median_batch_ms": 127.69445350022579,
+      "p99_batch_ms": 131.80791499957198,
+      "per_message_ms": 0.11545610623890216,
+      "messages_per_s": 8661.300234140901
+    }
+  }
+}

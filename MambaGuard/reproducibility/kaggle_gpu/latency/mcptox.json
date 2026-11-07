@@ -1,0 +1,38 @@
+{
+  "benchmark": "mcptox",
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 3,
+      "median_batch_ms": 8.401783000408614,
+      "p99_batch_ms": 12.5720674494005,
+      "per_message_ms": 2.800594333469538,
+      "messages_per_s": 357.06706539006035
+    },
+    "8": {
+      "windows": 8,
+      "messages": 24,
+      "median_batch_ms": 8.481000500069058,
+      "p99_batch_ms": 9.622380359651288,
+      "per_message_ms": 0.35337502083621075,
+      "messages_per_s": 2829.854803074776
+    },
+    "32": {
+      "windows": 32,
+      "messages": 96,
+      "median_batch_ms": 13.833264499226061,
+      "p99_batch_ms": 15.025082620832112,
+      "per_message_ms": 0.14409650520027148,
+      "messages_per_s": 6939.793568276742
+    },
+    "128": {
+      "windows": 128,
+      "messages": 384,
+      "median_batch_ms": 43.254650499875424,
+      "p99_batch_ms": 45.044264230709814,
+      "per_message_ms": 0.11264231901009225,
+      "messages_per_s": 8877.65813761704
+    }
+  }
+}

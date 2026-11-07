@@ -66,7 +66,9 @@ def _amp_dtype(name: str) -> torch.dtype:
     if key in table:
         return table[key]
     if key == "auto":
-        if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+        # native bf16 only (Ampere, compute capability >= 8); T4 reports
+        # bf16 as "supported" through slow emulation, so it gets fp32
+        if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
             return torch.bfloat16
         return torch.float32
     raise ValueError(f"unknown amp_dtype {name!r}")

@@ -27,6 +27,11 @@ rm -f  "$A/scripts/run_v4_experiments.py" "$A/scripts/reproduce_table.py" \
        "$A/reproducibility/experiments.json" "$A/reproducibility/REPRODUCE.md" \
        "$A/reproducibility/ARTIFACTS.md" "$A/reproducibility/HARDWARE.md" \
        "$A/reproducibility/DATASETS_DOWNLOAD.sh" "$A/CITATION.cff"
+# Kaggle notebook/guide name the code host; keep only the runner and its helpers.
+rm -rf "$A/kaggle/results" "$A/kaggle/dist"
+rm -f  "$A/kaggle/mambaguard_kaggle.ipynb" "$A/kaggle/KAGGLE_GUIDE.md" "$A/kaggle/build_kaggle_package.sh"
+# A commit hash of the source repository would identify it.
+find "$A/reproducibility" -name '*.json' -exec sed -i -E 's/"code_commit": *"[0-9a-f]+"/"code_commit": null/' {} +
 
 echo "== scrub identifying strings"
 # Platform-specific taxonomy and dataset names.

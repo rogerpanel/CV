@@ -1,0 +1,37 @@
+{
+  "a2a_sandbox": {
+    "n_test": 660,
+    "benign_test": 330,
+    "macro_f1_at_0.5": 0.9515133705553922,
+    "macro_f1_val_threshold": 0.9515111441716946,
+    "auroc": 0.9952800734618916
+  },
+  "mcptox": {
+    "n_test": 265,
+    "benign_test": 70,
+    "macro_f1_at_0.5": 0.8901326699834162,
+    "macro_f1_val_threshold": 0.8446741620930356,
+    "auroc": 0.9114285714285715
+  },
+  "mcp_safetybench": {
+    "n_test": 59,
+    "benign_test": 24,
+    "macro_f1_at_0.5": 0.8595238095238096,
+    "macro_f1_val_threshold": 0.8801161103047896,
+    "auroc": 0.9345238095238095
+  },
+  "agentdojo": {
+    "n_test": 104,
+    "benign_test": 14,
+    "macro_f1_at_0.5": 1.0,
+    "macro_f1_val_threshold": 1.0,
+    "auroc": 1.0
+  },
+  "injecagent": {
+    "n_test": 189,
+    "benign_test": 3,
+    "macro_f1_at_0.5": 0.8292682926829268,
+    "macro_f1_val_threshold": 1.0,
+    "auroc": 1.0
+  }
+}
