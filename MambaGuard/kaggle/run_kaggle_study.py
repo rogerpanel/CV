@@ -81,7 +81,7 @@ VARIANTS = {  # name: (model overrides, trainer overrides)
     "transformer": ({"backbone": "transformer"}, {}),
     "no_lipschitz": ({}, {"lipschitz_lambda": 0.0}),
 }
-MAIN_ENCODER = "chunk_lex"
+MAIN_ENCODER = "chunk_mil"  # chosen on MCPTox validation macro-F1 (0.766 vs 0.736 for chunk_lex)
 HELDOUT_AGENTDOJO_MODEL = "gpt-4o-2024-05-13"   # the only recorded model attacked with many templates
 AGENTDOJO_CAP = {"train": 100, "val": 25, "test": 40}  # attack episodes per family per split (held-out study)
 

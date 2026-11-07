@@ -14,13 +14,17 @@ tables.
 
 ## What changed since the first run
 
-1. **Payload encoder.** Each message is now split into chunks (one per tool in
-   a tool list, one per short run of sentences in long text, plus one
-   structural header chunk). Every chunk is embedded with MiniLM, and the
-   message vector is `[mean of chunks | max of chunks | max of per-chunk hashed
-   word features]` (1,280 numbers instead of 384). Max pooling keeps a single
-   poisoned tool description or injected sentence from being averaged away.
-   Code: `mambaguard/data/chunked_encoder.py`.
+1. **Payload encoder.** Each message is split into chunks (one per tool in a
+   tool list, one per short run of sentences in long text, plus a structural
+   header chunk). Every chunk gets a MiniLM embedding and a hashed word vector.
+   The detector now scores *each chunk* with a small network and pools the
+   scores per message (max and mean: multiple-instance pooling), so one
+   poisoned tool description or one injected sentence can decide the message
+   instead of being averaged away. Code: `mambaguard/data/chunked_encoder.py`
+   and `MambaGuardConfig.chunk_dim`. This variant (`chunk_mil`) was chosen
+   over plain pooled chunks (`chunk_lex`) on MCPTox *validation* scores; the
+   encoder ablation reports all four (`minilm`, `chunk`, `chunk_lex`,
+   `chunk_mil`).
 2. **Held-out-template evaluation.** For each fold, the attacks written in one
    wording or family are removed from training and validation, and the test
    split contains only those attacks plus benign episodes from unseen groups.
@@ -33,7 +37,7 @@ tables.
 
 | Study | What runs | Estimated T4 time* |
 |---|---|---|
-| `main` | Chunked+lexical encoder × 5 benchmarks × seeds 0, 1, 2; lexical baseline; encoder ablation (one-vector MiniLM vs chunked MiniLM vs chunked+lexical) on MCPTox, MCP-SafetyBench, AgentDojo × seeds 0, 1; architecture ablation (5 variants) on A2A and MCPTox × seeds 0, 1; certificates; latency (detector *and* encoder) | ~5 h |
+| `main` | Chunk-scoring detector (`chunk_mil`) × 5 benchmarks × seeds 0, 1, 2; lexical baseline; encoder ablation (`minilm`, `chunk`, `chunk_lex`) on MCPTox, MCP-SafetyBench, AgentDojo × seeds 0, 1; architecture ablation (5 variants) on A2A and MCPTox × seeds 0, 1; certificates; latency (detector *and* encoder) | ~5 h |
 | `heldout` | Held-out folds, detector (seeds 0, 1; A2A seed 0) and lexical baseline: MCPTox by wording style (`important_tag`, `plain`, `ignore_previous`) and by paradigm (Template-1/2/3); AgentDojo by attack family (6 families, GPT-4o recorded runs, which are the only runs with many attack templates); InjecAgent by attacker case (4 groups); MCP-SafetyBench by attack family (4); A2A by vulnerability class (11, leave-one-finding-out) | ~2.5 h |
 
 \*Estimated from the first run's timings; the new encoder adds a few minutes
