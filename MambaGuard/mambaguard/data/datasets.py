@@ -598,7 +598,22 @@ def protocol_collate(batch: list[list[ProtocolMessage]]) -> dict[str, Any]:
             graph.add_message(m)
         labels[b] = win_label
 
+    out_chunks: dict[str, Any] = {}
+    chunk_lists = [[m.extras.get("chunk_emb") for m in w] for w in batch]
+    if batch and any(c is not None for cs in chunk_lists for c in cs):
+        d_c = next(c.shape[-1] for cs in chunk_lists for c in cs if c is not None)
+        K = max(int(c.shape[0]) for cs in chunk_lists for c in cs if c is not None)
+        chunk_emb = torch.zeros((B, T_max, K, d_c), dtype=torch.float32)
+        chunk_mask = torch.zeros((B, T_max, K), dtype=torch.bool)
+        for b, cs in enumerate(chunk_lists):
+            for t, c in enumerate(cs):
+                if c is not None and c.shape[0]:
+                    chunk_emb[b, t, : c.shape[0]] = c
+                    chunk_mask[b, t, : c.shape[0]] = True
+        out_chunks = {"chunk_emb": chunk_emb, "chunk_mask": chunk_mask}
+
     return {
+        **out_chunks,
         "payload_emb": payload_emb,
         "metadata": metadata,
         "edge_type": edge_type,

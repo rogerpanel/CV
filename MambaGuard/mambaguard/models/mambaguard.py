@@ -1,6 +1,8 @@
 """MambaGuard top-level model: SSM temporal backbone + temporal GATv2 + detection head."""
 from __future__ import annotations
 
+import math
+
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Mapping, Optional
 
@@ -47,6 +49,8 @@ class MambaGuardConfig:
     dt_max: float = 1e-1
     readout: str = "graph"          # "graph": per-agent SSM + temporal GATv2; "flat": window as one sequence
     backbone: str = "ssm"           # "ssm" (selective scan) or "transformer" (attention ablation)
+    chunk_dim: int = 0              # >0: per-chunk payload features are scored by a small MLP and
+    chunk_hidden: int = 128         #     max+mean pooled per message (multiple-instance pooling)
 
 
 class MambaGuard(nn.Module):
@@ -57,7 +61,11 @@ class MambaGuard(nn.Module):
         cfg = cfg or MambaGuardConfig()
         self.cfg = cfg
 
-        self.input_proj = nn.Linear(cfg.d_p + cfg.d_mu, cfg.d_model)
+        self.chunk_mlp = (nn.Sequential(nn.Linear(cfg.chunk_dim, cfg.chunk_hidden), nn.GELU(),
+                                        nn.Linear(cfg.chunk_hidden, cfg.chunk_hidden))
+                          if cfg.chunk_dim > 0 else None)
+        d_chunk_out = 2 * cfg.chunk_hidden if cfg.chunk_dim > 0 else 0
+        self.input_proj = nn.Linear(cfg.d_p + d_chunk_out + cfg.d_mu, cfg.d_model)
         self.input_norm = RMSNorm(cfg.d_model)
 
         # Stack of 4 selective SSM blocks with residual + RMSNorm (pre-norm Mamba layout).
@@ -205,6 +213,10 @@ class MambaGuard(nn.Module):
 
         Returns dict with ``logits`` (A, num_classes) and ``agent_features``.
         """
+        if self.chunk_mlp is not None and "chunk_emb" in messages:
+            messages = dict(messages)
+            messages["payload_emb"] = torch.cat(
+                [messages["payload_emb"], self._pool_chunks(messages["chunk_emb"], messages["chunk_mask"])], dim=-1)
         if "p" not in messages and "payload_emb" in messages:
             # Batch produced by mambaguard.data.protocol_collate.
             if self.cfg.readout == "graph" and "src_idx" in messages:
@@ -231,6 +243,20 @@ class MambaGuard(nn.Module):
 
         logits = self.head(z)
         return {"logits": logits, "agent_features": z, "token_features": h}
+
+    def _pool_chunks(self, chunks: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        """(B, T, K, d_c) chunk features -> (B, T, 2H): max and mean of per-chunk MLP scores.
+
+        Both poolings are 1-Lipschitz, so the bound below stays finite; a single
+        unusual chunk (a poisoned tool, an injected sentence) can set a max coordinate.
+        """
+        h = self.chunk_mlp(chunks)
+        m = mask.unsqueeze(-1).to(h.dtype)
+        any_valid = mask.any(dim=-1, keepdim=True).to(h.dtype)
+        mx = h.masked_fill(~mask.unsqueeze(-1), float("-inf")).amax(dim=2)
+        mx = torch.where(any_valid > 0, mx, torch.zeros_like(mx))
+        mean = (h * m).sum(dim=2) / m.sum(dim=2).clamp(min=1.0)
+        return torch.cat([mx, mean], dim=-1)
 
     # ------------------------------------------------------------------
     @torch.no_grad()
@@ -259,6 +285,11 @@ class MambaGuard(nn.Module):
 
         # Input projection contributes once.
         win = float(torch.linalg.matrix_norm(self.input_proj.weight, ord=2).item())
+        if self.chunk_mlp is not None:
+            # [x, pool(MLP(c))]: GELU <= 1.13-Lipschitz, [max, mean] <= sqrt(2); joint input bound max(1, L_c)
+            l1 = float(torch.linalg.matrix_norm(self.chunk_mlp[0].weight, ord=2).item())
+            l2 = float(torch.linalg.matrix_norm(self.chunk_mlp[2].weight, ord=2).item())
+            win *= max(1.0, math.sqrt(2.0) * 1.13 * l1 * l2)
 
         return win * block_bound * gat_bound * head_bound
 

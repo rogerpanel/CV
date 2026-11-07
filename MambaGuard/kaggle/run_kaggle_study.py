@@ -142,7 +142,7 @@ class Encoders:
         if kind not in self._made:
             if kind == "minilm":
                 self._made[kind] = self.sentence()
-            elif kind in ("chunk", "chunk_lex"):
+            elif kind in ("chunk", "chunk_lex", "chunk_mil"):
                 self._made[kind] = ChunkedEncoder(self.sentence(), mode=kind, d_lex=self.args.d_lex)
             else:
                 raise ValueError(kind)
@@ -151,6 +151,9 @@ class Encoders:
     def dim(self, kind: str) -> int:
         e = self.get(kind)
         return int(getattr(e, "d_p", 384))
+
+    def chunk_dim(self, kind: str) -> int:
+        return int(getattr(self.get(kind), "chunk_dim", 0))
 
 
 def benchmark_root(name: str, data_root: str) -> str:
@@ -189,12 +192,16 @@ class Data:
         missing = [e for e in eps if (enc, e.episode_id) not in self.msgs]
         if missing:
             msgs = list(flatten(missing))
-            emb = self.encoders.get(enc).encode_batch([m.payload for m in msgs])
+            encoder = self.encoders.get(enc)
+            emb = encoder.encode_batch([m.payload for m in msgs])
             emb = emb.detach().float().cpu() if hasattr(emb, "detach") else torch.as_tensor(emb)
+            chunks = getattr(encoder, "last_chunks", None) if getattr(encoder, "chunk_dim", 0) else None
             by_ep: dict[str, list] = {}
             for i, m in enumerate(msgs):
                 mm = _copy_msg(m)
                 mm.payload_emb = emb[i]
+                if chunks:
+                    mm.extras["chunk_emb"] = chunks[i]
                 by_ep.setdefault(m.extras["episode_id"], []).append(mm)
             for e in missing:
                 self.msgs[(enc, e.episode_id)] = by_ep.get(e.episode_id, [])
@@ -241,9 +248,9 @@ def loader(ds, shuffle: bool, args: argparse.Namespace):
     return DataLoader(ds, **kw)
 
 
-def model_config(d_p: int, overrides: dict[str, Any]) -> MambaGuardConfig:
+def model_config(d_p: int, overrides: dict[str, Any], chunk_dim: int = 0) -> MambaGuardConfig:
     d_mu = len(DEFAULT_METADATA_SCHEMA)
-    return MambaGuardConfig(d_p=d_p, d_mu=d_mu, edge_dim=5 + d_mu, num_classes=2, **overrides)
+    return MambaGuardConfig(d_p=d_p, d_mu=d_mu, edge_dim=5 + d_mu, num_classes=2, chunk_dim=chunk_dim, **overrides)
 
 
 # ---------------------------------------------------------------------------
@@ -311,10 +318,10 @@ def summary_block(yv, pv, yt, pt) -> dict[str, Any]:
 # detector and lexical runs
 # ---------------------------------------------------------------------------
 def run_detector(tag: str, name: str, variant: str, seed: int, sets: dict, d_p: int, max_epochs: int,
-                 args: argparse.Namespace, out: Path, keep: bool) -> dict[str, Any]:
+                 args: argparse.Namespace, out: Path, keep: bool, chunk_dim: int = 0) -> dict[str, Any]:
     set_seed(seed)
     mo, to = VARIANTS[variant]
-    model = MambaGuard(model_config(d_p, mo))
+    model = MambaGuard(model_config(d_p, mo, chunk_dim))
     ckpt_dir = out / "checkpoints" / tag
     epochs = 2 if args.smoke else max(1, int(round(max_epochs * args.epoch_scale)))
     tcfg = {"epochs": epochs, "num_classes": 2, "lr": args.lr, "out_dir": str(ckpt_dir), "log_every": 0,
@@ -330,13 +337,14 @@ def run_detector(tag: str, name: str, variant: str, seed: int, sets: dict, d_p: 
     yt, pt = window_labels(sets["test"]), predict(trainer.model, sets["test"], args)
     res = {"model": "mambaguard", "epochs_max": epochs, "epochs_run": state.epoch + 1, "best_epoch": state.best_epoch,
            "train_time_s": round(train_time, 1), "n_train": len(sets["train"]), "n_val": len(sets["val"]),
-           "params": int(sum(p.numel() for p in trainer.model.parameters())), "d_p": d_p,
+           "params": int(sum(p.numel() for p in trainer.model.parameters())), "d_p": d_p, "chunk_dim": chunk_dim,
            **summary_block(yv, pv, yt, pt), "lipschitz_bound": float(trainer.model.lipschitz_bound())}
     np.savez_compressed(out / "predictions" / f"{tag}.npz", episode_id=np.array(window_ids(sets["test"])),
                         label=yt, prob=pt, val_label=yv, val_prob=pv)
     if keep:  # weights + config only; drop optimiser state and last.pt
         ck = torch.load(ckpt_dir / "best.pt", map_location="cpu", weights_only=False)
-        torch.save({"model": ck["model"], "config": ck.get("config"), "d_p": d_p}, ckpt_dir / "best.pt")
+        torch.save({"model": ck["model"], "config": ck.get("config"), "d_p": d_p, "chunk_dim": chunk_dim},
+                   ckpt_dir / "best.pt")
         (ckpt_dir / "last.pt").unlink(missing_ok=True)
     else:
         shutil.rmtree(ckpt_dir, ignore_errors=True)
@@ -465,6 +473,9 @@ def certify(model, ds, args: argparse.Namespace) -> dict[str, Any]:
                     batch = {k: (v.to(args.device) if torch.is_tensor(v) else v) for k, v in batch.items()}
                     noise = torch.randn_like(batch["payload_emb"]) * sigma
                     batch["payload_emb"] = batch["payload_emb"] + noise * batch["attention_mask"].unsqueeze(-1)
+                    if "chunk_emb" in batch:  # the certified input is [pooled vector, chunk features]
+                        batch["chunk_emb"] = batch["chunk_emb"] + torch.randn_like(batch["chunk_emb"]) * sigma * \
+                            batch["chunk_mask"].unsqueeze(-1)
                     c += np.bincount(model(batch)["logits"].argmax(dim=-1).cpu().numpy(), minlength=2)
                 return c
 
@@ -599,7 +610,8 @@ def run_job(j: dict, data: Data, encoders: Encoders, args: argparse.Namespace, o
         if j["study"] == "heldout" and name == "a2a_sandbox":
             max_ep = args.heldout_a2a_epochs
         keep = args.keep_checkpoints and j["study"] == "main" and j["seed"] == args.seeds[0]
-        res = run_detector(j["tag"], name, j["variant"], j["seed"], sets, encoders.dim(j["enc"]), max_ep, args, out, keep)
+        res = run_detector(j["tag"], name, j["variant"], j["seed"], sets, encoders.dim(j["enc"]), max_ep, args, out, keep,
+                           chunk_dim=encoders.chunk_dim(j["enc"]))
         stats = getattr(encoders.get(j["enc"]), "stats", {})
         return {**meta, "variant": j["variant"], "encoder": j["enc"], "seed": j["seed"], **res, "encoder_stats": stats}
     # certify / latency use the kept seed-0 main checkpoint
@@ -609,7 +621,7 @@ def run_job(j: dict, data: Data, encoders: Encoders, args: argparse.Namespace, o
         return {**meta, "skipped": f"{ck} missing"}
     payload = torch.load(ck, map_location=args.device, weights_only=False)
     d_p = int(payload.get("d_p", encoders.dim(MAIN_ENCODER)))
-    model = MambaGuard(model_config(d_p, {})).to(args.device)
+    model = MambaGuard(model_config(d_p, {}, int(payload.get("chunk_dim", 0)))).to(args.device)
     model.load_state_dict(payload["model"])
     ds = data.dataset(eps["test"], MAIN_ENCODER)
     if j["kind"] == "certify":
@@ -684,7 +696,8 @@ def main() -> None:
     ap.add_argument("--resume-from", default=None, help="results folder or .zip of an earlier session")
     ap.add_argument("--benchmarks", nargs="+", default=list(BENCHMARKS))
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
-    ap.add_argument("--enc-ablation", nargs="*", default=["minilm", "chunk"],
+    ap.add_argument("--main-encoder", default=MAIN_ENCODER, choices=["chunk_lex", "chunk_mil", "chunk", "minilm"])
+    ap.add_argument("--enc-ablation", nargs="*", default=["minilm", "chunk", "chunk_lex", "chunk_mil"],
                     help="encoders compared with chunk_lex on the payload benchmarks (seeds 0, 1)")
     ap.add_argument("--ablations", nargs="*", default=[v for v in VARIANTS if v != "full"])
     ap.add_argument("--arch-benchmarks", nargs="*", default=["a2a_sandbox", "mcptox"])
@@ -719,6 +732,8 @@ def main() -> None:
     ap.add_argument("--time-budget-h", type=float, default=11.0)
     ap.add_argument("--smoke", action="store_true", help="tiny end-to-end check: few windows, 2 epochs, 2 folds")
     args = ap.parse_args()
+    globals()["MAIN_ENCODER"] = args.main_encoder
+    args.enc_ablation = [e for e in args.enc_ablation if e != args.main_encoder]
     if args.smoke:
         args.seeds, args.heldout_seeds = args.seeds[:1], args.heldout_seeds[:1]
         args.enc_ablation = args.enc_ablation[:1]

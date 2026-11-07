@@ -17,8 +17,11 @@ Max pooling lets one unusual chunk (the poisoned tool, the injected sentence)
 dominate a coordinate instead of being averaged away. ``which_chunk`` gives the
 chunk texts and per-chunk embeddings so a detection can be localised.
 
-Variants: ``mode="chunk"`` drops the lexical block; ``mode="chunk_lex"`` is the
-full encoder.
+Variants: ``mode="chunk"`` drops the lexical block; ``mode="chunk_lex"`` adds
+it; ``mode="chunk_mil"`` returns the same pooled vector and also keeps each
+message's per-chunk features ``[sentence embedding | lexical vector]`` in
+``last_chunks``, so the detector can score every chunk itself and pool the
+scores (multiple-instance pooling, ``MambaGuardConfig.chunk_dim``).
 """
 from __future__ import annotations
 
@@ -150,13 +153,15 @@ class ChunkedEncoder:
 
     def __init__(self, sentence_encoder: Any, mode: str = "chunk_lex", d_lex: int = 512,
                  d_sent: Optional[int] = None) -> None:
-        if mode not in ("chunk", "chunk_lex"):
-            raise ValueError(f"mode must be 'chunk' or 'chunk_lex', got {mode!r}")
+        if mode not in ("chunk", "chunk_lex", "chunk_mil"):
+            raise ValueError(f"mode must be 'chunk', 'chunk_lex' or 'chunk_mil', got {mode!r}")
         self.sent = sentence_encoder
         self.mode = mode
-        self.d_lex = d_lex if mode == "chunk_lex" else 0
+        self.d_lex = d_lex if mode in ("chunk_lex", "chunk_mil") else 0
         self.d_sent = int(d_sent or getattr(sentence_encoder, "d_p", 384))
         self.d_p = 2 * self.d_sent + self.d_lex
+        self.chunk_dim = self.d_sent + self.d_lex if mode == "chunk_mil" else 0
+        self.last_chunks: list = []
         self.stats: dict[str, float] = {}
 
     def encode_batch(self, payloads: list[str]) -> "Any":
@@ -201,6 +206,8 @@ class ChunkedEncoder:
             out[lo: lo + n, self.d_sent: 2 * self.d_sent] = mx[:, : self.d_sent]
             if self.d_lex:
                 out[lo: lo + n, 2 * self.d_sent:] = mx[:, self.d_sent:]
+        if self.chunk_dim:
+            self.last_chunks = [feats[torch.tensor([uniq[c] for c in cs], dtype=torch.long)] for cs in per_msg]
         n = [len(cs) for cs in per_msg]
         self.stats = {"messages": len(payloads), "unique_chunks": len(texts),
                       "chunks_per_message_mean": sum(n) / len(n), "chunks_per_message_max": max(n)}
