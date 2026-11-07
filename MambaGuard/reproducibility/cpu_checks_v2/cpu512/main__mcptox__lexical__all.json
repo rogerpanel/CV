@@ -1,0 +1,40 @@
+{
+  "study": "main",
+  "bench": "mcptox",
+  "fold": "all",
+  "benchmark": "mcptox",
+  "variant": "lexical",
+  "encoder": "tfidf",
+  "seed": null,
+  "model": "lexical_tfidf_lr",
+  "n_train": 1219,
+  "n_val": 361,
+  "threshold_val_tuned": 0.5401557545868508,
+  "test_attack_frac": 0.7358490566037735,
+  "n_test": 265,
+  "n_test_benign": 70,
+  "test_at_0.5": {
+    "macro_f1": 0.8901326699834162,
+    "accuracy": 0.9169811320754717,
+    "attack_recall": 0.958974358974359,
+    "fpr": 0.2,
+    "auroc": 0.9168498168498169,
+    "avg_precision": 0.9651337979997663
+  },
+  "test_at_val_threshold": {
+    "macro_f1": 0.8487442922374429,
+    "accuracy": 0.879245283018868,
+    "attack_recall": 0.9025641025641026,
+    "fpr": 0.18571428571428572,
+    "auroc": 0.9168498168498169,
+    "avg_precision": 0.9651337979997663
+  },
+  "macro_f1_tuned_95ci": [
+    0.7986228876225031,
+    0.8917925683952633
+  ],
+  "auroc_95ci": [
+    0.8737120065369688,
+    0.9526292718366844
+  ]
+}

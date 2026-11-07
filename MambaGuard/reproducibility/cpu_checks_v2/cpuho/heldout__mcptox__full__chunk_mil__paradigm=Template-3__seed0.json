@@ -1,0 +1,54 @@
+{
+  "study": "heldout",
+  "bench": "mcptox",
+  "fold": "paradigm=Template-3",
+  "benchmark": "mcptox",
+  "variant": "full",
+  "encoder": "chunk_mil",
+  "seed": 0,
+  "model": "mambaguard",
+  "epochs_max": 20,
+  "epochs_run": 14,
+  "best_epoch": 8,
+  "train_time_s": 100.9,
+  "n_train": 869,
+  "n_val": 221,
+  "params": 4099458,
+  "d_p": 1280,
+  "chunk_dim": 896,
+  "threshold_val_tuned": 0.8803054118156433,
+  "test_attack_frac": 0.5757575757575758,
+  "n_test": 165,
+  "n_test_benign": 70,
+  "test_at_0.5": {
+    "macro_f1": 0.8907123932881955,
+    "accuracy": 0.8909090909090909,
+    "attack_recall": 0.8105263157894737,
+    "fpr": 0.0,
+    "auroc": 0.9449624060150376,
+    "avg_precision": 0.9710927641406819
+  },
+  "test_at_val_threshold": {
+    "macro_f1": 0.7682584269662922,
+    "accuracy": 0.7696969696969697,
+    "attack_recall": 0.6,
+    "fpr": 0.0,
+    "auroc": 0.9449624060150376,
+    "avg_precision": 0.9710927641406819
+  },
+  "macro_f1_tuned_95ci": [
+    0.6964143675427973,
+    0.8334018922254216
+  ],
+  "auroc_95ci": [
+    0.9025556855892397,
+    0.9776754968786535
+  ],
+  "lipschitz_bound": 1459920.4791085578,
+  "encoder_stats": {
+    "messages": 180,
+    "unique_chunks": 279,
+    "chunks_per_message_mean": 5.416666666666667,
+    "chunks_per_message_max": 22
+  }
+}

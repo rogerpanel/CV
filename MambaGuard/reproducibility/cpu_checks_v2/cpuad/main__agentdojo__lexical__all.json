@@ -1,0 +1,41 @@
+{
+  "study": "main",
+  "bench": "agentdojo",
+  "fold": "all",
+  "benchmark": "agentdojo",
+  "agentdojo_model": "default",
+  "variant": "lexical",
+  "encoder": "tfidf",
+  "seed": null,
+  "model": "lexical_tfidf_lr",
+  "n_train": 448,
+  "n_val": 95,
+  "threshold_val_tuned": 0.49,
+  "test_attack_frac": 0.8653846153846154,
+  "n_test": 104,
+  "n_test_benign": 14,
+  "test_at_0.5": {
+    "macro_f1": 1.0,
+    "accuracy": 1.0,
+    "attack_recall": 1.0,
+    "fpr": 0.0,
+    "auroc": 1.0,
+    "avg_precision": 1.0
+  },
+  "test_at_val_threshold": {
+    "macro_f1": 1.0,
+    "accuracy": 1.0,
+    "attack_recall": 1.0,
+    "fpr": 0.0,
+    "auroc": 1.0,
+    "avg_precision": 1.0
+  },
+  "macro_f1_tuned_95ci": [
+    1.0,
+    1.0
+  ],
+  "auroc_95ci": [
+    1.0,
+    1.0
+  ]
+}
