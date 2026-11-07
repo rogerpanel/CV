@@ -88,10 +88,16 @@ The A2A sandbox needs no download (`root = builtin`).
 
 ```bash
 bash kaggle/setup_benchmarks.sh data/raw          # clones at pinned commits
-python kaggle/run_kaggle_study.py --data-root data/raw --out results
-python scripts/summarise_kaggle_results.py results.zip --latex
-python scripts/lexical_baseline.py --data-root data/raw
+python kaggle/run_kaggle_study.py --study main    --data-root data/raw --out results_main
+python kaggle/run_kaggle_study.py --study heldout --data-root data/raw --out results_heldout
+python scripts/summarise_kaggle_results.py results_main.zip results_heldout.zip --latex
 ```
+
+`--study main` uses the chunked payload encoder (`mambaguard/data/chunked_encoder.py`)
+and also runs the lexical baseline and the encoder and architecture
+ablations; `--study heldout` runs the leave-template-out evaluation for the
+detector and the lexical baseline. `reproducibility/kaggle_gpu/` holds the
+first GPU run (one MiniLM vector per message).
 
 The study trains the detector with seeds 0, 1, 2 on MCPTox, MCP-SafetyBench,
 AgentDojo, InjecAgent and the A2A sandbox, runs the five ablations with seeds
