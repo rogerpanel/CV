@@ -15,6 +15,7 @@ fraction of attacks in it. Reliability bins are pooled over benchmarks and seeds
 
     python scripts/calibration_v2.py reproducibility/kaggle_gpu_v2 --data-root data/raw \
         --out reproducibility/calibration_v2.json
+    (a zip of the results folder also works)
 """
 from __future__ import annotations
 
@@ -67,7 +68,7 @@ def main() -> None:
     rargs = SimpleNamespace(data_root=args.data_root, a2a_pairs=200, heldout_a2a_pairs=100, smoke=False,
                             device="cpu", agentdojo_model=None)
     data = EM.R.Data(rargs, None)
-    pred = args.results / "predictions"
+    pred = EM.open_results(args.results) / "predictions"
     report: dict = {"bins_M": M, "per_benchmark": {}, "pooled": {}}
     pooled = {k: ([], []) for k in ("det_raw", "det_platt", "lex_raw", "lex_platt")}
     for b in BENCHES:

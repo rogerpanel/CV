@@ -49,6 +49,20 @@ def _runner():
 R = _runner()
 
 
+def open_results(path: Path) -> Path:
+    """Accept a results folder or a zip of one (as written by run_kaggle_study.py)."""
+    if path.suffix == ".zip":
+        import tempfile
+        import zipfile
+
+        tmp = Path(tempfile.mkdtemp(prefix="mg_results_"))
+        with zipfile.ZipFile(path) as zf:
+            zf.extractall(tmp)
+        kids = [d for d in tmp.iterdir() if d.is_dir()]
+        path = kids[0] if len(kids) == 1 and not (tmp / "predictions").exists() else tmp
+    return path
+
+
 def lexical_probs(eps: dict) -> tuple[np.ndarray, np.ndarray]:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.linear_model import LogisticRegression
@@ -132,7 +146,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=None)
     ap.add_argument("--studies", nargs="+", default=["main", "heldout"])
     args = ap.parse_args()
-    pred = args.results / "predictions"
+    pred = open_results(args.results) / "predictions"
     rargs = SimpleNamespace(data_root=args.data_root, a2a_pairs=200, heldout_a2a_pairs=100, smoke=False,
                             device="cpu", agentdojo_model=None)
     data = R.Data(rargs, None)

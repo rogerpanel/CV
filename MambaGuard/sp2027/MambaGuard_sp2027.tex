@@ -1,6 +1,6 @@
 %% ============================================================================
-%%  Templates, Not Attacks: A Measurement Study of Learned Detectors for
-%%  LLM-Agent Protocol Traffic
+%%  MambaGuard: Certified Streaming Detection for Multi-Protocol LLM Agent
+%%  Security -- What Do Agent-Protocol Intrusion Detectors Actually Learn?
 %%
 %%  Target venue : IEEE Symposium on Security and Privacy 2027 (Cycle 2)
 %%  Class        : IEEEtran v1.8b, [conference,compsoc], US letter
@@ -72,8 +72,9 @@
 
 \begin{document}
 
-\title{Templates, Not Attacks: A Measurement Study of\\
-Learned Detectors for LLM-Agent Protocol Traffic}
+\title{MambaGuard: Certified Streaming Detection for\\
+Multi-Protocol LLM Agent Security\\[4pt]
+\large What Do Agent-Protocol Intrusion Detectors Actually Learn?}
 
 \author{\IEEEauthorblockN{Anonymous Submission}\\
 \IEEEauthorblockA{Paper \#XXXX, IEEE S\&P 2027 Cycle 2}}
@@ -82,7 +83,7 @@ Learned Detectors for LLM-Agent Protocol Traffic}
 
 %% ============================================================================
 \begin{abstract}
-Large-language-model (LLM) agents now exchange tool descriptions, tool results and delegated tasks over the Model Context Protocol and the Agent-to-Agent protocol, and learned intrusion detectors are being proposed to flag malicious messages in this traffic. Whether such detectors learn attacks, or only the wording of benchmark attacks, is unknown. We build a measurement framework that renders five benchmarks as protocol episodes, splits them by server, case or template, and adds folds that hold out an entire attack wording or family. On identical episodes we compare a neural detector (selective state-space model, graph attention and chunk-level payload scoring) with an episode-length control, a TF--IDF lexical classifier, a label-free novelty score and a calibrated hybrid, over five seeds, under three alarm rules (validation-tuned, split-conformal and adaptive conformal) and with randomised-smoothing certificates. Chunk scoring adds up to $0.38$ macro-F1 to the detector, yet the lexical classifier matches or beats it on every benchmark; the hybrid beats lexical in only $11$ of $71$ held-out runs; family-level held-out AUROC falls to $0.47$--$0.67$ for all models; and split-conformal thresholds give $17$--$19\%$ false alarms against a $5\%$ target when test servers are new, which adaptive conformal inference restores to $6$--$7\%$. For scientists, engineers and practitioners, the results show that current agent-security benchmarks reward template recognition, so detectors, and claims about them, must be judged on held-out attack families with drift-aware alarm control.
+Large-language-model (LLM) agents now exchange tool descriptions, tool results and delegated tasks over the Model Context Protocol and the Agent-to-Agent protocol, and learned intrusion detectors are being proposed to flag malicious messages in this traffic. Whether such detectors learn attacks, or only the wording of benchmark attacks, is unknown. We build a measurement framework that renders five benchmarks as protocol episodes, splits them by server, case or template, and adds folds that hold out an entire attack wording or family. On identical episodes we compare MambaGuard, a certified streaming detector (selective state-space model, graph attention and chunk-level payload scoring), with an episode-length control, a TF--IDF lexical classifier, a label-free novelty score and a calibrated hybrid, over five seeds, under three alarm rules (validation-tuned, split-conformal and adaptive conformal) and with randomised-smoothing certificates. Chunk scoring adds up to $0.38$ macro-F1 to MambaGuard, yet the lexical classifier matches or beats it on every benchmark; the hybrid beats lexical in only $11$ of $71$ held-out runs; family-level held-out AUROC falls to $0.47$--$0.67$ for all models; and split-conformal thresholds give $17$--$19\%$ false alarms against a $5\%$ target when test servers are new, which adaptive conformal inference restores to $6$--$7\%$. For scientists, engineers and practitioners, the results show that current agent-security benchmarks reward template recognition, so detectors, and claims about them, must be judged on held-out attack families with drift-aware alarm control.
 \end{abstract}
 
 %% ============================================================================
@@ -93,14 +94,14 @@ Large-language-model (LLM) agents no longer act alone. They list and call tools 
 
 A natural defence is the one networks already use: an \emph{intrusion detector} that watches the traffic and raises an alarm. Learned detectors for agent traffic are appearing, and the newest benchmarks --- MCPTox~\cite{Wang2025MCPTox}, MCP-SafetyBench~\cite{Zong2026SafetyBench}, AgentDojo~\cite{Debenedetti2024AgentDojo}, InjecAgent~\cite{Zhan2024InjecAgent} --- make it easy to report high scores. Security machine learning has a history of high scores that do not survive contact with deployment: spurious correlations, sampling bias and inappropriate baselines are among the most common pitfalls~\cite{Arp2022DosDonts}, and detectors evaluated on random splits often collapse under time or family shift~\cite{Pendlebury2019Tesseract}. This paper asks whether the same is happening for agent-protocol detectors.
 
-We built the strongest neural detector we could --- a selective state-space model (SSM) over each agent's message stream, a Lipschitz-normalised graph-attention layer over the protocol graph, and a payload encoder that scores each tool description or sentence separately (\emph{chunk scoring}) --- and then measured, with controls, what it and three simple baselines learn. We call the neural detector MambaGuard. It is an instrument here, not the contribution: the contribution is the measurement framework of Fig.~\ref{fig:framework} and what it finds.
+We built the strongest neural detector we could --- a selective state-space model (SSM) over each agent's message stream, a Lipschitz-normalised graph-attention layer over the protocol graph, and a payload encoder that scores each tool description or sentence separately (\emph{chunk scoring}) --- and then measured, with controls, what it and three simple baselines learn. We call the neural detector MambaGuard. The paper contributes its design --- chunk scoring and type-checked certificates --- but its main contribution is the measurement framework of Fig.~\ref{fig:framework} and what that framework reveals when MambaGuard and simple baselines are put through it.
 
 \paragraph{Research questions} \RQ{1} (\emph{detection}): in distribution, does a structured neural detector beat an episode-length control, a bag-of-words classifier and a label-free novelty score? \RQ{2} (\emph{mechanism}): which signal carries detection --- the words, the payload encoding, or the protocol structure --- and do architecture choices replicate across seeds? \RQ{3} (\emph{generalisation}): does any model detect attacks whose wording or family never appeared in training? \RQ{4} (\emph{operating points}): can the false-alarm rate be controlled, and are the models' probabilities trustworthy? \RQ{5} (\emph{guarantees and cost}): what do robustness certificates and latency measurements actually deliver?
 
 \paragraph{Key findings}
 \begin{itemize}
   \item \textbf{F1 (RQ1).} The bag-of-words baseline matches or beats the neural detector on all five benchmarks (macro-F1 $0.82$--$1.00$ vs $0.50$--$0.96$). A calibrated hybrid of detector, lexical and novelty scores differs significantly from lexical alone on one benchmark only, where it is \emph{worse} ($-0.040$, Holm-adjusted $p=0.02$).
-  \item \textbf{F2 (RQ2).} The heaviest lexical features are the attack templates themselves. Chunk scoring is the one design choice that matters for the neural detector ($+0.20$ to $+0.38$ macro-F1 over one embedding per message); the protocol graph and the SSM are not shown to help, and an ablation winner on two seeds (flat read-out, MCPTox macro-F1 $0.84$) did not replicate on five ($0.50$).
+  \item \textbf{F2 (RQ2).} The heaviest lexical features are the attack templates themselves. Chunk scoring is the one design choice that matters for the neural detector ($+0.20$ to $+0.38$ macro-F1 over one embedding per message); the protocol graph and the SSM are not shown to help, and an ablation winner on two seeds (flat read-out, MCPTox macro-F1 $0.84$) did not replicate on five ($0.50$). Deleting the $50$ most attack-indicative n-grams costs the lexical model $0.12$ AUROC on MCPTox, and across $36$ splits detection rises with the similarity of test attacks to training attacks (Spearman $\rho=0.40$).
   \item \textbf{F3 (RQ3).} When attack wordings or families are held out, every model degrades; at family level (MCP-SafetyBench, A2A) AUROC is $0.47$--$0.67$, close to chance. The hybrid improves on lexical in $11$ of $71$ held-out (fold, seed) runs.
   \item \textbf{F4 (RQ4).} Split-conformal thresholds, whose guarantee assumes calibration and test traffic are exchangeable, give $17$--$19\%$ false alarms on MCPTox's unseen servers against a $5\%$ target; adaptive conformal inference restores $6$--$7\%$ at a recall cost. The neural detector is better calibrated than the lexical baseline before recalibration (mean ECE $0.08$ vs $0.22$).
   \item \textbf{F5 (RQ5).} Randomised smoothing certifies $0.36$--$0.98$ accuracy at radius $0.05$ in payload-feature space, but no certified radius exceeds $2.2\sigma$ and none transfers to text edits; a Lipschitz bound used in this detector family is unsound once residual paths are counted.
@@ -111,7 +112,7 @@ We built the strongest neural detector we could --- a selective state-space mode
 \begin{itemize}
   \item A \textbf{measurement framework} (Fig.~\ref{fig:framework}, \S\ref{sec:method}) for agent-protocol detectors: loaders that render five benchmarks as protocol episodes; grouped splits with a separate calibration half; held-out-template folds by wording, family and vulnerability class with a leakage audit; length, lexical and novelty controls on identical episodes; and a pre-registered analysis (hybrid weights, conformal and adaptive conformal alarms, paired bootstrap with Holm correction, sign test).
   \item A \textbf{five-seed study} (\S\ref{sec:results}) answering RQ1--RQ5, including two negative results a reviewer can check: the lexical baseline is not beaten, and an ablation winner did not replicate.
-  \item \textbf{Chunk-level payload scoring} (\S\ref{sec:encoder}), the one detector design choice that measurably helps, and a \textbf{benchmark audit} showing that episode-level scores on current corpora largely measure template recognition.
+  \item \textbf{Chunk-level payload scoring} (\S\ref{sec:encoder}), the one detector design choice that measurably helps, and a \textbf{template audit} (top features, feature removal, similarity of test attacks to training attacks) showing that episode-level scores on current corpora largely measure template recognition.
   \item A \textbf{certificate audit} (\S\ref{sec:res-cert}): measured smoothing curves, a type-checked composed bound, and a counter-example showing that the block-product Lipschitz bound is not a bound.
   \item An \textbf{anonymised artifact} that reruns the whole GPU study in under three hours on one T4 and regenerates every table and figure.
 \end{itemize}
@@ -365,7 +366,99 @@ InjecAgent      & 189 (3)   & $.929{\scriptstyle\pm.111}$ & $\mathbf{1.00}$ & $\
 
 \textbf{The protocol structure is not shown to help, and an ablation winner did not replicate.} Table~\ref{tab:abl} removes one component at a time. On A2A every variant reaches macro-F1 $0.952$--$0.962$ and AUROC $0.996$--$0.997$, within the seed spread. On MCPTox, in the earlier study, the full graph model was the \emph{weakest} variant ($0.731$) and the flat read-out the strongest ($0.841\pm0.003$, AUROC $0.945$, two seeds). Because that choice was made on validation scores, we pre-registered the flat read-out as the main detector of the five-seed study. It did not replicate: with five seeds, and with early stopping and thresholds on the selection half of validation, the flat read-out reaches $0.498\pm0.080$ (AUROC $0.781$) on MCPTox, while A2A is unchanged ($0.962$). We read this as a measurement result in its own right: on payload benchmarks with $70$ benign test episodes the downstream architecture mostly adds variance, and two seeds are not enough to rank architectures.
 
-\textbf{Answer to RQ2.} Words, and specifically the attack templates, carry detection on payload benchmarks. For the neural detector, how the payload is encoded matters far more than the sequence or graph model on top.
+\textbf{A template audit.} To test the template explanation directly, we ran three CPU measurements on the same splits (\texttt{scripts/template\_audit.py}). The lexical AUROCs they recompute match the GPU study's to three decimals on all 36 splits, which confirms that the episodes are identical.
+
+\emph{(i) What the words are.} Table~\ref{tab:features} lists the lexical model's heaviest features. On the attack side they are MCPTox's imperative wrapper words, AgentDojo's fixed preamble, InjecAgent's single attacker scenario and the A2A generator's field values; on the benign side, server and topic names (``serpapi'', ``sushi dinner'', the channel ``external\_0'') and A2A's completed-task status. MCP-SafetyBench's attack features are structural JSON-RPC keys (``tools call params'') because its host/user and replay attacks sit in tool calls, which its benign twins do not contain.
+
+\emph{(ii) How concentrated the signal is.} We delete the $k$ most attack-indicative n-grams of the full model and refit (Fig.~\ref{fig:audit}c). On MCPTox, removing $10$ costs $0.05$ AUROC and removing $50$ costs $0.12$ ($0.917\to0.796$); on MCP-SafetyBench, $50$ cost $0.05$ and $1{,}000$ cost $0.20$. AgentDojo is untouched at $k=50$, because its preamble is spread over many overlapping n-grams, and falls to $0.76$ at $k=1{,}000$. A2A hardly moves ($0.944$ at $k=1{,}000$): its attacks change structured fields, whose values remain. InjecAgent stays at $1.00$ even after $1{,}000$ removals, because its benign class is one filler sentence and can be recognised from the benign side alone.
+
+\emph{(iii) How familiar the test attacks are.} For each test attack we isolate its \emph{injected content} --- the chunks of its attacker-controlled messages that occur in no benign episode (the poisoned tool, the injected sentence run, the altered A2A field) --- and measure its TF--IDF cosine similarity to the nearest training attack ($1$ means the same wording was seen in training). In distribution the median is $0.96$ on A2A ($59\%$ of test attacks have a near-duplicate with similarity $\ge0.9$), $0.84$ on InjecAgent, $0.80$ on AgentDojo and $0.75$ on MCP-SafetyBench; the held-out folds lower it to $0.43$, $0.32$, $0.67$ and $0.34$. MCPTox is the exception: every poisoned description is unique (median $0.23$ in and $0.20$ out of distribution), and its detection rests on the few wrapper words of~(ii). Across all 36 splits, AUROC rises with similarity (Fig.~\ref{fig:audit}a,b; Spearman rank correlation $\rho=0.40$, $p=0.015$, for the detector and $\rho=0.30$, $p=0.07$, for the lexical baseline). The clearest outliers are InjecAgent's held-out folds, perfectly detected at similarity $\approx0.33$ through the benign-side shortcut of~(ii).
+
+\begin{table}[!t]
+\centering
+\caption{RQ2, template audit (i): the five heaviest attack and three heaviest benign features of the lexical model on each benchmark's training split (word uni- and bigrams after tokenisation).}
+\label{tab:features}
+\scriptsize
+\renewcommand{\arraystretch}{1.12}
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabular}{@{}p{1.25cm}p{4.15cm}p{2.75cm}@{}}
+\toprule
+\textbf{Benchmark} & \textbf{Attack features} & \textbf{Benign features} \\
+\midrule
+A2A & principal service; cdn example; https keys; example jwks; admin & done; task\_state\_completed message; example well \\
+MCPTox & important; before; you must; when using; ignore & type string; string role; id \\
+MCP-SB & args; system; enhanced; tools call; call params & serpapi fallback; return default; api primary \\
+AgentDojo & that gave; can solve; gave you; task that; solve the & external\_0; sushi dinner; discuss potential \\
+InjecAgent & lock system; permanent access; friend amy; august smart; please grant & guests; permanent; thanks \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure*}[!t]
+\centering
+\tikzset{every mark/.append style={line width=0.5pt}}
+\pgfplotsset{auditsc/.style={width=6.1cm, height=4.6cm, xmin=0.1, xmax=1.0, ymin=0.1, ymax=1.04,
+    xlabel={similarity to nearest training attack (median)}, xlabel style={font=\scriptsize},
+    tick label style={font=\scriptsize}, ymajorgrids, xmajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+    extra y ticks={0.5}, extra y tick labels={}, extra y tick style={grid=major, major grid style={densely dashed, red!60!black, line width=0.5pt}},
+    only marks, mark size=2.1pt}}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}
+\begin{axis}[auditsc, name=sa, ylabel={test AUROC}, ylabel style={font=\scriptsize}, title={\scriptsize\bfseries (a) MambaGuard: $\rho=0.40$ ($p=0.015$)}, title style={yshift=-3pt}]
+% held-out folds (hollow) per benchmark
+\addplot[cDet, mark=o] coordinates {(0.300,0.573)(0.287,0.436)(0.356,0.756)(0.263,0.209)(0.478,0.858)(0.718,0.760)(0.415,0.587)(0.789,0.453)(0.407,0.338)(0.457,0.556)(0.292,0.173)};
+\addplot[cDet, mark=square] coordinates {(0.214,0.704)(0.212,0.682)(0.192,0.662)(0.182,0.646)(0.226,0.678)(0.203,0.641)};
+\addplot[cDet, mark=triangle] coordinates {(0.402,0.486)(0.427,0.460)(0.227,0.703)(0.289,0.736)};
+\addplot[cDet, mark=diamond] coordinates {(0.637,0.985)(0.703,0.854)(0.739,0.943)(0.733,0.976)(0.701,0.782)(0.516,0.952)};
+\addplot[cDet, mark=pentagon] coordinates {(0.329,1.0)(0.313,1.0)(0.310,1.0)(0.347,0.996)};
+% in distribution (filled)
+\addplot[cDet, mark=*, mark options={draw=black}] coordinates {(0.962,0.997)};
+\addplot[cDet, mark=square*, mark options={draw=black}] coordinates {(0.233,0.781)};
+\addplot[cDet, mark=triangle*, mark options={draw=black}] coordinates {(0.748,0.761)};
+\addplot[cDet, mark=diamond*, mark options={draw=black}] coordinates {(0.804,0.987)};
+\addplot[cDet, mark=pentagon*, mark options={draw=black}] coordinates {(0.842,1.0)};
+\end{axis}
+\begin{axis}[auditsc, name=sb, at={(sa.east)}, anchor=west, xshift=0.55cm, yticklabels={}, title={\scriptsize\bfseries (b) Lexical: $\rho=0.30$ ($p=0.07$)}, title style={yshift=-3pt}]
+\addplot[cLex, mark=o] coordinates {(0.300,0.893)(0.287,0.569)(0.356,0.622)(0.263,0.609)(0.478,1.0)(0.718,0.400)(0.415,0.347)(0.789,0.489)(0.407,0.449)(0.457,1.0)(0.292,0.284)};
+\addplot[cLex, mark=square] coordinates {(0.214,0.843)(0.212,0.866)(0.192,0.849)(0.182,0.950)(0.226,0.862)(0.203,0.851)};
+\addplot[cLex, mark=triangle] coordinates {(0.402,0.661)(0.427,0.671)(0.227,0.700)(0.289,0.646)};
+\addplot[cLex, mark=diamond] coordinates {(0.637,1.0)(0.703,1.0)(0.739,0.966)(0.733,0.986)(0.701,0.938)(0.516,0.995)};
+\addplot[cLex, mark=pentagon] coordinates {(0.329,1.0)(0.313,1.0)(0.310,1.0)(0.347,1.0)};
+\addplot[cLex, mark=*, mark options={draw=black}] coordinates {(0.962,0.995)};
+\addplot[cLex, mark=square*, mark options={draw=black}] coordinates {(0.233,0.917)};
+\addplot[cLex, mark=triangle*, mark options={draw=black}] coordinates {(0.748,0.935)};
+\addplot[cLex, mark=diamond*, mark options={draw=black}] coordinates {(0.804,1.0)};
+\addplot[cLex, mark=pentagon*, mark options={draw=black}] coordinates {(0.842,1.0)};
+\end{axis}
+\begin{axis}[name=sc, at={(sb.east)}, anchor=west, xshift=1.35cm, width=6.1cm, height=4.6cm,
+    xmin=0.7, xmax=5.3, xtick={1,2,3,4,5}, xticklabels={0,10,50,200,1000}, ymin=0.62, ymax=1.02,
+    xlabel={top attack n-grams removed, $k$}, ylabel={lexical test AUROC}, xlabel style={font=\scriptsize}, ylabel style={font=\scriptsize},
+    tick label style={font=\scriptsize}, ymajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+    title={\scriptsize\bfseries (c) Feature removal}, title style={yshift=-3pt},
+    legend style={font=\tiny, draw=none, fill=white, fill opacity=0.85, text opacity=1, at={(0.03,0.03)}, anchor=south west}, legend cell align=left]
+\addplot[black, line width=1pt, mark=pentagon*, mark size=2pt] coordinates {(1,1.0)(2,1.0)(3,1.0)(4,1.0)(5,1.0)};
+\addlegendentry{InjecAgent}
+\addplot[black!85, line width=1pt, mark=*, mark size=1.8pt] coordinates {(1,0.995)(2,0.985)(3,0.978)(4,0.959)(5,0.944)};
+\addlegendentry{A2A sandbox}
+\addplot[black!70, line width=1pt, densely dashed, mark=diamond*, mark size=2pt] coordinates {(1,1.0)(2,1.0)(3,0.999)(4,0.952)(5,0.763)};
+\addlegendentry{AgentDojo}
+\addplot[black!45, line width=1pt, dashdotted, mark=triangle*, mark size=2pt] coordinates {(1,0.935)(2,0.910)(3,0.882)(4,0.826)(5,0.736)};
+\addlegendentry{MCP-SafetyBench}
+\addplot[black!55, line width=1pt, densely dotted, mark=square*, mark size=1.7pt] coordinates {(1,0.917)(2,0.865)(3,0.796)(4,0.714)(5,0.690)};
+\addlegendentry{MCPTox}
+\end{axis}
+% shared legend for (a) and (b)
+\begin{scope}[shift={($(sa.south west)+(0.1,-1.15)$)}, font=\scriptsize]
+\foreach \m/\l/\x in {o/A2A/0, square/MCPTox/1.55, triangle/MCP-SB/3.35, diamond/AgentDojo/5.25, pentagon/InjecAgent/7.35}
+  \draw[black!70, line width=0.5pt] plot[mark=\m, mark size=2.1pt] coordinates {(\x,0)} node[right=2pt, black] {\l};
+\node[anchor=west] at (9.5,0) {hollow: held-out fold; filled with black outline: in distribution; dashed: chance};
+\end{scope}
+\end{tikzpicture}}
+\caption{RQ2 and RQ3, template audit. (a, b) Test AUROC against the median TF--IDF similarity between each test attack's injected content and its nearest training attack, for all 36 splits (5 in distribution, 31 held-out folds); $\rho$ is Spearman's rank correlation. Detection is easier when test attacks resemble training attacks; InjecAgent (pentagons) is detected perfectly at low similarity through its single benign filler. (c) Lexical AUROC after deleting the $k$ most attack-indicative n-grams of the full model and refitting: a few dozen MCPTox wrapper n-grams carry most of its signal.}
+\label{fig:audit}
+\end{figure*}
+
+\textbf{Answer to RQ2.} Words, and specifically the attack templates, carry detection on payload benchmarks: a few dozen n-grams carry most of MCPTox's signal, benign-side vocabulary alone separates InjecAgent, and detection is easiest where test attacks resemble training attacks. For the neural detector, how the payload is encoded matters far more than the sequence or graph model on top.
 
 \begin{table}[!t]
 \centering
@@ -608,7 +701,7 @@ InjecAgent      & 5.56 & 36{,}558 & 8.11  & 1.31 \\
 \section{Lessons for Benchmark Builders and Practitioners}
 \label{sec:lessons}
 %% ============================================================================
-\textbf{L1: Report a lexical baseline and a length control on identical splits.} Both are cheap, and here they set the bar that a structured detector failed to clear. A detector paper that omits them cannot tell template recognition from attack understanding.
+\textbf{L1: Report a lexical baseline and a length control on identical splits.} Both are cheap, and here they set the bar that a structured detector failed to clear. Pair them with a feature-removal curve and a similarity-to-training measure (Fig.~\ref{fig:audit}); together they show in minutes whether a benchmark rewards templates. A detector paper that omits them cannot tell template recognition from attack understanding.
 
 \textbf{L2: Hold out wordings and families, not only episodes.} Random or grouped splits keep every attack template in training. A held-out-family protocol, which our loaders provide for five benchmarks, is what separates the models' generalisation (Fig.~\ref{fig:radar}c).
 
@@ -639,7 +732,7 @@ InjecAgent      & 5.56 & 36{,}558 & 8.11  & 1.31 \\
 \section{Conclusion}
 \label{sec:conclusion}
 %% ============================================================================
-We measured what learned detectors learn from LLM-agent protocol traffic on five benchmarks, with grouped splits, held-out-template folds, simple controls on identical episodes, five seeds, conformal alarm rules and certificates. The strongest neural detector we could build is matched or beaten by a bag-of-words classifier in distribution, a calibrated hybrid rarely improves on that classifier under shift, and no model generalises across attack families. Chunk-level payload scoring is the one detector design choice that clearly helps; distribution-free false-alarm guarantees fail when servers change, and adaptive conformal inference recovers them at a recall cost. For researchers, the result is a protocol --- held-out families, lexical and length controls, enough seeds --- that a detection claim should pass; for benchmark builders, a call for paraphrased attacks and large benign classes; for practitioners, a reminder that a detector's alarm rate must be monitored per server population. The artifact reruns everything on one GPU in under three hours.
+We measured what learned detectors learn from LLM-agent protocol traffic on five benchmarks, with grouped splits, held-out-template folds, simple controls on identical episodes, five seeds, conformal alarm rules and certificates. The strongest neural detector we could build is matched or beaten by a bag-of-words classifier in distribution, a calibrated hybrid rarely improves on that classifier under shift, and no model generalises across attack families. A template audit explains why: a few dozen imperative n-grams carry most of MCPTox's signal, a single benign filler sentence separates InjecAgent, and detection is easiest exactly where test attacks resemble training attacks. Chunk-level payload scoring is the one detector design choice that clearly helps; distribution-free false-alarm guarantees fail when servers change, and adaptive conformal inference recovers them at a recall cost. For researchers, the result is a protocol --- held-out families, lexical and length controls, enough seeds --- that a detection claim should pass; for benchmark builders, a call for paraphrased attacks and large benign classes; for practitioners, a reminder that a detector's alarm rate must be monitored per server population. The artifact reruns everything on one GPU in under three hours.
 
 %% ============================================================================
 %% References (anonymised third-person self-citation where needed)
@@ -736,7 +829,7 @@ where $\Delta_{t},B_{t},C_{t}$ depend on the input (the ``selective'' part~\cite
 
 \textbf{Online controller and no-regret.} The detector's scores parameterise a Hedge learner~\cite{CesaBianchi2006Prediction} over $N=5$ defender actions (inspect, block, terminate session, isolate agent, revoke capability), Algorithm~\ref{alg:mwu}. For losses in $[0,U]$, the step size $\eta=\sqrt{8\ln N/T_{\text{h}}}/U$ minimises the regret bound $(\ln N)/\eta+\eta T_{\text{h}}U^{2}/8$ and gives regret at most $U\sqrt{(T_{\text{h}}/2)\ln N}$; the frequently quoted $\eta=\sqrt{2\ln N/T_{\text{h}}}$ minimises a cruder bound and doubles the constant. Convergence to the Stackelberg value is claimed only in the zero-sum case, or as regret against the best fixed commitment over finitely many attacker types~\cite{Balcan2015Commitment}.
 
-\begin{algorithm}[!h]
+\begin{algorithm}[!tbp]
 \caption{Online defence loop}
 \label{alg:mwu}
 \begin{algorithmic}[1]
@@ -772,7 +865,7 @@ With LipschitzNorm constant $\eta_{L}$, $L_{\text{gat}}\le\|W_{v}\|_{2}(1+\eta_{
 \end{lemma}
 The SiLU constant: $\mathrm{SiLU}'(u)=\sigma(u)(1+u(1-\sigma(u)))$ peaks at $u^{*}\approx2.3994$ with value $\approx1.0998$. Table~\ref{tab:lipsweep} shows the bounds as the spectral cap $c$ on every linear layer grows.
 
-\begin{table}[!h]
+\begin{table}[!tbp]
 \centering
 \caption{Lipschitz bounds versus the spectral cap $c$ (default 3.68\,M-parameter configuration, synthetic inputs). $\hat L_{f}$: largest output change per unit input change found by 200-step projected gradient ascent, a lower bound on the true constant (evaluated at $c=0.5$ only).}
 \label{tab:lipsweep}
@@ -794,37 +887,133 @@ $c$ & $L_{\text{ssm}}$ & $L_{\text{gat}}$ & Block product & Residual~(\ref{eq:li
 
 \section{Per-Fold Held-Out Results}
 \label{app:folds}
-Table~\ref{tab:folds} lists the payload benchmarks' folds (detector: mean over seeds 0--2; lexical: one deterministic fit). A2A's 11 leave-one-class-out folds range from macro-F1 $0.28$ to $0.60$ for the detector and $0.33$ to $0.86$ for the lexical baseline; InjecAgent's four folds are at $0.80$--$1.00$ for both.
+Table~\ref{tab:folds} lists all 31 held-out folds with the template similarity of \S\ref{sec:res-mech}. Two patterns support the conclusions. First, \emph{ranking survives where thresholds fail}: on A2A the lexical baseline ranks two held-out classes perfectly (AUROC $1.00$ on \texttt{indefinite\_interrupted\_tasks} and \texttt{unbounded\_delegation\_depth}) yet reaches macro-F1 $0.33$ on the first, because a threshold tuned on the other ten classes does not transfer --- the same failure that breaks split conformal in \S\ref{sec:res-conformal}. Second, the detector is \emph{not} uniformly worse: it ranks better than lexical on A2A \texttt{cross\_client\_context\_injection}, \texttt{post\_revocation\_stream} and \texttt{unattested\_skill\_claims}, and on MCP-SafetyBench host/user and result injection, all structural or placement-borne attacks, but none of these advantages is large enough, or consistent enough across seeds, to change the averages.
 
-\begin{table}[!h]
+\begin{table}[!tbp]
 \centering
-\caption{Held-out folds: test macro-F1 / AUROC at the val$_{\text{sel}}$-tuned threshold, as printed by the study runner (raw scores, no Platt step).}
+\caption{All held-out folds: median similarity of test attacks to the nearest training attack (Sim.), and test macro-F1 / AUROC at the val$_{\text{sel}}$-tuned threshold as printed by the study runner (raw scores; detector: mean of seeds 0--2, A2A seed 0; lexical: one deterministic fit).}
 \label{tab:folds}
+\scriptsize
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{2.4pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}llccc@{}}
+\toprule
+\textbf{Benchmark} & \textbf{Held-out fold} & \textbf{Sim.} & \textbf{MambaGuard} & \textbf{Lexical} \\
+\midrule
+A2A (class) & agent\_card\_jws\_trust & $0.41$ & $.330/.338$ & $.333/.449$ \\
+ & artifact\_chunk\_corruption & $0.79$ & $.333/.453$ & $.333/.489$ \\
+ & cross\_client\_context\_injection & $0.36$ & $.333/.756$ & $.333/.622$ \\
+ & indefinite\_interrupted\_tasks & $0.46$ & $.333/.556$ & $.333/1.00$ \\
+ & multi\_hop\_identity\_loss & $0.29$ & $.333/.436$ & $.333/.569$ \\
+ & post\_revocation\_stream & $0.72$ & $.444/.760$ & $.433/.400$ \\
+ & scope\_amplification & $0.30$ & $.597/.573$ & $.597/.893$ \\
+ & stale\_task\_state & $0.29$ & $.333/.173$ & $.333/.284$ \\
+ & unattested\_skill\_claims & $0.41$ & $.333/.587$ & $.466/.347$ \\
+ & unbounded\_delegation\_depth & $0.48$ & $.466/.858$ & $.864/1.00$ \\
+ & unverified\_webhook\_url & $0.26$ & $.280/.209$ & $.641/.609$ \\
+\midrule
+MCPTox & paradigm Template-1 & $0.18$ & $.534/.646$ & $.832/.950$ \\
+ & paradigm Template-2 & $0.23$ & $.525/.678$ & $.587/.862$ \\
+ & paradigm Template-3 & $0.20$ & $.524/.641$ & $.589/.851$ \\
+ & wrapper \texttt{ignore\_previous} & $0.19$ & $.581/.662$ & $.854/.849$ \\
+ & wrapper \texttt{important\_tag} & $0.21$ & $.524/.704$ & $.574/.843$ \\
+ & wrapper \texttt{plain} & $0.21$ & $.500/.682$ & $.616/.866$ \\
+\midrule
+MCP-SafetyBench & host/user & $0.29$ & $.420/.736$ & $.498/.646$ \\
+ & name competition & $0.43$ & $.440/.460$ & $.492/.671$ \\
+ & tool poisoning & $0.40$ & $.482/.486$ & $.494/.661$ \\
+ & result injection & $0.23$ & $.485/.703$ & $.628/.700$ \\
+\midrule
+AgentDojo & \texttt{direct} & $0.70$ & $.618/.782$ & $.871/.938$ \\
+ & denial of service & $0.52$ & $.806/.952$ & $.949/.995$ \\
+ & \texttt{ignore\_previous} & $0.74$ & $.856/.943$ & $.804/.966$ \\
+ & \texttt{important\_instructions} & $0.64$ & $.896/.985$ & $.949/1.00$ \\
+ & \texttt{injecagent} & $0.73$ & $.907/.976$ & $.899/.986$ \\
+ & \texttt{tool\_knowledge} & $0.70$ & $.705/.854$ & $.975/1.00$ \\
+\midrule
+InjecAgent & attacker cases 0 & $0.33$ & $1.00/1.00$ & $1.00/1.00$ \\
+ & attacker cases 1 & $0.31$ & $.965/1.00$ & $1.00/1.00$ \\
+ & attacker cases 2 & $0.31$ & $1.00/1.00$ & $1.00/1.00$ \\
+ & attacker cases 3 & $0.35$ & $.802/.996$ & $.818/1.00$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\section{Additional Measurements}
+\label{app:extra}
+\textbf{Paired comparison.} Table~\ref{tab:boot} gives the hybrid-minus-lexical paired bootstrap behind \S\ref{sec:res-detect}. \textbf{Conformal alarms.} Table~\ref{tab:conformal} gives test FPR and recall for all four models under both conformal rules, including the novelty score, whose low false-alarm rate comes with recall of $0.03$--$0.25$. \textbf{Certificates.} Table~\ref{tab:certfull} gives certified accuracy for all three noise levels; the composed bound~(\ref{eq:composed}) at radius $r$ is the entry minus $0.010$.
+
+\begin{table}[!tbp]
+\centering
+\caption{Hybrid minus lexical, paired bootstrap over test episodes ($2{,}000$ resamples, shared across the five seeds); $p$ for macro-F1 is Holm-adjusted across benchmarks.}
+\label{tab:boot}
 \scriptsize
 \renewcommand{\arraystretch}{1.08}
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}llcc@{}}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-\textbf{Benchmark} & \textbf{Held-out fold} & \textbf{MambaGuard} & \textbf{Lexical} \\
+\textbf{Benchmark} & \textbf{$\Delta$F1 [95\% CI]} & \textbf{$p_{\text{Holm}}$} & \textbf{$\Delta$AUROC [95\% CI]} & \textbf{$p$} \\
 \midrule
-MCPTox & paradigm Template-1 & $.534$ / $.646$ & $.832$ / $.950$ \\
-       & paradigm Template-2 & $.525$ / $.678$ & $.587$ / $.862$ \\
-       & paradigm Template-3 & $.524$ / $.641$ & $.589$ / $.851$ \\
-       & wrapper \texttt{ignore\_previous} & $.581$ / $.662$ & $.854$ / $.849$ \\
-       & wrapper \texttt{important\_tag} & $.524$ / $.704$ & $.574$ / $.843$ \\
-       & wrapper \texttt{plain} & $.500$ / $.682$ & $.616$ / $.866$ \\
+A2A sandbox     & $+.006$ $[-.005,+.016]$ & $1.00$ & $+.001$ $[-.000,+.003]$ & $.17$ \\
+MCPTox          & $+.001$ $[+.000,+.004]$ & $1.00$ & $-.001$ $[-.002,+.001]$ & $.25$ \\
+MCP-SafetyBench & $+.025$ $[-.038,+.094]$ & $1.00$ & $+.020$ $[-.010,+.061]$ & $.26$ \\
+AgentDojo       & $-.040$ $[-.077,-.011]$ & $.020$ & $+.000$ $[+.000,+.000]$ & $1.00$ \\
+InjecAgent      & $+.000$ $[+.000,+.000]$ & $1.00$ & $+.000$ $[+.000,+.000]$ & $1.00$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[!tbp]
+\centering
+\caption{Conformal false-alarm control at $\alpha=0.05$: test FPR / recall, mean over five seeds. ``---'': fewer than 19 benign calibration episodes (split conformal) or fewer than 5 (ACI).}
+\label{tab:conformal}
+\scriptsize
+\renewcommand{\arraystretch}{1.08}
+\setlength{\tabcolsep}{2.2pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}llcccc@{}}
+\toprule
+\textbf{Benchmark} & \textbf{Rule} & \textbf{MambaGuard} & \textbf{Lexical} & \textbf{Novelty} & \textbf{Hybrid} \\
 \midrule
-AgentDojo & \texttt{direct} & $.618$ / $.782$ & $.871$ / $.938$ \\
-          & denial of service & $.806$ / $.952$ & $.949$ / $.995$ \\
-          & \texttt{ignore\_previous} & $.856$ / $.943$ & $.804$ / $.966$ \\
-          & \texttt{important\_instructions} & $.896$ / $.985$ & $.949$ / $1.00$ \\
-          & \texttt{injecagent} & $.907$ / $.976$ & $.899$ / $.986$ \\
-          & \texttt{tool\_knowledge} & $.705$ / $.854$ & $.975$ / $1.00$ \\
+A2A sandbox & split & .033 / .956 & .048 / .958 & .034 / .213 & .043 / .964 \\
+            & ACI   & .050 / .847 & .052 / .894 & .048 / .253 & .048 / .878 \\
+MCPTox      & split & .171 / .506 & .186 / .590 & .029 / .035 & .186 / .596 \\
+            & ACI   & .057 / .233 & .071 / .221 & .060 / .086 & .071 / .223 \\
+MCP-SafetyBench & ACI & .058 / .400 & .125 / .514 & .092 / .211 & .075 / .691 \\
+AgentDojo   & ACI   & .114 / .653 & .143 / .433 & .071 / .033 & .114 / .591 \\
+InjecAgent  & ---   & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[!tbp]
+\centering
+\caption{Certified accuracy $\mathrm{CertAcc}(r)$ and abstention rate (Abs.) of the seed-0 five-seed models; $100$ test windows ($59$ for MCP-SafetyBench), $n=500$, $\alpha_{MC}=10^{-3}$.}
+\label{tab:certfull}
+\scriptsize
+\renewcommand{\arraystretch}{1.05}
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{@{}lcccccccc@{}}
+\toprule
+\textbf{Benchmark} & $\sigma$ & \textbf{Abs.} & $r{=}0$ & $0.02$ & $0.05$ & $0.10$ & $0.25$ \\
 \midrule
-MCP-SafetyBench & host/user & $.420$ / $.736$ & $.498$ / $.646$ \\
-                & name competition & $.440$ / $.460$ & $.492$ / $.671$ \\
-                & tool poisoning & $.482$ / $.486$ & $.494$ / $.661$ \\
-                & result injection & $.485$ / $.703$ & $.628$ / $.700$ \\
+A2A sandbox & .05 & .01 & .95 & .94 & .90 & .49 & .00 \\
+            & .10 & .08 & .87 & .84 & .67 & .46 & .00 \\
+            & .25 & .34 & .55 & .52 & .39 & .23 & .03 \\
+MCPTox      & .05 & .02 & .68 & .65 & .60 & .42 & .00 \\
+            & .10 & .05 & .63 & .60 & .55 & .40 & .00 \\
+            & .25 & .19 & .53 & .48 & .39 & .24 & .00 \\
+MCP-SafetyBench & .05 & .05 & .63 & .49 & .36 & .10 & .00 \\
+            & .10 & .34 & .51 & .39 & .29 & .10 & .00 \\
+            & .25 & .54 & .37 & .29 & .17 & .07 & .02 \\
+AgentDojo   & .05 & .03 & .93 & .93 & .93 & .76 & .00 \\
+            & .10 & .02 & .93 & .93 & .92 & .71 & .00 \\
+            & .25 & .09 & .88 & .87 & .87 & .68 & .24 \\
+InjecAgent  & .05 & .02 & .98 & .98 & .98 & .96 & .00 \\
+            & .10 & .02 & .98 & .98 & .98 & .96 & .00 \\
+            & .25 & .03 & .97 & .96 & .96 & .96 & .69 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -847,6 +1036,6 @@ The benchmarks are public or generated deterministically from a fixed seed with 
 
 \section{Artifact Availability}
 \label{app:artifact}
-An anonymised artifact is available at \url{https://anonymous.4open.science/r/mambaguard-sp2027} (identifier filled in at submission). It contains the benchmark loaders, the detector and its ablations, the lexical and novelty controls, the certificates, the adaptive attacks, the training and evaluation harness and the tests. \texttt{kaggle/run\_kaggle\_study.py --study all} reruns the five-seed study on one GPU in under three hours, and \texttt{scripts/analyse\_v3.py} recomputes the hybrid, conformal, ACI and paired-test results from its saved scores. \texttt{reproducibility/kaggle\_gpu\_v3/} holds the five-seed run's printed results; \texttt{reproducibility/kaggle\_gpu\_v2/} the earlier study's runs, per-episode predictions, certificates and latency; \texttt{reproducibility/calibration\_v2.json} the ECE analysis (\texttt{scripts/calibration\_v2.py}). The artifact is frozen at the submission deadline.
+An anonymised artifact is available at \url{https://anonymous.4open.science/r/mambaguard-sp2027} (identifier filled in at submission). It contains the benchmark loaders, the detector and its ablations, the lexical and novelty controls, the certificates, the adaptive attacks, the training and evaluation harness and the tests. \texttt{kaggle/run\_kaggle\_study.py --study all} reruns the five-seed study on one GPU in under three hours, and \texttt{scripts/analyse\_v3.py} recomputes the hybrid, conformal, ACI and paired-test results from its saved scores. \texttt{reproducibility/kaggle\_gpu\_v3/} holds the five-seed run's printed results; \texttt{reproducibility/kaggle\_gpu\_v2/} the earlier study's runs, per-episode predictions, certificates and latency; \texttt{reproducibility/calibration\_v2.json} the ECE analysis (\texttt{scripts/calibration\_v2.py}); \texttt{reproducibility/template\_audit.json} the template audit (\texttt{scripts/template\_audit.py}, CPU only, about 20 minutes). The artifact is frozen at the submission deadline.
 
 \end{document}

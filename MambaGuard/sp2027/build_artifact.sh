@@ -22,6 +22,7 @@ A="$WORK/anon_build"
 echo "== prune"
 find "$A" -type d -name __pycache__ -prune -exec rm -rf {} +
 find "$A" -type f \( -name '*.pyc' -o -name '.DS_Store' \) -delete
+find "$A" -type d \( -name .pytest_cache -o -name '*.egg-info' \) -prune -exec rm -rf {} +
 rm -rf "$A/docs" "$A/notebooks" "$A/outputs" "$A/data"
 rm -f  "$A/scripts/run_v4_experiments.py" "$A/scripts/reproduce_table.py" \
        "$A/reproducibility/experiments.json" "$A/reproducibility/REPRODUCE.md" \
@@ -53,6 +54,7 @@ cp "$HERE/artifact/README.md"       "$A/README.md"
 cp "$HERE/artifact/DATASETS.md"     "$A/reproducibility/DATASETS.md"
 cp "$HERE/artifact/reproduce_all.sh" "$A/scripts/reproduce_all.sh"
 chmod +x "$A/scripts/reproduce_all.sh"
+"$PYTHON" "$HERE/review/make_review_notebook.py" "$A/kaggle/run_on_kaggle.ipynb" >/dev/null
 
 echo "== verify: no identifying strings"
 IDENT='anaedevha|trofimov|borodachev|mephi|robustidps|rogerpanel|torchroger|ar006|zenodo|kaggle/dsv|37\.27\.31|tnnls|lipmamba|moscow|russia|roger nick|campus\.'
@@ -67,6 +69,12 @@ fi
 echo "== verify: tests pass inside the copy"
 ( cd "$A" && PYTHONPATH="$A" "$PYTHON" -m pytest tests -q -p no:cacheprovider )
 find "$A" -type d -name __pycache__ -prune -exec rm -rf {} +
+
+echo "== pack recorded runs (keeps every folder under GitHub's 100-files-per-upload limit)"
+( cd "$A/reproducibility" && for d in kaggle_gpu kaggle_gpu_v2 cpu_checks_v2; do
+    [ -d "$d" ] && zip -qr "$d.zip" "$d" && rm -rf "$d"; done )
+find "$A" -type d -name .pytest_cache -prune -exec rm -rf {} +
+for d in "$A"/*/; do n=$(find "$d" -type f | wc -l); [ "$n" -le 100 ] || echo "note: $d has $n files"; done
 
 echo "== zip"
 rm -rf "$DIST" && mkdir -p "$DIST"

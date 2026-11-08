@@ -25,6 +25,7 @@ import random
 import sys
 import time
 import traceback
+import os
 from pathlib import Path
 from typing import Any
 
@@ -36,7 +37,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-OUT = PROJECT_ROOT / "reproducibility"
+OUT = Path(os.environ.get("MG_OUT_DIR", PROJECT_ROOT / "reproducibility"))  # MG_OUT_DIR=outputs keeps the recorded copy
 OUT.mkdir(parents=True, exist_ok=True)
 
 RESULT: dict[str, Any] = {}

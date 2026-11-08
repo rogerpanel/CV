@@ -1,0 +1,557 @@
+{
+ "main": {
+  "a2a_sandbox": {
+   "similarity": {
+    "median": 0.9616138063862257,
+    "q25": 0.856473348454456,
+    "q75": 1.0,
+    "frac_ge_0.9": 0.5909090909090909,
+    "n_test_attacks": 330
+   },
+   "lexical_auroc": 0.9952800734618916,
+   "detector_auroc": 0.997,
+   "top_attack_features": [
+    "principal service",
+    "service",
+    "cdn example",
+    "https keys",
+    "cdn",
+    "example jwks",
+    "keys",
+    "records",
+    "admin",
+    "ingest"
+   ],
+   "top_benign_features": [
+    "done",
+    "text done",
+    "done jsonrpc",
+    "task_state_completed message",
+    "example well"
+   ],
+   "removal_auroc": {
+    "0": 0.9952800734618916,
+    "10": 0.9846097337006428,
+    "50": 0.9779522497704316,
+    "200": 0.9591919191919193,
+    "1000": 0.9439761248852158
+   },
+   "heldout_similarity_mean": 0.4329209561104875
+  },
+  "mcptox": {
+   "similarity": {
+    "median": 0.23312466741960117,
+    "q25": 0.17751898780124098,
+    "q75": 0.3266018935657965,
+    "frac_ge_0.9": 0.0,
+    "n_test_attacks": 195
+   },
+   "lexical_auroc": 0.9168498168498169,
+   "detector_auroc": 0.781,
+   "top_attack_features": [
+    "important",
+    "before",
+    "you must",
+    "must",
+    "important inputschema",
+    "when using",
+    "properties name",
+    "you",
+    "this",
+    "ignore"
+   ],
+   "top_benign_features": [
+    "type",
+    "string",
+    "type string",
+    "string role",
+    "id"
+   ],
+   "removal_auroc": {
+    "0": 0.9168498168498169,
+    "10": 0.8647619047619047,
+    "50": 0.7961172161172162,
+    "200": 0.7139194139194139,
+    "1000": 0.6903296703296704
+   },
+   "heldout_similarity_mean": 0.20505418990739085
+  },
+  "mcp_safetybench": {
+   "similarity": {
+    "median": 0.7480722305508077,
+    "q25": 0.6457558324657025,
+    "q75": 0.8322274926639917,
+    "frac_ge_0.9": 0.17142857142857143,
+    "n_test_attacks": 35
+   },
+   "lexical_auroc": 0.9345238095238095,
+   "detector_auroc": 0.761,
+   "top_attack_features": [
+    "args",
+    "system",
+    "enhanced",
+    "performance",
+    "this is",
+    "args query",
+    "tools call",
+    "call params",
+    "params name",
+    "params"
+   ],
+   "top_benign_features": [
+    "serpapi fallback",
+    "return default",
+    "api primary",
+    "serpapi",
+    "and serpapi"
+   ],
+   "removal_auroc": {
+    "0": 0.9345238095238095,
+    "10": 0.9095238095238095,
+    "50": 0.8821428571428572,
+    "200": 0.8261904761904763,
+    "1000": 0.7357142857142857
+   },
+   "heldout_similarity_mean": 0.33631301612418707
+  },
+  "agentdojo": {
+   "similarity": {
+    "median": 0.8041087482131519,
+    "q25": 0.7252595699079247,
+    "q75": 0.9467888091178043,
+    "frac_ge_0.9": 0.32222222222222224,
+    "n_test_attacks": 90
+   },
+   "lexical_auroc": 1.0,
+   "detector_auroc": 0.987,
+   "top_attack_features": [
+    "you in",
+    "that gave",
+    "beginning",
+    "can solve",
+    "gave you",
+    "task that",
+    "the beginning",
+    "solve the",
+    "the task",
+    "solve"
+   ],
+   "top_benign_features": [
+    "external_0",
+    "external_0 jsonrpc",
+    "sushi dinner",
+    "channel external_0",
+    "discuss potential"
+   ],
+   "removal_auroc": {
+    "0": 1.0,
+    "10": 1.0,
+    "50": 0.9992063492063492,
+    "200": 0.9523809523809523,
+    "1000": 0.7634920634920634
+   },
+   "heldout_similarity_mean": 0.6714802855956457
+  },
+  "injecagent": {
+   "similarity": {
+    "median": 0.8416301310092331,
+    "q25": 0.7967579290900535,
+    "q75": 0.8880813082081527,
+    "frac_ge_0.9": 0.15591397849462366,
+    "n_test_attacks": 186
+   },
+   "lexical_auroc": 1.0,
+   "detector_auroc": 1.0,
+   "top_attack_features": [
+    "my",
+    "lock system",
+    "permanent access",
+    "friend amy",
+    "amy guest_amy01",
+    "the august",
+    "august",
+    "august smart",
+    "grant permanent",
+    "please grant"
+   ],
+   "top_benign_features": [
+    "guests",
+    "permanent",
+    "access",
+    "thanks",
+    "would"
+   ],
+   "removal_auroc": {
+    "0": 1.0,
+    "10": 1.0,
+    "50": 1.0,
+    "200": 1.0,
+    "1000": 1.0
+   },
+   "heldout_similarity_mean": 0.3246493564980515
+  }
+ },
+ "heldout": {
+  "a2a_sandbox": {
+   "finding=scope_amplification": {
+    "similarity": {
+     "median": 0.3002332446681933,
+     "q25": 0.2973222752847746,
+     "q75": 0.33820576427505344,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.8933333333333333,
+    "detector_auroc": 0.573
+   },
+   "finding=multi_hop_identity_loss": {
+    "similarity": {
+     "median": 0.28670133362735895,
+     "q25": 0.27459445648672853,
+     "q75": 0.3007067344378027,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.5688888888888889,
+    "detector_auroc": 0.436
+   },
+   "finding=cross_client_context_injection": {
+    "similarity": {
+     "median": 0.3557735785401438,
+     "q25": 0.3557735785401438,
+     "q75": 0.3557735785401438,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.6222222222222222,
+    "detector_auroc": 0.756
+   },
+   "finding=unverified_webhook_url": {
+    "similarity": {
+     "median": 0.2634431231206984,
+     "q25": 0.14959866422035897,
+     "q75": 0.30453983208674296,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.6088888888888888,
+    "detector_auroc": 0.209
+   },
+   "finding=unbounded_delegation_depth": {
+    "similarity": {
+     "median": 0.47820355111764007,
+     "q25": 0.4687048323365317,
+     "q75": 0.5092866931886825,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 0.858
+   },
+   "finding=post_revocation_stream": {
+    "similarity": {
+     "median": 0.7176788694786073,
+     "q25": 0.7176788694786073,
+     "q75": 0.7176788694786073,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.4,
+    "detector_auroc": 0.76
+   },
+   "finding=unattested_skill_claims": {
+    "similarity": {
+     "median": 0.41473592172939694,
+     "q25": 0.3806500182324619,
+     "q75": 0.4919904803805041,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.3466666666666667,
+    "detector_auroc": 0.587
+   },
+   "finding=artifact_chunk_corruption": {
+    "similarity": {
+     "median": 0.7886440912074748,
+     "q25": 0.7802646417489503,
+     "q75": 0.7908726111945463,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.48888888888888893,
+    "detector_auroc": 0.453
+   },
+   "finding=agent_card_jws_trust": {
+    "similarity": {
+     "median": 0.4073277499209989,
+     "q25": 0.40163148804108817,
+     "q75": 0.42521054883477466,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.4488888888888889,
+    "detector_auroc": 0.338
+   },
+   "finding=indefinite_interrupted_tasks": {
+    "similarity": {
+     "median": 0.45707878575700944,
+     "q25": 0.44625079695274517,
+     "q75": 0.474584017747395,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 0.556
+   },
+   "finding=stale_task_state": {
+    "similarity": {
+     "median": 0.29231026804784005,
+     "q25": 0.29231026804784005,
+     "q75": 0.29231026804784005,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.28444444444444444,
+    "detector_auroc": 0.173
+   }
+  },
+  "mcptox": {
+   "wrapper=important_tag": {
+    "similarity": {
+     "median": 0.21449976422005756,
+     "q25": 0.16770133140664198,
+     "q75": 0.30920145510138897,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 66
+    },
+    "lexical_auroc": 0.842857142857143,
+    "detector_auroc": 0.704
+   },
+   "wrapper=plain": {
+    "similarity": {
+     "median": 0.21207904273959477,
+     "q25": 0.16162322542858856,
+     "q75": 0.33162505496200834,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 69
+    },
+    "lexical_auroc": 0.8664596273291927,
+    "detector_auroc": 0.682
+   },
+   "wrapper=ignore_previous": {
+    "similarity": {
+     "median": 0.19221660625212056,
+     "q25": 0.14169737299304191,
+     "q75": 0.3335326937849171,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 60
+    },
+    "lexical_auroc": 0.8488095238095239,
+    "detector_auroc": 0.662
+   },
+   "paradigm=Template-1": {
+    "similarity": {
+     "median": 0.18245565742735742,
+     "q25": 0.13291738072652176,
+     "q75": 0.21382054978658593,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 28
+    },
+    "lexical_auroc": 0.95,
+    "detector_auroc": 0.646
+   },
+   "paradigm=Template-2": {
+    "similarity": {
+     "median": 0.2262389234403683,
+     "q25": 0.16988753900462056,
+     "q75": 0.3159590027318858,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 72
+    },
+    "lexical_auroc": 0.8617063492063493,
+    "detector_auroc": 0.678
+   },
+   "paradigm=Template-3": {
+    "similarity": {
+     "median": 0.2028351453648464,
+     "q25": 0.1677835528222391,
+     "q75": 0.2995725207299233,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 95
+    },
+    "lexical_auroc": 0.8511278195488722,
+    "detector_auroc": 0.641
+   }
+  },
+  "mcp_safetybench": {
+   "family=poisoning": {
+    "similarity": {
+     "median": 0.40219896210593864,
+     "q25": 0.29944813754047095,
+     "q75": 0.584273603438741,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 15
+    },
+    "lexical_auroc": 0.6611111111111112,
+    "detector_auroc": 0.486
+   },
+   "family=name_competition": {
+    "similarity": {
+     "median": 0.426851930907025,
+     "q25": 0.27677179772088867,
+     "q75": 0.5029448371606668,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 9
+    },
+    "lexical_auroc": 0.6712962962962963,
+    "detector_auroc": 0.46
+   },
+   "family=result_injection": {
+    "similarity": {
+     "median": 0.22676585869535928,
+     "q25": 0.1177276370546213,
+     "q75": 0.42076680148204326,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 5
+    },
+    "lexical_auroc": 0.7,
+    "detector_auroc": 0.703
+   },
+   "family=host_user": {
+    "similarity": {
+     "median": 0.2894353127884254,
+     "q25": 0.20487130096214562,
+     "q75": 0.331846087561206,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 6
+    },
+    "lexical_auroc": 0.6458333333333333,
+    "detector_auroc": 0.736
+   }
+  },
+  "agentdojo": {
+   "family=important_instructions": {
+    "similarity": {
+     "median": 0.6371589105847418,
+     "q25": 0.5529099972436442,
+     "q75": 0.7266502757750402,
+     "frac_ge_0.9": 0.025,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 0.985
+   },
+   "family=tool_knowledge": {
+    "similarity": {
+     "median": 0.7029507698458125,
+     "q25": 0.624117228556065,
+     "q75": 0.8091134330021527,
+     "frac_ge_0.9": 0.15,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 0.854
+   },
+   "family=ignore_previous": {
+    "similarity": {
+     "median": 0.7387367528362371,
+     "q25": 0.6218265930150149,
+     "q75": 0.8822248364422994,
+     "frac_ge_0.9": 0.225,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 0.9660714285714285,
+    "detector_auroc": 0.943
+   },
+   "family=injecagent": {
+    "similarity": {
+     "median": 0.7327494486873851,
+     "q25": 0.6183847460432917,
+     "q75": 0.894444365738317,
+     "frac_ge_0.9": 0.25,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 0.9857142857142858,
+    "detector_auroc": 0.976
+   },
+   "family=direct": {
+    "similarity": {
+     "median": 0.7013457534425329,
+     "q25": 0.6002182006001898,
+     "q75": 0.8198112086379072,
+     "frac_ge_0.9": 0.15,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 0.9375,
+    "detector_auroc": 0.782
+   },
+   "family=dos": {
+    "similarity": {
+     "median": 0.5159400781771653,
+     "q25": 0.49286503475110255,
+     "q75": 0.5886150205170904,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 40
+    },
+    "lexical_auroc": 0.9946428571428572,
+    "detector_auroc": 0.952
+   }
+  },
+  "injecagent": {
+   "attacker_cases=0": {
+    "similarity": {
+     "median": 0.32900126773722854,
+     "q25": 0.3012893449140922,
+     "q75": 0.3733406491684369,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 27
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 1.0
+   },
+   "attacker_cases=1": {
+    "similarity": {
+     "median": 0.31280856794703604,
+     "q25": 0.2756397139541903,
+     "q75": 0.36124144909024786,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 57
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 1.0
+   },
+   "attacker_cases=2": {
+    "similarity": {
+     "median": 0.3101172993366271,
+     "q25": 0.28449162425294267,
+     "q75": 0.3471109942504199,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 51
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 1.0
+   },
+   "attacker_cases=3": {
+    "similarity": {
+     "median": 0.3466702909713143,
+     "q25": 0.3103145754914091,
+     "q75": 0.3758727360209746,
+     "frac_ge_0.9": 0.0,
+     "n_test_attacks": 51
+    },
+    "lexical_auroc": 1.0,
+    "detector_auroc": 0.996
+   }
+  }
+ },
+ "spearman_lexical": {
+  "rho": 0.30336706332180857,
+  "p": 0.07207905718701474,
+  "n": 36
+ },
+ "spearman_detector": {
+  "rho": 0.4010303471440709,
+  "p": 0.015351236593246985,
+  "n": 36
+ }
+}
