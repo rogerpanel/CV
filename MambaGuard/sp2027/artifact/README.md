@@ -39,7 +39,7 @@ scripts/               train, evaluate, certify, prepare_data,
                        reproduce_all.sh
 kaggle/                run_kaggle_study.py (the GPU benchmark study),
                        setup_benchmarks.sh, requirements-kaggle.txt
-reproducibility/       kaggle_gpu/ (every recorded GPU run, prediction,
+reproducibility/       kaggle_gpu_v2/ (the reported GPU run: every run, prediction,
                        certificate and latency file), kaggle_results.json,
                        lexical_baseline.json, experiments_sp2027.json,
                        PROTOCOL_BENCHMARKS.md, DATASETS.md, ENVIRONMENT.md
@@ -104,10 +104,10 @@ AgentDojo, InjecAgent and the A2A sandbox, runs the five ablations with seeds
 0 and 1 on the A2A sandbox and MCPTox, certifies the seed-0 models and times
 the forward pass. It needs `sentence-transformers` (frozen MiniLM payload
 encoder) and one CUDA GPU; the paper's runs used one NVIDIA T4 (16 GB) and
-took 4.0 GPU-hours. It saves each result as soon as it finishes and can resume
+took 4.0 GPU-hours for the first run; the reported v2 run (`--study all`) took 7.1 GPU-hours. It saves each result as soon as it finishes and can resume
 (`--resume-from`). `python kaggle/run_kaggle_study.py --smoke` is a 5-minute
 end-to-end check. The recorded outputs of the paper's run are in
-`reproducibility/kaggle_gpu/`; `summarise_kaggle_results.py` also accepts that
+`reproducibility/kaggle_gpu_v2/`; `summarise_kaggle_results.py` also accepts that
 folder.
 
 ## Where each paper result comes from
@@ -119,11 +119,13 @@ folder.
 | Lipschitz table (block product, residual bound, probe) | `empirical_lipschitz`, `compute_lipschitz_bound` | `experiments_sp2027.json: empirical_lipschitz` |
 | Graph-edit certificate check | `sparse_smoothing.sparse_certify` | `experiments_sp2027.json: sparse_smoothing` |
 | E1 embedding-PGD check | `attacks.adaptive.EmbedPGD` | `experiments_sp2027.json: embed_pgd_asr` |
-| Detection table (Table 1, MambaGuard columns) | `kaggle/run_kaggle_study.py` | `kaggle_gpu/runs/*__full__*.json` |
-| Detection table (Lexical column) | `scripts/lexical_baseline.py` | `lexical_baseline.json` |
-| Certified-accuracy figure | `run_kaggle_study.py` (`certify`) | `kaggle_gpu/certify/*.json` |
-| GPU latency table | `run_kaggle_study.py` (`latency`) | `kaggle_gpu/latency/*.json` |
-| Ablation table | `run_kaggle_study.py` | `kaggle_gpu/runs/*.json` |
+| Detection table (Table 1, MambaGuard columns) | `kaggle/run_kaggle_study.py` | `kaggle_gpu_v2/runs/main__*.json` |
+| Detection table (Lexical column) | `scripts/lexical_baseline.py` | `kaggle_gpu_v2/runs/*__lexical__*.json` |
+| Certified-accuracy figure | `run_kaggle_study.py` (`certify`) | `kaggle_gpu_v2/certify/*.json` |
+| GPU latency table | `run_kaggle_study.py` (`latency`) | `kaggle_gpu_v2/latency/*.json` |
+| Encoder ablation table | `run_kaggle_study.py --study main` | `kaggle_gpu_v2/runs/enc__*.json` |
+| Architecture ablation table | `run_kaggle_study.py --study main` | `kaggle_gpu_v2/runs/arch__*.json` |
+| Held-out-template table | `run_kaggle_study.py --study heldout` | `kaggle_gpu_v2/runs/heldout__*.json` |
 
 The first five rows run on synthetic inputs on a CPU and need no data.
 

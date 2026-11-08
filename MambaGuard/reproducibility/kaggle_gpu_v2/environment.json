@@ -1,0 +1,26 @@
+{
+  "runner_version": 2,
+  "python": "3.13.16",
+  "torch": "2.11.0+cu130",
+  "cuda": "13.0",
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "bf16_native": false,
+  "study": "all",
+  "main_encoder": "chunk_mil",
+  "sentence_backend": "minilm",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "heldout_seeds": [
+    0,
+    1
+  ],
+  "balance": true,
+  "started": "2026-11-08 03:00:10",
+  "code_commit": "64728c3d75765bfdf8040b198269fee091d6a8a5",
+  "sentence_transformers": "5.7.0",
+  "finished": "2026-11-08 10:05:53"
+}

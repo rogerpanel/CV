@@ -1,0 +1,39 @@
+{
+  "study": "main",
+  "bench": "agentdojo",
+  "benchmark": "agentdojo",
+  "agentdojo_model": "default",
+  "encoder": {
+    "per_message_ms_batch1": 8.6552613999811,
+    "per_message_ms_batched": 1.866466864994436,
+    "messages": 200
+  },
+  "d_p": 1280,
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 4,
+      "median_batch_ms": 8.413954499701504,
+      "p99_batch_ms": 9.789221720511708,
+      "per_message_ms": 2.103488624925376,
+      "messages_per_s": 475.4007167666411
+    },
+    "8": {
+      "windows": 8,
+      "messages": 32,
+      "median_batch_ms": 9.204521999890858,
+      "p99_batch_ms": 10.309225879827867,
+      "per_message_ms": 0.2876413124965893,
+      "messages_per_s": 3476.552068687482
+    },
+    "32": {
+      "windows": 32,
+      "messages": 198,
+      "median_batch_ms": 38.61842300011631,
+      "p99_batch_ms": 40.162064579726575,
+      "per_message_ms": 0.19504254040462782,
+      "messages_per_s": 5127.086623899781
+    }
+  }
+}

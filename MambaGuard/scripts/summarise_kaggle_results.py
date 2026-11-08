@@ -133,7 +133,7 @@ def main() -> None:
     encs = sorted({r["encoder"] for r in runs if r["study"] == "enc"})
     if encs:
         print("\n## Encoder ablation (macro-F1 / AUROC; seeds 0-1 for the ablated encoders)\n")
-        cols = [e for e in ("minilm", "chunk") if e in encs] + [main_enc]
+        cols = [e for e in ("minilm", "chunk", "chunk_lex", "chunk_mil") if e in encs and e != main_enc] + [main_enc]
         eb = [b for b in benches if any(r["study"] == "enc" and r["benchmark"] == b for r in runs)]
         print("| Encoder | " + " | ".join(LABEL[b] for b in eb) + " |")
         print("|---|" + "---|" * len(eb))
