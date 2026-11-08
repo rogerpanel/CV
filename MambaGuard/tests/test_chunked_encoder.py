@@ -91,7 +91,7 @@ def test_heldout_split_removes_template_from_training_and_keeps_it_for_test():
         "test": [_ep("a5", True, "plain"), _ep("a6", True, "important_tag"), _ep("b3", False)],
     }
     fold = next(f for f in R.heldout_folds("mcptox") if f[0] == "wrapper=plain")
-    args = SimpleNamespace(smoke=False, heldout_a2a_pairs=100)
+    args = SimpleNamespace(smoke=False, heldout_a2a_pairs=100, calibration_split=False)
     out = R.heldout_split(_StubData(splits), "mcptox", fold[1], fold[2], args)
     assert [e.episode_id for e in out["train"]] == ["a2", "b1"]
     assert [e.episode_id for e in out["val"]] == ["a4", "b2"]

@@ -104,6 +104,7 @@ def main() -> None:
     runs, cert, lat, envs, errors = load(args.results)
     main_enc = next((e.get("main_encoder") for e in envs if e.get("main_encoder")), None) or \
         next((e.get("encoder") for e in envs if e.get("encoder")), "minilm")
+    main_var = next((e.get("main_variant") for e in envs if e.get("main_variant")), "full")
     out: dict[str, Any] = {"environment": envs, "main_encoder": main_enc, "main": {}, "encoder_ablation": {},
                            "arch_ablation": {}, "heldout": {}, "certify": cert, "latency": lat, "errors": errors}
     benches = [b for b in ORDER if any(r["benchmark"] == b for r in runs)]
@@ -119,7 +120,7 @@ def main() -> None:
     print("| Benchmark | n test (benign) | MambaGuard F1 | AUROC | recall | FPR | Lexical F1 | Lexical AUROC | Length |")
     print("|---|---|---|---|---|---|---|---|---|")
     for b in benches:
-        rs = pick(runs, study="main", benchmark=b, variant="full", encoder=main_enc, fold="all")
+        rs = pick(runs, study="main", benchmark=b, variant=main_var, encoder=main_enc, fold="all")
         lx = pick(runs, study="main", benchmark=b, variant="lexical", fold="all")
         if not rs:
             continue
@@ -141,7 +142,7 @@ def main() -> None:
             cells = []
             for b in eb:
                 rs = pick(runs, study="enc", benchmark=b, encoder=e) if e != main_enc else \
-                    [r for r in pick(runs, study="main", benchmark=b, variant="full", encoder=e) if r["seed"] in (0, 1)]
+                    [r for r in pick(runs, study="main", benchmark=b, variant=main_var, encoder=e) if r["seed"] in (0, 1)]
                 if rs:
                     s = stats(rs)
                     out["encoder_ablation"].setdefault(e, {})[b] = s
@@ -159,7 +160,7 @@ def main() -> None:
         for v in VARIANT_LABEL:
             cells, first = [], None
             for b in ab:
-                rs = pick(runs, study="main" if v == "full" else "arch", benchmark=b, variant=v)
+                rs = pick(runs, study="main" if v == main_var else "arch", benchmark=b, variant=v)
                 rs = [r for r in rs if r["encoder"] == main_enc or r["study"] == "arch"]
                 if rs:
                     s = stats(rs)
@@ -181,7 +182,7 @@ def main() -> None:
             folds = sorted({r["fold"] for r in runs if r["study"] == "heldout" and r["benchmark"] == b})
             per = {}
             for f in folds:
-                d = pick(runs, study="heldout", benchmark=b, fold=f, variant="full")
+                d = pick(runs, study="heldout", benchmark=b, fold=f, variant=main_var)
                 l = pick(runs, study="heldout", benchmark=b, fold=f, variant="lexical")
                 sd, sl = (stats(d) if d else None), (stats(l) if l else None)
                 per[f] = {"mambaguard": sd, "lexical": sl}

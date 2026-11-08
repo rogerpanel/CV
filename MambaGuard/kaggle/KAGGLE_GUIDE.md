@@ -12,7 +12,36 @@ tables.
 | `requirements-kaggle.txt` | The two packages Kaggle lacks (`einops`, `sentence-transformers`) |
 | `build_kaggle_package.sh` | Builds `dist/mambaguard-kaggle.zip` for upload as a Kaggle Dataset (Option B) |
 
-## What changed since the first run
+## Version 3 (current): what runs and why
+
+One background run, `STUDY = "all"`, estimated 4–5 h on a T4 → `results_v3_all.zip`.
+
+| Change | Why | Source of the idea |
+|---|---|---|
+| Main model = **flat read-out** MambaGuard with chunk scoring | it had the best *validation* scores in v2 (MCPTox val AUROC 0.969; best A2A val F1), so choosing it is legitimate model selection, not test-set peeking | v2 ablation |
+| **5 seeds** (main), 3 seeds (held-out folds; A2A 1) | tighter intervals; paired tests | certIDPS protocol |
+| Validation split by group into a **selection** half and a **calibration** half | split-conformal needs a calibration set untouched by any fitted choice | certIDPS (train/val/cal/test), ConformalGuard |
+| **Lexical** (TF-IDF) and label-free **novelty** (Mahalanobis to benign) experts scored on the same episodes as every detector run | hybrid of complementary experts; novelty needs no attack examples, so it targets unseen families | RobustIDPS (Mahalanobis stage), certIDPS (Hedge over experts) |
+| Pre-registered analysis `scripts/analyse_v3.py`: hybrid weights chosen on validation; split-conformal and **adaptive conformal** (ACI) false-alarm control; paired bootstrap vs lexical with Holm correction; sign test over held-out folds | operating points with a false-alarm guarantee, and statistics a reviewer can check | ConformalGuard (ACI), certIDPS (pre-registered tests) |
+
+The v2 study (graph read-out, 3 seeds) is reproduced with
+`--main-variant full --seeds 0 1 2 --heldout-seeds 0 1 --skip --no-calibration-split --out results_all`.
+
+### Steps
+
+1. Re-import `kaggle/mambaguard_kaggle.ipynb` (File → Import Notebook); it changed. GPU T4 x2, Internet On, Private.
+2. Run cells 1–7 by hand. Cell 7 (smoke test, ~5 min) must end with `wrote ... results_v3_all_smoke.zip` and no `ERROR`.
+3. Cell 8: leave `STUDY = "all"` → **Save Version → Save & Run All (Commit)**. Close the browser if you like.
+4. When the version finishes (Versions → Logs shows `wrote /kaggle/working/results_v3_all.zip`), open it → **Output** →
+   download `results_v3_all.zip`. Cell 9 of the committed version has already printed both summaries.
+5. Upload `results_v3_all.zip` to `MambaGuard/kaggle/results/` on GitHub, or attach it in the chat.
+
+If it times out: attach the version's output as input, set `RESUME = "/kaggle/input/<notebook>/results_v3_all"`,
+commit again. To split into two sessions: `STUDY = "main"`, then `STUDY = "heldout"`.
+
+---
+
+## Version 2 notes (previous run)
 
 1. **Payload encoder.** Each message is split into chunks (one per tool in a
    tool list, one per short run of sentences in long text, plus a structural

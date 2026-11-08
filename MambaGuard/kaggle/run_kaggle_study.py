@@ -101,7 +101,8 @@ def env_info(args: argparse.Namespace) -> dict[str, Any]:
         "cuda": torch.version.cuda, "device": args.device,
         "gpu": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
         "bf16_native": bool(torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8),
-        "study": args.study, "main_encoder": MAIN_ENCODER, "sentence_backend": args.sentence_backend,
+        "study": args.study, "main_encoder": MAIN_ENCODER, "main_variant": args.main_variant, "runner_v": 3,
+        "calibration_split": args.calibration_split, "sentence_backend": args.sentence_backend,
         "seeds": args.seeds, "heldout_seeds": args.heldout_seeds, "balance": args.balance,
         "started": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
@@ -225,6 +226,21 @@ def smoke_cut(eps: list, split: str, args: argparse.Namespace) -> list:
     return att[:k] + ben[:k]
 
 
+def split_val_cal(eps: list, args: argparse.Namespace) -> tuple[list, list]:
+    """Split validation episodes by group into a selection half and a calibration half.
+
+    Early stopping, thresholds and mixture weights use the selection half; the
+    calibration half is touched only by the split-conformal quantile, so it is
+    independent of every fitted choice (as split conformal requires)."""
+    if not args.calibration_split:
+        return eps, []
+    val = [e for e in eps if h64("cal:" + str(e.group)) % 2 == 0]
+    cal = [e for e in eps if h64("cal:" + str(e.group)) % 2 == 1]
+    if len({int(e.is_attack) for e in val}) < 2 or not cal:  # too small to split: keep validation intact
+        return eps, []
+    return val, cal
+
+
 def window_labels(ds: ProtocolMessageDataset) -> np.ndarray:
     return np.array([int(ds[i][0].extras.get("is_attack_episode", 0)) for i in range(len(ds))])
 
@@ -329,6 +345,7 @@ def run_detector(tag: str, name: str, variant: str, seed: int, sets: dict, d_p: 
     stopper = EarlyStopping(patience=args.patience, monitor="val_macro_f1")
     trainer = MambaGuardTrainer(model, loader(sets["train"], True, args), loader(sets["val"], False, args),
                                 cfg=tcfg, device=args.device, callbacks=[stopper])
+    cal = sets.get("cal")
     t0 = time.time()
     state = trainer.train()
     train_time = time.time() - t0
@@ -339,8 +356,10 @@ def run_detector(tag: str, name: str, variant: str, seed: int, sets: dict, d_p: 
            "train_time_s": round(train_time, 1), "n_train": len(sets["train"]), "n_val": len(sets["val"]),
            "params": int(sum(p.numel() for p in trainer.model.parameters())), "d_p": d_p, "chunk_dim": chunk_dim,
            **summary_block(yv, pv, yt, pt), "lipschitz_bound": float(trainer.model.lipschitz_bound())}
+    yc, pc = ((window_labels(cal), predict(trainer.model, cal, args)) if cal is not None and len(cal)
+              else (np.zeros(0, dtype=int), np.zeros(0)))
     np.savez_compressed(out / "predictions" / f"{tag}.npz", episode_id=np.array(window_ids(sets["test"])),
-                        label=yt, prob=pt, val_label=yv, val_prob=pv)
+                        label=yt, prob=pt, val_label=yv, val_prob=pv, cal_label=yc, cal_prob=pc)
     if keep:  # weights + config only; drop optimiser state and last.pt
         ck = torch.load(ckpt_dir / "best.pt", map_location="cpu", weights_only=False)
         torch.save({"model": ck["model"], "config": ck.get("config"), "d_p": d_p, "chunk_dim": chunk_dim},
@@ -349,6 +368,43 @@ def run_detector(tag: str, name: str, variant: str, seed: int, sets: dict, d_p: 
     else:
         shutil.rmtree(ckpt_dir, ignore_errors=True)
     return res
+
+
+def lexical_scores(eps: dict[str, list]) -> dict[str, np.ndarray]:
+    """TF-IDF logistic regression (the lexical baseline) as an expert: P(attack) per episode."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.linear_model import LogisticRegression
+
+    vec = TfidfVectorizer(ngram_range=(1, 2), min_df=2, max_features=50000, sublinear_tf=True)
+    xtr = vec.fit_transform([episode_text(e) for e in eps["train"]])
+    clf = LogisticRegression(C=1.0, class_weight="balanced", max_iter=2000).fit(xtr, [int(e.is_attack) for e in eps["train"]])
+    return {s: (clf.predict_proba(vec.transform([episode_text(e) for e in eps[s]]))[:, 1] if eps.get(s) else np.zeros(0))
+            for s in ("val", "cal", "test")}
+
+
+def novelty_scores(eps: dict[str, list], data: "Data", enc: str) -> dict[str, np.ndarray]:
+    """Label-free novelty expert: Mahalanobis distance of an episode's mean payload
+    vector to the benign training episodes (PCA to <=32 dims, Ledoit-Wolf covariance)."""
+    from sklearn.covariance import LedoitWolf
+    from sklearn.decomposition import PCA
+
+    def vecs(es):
+        return np.stack([torch.stack([m.payload_emb for m in data.msgs[(enc, e.episode_id)]]).mean(0).numpy()
+                         for e in es]) if es else np.zeros((0, 1))
+    xtr = vecs(eps["train"])
+    ben = xtr[[not e.is_attack for e in eps["train"]]]
+    if len(ben) < 4:
+        return {s: np.zeros(len(eps.get(s) or [])) for s in ("val", "cal", "test")}
+    pca = PCA(n_components=min(32, len(xtr) - 1, xtr.shape[1])).fit(xtr)
+    lw = LedoitWolf().fit(pca.transform(ben))
+    out = {}
+    for s in ("val", "cal", "test"):
+        if eps.get(s):
+            z = pca.transform(vecs(eps[s]))
+            out[s] = np.sqrt(np.maximum(lw.mahalanobis(z), 0.0))
+        else:
+            out[s] = np.zeros(0)
+    return out
 
 
 def episode_text(ep) -> str:
@@ -444,8 +500,9 @@ def heldout_split(data: Data, name: str, key, held: set, args: argparse.Namespac
             sel = [e for e in eps if (key(e) in held) or (key(e) is None and not e.is_attack)]
         else:
             sel = [e for e in eps if key(e) not in held]
-        out[split] = smoke_cut(sel, split, args)
-    return out
+        out[split] = sel
+    out["val"], out["cal"] = split_val_cal(out["val"], args)
+    return {s: smoke_cut(v, s, args) for s, v in out.items()}
 
 
 # ---------------------------------------------------------------------------
@@ -546,16 +603,16 @@ def build_plan(args: argparse.Namespace) -> list[dict[str, Any]]:
     if args.study in ("main", "all"):
         for b in b_ok:
             for s in args.seeds:
-                jobs.append(dict(kind="det", study="main", bench=b, variant="full", enc=MAIN_ENCODER, fold="all", seed=s))
+                jobs.append(dict(kind="det", study="main", bench=b, variant=args.main_variant, enc=MAIN_ENCODER, fold="all", seed=s))
         for b in b_ok:
             jobs.append(dict(kind="lex", study="main", bench=b, fold="all"))
         enc_seeds = args.seeds[:2]
         for b in [x for x in PAYLOAD_BENCHMARKS if x in b_ok]:
             for e in args.enc_ablation:
                 for s in enc_seeds:
-                    jobs.append(dict(kind="det", study="enc", bench=b, variant="full", enc=e, fold="all", seed=s))
+                    jobs.append(dict(kind="det", study="enc", bench=b, variant=args.main_variant, enc=e, fold="all", seed=s))
         for b in [x for x in args.arch_benchmarks if x in b_ok]:
-            for v in args.ablations:
+            for v in [x for x in args.ablations if x != args.main_variant] + (["full"] if args.main_variant != "full" else []):
                 for s in enc_seeds:
                     jobs.append(dict(kind="det", study="arch", bench=b, variant=v, enc=MAIN_ENCODER, fold="all", seed=s))
         for b in b_ok:
@@ -570,7 +627,7 @@ def build_plan(args: argparse.Namespace) -> list[dict[str, Any]]:
             for fold, _, _ in folds:
                 jobs.append(dict(kind="lex", study="heldout", bench=b, fold=fold))
                 for s in seeds:
-                    jobs.append(dict(kind="det", study="heldout", bench=b, variant="full", enc=MAIN_ENCODER, fold=fold, seed=s))
+                    jobs.append(dict(kind="det", study="heldout", bench=b, variant=args.main_variant, enc=MAIN_ENCODER, fold=fold, seed=s))
     for j in jobs:
         if j["kind"] == "det":
             j["tag"] = f"{j['study']}__{j['bench']}__{j['variant']}__{j['enc']}__{j['fold']}__seed{j['seed']}"
@@ -587,8 +644,9 @@ def job_dir(kind: str) -> str:
 
 
 def main_sets(data: Data, name: str, args: argparse.Namespace) -> dict[str, list]:
-    return {s: smoke_cut(data.split(name, s, agentdojo_model=args.agentdojo_model), s, args)
-            for s in ("train", "val", "test")}
+    eps = {s: data.split(name, s, agentdojo_model=args.agentdojo_model) for s in ("train", "val", "test")}
+    eps["val"], eps["cal"] = split_val_cal(eps["val"], args)
+    return {s: smoke_cut(v, s, args) for s, v in eps.items()}
 
 
 def run_job(j: dict, data: Data, encoders: Encoders, args: argparse.Namespace, out: Path) -> dict[str, Any]:
@@ -603,9 +661,10 @@ def run_job(j: dict, data: Data, encoders: Encoders, args: argparse.Namespace, o
     if name == "agentdojo":
         meta["agentdojo_model"] = HELDOUT_AGENTDOJO_MODEL if j["study"] == "heldout" else (args.agentdojo_model or "default")
     if j["kind"] == "lex":
-        return {**meta, "variant": "lexical", "encoder": "tfidf", "seed": None, **run_lexical(eps)}
+        return {**meta, "variant": "lexical", "encoder": "tfidf", "seed": None,
+                **run_lexical({s: eps[s] for s in ("train", "val", "test")})}
     if j["kind"] == "det":
-        sets = {s: data.dataset(eps[s], j["enc"]) for s in eps}
+        sets = {s: data.dataset(eps[s], j["enc"]) for s in eps if eps[s]}
         max_ep = BENCHMARKS[name][1]
         if j["study"] == "heldout" and name == "a2a_sandbox":
             max_ep = args.heldout_a2a_epochs
@@ -613,15 +672,23 @@ def run_job(j: dict, data: Data, encoders: Encoders, args: argparse.Namespace, o
         res = run_detector(j["tag"], name, j["variant"], j["seed"], sets, encoders.dim(j["enc"]), max_ep, args, out, keep,
                            chunk_dim=encoders.chunk_dim(j["enc"]))
         stats = getattr(encoders.get(j["enc"]), "stats", {})
-        return {**meta, "variant": j["variant"], "encoder": j["enc"], "seed": j["seed"], **res, "encoder_stats": stats}
+        if j["study"] in ("main", "heldout"):  # experts on exactly the same episodes, for the hybrid analysis
+            f = out / "predictions" / f"{j['tag']}.npz"
+            arrs = dict(np.load(f))
+            lex, nov = lexical_scores(eps), novelty_scores(eps, data, j["enc"])
+            for s in ("val", "cal", "test"):
+                arrs[f"lex_{s}"], arrs[f"nov_{s}"] = lex[s], nov[s]
+            np.savez_compressed(f, **arrs)
+        return {**meta, "variant": j["variant"], "encoder": j["enc"], "seed": j["seed"], **res, "encoder_stats": stats,
+                "n_cal": len(eps.get("cal") or [])}
     # certify / latency use the kept seed-0 main checkpoint
-    tag = f"main__{name}__full__{MAIN_ENCODER}__all__seed{args.seeds[0]}"
+    tag = f"main__{name}__{args.main_variant}__{MAIN_ENCODER}__all__seed{args.seeds[0]}"
     ck = out / "checkpoints" / tag / "best.pt"
     if not ck.exists():
         return {**meta, "skipped": f"{ck} missing"}
     payload = torch.load(ck, map_location=args.device, weights_only=False)
     d_p = int(payload.get("d_p", encoders.dim(MAIN_ENCODER)))
-    model = MambaGuard(model_config(d_p, {}, int(payload.get("chunk_dim", 0)))).to(args.device)
+    model = MambaGuard(model_config(d_p, VARIANTS[args.main_variant][0], int(payload.get("chunk_dim", 0)))).to(args.device)
     model.load_state_dict(payload["model"])
     ds = data.dataset(eps["test"], MAIN_ENCODER)
     if j["kind"] == "certify":
@@ -695,14 +762,18 @@ def main() -> None:
     ap.add_argument("--out", default=None, help="default: /kaggle/working/results_<study>")
     ap.add_argument("--resume-from", default=None, help="results folder or .zip of an earlier session")
     ap.add_argument("--benchmarks", nargs="+", default=list(BENCHMARKS))
-    ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
+    ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2, 3, 4])
+    ap.add_argument("--main-variant", default="flat", choices=list(VARIANTS),
+                    help="architecture of the main detector (v3: 'flat', chosen on v2 validation scores; v2: 'full')")
+    ap.add_argument("--calibration-split", action=argparse.BooleanOptionalAction, default=True,
+                    help="split validation by group into selection and conformal-calibration halves")
     ap.add_argument("--main-encoder", default=MAIN_ENCODER, choices=["chunk_lex", "chunk_mil", "chunk", "minilm"])
     ap.add_argument("--enc-ablation", nargs="*", default=["minilm", "chunk", "chunk_lex", "chunk_mil"],
                     help="encoders compared with chunk_lex on the payload benchmarks (seeds 0, 1)")
     ap.add_argument("--ablations", nargs="*", default=[v for v in VARIANTS if v != "full"])
     ap.add_argument("--arch-benchmarks", nargs="*", default=["a2a_sandbox", "mcptox"])
     ap.add_argument("--heldout-benchmarks", nargs="*", default=["mcptox", "agentdojo", "injecagent", "mcp_safetybench", "a2a_sandbox"])
-    ap.add_argument("--heldout-seeds", nargs="+", type=int, default=[0, 1], help="A2A held-out folds use the first seed only")
+    ap.add_argument("--heldout-seeds", nargs="+", type=int, default=[0, 1, 2], help="A2A held-out folds use the first seed only")
     ap.add_argument("--heldout-a2a-pairs", type=int, default=100)
     ap.add_argument("--heldout-a2a-epochs", type=int, default=10)
     ap.add_argument("--encoder-model", default="sentence-transformers/all-MiniLM-L6-v2")
@@ -725,7 +796,7 @@ def main() -> None:
     ap.add_argument("--cert-n", type=int, default=500)
     ap.add_argument("--cert-alpha", type=float, default=1e-3)
     ap.add_argument("--cert-batch", type=int, default=50)
-    ap.add_argument("--skip", nargs="*", default=[], choices=["enc", "arch", "certify", "latency", "lex"],
+    ap.add_argument("--skip", nargs="*", default=["enc", "arch"], choices=["enc", "arch", "certify", "latency", "lex"],
                     help="parts of the main study to skip")
     ap.add_argument("--keep-checkpoints", action=argparse.BooleanOptionalAction, default=True)
     ap.add_argument("--zip-checkpoints", action=argparse.BooleanOptionalAction, default=True)
@@ -738,7 +809,7 @@ def main() -> None:
         args.seeds, args.heldout_seeds = args.seeds[:1], args.heldout_seeds[:1]
         args.enc_ablation = args.enc_ablation[:1]
         args.ablations = args.ablations[:2]
-    out = Path(args.out or f"/kaggle/working/results_{args.study}")
+    out = Path(args.out or f"/kaggle/working/results_v3_{args.study}")
     if args.smoke:
         out = out.with_name(out.name + "_smoke")
     if args.resume_from:
