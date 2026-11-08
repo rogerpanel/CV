@@ -1,10 +1,13 @@
 # MambaGuard — Artifact for Anonymous Review
 
 This is the anonymised artifact for the IEEE S&P 2027 submission
-*"MambaGuard: Certified Streaming Detection for Multi-Protocol LLM Agent
-Security"*. It contains the detector, both certificates, the online
-controller, the adaptive attacks, the evaluation harness, and the script
-that regenerates the paper's numbers.
+*"Templates, Not Attacks: A Measurement Study of Learned Detectors for
+LLM-Agent Protocol Traffic"*. It contains the benchmark loaders, the
+measurement harness (grouped splits, held-out-template folds, lexical,
+length and novelty controls, conformal and adaptive conformal alarms,
+pre-registered statistics), the neural detector under test (MambaGuard) and
+its ablations, the certificates, the adaptive attacks, and the scripts that
+regenerate the paper's numbers.
 
 The artifact is frozen at the submission deadline and is not updated during
 review.
@@ -36,14 +39,16 @@ configs/               model / training / data / certification YAML
 scripts/               train, evaluate, certify, prepare_data,
                        benchmark_latency, run_sp2027_experiments,
                        lexical_baseline, summarise_kaggle_results,
-                       reproduce_all.sh
+                       analyse_v3, calibration_v2, reproduce_all.sh
 kaggle/                run_kaggle_study.py (the GPU benchmark study),
                        setup_benchmarks.sh, requirements-kaggle.txt
-reproducibility/       kaggle_gpu_v2/ (the reported GPU run: every run, prediction,
-                       certificate and latency file), kaggle_results.json,
+reproducibility/       kaggle_gpu_v3/ (five-seed study, transcribed tables),
+                       kaggle_gpu_v2/ (three-seed study: every run, prediction,
+                       certificate and latency file), calibration_v2.json,
+                       kaggle_results.json,
                        lexical_baseline.json, experiments_sp2027.json,
                        PROTOCOL_BENCHMARKS.md, DATASETS.md, ENVIRONMENT.md
-tests/                 43 unit and end-to-end tests
+tests/                 51 unit and end-to-end tests
 ```
 
 ## Install
@@ -84,50 +89,61 @@ python -m mambaguard.data.protocol_traces mcptox data/raw/MCPTox-Benchmark --sho
 
 The A2A sandbox needs no download (`root = builtin`).
 
-## Full reproduction (one GPU, about four hours)
+## Full reproduction (one GPU, under three hours)
 
 ```bash
 bash kaggle/setup_benchmarks.sh data/raw          # clones at pinned commits
-python kaggle/run_kaggle_study.py --study main    --data-root data/raw --out results_main
-python kaggle/run_kaggle_study.py --study heldout --data-root data/raw --out results_heldout
-python scripts/summarise_kaggle_results.py results_main.zip results_heldout.zip --latex
+python kaggle/run_kaggle_study.py --study all --data-root data/raw --out results_v3_all
+python scripts/summarise_kaggle_results.py results_v3_all.zip --latex
+python scripts/analyse_v3.py results_v3_all.zip --json analysis_v3.json
 ```
 
-`--study main` uses the chunked payload encoder (`mambaguard/data/chunked_encoder.py`)
-and also runs the lexical baseline and the encoder and architecture
-ablations; `--study heldout` runs the leave-template-out evaluation for the
-detector and the lexical baseline. `reproducibility/kaggle_gpu/` holds the
-first GPU run (one MiniLM vector per message).
+This is the paper's five-seed study. It trains the detector (flat read-out,
+chunk-scoring payload encoder `mambaguard/data/chunked_encoder.py`) with seeds
+0-4 on MCPTox, MCP-SafetyBench, AgentDojo, InjecAgent and the A2A sandbox;
+splits validation by group into a selection half and a calibration half;
+scores the lexical (TF-IDF) and novelty (Mahalanobis) controls on the same
+episodes; runs the held-out-template folds (seeds 0-2, A2A seed 0); certifies
+the seed-0 models; and times the detector and the encoder. `analyse_v3.py`
+then computes, from the saved scores only, the calibrated hybrid, split
+conformal and adaptive conformal (ACI) thresholds, paired bootstrap with Holm
+correction and the held-out sign test. The paper's run used one NVIDIA T4 and
+took 2.8 GPU-hours; results are saved as they finish and can be resumed
+(`--resume-from`). `--smoke` is a 5-minute end-to-end check.
 
-The study trains the detector with seeds 0, 1, 2 on MCPTox, MCP-SafetyBench,
-AgentDojo, InjecAgent and the A2A sandbox, runs the five ablations with seeds
-0 and 1 on the A2A sandbox and MCPTox, certifies the seed-0 models and times
-the forward pass. It needs `sentence-transformers` (frozen MiniLM payload
-encoder) and one CUDA GPU; the paper's runs used one NVIDIA T4 (16 GB) and
-took 4.0 GPU-hours for the first run; the reported v2 run (`--study all`) took 7.1 GPU-hours. It saves each result as soon as it finishes and can resume
-(`--resume-from`). `python kaggle/run_kaggle_study.py --smoke` is a 5-minute
-end-to-end check. The recorded outputs of the paper's run are in
-`reproducibility/kaggle_gpu_v2/`; `summarise_kaggle_results.py` also accepts that
-folder.
+The earlier three-seed study (graph read-out), which supplies the encoder and
+architecture ablations and the calibration measurement, is reproduced with
+
+```bash
+python kaggle/run_kaggle_study.py --study all --main-variant full --seeds 0 1 2 \
+    --heldout-seeds 0 1 --skip --no-calibration-split --data-root data/raw --out results_all
+python scripts/calibration_v2.py reproducibility/kaggle_gpu_v2 --data-root data/raw
+```
+
+Recorded outputs: `reproducibility/kaggle_gpu_v3/RESULTS_TRANSCRIBED.md` holds
+the five-seed run's printed tables (its per-episode score files could not be
+retrieved from the compute platform, so they are transcribed from the run's
+output); `reproducibility/kaggle_gpu_v2/` holds every run, per-episode
+prediction, certificate and latency file of the three-seed study;
+`reproducibility/kaggle_gpu/` the first run (one MiniLM vector per message).
 
 ## Where each paper result comes from
 
 | Paper element | Command / function | Output |
 |---|---|---|
-| Hedge regret bound (Theorem 1) | `run_sp2027_experiments.py`, `HedgeDefender` | `experiments_sp2027.json: hedge_corrected` |
-| Composed certificate (Theorem 2), synthetic check | `composed_certificate_v2` | `experiments_sp2027.json: composed_certificate_v2` |
+| Table 2 (RQ1), Fig. 3a | `run_kaggle_study.py --study all` + `analyse_v3.py` | `kaggle_gpu_v3/RESULTS_TRANSCRIBED.md` (v3 analysis, in-distribution) |
+| Table 4, Fig. 3b-c (RQ3), Appendix D | same | `kaggle_gpu_v3/RESULTS_TRANSCRIBED.md` (held-out tables) |
+| Fig. 4a, conformal and ACI (RQ4) | `analyse_v3.py` | `kaggle_gpu_v3/RESULTS_TRANSCRIBED.md` (conformal table) |
+| Fig. 4b, ECE (RQ4) | `scripts/calibration_v2.py` | `calibration_v2.json` |
+| Fig. 2, encoder ablation (RQ2) | three-seed study | `kaggle_gpu_v2/runs/enc__*.json` |
+| Table 3, architecture ablation (RQ2) | three-seed study | `kaggle_gpu_v2/runs/arch__*.json` |
+| Fig. 5, certified accuracy; Table 5, latency (RQ5) | `run_kaggle_study.py` (`certify`, `latency`) | `kaggle_gpu_v3/RESULTS_TRANSCRIBED.md` |
 | Lipschitz table (block product, residual bound, probe) | `empirical_lipschitz`, `compute_lipschitz_bound` | `experiments_sp2027.json: empirical_lipschitz` |
+| Hedge regret, composed bound (synthetic check) | `run_sp2027_experiments.py` | `experiments_sp2027.json` |
 | Graph-edit certificate check | `sparse_smoothing.sparse_certify` | `experiments_sp2027.json: sparse_smoothing` |
 | E1 embedding-PGD check | `attacks.adaptive.EmbedPGD` | `experiments_sp2027.json: embed_pgd_asr` |
-| Detection table (Table 1, MambaGuard columns) | `kaggle/run_kaggle_study.py` | `kaggle_gpu_v2/runs/main__*.json` |
-| Detection table (Lexical column) | `scripts/lexical_baseline.py` | `kaggle_gpu_v2/runs/*__lexical__*.json` |
-| Certified-accuracy figure | `run_kaggle_study.py` (`certify`) | `kaggle_gpu_v2/certify/*.json` |
-| GPU latency table | `run_kaggle_study.py` (`latency`) | `kaggle_gpu_v2/latency/*.json` |
-| Encoder ablation table | `run_kaggle_study.py --study main` | `kaggle_gpu_v2/runs/enc__*.json` |
-| Architecture ablation table | `run_kaggle_study.py --study main` | `kaggle_gpu_v2/runs/arch__*.json` |
-| Held-out-template table | `run_kaggle_study.py --study heldout` | `kaggle_gpu_v2/runs/heldout__*.json` |
 
-The first five rows run on synthetic inputs on a CPU and need no data.
+The last four rows run on synthetic inputs on a CPU and need no data.
 
 ## Datasets
 
@@ -137,8 +153,8 @@ All datasets are public and are listed with their sources in
 ## Notes for reviewers
 
 - The smoothing certificate holds in the MiniLM payload-embedding space,
-  not for arbitrary text edits; see the paper's "Operational Meaning and
-  Non-Guarantees" subsection.
+  not for arbitrary text edits; see the paper's "Certificates" subsection
+  and Section 4.5.
 - `attacks/adaptive/token_gcg.py` defines the GCG attack interface. Running it
   requires a token-level embedder for the payload encoder; the hook is
   documented in the file.
