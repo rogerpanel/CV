@@ -96,6 +96,22 @@ def episode_chunks(ep, cap: int) -> list[str]:
     return out[:cap] if out else [""]
 
 
+def amp(args):
+    """bfloat16 autocast on CPUs with native bf16 (AMX / AVX512-BF16), else a no-op."""
+    import contextlib
+
+    import torch
+
+    if args.device == "cpu" and getattr(args, "cpu_bf16", False):
+        return torch.autocast("cpu", dtype=torch.bfloat16)
+    return contextlib.nullcontext()
+
+
+def by_length(texts: list[str]) -> list[str]:
+    """Unique texts, shortest first, so each batch pads to similar lengths."""
+    return sorted(dict.fromkeys(texts), key=len)
+
+
 def sha(s: str) -> str:
     return hashlib.sha1(s.encode("utf-8", "ignore")).hexdigest()
 
@@ -162,11 +178,11 @@ class ZeroShot:
     def chunk_scores(self, chunks: list[str]) -> np.ndarray:
         import torch
 
-        todo = [c for c in dict.fromkeys(chunks) if sha(c) not in self.cache]
+        todo = [c for c in by_length(chunks) if sha(c) not in self.cache]
         for i in range(0, len(todo), self.args.batch):
             b = todo[i:i + self.args.batch]
             enc = self.tok(b, truncation=True, max_length=self.args.max_len, padding=True, return_tensors="pt").to(self.args.device)
-            with torch.no_grad():
+            with torch.no_grad(), amp(self.args):
                 pr = torch.softmax(self.model(**enc).logits.float(), -1)[:, self.benign]
             for c, v in zip(b, (1.0 - pr).cpu().numpy().tolist()):
                 self.cache[sha(c)] = v
@@ -204,12 +220,12 @@ class Judge(ZeroShot):
     def chunk_scores(self, chunks: list[str]) -> np.ndarray:
         import torch
 
-        todo = [c for c in dict.fromkeys(chunks) if sha(c) not in self.cache]
+        todo = [c for c in by_length(chunks) if sha(c) not in self.cache]
         bs = max(1, self.args.batch // 4)
         for i in range(0, len(todo), bs):
             b = todo[i:i + bs]
             enc = self.tok([self._prompt(c) for c in b], return_tensors="pt", padding=True).to(self.args.device)
-            with torch.no_grad():
+            with torch.no_grad(), amp(self.args):
                 logits = self.model(**enc).logits[:, -1, :].float()
             y = torch.logsumexp(logits[:, self.yes], -1)
             n = torch.logsumexp(logits[:, self.no], -1)
@@ -306,8 +322,9 @@ def chunk_training_set(train_eps, cap: int, max_items: int, seed: int):
 
 
 class FineTuned:
-    def __init__(self, args, seed: int):
+    def __init__(self, args, seed: int, epochs: int | None = None):
         self.args, self.seed = args, seed
+        self.epochs = epochs or args.ft_epochs
 
     def fit(self, train_eps):
         import torch
@@ -324,19 +341,20 @@ class FineTuned:
         texts, y = chunk_training_set(train_eps, self.args.max_chunks, self.args.ft_max_items, self.seed)
         w = torch.tensor([1.0, float(max(1.0, (y == 0).sum() / max(1, (y == 1).sum())))], dtype=torch.float32, device=self.args.device)
         opt = torch.optim.AdamW(self.model.parameters(), lr=self.args.ft_lr, weight_decay=0.01)
-        steps = self.args.ft_epochs * math.ceil(len(texts) / self.args.ft_batch)
+        steps = self.epochs * math.ceil(len(texts) / self.args.ft_batch)
         sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / max(1, 0.06 * steps)) * max(0.0, 1 - s / max(1, steps)))
         use_amp = self.args.device == "cuda"
         scaler = torch.amp.GradScaler("cuda", enabled=use_amp) if hasattr(torch, "amp") and hasattr(torch.amp, "GradScaler") else torch.cuda.amp.GradScaler(enabled=use_amp)
         self.model.train()
         rng = np.random.default_rng(self.seed)
-        for _ in range(self.args.ft_epochs):
+        for _ in range(self.epochs):
             order = rng.permutation(len(texts))
             for i0 in range(0, len(texts), self.args.ft_batch):
                 b = order[i0:i0 + self.args.ft_batch]
-                enc = self.tok([texts[i] for i in b], truncation=True, max_length=self.args.max_len, padding=True,
+                enc = self.tok([texts[i] for i in b], truncation=True, max_length=self.args.ft_max_len, padding=True,
                                return_tensors="pt").to(self.args.device)
-                with torch.autocast("cuda", dtype=torch.float16, enabled=use_amp):
+                ctx = torch.autocast("cuda", dtype=torch.float16, enabled=True) if use_amp else amp(self.args)
+                with ctx:
                     logits = self.model(**enc).logits
                 loss = torch.nn.functional.cross_entropy(logits.float(), torch.as_tensor(y[b], device=self.args.device), weight=w)
                 opt.zero_grad()
@@ -353,13 +371,14 @@ class FineTuned:
     def chunk_scores(self, chunks):
         import torch
 
-        out = []
-        for i in range(0, len(chunks), self.args.batch):
-            enc = self.tok(chunks[i:i + self.args.batch], truncation=True, max_length=self.args.max_len, padding=True,
-                           return_tensors="pt").to(self.args.device)
-            with torch.no_grad():
-                out.append(torch.softmax(self.model(**enc).logits.float(), -1)[:, 1].cpu().numpy())
-        return np.concatenate(out) if out else np.zeros(0)
+        uniq, score = by_length(chunks), {}
+        for i in range(0, len(uniq), self.args.batch):
+            b = uniq[i:i + self.args.batch]
+            enc = self.tok(b, truncation=True, max_length=self.args.ft_max_len, padding=True, return_tensors="pt").to(self.args.device)
+            with torch.no_grad(), amp(self.args):
+                p = torch.softmax(self.model(**enc).logits.float(), -1)[:, 1].cpu().numpy()
+            score.update(zip(b, p.tolist()))
+        return np.array([score[c] for c in chunks]) if chunks else np.zeros(0)
 
 
 def episode_scores(det, eps, cap) -> np.ndarray:
@@ -416,13 +435,17 @@ def main() -> None:
     ap.add_argument("--ft-seeds", nargs="+", type=int, default=[0, 1, 2], help="fine-tuning seeds, main study")
     ap.add_argument("--ft-heldout-seeds", nargs="+", type=int, default=[0], help="fine-tuning seeds, held-out/transfer")
     ap.add_argument("--max-chunks", type=int, default=64)
-    ap.add_argument("--max-len", type=int, default=256)
-    ap.add_argument("--judge-max-len", type=int, default=768)
+    ap.add_argument("--max-len", type=int, default=256, help="zero-shot classifiers' token limit per chunk")
+    ap.add_argument("--judge-max-len", type=int, default=None, help="default 768 on GPU, 512 on CPU")
+    ap.add_argument("--ft-max-len", type=int, default=None, help="fine-tuning token limit; default 256 on GPU, 128 on CPU")
+    ap.add_argument("--ft-epochs-heldout", type=int, default=None, help="default = --ft-epochs on GPU, 1 on CPU")
+    ap.add_argument("--cpu-bf16", choices=["auto", "on", "off"], default="auto",
+                    help="bfloat16 autocast on CPU (auto: if the CPU has AMX or AVX512-BF16)")
     ap.add_argument("--batch", type=int, default=64)
     ap.add_argument("--ft-epochs", type=int, default=2)
     ap.add_argument("--ft-batch", type=int, default=32)
     ap.add_argument("--ft-lr", type=float, default=3e-5)
-    ap.add_argument("--ft-max-items", type=int, default=40000)
+    ap.add_argument("--ft-max-items", type=int, default=None, help="training chunks per run; default 40000 on GPU, 8000 on CPU")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--offline-test", action="store_true", help="tiny random models, no downloads")
     ap.add_argument("--resume-from", default=None)
@@ -432,8 +455,17 @@ def main() -> None:
     import torch
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    if args.device == "cpu":  # e.g. the CPU host of a TPU VM: use every core
+    cpu = args.device == "cpu"
+    if cpu:  # e.g. the CPU host of a TPU VM: use every core
         torch.set_num_threads(max(1, os.cpu_count() or 1))
+    flags = open("/proc/cpuinfo").read() if os.path.exists("/proc/cpuinfo") else ""
+    args.cpu_bf16 = cpu and (args.cpu_bf16 == "on" or (args.cpu_bf16 == "auto" and ("amx_bf16" in flags or "avx512_bf16" in flags)))
+    args.judge_max_len = args.judge_max_len or (512 if cpu else 768)
+    args.ft_max_len = args.ft_max_len or (128 if cpu else 256)
+    args.ft_epochs_heldout = args.ft_epochs_heldout or (1 if cpu else args.ft_epochs)
+    args.ft_max_items = args.ft_max_items or (8000 if cpu else 40000)
+    print(f"cpu cores={os.cpu_count()} bf16={args.cpu_bf16} ft_max_items={args.ft_max_items} "
+          f"ft_epochs={args.ft_epochs}/{args.ft_epochs_heldout} ft_max_len={args.ft_max_len}", flush=True)
     args.calibration_split, args.heldout_a2a_pairs, args.a2a_pairs, args.agentdojo_model = True, 100, 200, None
     if args.smoke or args.offline_test:
         args.smoke, args.ft_seeds, args.ft_heldout_seeds, args.ft_epochs, args.max_chunks = True, [0], [0], 1, 16
@@ -483,7 +515,8 @@ def main() -> None:
                     if name == "lexical":
                         sc = lexical_scores(eps)
                     else:
-                        det = zs.get(name) or FineTuned(args, seed).fit(eps["train"])
+                        ep = args.ft_epochs if study == "main" else args.ft_epochs_heldout
+                        det = zs.get(name) or FineTuned(args, seed, ep).fit(eps["train"])
                         sc = {s: episode_scores(det, eps.get(s) or [], args.max_chunks) for s in ("val", "cal", "test")}
                         meta["model"] = getattr(det, "model_id", FT_MODEL)
                         if name == "deberta_ft":

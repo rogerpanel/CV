@@ -18,37 +18,38 @@ def code(s):
 
 
 md("""
-# GPU/TPU study (version 4.1)
+# Detector study on a Kaggle TPU VM (version 4.2)
 
-Two parts, which can run on different machines:
+Everything runs on the **CPU host of a TPU v5e-8 VM** (no TPU code needed; the models are small, and the host has
+many cores and native bfloat16). It also runs unchanged on a Kaggle T4 or on Colab.
 
-| `PART` | What it runs | Kaggle T4 | Kaggle TPU VM (CPU host) | Colab T4/L4 |
-|---|---|---|---|---|
-| `"detectors"` | Independent detectors (ProtectAI, PIGuard, Prompt-Guard-2, Qwen judge, fine-tuned DeBERTa-v3, lexical) on the same splits, 31 held-out folds, 4 transfers | ~1.3 h | slower (judge and fine-tuning on CPU) | ~1-1.3 h |
-| `"neural"` | Five-seed SSM-GAT study with saved per-episode scores (main + held-out, certificates) | ~2.8 h | several hours on CPU; resumable | ~2.5 h |
-| `"both"` | both, one after the other | ~4.5 h | -- | ~4 h |
+| Part (in run order) | What it runs | TPU VM (CPU host) |
+|---|---|---|
+| detectors | ProtectAI, PIGuard, Prompt-Guard-2, a Qwen2.5-1.5B judge, a fine-tuned DeBERTa-v3-small and the lexical baseline on the same splits, the 31 held-out folds and 4 cross-benchmark transfers | budget `DET_H` (4.5 h) |
+| neural | five-seed SSM-GAT study with saved per-episode scores (main + held-out + certificates) | budget `NEURAL_H` (4 h) |
 
-**Plan for 2 h of T4 + 20 h of TPU:**
-1. *TPU VM session* (Accelerator **TPU v5e-8**): `PART = "neural"`, `RUN_SMOKE = True`. Run cells 1-7 by hand (the smoke
-   test also checks the detector models load), then **Save Version -> Save & Run All (Commit)**.
-2. *T4 session* (Accelerator **GPU T4 x2**): `PART = "detectors"`, `RUN_SMOKE = False`, `TIME_BUDGET_H = 1.6`.
-   **Save Version -> Save & Run All (Commit)** straight away (the smoke test already ran on the TPU VM).
-3. If either stops at its time budget, start a new version on the TPU VM with the same `PART`, attach the
-   stopped version's output (**+ Add Input -> Notebook Output**) and set `RESUME` to its results folder.
+**Session 1.** Settings -> Accelerator **TPU v5e-8**, Internet **On**. Wait until the session indicator says it is
+running (TPU machines can take 5-15 min to start; cells queue until then). Run cells 0-7 by hand, then
+**Save Version -> Save & Run All (Commit)**.
 
-Each committed version writes **one file to download: `results_v4_<PART>_bundle.zip`** (version list -> the
-version -> **Output**). Only committed versions keep files; the editor's working folder is erased on restart.
+**Session 2, only if the log says a budget was reached.** Open the notebook, **+ Add Input -> Notebook Output ->**
+the finished version of this notebook, set `RESUME_FROM` to the path shown in the right panel
+(e.g. `/kaggle/input/sp-mambaguard-v4-1`), `RUN_SMOKE = False`, and commit again. Finished jobs are skipped.
 
-Optional, for Prompt-Guard-2: accept its licence on Hugging Face and store a read token as the secret `HF_TOKEN`
-(Kaggle: *Add-ons -> Secrets*; Colab: the key icon). Without it, that one detector is skipped.
+Each committed version writes **one file to download: `results_v4_bundle.zip`** (version list -> the version ->
+**Output**). Only committed versions keep files.
+
+Optional, for Prompt-Guard-2: accept its licence on Hugging Face and store a read token as the Kaggle secret
+`HF_TOKEN` (*Add-ons -> Secrets*). Without it, that one detector is skipped.
 """)
 
 md("## 0. Settings")
 code("""
-PART          = "neural"   # "detectors", "neural" or "both"
-RUN_SMOKE     = True       # 5-10 min check; set False on the T4 to save quota
-TIME_BUDGET_H = 8.5        # stop launching new jobs after this long (T4: 1.6), then save and zip
-RESUME        = ""         # results folder (or .zip) of a stopped version, attached as input
+PART        = "both"   # "both" (detectors, then neural), "detectors" or "neural"
+RUN_SMOKE   = True     # 10-min check in session 1; False when resuming
+DET_H       = 4.5      # time budget of the detector part (hours)
+NEURAL_H    = 4.0      # time budget of the neural part (hours)
+RESUME_FROM = ""       # session 2: the attached earlier version, e.g. "/kaggle/input/sp-mambaguard-v4-1"
 """)
 
 md("## 1. Machine")
@@ -65,7 +66,9 @@ print("torch", torch.__version__, "| GPU:", torch.cuda.get_device_name(0) if GPU
       "| CPU cores:", os.cpu_count())
 if not GPU:
     torch.set_num_threads(os.cpu_count() or 1)
-    print("CPU run: the neural study skips GPU latency timing (the paper keeps the T4 latency table)")
+    flags = open("/proc/cpuinfo").read() if os.path.exists("/proc/cpuinfo") else ""
+    print("CPU run; native bfloat16:", "amx_bf16" in flags or "avx512_bf16" in flags,
+          "| the neural study skips latency timing (the paper keeps the T4 latency table)")
 """)
 
 md("## 2. Code")
@@ -145,14 +148,20 @@ if RUN_SMOKE:
     !python kaggle/run_detector_baselines.py --smoke --studies main --benchmarks mcptox injecagent --data-root {DATA} --out {WORK}/results_baselines
 """)
 
-md("## 8. The run (commit the notebook for this part)")
+md("## 8. The run (commit the notebook for this)")
 code("""
-RES_N = f"--resume-from {RESUME}" if (RESUME and PART == "neural") else ""
-RES_D = f"--resume-from {RESUME}" if (RESUME and PART == "detectors") else ""
-if PART in ("neural", "both"):
-    !python kaggle/run_kaggle_study.py --study all --data-root {DATA} --out {WORK}/results_v4_all --time-budget-h {TIME_BUDGET_H} {NEURAL_SKIP} {RES_N}
+def resume_arg(name):
+    if not RESUME_FROM:
+        return ""
+    hits = sorted(glob.glob(f"{RESUME_FROM}/**/{name}", recursive=True)) + sorted(glob.glob(f"{RESUME_FROM}/**/{name}.zip", recursive=True))
+    hits = [h for h in hits if "smoke" not in h]
+    print("resume", name, "from", hits[0] if hits else "nothing found")
+    return f"--resume-from {hits[0]}" if hits else ""
+RES_D, RES_N = resume_arg("results_baselines"), resume_arg("results_v4_all")
 if PART in ("detectors", "both"):
-    !python kaggle/run_detector_baselines.py --data-root {DATA} --out {WORK}/results_baselines --time-budget-h {TIME_BUDGET_H} {RES_D}
+    !python kaggle/run_detector_baselines.py --data-root {DATA} --out {WORK}/results_baselines --time-budget-h {DET_H} {RES_D}
+if PART in ("neural", "both"):
+    !python kaggle/run_kaggle_study.py --study all --data-root {DATA} --out {WORK}/results_v4_all --time-budget-h {NEURAL_H} {NEURAL_SKIP} {RES_N}
 """)
 
 md("## 9. Summaries and the single download file")
@@ -171,7 +180,7 @@ if os.path.exists("results_v4_all.zip"):
     run(["scripts/analyse_v3.py", f"{WORK}/results_v4_all.zip", "--json", f"{WORK}/analysis_v4.json"], f"{WORK}/analysis_v4.md")
 if os.path.exists("results_baselines/summary.md"):
     shutil.copy("results_baselines/summary.md", "baselines_summary.md"); print(open("baselines_summary.md").read())
-bundle = f"results_v4_{PART}_bundle.zip"
+bundle = "results_v4_bundle.zip"
 with zipfile.ZipFile(bundle, "w", zipfile.ZIP_DEFLATED) as z:
     for f in ["results_v4_all.zip", "results_baselines.zip", "summary_v4.md", "analysis_v4.md", "analysis_v4.json", "baselines_summary.md"]:
         if os.path.exists(f):
