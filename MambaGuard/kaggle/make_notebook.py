@@ -63,6 +63,7 @@ if CODE is None:
     subprocess.run(["git", "-C", "/tmp/mg_repo", "sparse-checkout", "set", "MambaGuard"], check=True)
     CODE = "/tmp/mg_repo/MambaGuard"
     print("cloned commit", subprocess.check_output(["git", "-C", "/tmp/mg_repo", "rev-parse", "--short", "HEAD"], text=True).strip())
+os.environ.setdefault("HF_HUB_DISABLE_XET", "1")   # plain LFS downloads; Xet transfers can hang
 os.chdir(CODE); sys.path.insert(0, CODE)
 os.environ["PYTHONPATH"] = CODE + os.pathsep + os.environ.get("PYTHONPATH", "")
 try:

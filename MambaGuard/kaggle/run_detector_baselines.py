@@ -154,9 +154,10 @@ class ZeroShot:
         if self.model is None:
             raise RuntimeError("; ".join(errors))
         id2label = {int(k): str(v).lower() for k, v in self.model.config.id2label.items()}
-        benign = [i for i, l in id2label.items() if any(w in l for w in ("safe", "benign", "legit", "label_0", "negative"))]
+        benign = [i for i, l in id2label.items() if l in ("safe", "benign", "legit", "legitimate", "label_0", "negative", "normal")]
         self.benign = benign[0] if benign else 0
         self.labels = id2label
+        print(f"  {name}: labels {id2label}; benign index {self.benign}" + ("" if benign else " (fallback: index 0)"), flush=True)
 
     def chunk_scores(self, chunks: list[str]) -> np.ndarray:
         import torch
@@ -193,7 +194,9 @@ class Judge(ZeroShot):
         self.no = sorted({enc("No"), enc(" No")})
 
     def _prompt(self, c: str) -> str:
-        msg = [{"role": "user", "content": JUDGE_PROMPT.format(text=c[:2000])}]
+        # truncate the chunk (not the prompt) so the question and the answer slot always survive
+        ids = self.tok.encode(c, add_special_tokens=False)[: max(32, self.args.judge_max_len - 200)]
+        msg = [{"role": "user", "content": JUDGE_PROMPT.format(text=self.tok.decode(ids))}]
         if getattr(self.tok, "chat_template", None):
             return self.tok.apply_chat_template(msg, tokenize=False, add_generation_prompt=True)
         return msg[0]["content"] + "\nAnswer:"
@@ -205,8 +208,7 @@ class Judge(ZeroShot):
         bs = max(1, self.args.batch // 4)
         for i in range(0, len(todo), bs):
             b = todo[i:i + bs]
-            enc = self.tok([self._prompt(c) for c in b], return_tensors="pt", padding=True, truncation=True,
-                           max_length=self.args.judge_max_len).to(self.args.device)
+            enc = self.tok([self._prompt(c) for c in b], return_tensors="pt", padding=True).to(self.args.device)
             with torch.no_grad():
                 logits = self.model(**enc).logits[:, -1, :].float()
             y = torch.logsumexp(logits[:, self.yes], -1)
@@ -221,8 +223,9 @@ def load_classifier(mid, args):
         return tiny_classifier(args)
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-    tok = AutoTokenizer.from_pretrained(mid, token=os.environ.get("HF_TOKEN"))
-    model = AutoModelForSequenceClassification.from_pretrained(mid, token=os.environ.get("HF_TOKEN"))
+    # PIGuard/InjecGuard ship a small custom head (modeling_piguard.py), hence trust_remote_code
+    tok = AutoTokenizer.from_pretrained(mid, token=os.environ.get("HF_TOKEN"), trust_remote_code=True)
+    model = AutoModelForSequenceClassification.from_pretrained(mid, token=os.environ.get("HF_TOKEN"), trust_remote_code=True)
     return tok, model.to(args.device).eval()
 
 
