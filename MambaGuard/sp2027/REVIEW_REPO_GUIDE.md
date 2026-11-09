@@ -50,12 +50,12 @@ git remote add origin https://github.com/<account>/<repo>.git && git push -u ori
    `main`.
 3. Under terms to remove, add your names, your GitHub user name, your
    institution, and `MambaGuard`.
-4. Set the repository ID to `agent-protocol-detectors` (the paper's Appendix J already uses
+4. Set the repository ID to `agent-protocol-detectors` (the paper's Appendix I already uses
    `https://anonymous.4open.science/r/agent-protocol-detectors`; if that ID is taken, pick another and
    tell Claude to update the paper), set the expiry after the review period, and save.
 5. Open the link in a private browser window and check the README renders
    and no name appears.
-6. Put the link in the paper (Appendix J, `\url{...}`) and in the
+6. Put the link in the paper (Appendix I, `\url{...}`) and in the
    submission form's artifact field.
 7. Optionally, put the mirror's **Download** link into `ARTIFACT_ZIP_URL` in
    `kaggle/run_on_kaggle.ipynb`, so reviewers can run the study on Kaggle

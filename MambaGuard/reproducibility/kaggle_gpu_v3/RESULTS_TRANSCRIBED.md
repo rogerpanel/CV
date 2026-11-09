@@ -1,5 +1,9 @@
 # v3 GPU study: transcribed notebook output
 
+**Verified.** A complete rerun with every per-episode score saved
+(`reproducibility/kaggle_gpu_v4/`, Colab T4/L4, 2026-11-09) reproduced every table below
+exactly, except latency timings.
+
 **Provenance.** These tables are the text that the committed Kaggle version
 printed in its final cell (`scripts/summarise_kaggle_results.py` and
 `scripts/analyse_v3.py` run on `/kaggle/working/results_v3_all.zip`,

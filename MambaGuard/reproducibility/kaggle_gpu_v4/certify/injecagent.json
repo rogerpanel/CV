@@ -1,0 +1,229 @@
+{
+  "study": "main",
+  "bench": "injecagent",
+  "benchmark": "injecagent",
+  "encoder": "chunk_mil",
+  "d_p": 1280,
+  "n0": 32,
+  "n": 500,
+  "alpha": 0.001,
+  "windows": 100,
+  "sigmas": {
+    "0.05": {
+      "cert_acc_curve": [
+        {
+          "radius": 0.0,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.02,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.05,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.1,
+          "cert_acc": 0.96
+        },
+        {
+          "radius": 0.25,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 0.5,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 0.75,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 1.0,
+          "cert_acc": 0.0
+        }
+      ],
+      "composed_bound_V1_B1_T1e4_N5": [
+        {
+          "radius": 0.0,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.02,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.05,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.1,
+          "composed_lower_bound": 0.9500293871100295
+        },
+        {
+          "radius": 0.25,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 0.5,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 0.75,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 1.0,
+          "composed_lower_bound": -0.009970612889970507
+        }
+      ],
+      "abstain_rate": 0.02,
+      "median_radius_certified": 0.11025931172777428
+    },
+    "0.1": {
+      "cert_acc_curve": [
+        {
+          "radius": 0.0,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.02,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.05,
+          "cert_acc": 0.98
+        },
+        {
+          "radius": 0.1,
+          "cert_acc": 0.96
+        },
+        {
+          "radius": 0.25,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 0.5,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 0.75,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 1.0,
+          "cert_acc": 0.0
+        }
+      ],
+      "composed_bound_V1_B1_T1e4_N5": [
+        {
+          "radius": 0.0,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.02,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.05,
+          "composed_lower_bound": 0.9700293871100295
+        },
+        {
+          "radius": 0.1,
+          "composed_lower_bound": 0.9500293871100295
+        },
+        {
+          "radius": 0.25,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 0.5,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 0.75,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 1.0,
+          "composed_lower_bound": -0.009970612889970507
+        }
+      ],
+      "abstain_rate": 0.02,
+      "median_radius_certified": 0.22051862345554857
+    },
+    "0.25": {
+      "cert_acc_curve": [
+        {
+          "radius": 0.0,
+          "cert_acc": 0.97
+        },
+        {
+          "radius": 0.02,
+          "cert_acc": 0.96
+        },
+        {
+          "radius": 0.05,
+          "cert_acc": 0.96
+        },
+        {
+          "radius": 0.1,
+          "cert_acc": 0.96
+        },
+        {
+          "radius": 0.25,
+          "cert_acc": 0.69
+        },
+        {
+          "radius": 0.5,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 0.75,
+          "cert_acc": 0.0
+        },
+        {
+          "radius": 1.0,
+          "cert_acc": 0.0
+        }
+      ],
+      "composed_bound_V1_B1_T1e4_N5": [
+        {
+          "radius": 0.0,
+          "composed_lower_bound": 0.9600293871100295
+        },
+        {
+          "radius": 0.02,
+          "composed_lower_bound": 0.9500293871100295
+        },
+        {
+          "radius": 0.05,
+          "composed_lower_bound": 0.9500293871100295
+        },
+        {
+          "radius": 0.1,
+          "composed_lower_bound": 0.9500293871100295
+        },
+        {
+          "radius": 0.25,
+          "composed_lower_bound": 0.6800293871100295
+        },
+        {
+          "radius": 0.5,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 0.75,
+          "composed_lower_bound": -0.009970612889970507
+        },
+        {
+          "radius": 1.0,
+          "composed_lower_bound": -0.009970612889970507
+        }
+      ],
+      "abstain_rate": 0.03,
+      "median_radius_certified": 0.2974092603994509
+    }
+  }
+}

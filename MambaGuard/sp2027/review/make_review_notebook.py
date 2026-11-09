@@ -118,6 +118,12 @@ code("""
 !python kaggle/run_kaggle_study.py --study all --data-root {DATA} --out /kaggle/working/results_v3_all --time-budget-h 11
 """)
 
+md("## 8b. Independent detectors (~2 h): public classifiers, an LLM judge, a fine-tuned DeBERTa-v3, transfers")
+code("""
+!python kaggle/run_detector_baselines.py --data-root {DATA} --out /kaggle/working/results_baselines
+!python scripts/summarise_detectors.py /kaggle/working/results_v3_all.zip /kaggle/working/results_baselines.zip | tee /kaggle/working/detectors.md
+""")
+
 md("## 9. Tables and pre-registered analysis (printed here; also saved next to the zip)")
 code("""
 !python scripts/summarise_kaggle_results.py /kaggle/working/results_v3_all.zip | tee /kaggle/working/summary_v3.md

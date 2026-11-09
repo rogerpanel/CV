@@ -40,10 +40,10 @@ if [ "$AUDIT" -eq 1 ]; then
   echo "== [2] template audit (top features, feature removal, similarity to training attacks)"
   "$PYTHON" scripts/template_audit.py --data-root "$DATA_ROOT" --out outputs/template_audit.json
   echo "   -> outputs/template_audit.json (compare with reproducibility/template_audit.json)"
-  echo "== [2] calibration (ECE) of the recorded three-seed predictions"
-  "$PYTHON" scripts/calibration_v2.py reproducibility/kaggle_gpu_v2.zip --data-root "$DATA_ROOT" \
-      --out outputs/calibration_v2.json
-  echo "   -> outputs/calibration_v2.json (compare with reproducibility/calibration_v2.json)"
+  echo "== [2] calibration (ECE) of every detector, from the recorded scores"
+  "$PYTHON" scripts/calibration_v4.py reproducibility/kaggle_gpu_v4.zip reproducibility/detectors_v4.zip \
+      --out outputs/calibration_v4.json
+  echo "   -> outputs/calibration_v4.json (compare with reproducibility/calibration_v4.json)"
 fi
 
 if [ "$GPU" -eq 1 ]; then

@@ -19,15 +19,17 @@
 \node[stage=st2] (s2) at (1*\dx,0) {%
   {\bfseries Grouped splits}\\ no server, case, template or twin crosses splits:\\ train $\mid$ val$_{\text{sel}}$ $\mid$ val$_{\text{cal}}$ $\mid$ test\\[3pt]
   {\bfseries Held-out folds $\calF$}\\ hide one wording, family or vulnerability class from train and val; test on it alone\\[3pt]
-  {\bfseries Audit}\\ leakage check per fold; episode-length control};
+  {\bfseries Transfer}\\ train on one benchmark, test on another\\[3pt]
+  {\bfseries Audit}\\ leakage check per fold; length control};
 \node[stage=st3] (s3) at (2*\dx,0) {%
   {\bfseries Chunking}\\ payload $x\rightarrow c_{1},\dots,c_{K}$: one per tool, per ${\sim}48$-word sentence run, plus a header ($K\le64$)\\[3pt]
   {\bfseries Per chunk}\\ $e(c_{k})\in\R^{384}$: MiniLM\\ $v(c_{k})\in\R^{512}$: hashed word counts\\[3pt]
   {\bfseries Pooling}\\ $p=[\overline{e},\max e,\max v]$\\ learned scorer $g(c_{k})$, max + mean};
 \node[stage=st4] (s4) at (3*\dx,0) {%
-  {\bfseries Controls}\\ length: one threshold on $T$\\ lexical: TF--IDF + logistic regression\\ novelty: Mahalanobis distance to benign training data\\[3pt]
+  {\bfseries Controls}\\ length; lexical TF--IDF + logistic regression; novelty (Mahalanobis)\\[3pt]
+  {\bfseries Independent}\\ ProtectAI, PIGuard (zero-shot); LLM judge; fine-tuned DeBERTa-v3\\[3pt]
   {\bfseries Neural detector}\\ SSM-GAT $f_{\theta}$: SSM + GATv2, graph or flat read-out; 5 ablations\\[3pt]
-  every model outputs a score $s(E)\in[0,1]$};
+  each outputs $s(E)\in[0,1]$};
 \node[stage=st5] (s5) at (4*\dx,0) {%
   {\bfseries Calibration}\\ Platt: $\tilde s=\sigma(a s+b)$, fitted on val$_{\text{sel}}$\\[3pt]
   {\bfseries Hybrid}\\ $s_{\text{hyb}}=\sum_{j}w_{j}\tilde s_{j}$; weights $w$ on the simplex, chosen on val$_{\text{sel}}$\\[3pt]

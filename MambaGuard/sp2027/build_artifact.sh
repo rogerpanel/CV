@@ -82,7 +82,7 @@ echo "== verify: tests pass inside the copy"
 find "$A" -type d -name __pycache__ -prune -exec rm -rf {} +
 
 echo "== pack recorded runs (keeps every folder under GitHub's 100-files-per-upload limit)"
-( cd "$A/reproducibility" && for d in kaggle_gpu kaggle_gpu_v2 cpu_checks_v2; do
+( cd "$A/reproducibility" && for d in kaggle_gpu kaggle_gpu_v2 kaggle_gpu_v4 detectors_v4 cpu_checks_v2; do
     [ -d "$d" ] && zip -qr "$d.zip" "$d" && rm -rf "$d"; done )
 find "$A" -type d -name .pytest_cache -prune -exec rm -rf {} +
 for d in "$A"/*/; do n=$(find "$d" -type f | wc -l); [ "$n" -le 100 ] || echo "note: $d has $n files"; done

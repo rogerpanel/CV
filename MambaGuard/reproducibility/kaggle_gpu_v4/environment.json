@@ -1,0 +1,32 @@
+{
+  "runner_version": 2,
+  "python": "3.13.16",
+  "torch": "2.14.1+cu130",
+  "cuda": "13.0",
+  "device": "cuda",
+  "gpu": "Tesla T4",
+  "bf16_native": false,
+  "study": "all",
+  "main_encoder": "chunk_mil",
+  "main_variant": "flat",
+  "runner_v": 3,
+  "calibration_split": true,
+  "sentence_backend": "minilm",
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "heldout_seeds": [
+    0,
+    1,
+    2
+  ],
+  "balance": true,
+  "started": "2026-11-09 18:54:45",
+  "code_commit": null,
+  "sentence_transformers": "5.7.0",
+  "finished": "2026-11-09 20:04:40"
+}

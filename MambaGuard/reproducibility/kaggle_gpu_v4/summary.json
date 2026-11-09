@@ -1,0 +1,1730 @@
+{
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=agent_card_jws_trust": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.33035714285714285,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.3377777777777778,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.4,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.7333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=artifact_chunk_corruption": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.45333333333333337,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=cross_client_context_injection": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.7555555555555555,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=indefinite_interrupted_tasks": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.5555555555555556,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=multi_hop_identity_loss": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.4355555555555555,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=post_revocation_stream": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.4444444444444444,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.76,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.13333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.06666666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=scope_amplification": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.5970695970695971,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.5733333333333334,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.06666666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=stale_task_state": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.17333333333333334,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=unattested_skill_claims": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.5866666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=unbounded_delegation_depth": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.466484268125855,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8577777777777778,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.13333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__flat__chunk_mil__finding=unverified_webhook_url": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.28,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.20888888888888887,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.4666666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.8666666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=agent_card_jws_trust": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.4488888888888889,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=artifact_chunk_corruption": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.48888888888888893,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=cross_client_context_injection": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.6222222222222222,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=indefinite_interrupted_tasks": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=multi_hop_identity_loss": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.5688888888888889,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=post_revocation_stream": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.43270300333704115,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.4,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.4,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.5333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=scope_amplification": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.5970695970695971,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8933333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.6666666666666666,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=stale_task_state": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.3333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.28444444444444444,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=unattested_skill_claims": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.466484268125855,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.3466666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.13333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=unbounded_delegation_depth": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8642533936651584,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.7333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__a2a_sandbox__lexical__tfidf__finding=unverified_webhook_url": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.6411483253588517,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.6088888888888888,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.4,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.06666666666666667,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=direct": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.617820410071462,
+      "std": 0.09231162374889293,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.7821428571428571,
+      "std": 0.0325862278408833,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.5750000000000001,
+      "std": 0.1322875655532295,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.19047619047619047,
+      "std": 0.10910894511799618,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=dos": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.8062846276781239,
+      "std": 0.06637174505864676,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.9517857142857142,
+      "std": 0.028347335475692067,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9,
+      "std": 0.025000000000000022,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.28571428571428575,
+      "std": 0.12371791482634838,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=ignore_previous": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.8559933997794708,
+      "std": 0.060528365046661044,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.942857142857143,
+      "std": 0.04024795596280229,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9249999999999999,
+      "std": 0.043301270189221905,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.21428571428571427,
+      "std": 0.07142857142857142,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=important_instructions": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.8963012597158938,
+      "std": 0.09579758842573666,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.9851190476190476,
+      "std": 0.011889871640141792,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9666666666666667,
+      "std": 0.028867513459481315,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.19047619047619047,
+      "std": 0.21821789023599236,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=injecagent": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.9074734628095605,
+      "std": 0.06031538881537111,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.9755952380952381,
+      "std": 0.009834947405868004,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9583333333333334,
+      "std": 0.014433756729740658,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.14285714285714288,
+      "std": 0.1889822365046136,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__flat__chunk_mil__family=tool_knowledge": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.7047763550299754,
+      "std": 0.24476126510436746,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.8535714285714286,
+      "std": 0.2042594888261258,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9666666666666667,
+      "std": 0.038188130791298645,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.5238095238095238,
+      "std": 0.4364357804719848,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=direct": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8712241653418125,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9375,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.85,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=dos": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.949343339587242,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9946428571428572,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.14285714285714285,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=ignore_previous": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8036363636363637,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9660714285714285,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.825,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.14285714285714285,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=important_instructions": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.949343339587242,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.14285714285714285,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=injecagent": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8986866791744841,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9857142857142858,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.975,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.21428571428571427,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__agentdojo__lexical__tfidf__family=tool_knowledge": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.9753086419753085,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.07142857142857142,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__injecagent__flat__chunk_mil__attacker_cases=0": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "n_test": 30
+  },
+  "heldout__injecagent__flat__chunk_mil__attacker_cases=1": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.9652173913043479,
+      "std": 0.06024524548065657,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.1111111111111111,
+      "std": 0.19245008972987526,
+      "n": 3
+    },
+    "n_test": 60
+  },
+  "heldout__injecagent__flat__chunk_mil__attacker_cases=2": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__injecagent__flat__chunk_mil__attacker_cases=3": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.8024088123098023,
+      "std": 0.027319647558413547,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.9956427015250545,
+      "std": 0.0075470623423480225,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.9477124183006534,
+      "std": 0.011320593513522097,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.1111111111111111,
+      "std": 0.19245008972987526,
+      "n": 3
+    },
+    "n_test": 54
+  },
+  "heldout__injecagent__lexical__tfidf__attacker_cases=0": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__injecagent__lexical__tfidf__attacker_cases=1": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 60
+  },
+  "heldout__injecagent__lexical__tfidf__attacker_cases=2": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__injecagent__lexical__tfidf__attacker_cases=3": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8181818181818181,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9411764705882353,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 54
+  },
+  "heldout__mcp_safetybench__flat__chunk_mil__family=host_user": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.41963049104317185,
+      "std": 0.16041608546769112,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.7361111111111112,
+      "std": 0.013888888888888895,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.8333333333333334,
+      "std": 0.28867513459481287,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.6388888888888888,
+      "std": 0.33935532563529486,
+      "n": 3
+    },
+    "n_test": 30
+  },
+  "heldout__mcp_safetybench__flat__chunk_mil__family=name_competition": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.4398124066280306,
+      "std": 0.03433569930657736,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.4598765432098766,
+      "std": 0.06486990604007317,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.3703703703703704,
+      "std": 0.23129622216290366,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.4305555555555556,
+      "std": 0.2646188733785785,
+      "n": 3
+    },
+    "n_test": 33
+  },
+  "heldout__mcp_safetybench__flat__chunk_mil__family=poisoning": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.4823987149291937,
+      "std": 0.08906052565849196,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.48611111111111116,
+      "std": 0.00277777777777774,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.17777777777777778,
+      "std": 0.16777409856157222,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.11111111111111112,
+      "std": 0.15774745405000762,
+      "n": 3
+    },
+    "n_test": 39
+  },
+  "heldout__mcp_safetybench__flat__chunk_mil__family=result_injection": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.4845730907558865,
+      "std": 0.13041708879432018,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.7027777777777778,
+      "std": 0.12647280486480234,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.8000000000000002,
+      "std": 1.3597399555105182e-16,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.5416666666666666,
+      "std": 0.19094065395649332,
+      "n": 3
+    },
+    "n_test": 29
+  },
+  "heldout__mcp_safetybench__lexical__tfidf__family=host_user": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.49760765550239233,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.6458333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.6666666666666666,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.5,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 30
+  },
+  "heldout__mcp_safetybench__lexical__tfidf__family=name_competition": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.49230769230769234,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.6712962962962963,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.5555555555555556,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.5,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 33
+  },
+  "heldout__mcp_safetybench__lexical__tfidf__family=poisoning": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.49444444444444446,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.6611111111111112,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.13333333333333333,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.041666666666666664,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 39
+  },
+  "heldout__mcp_safetybench__lexical__tfidf__family=result_injection": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.6282051282051282,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.7,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.2,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 29
+  },
+  "heldout__mcptox__flat__chunk_mil__paradigm=Template-1": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.5342353368792971,
+      "std": 0.10574722769371317,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.6462585034013605,
+      "std": 0.0472216777836224,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.13095238095238096,
+      "std": 0.11480536620229707,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.0047619047619047615,
+      "std": 0.008247860988423226,
+      "n": 3
+    },
+    "n_test": 98
+  },
+  "heldout__mcptox__flat__chunk_mil__paradigm=Template-2": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.5248269440487389,
+      "std": 0.02654891440439984,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.6781084656084656,
+      "std": 0.05421509744493042,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.23611111111111108,
+      "std": 0.013888888888888895,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.06666666666666667,
+      "std": 0.05016977977548923,
+      "n": 3
+    },
+    "n_test": 142
+  },
+  "heldout__mcptox__flat__chunk_mil__paradigm=Template-3": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.5238718544141191,
+      "std": 0.06385123631421755,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.6410025062656642,
+      "std": 0.024899519179373244,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.37543859649122807,
+      "std": 0.1522984871172681,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.24285714285714288,
+      "std": 0.1505093393264677,
+      "n": 3
+    },
+    "n_test": 165
+  },
+  "heldout__mcptox__flat__chunk_mil__wrapper=ignore_previous": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.5806013416658978,
+      "std": 0.046415971270040296,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.6616666666666666,
+      "std": 0.048429414236239816,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.2888888888888889,
+      "std": 0.03849001794597504,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.06190476190476191,
+      "std": 0.05016977977548923,
+      "n": 3
+    },
+    "n_test": 130
+  },
+  "heldout__mcptox__flat__chunk_mil__wrapper=important_tag": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.5238991962874632,
+      "std": 0.14916238164890722,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.704112554112554,
+      "std": 0.017625747261070166,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.23232323232323235,
+      "std": 0.19185272639618767,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.04285714285714285,
+      "std": 0.04285714285714286,
+      "n": 3
+    },
+    "n_test": 136
+  },
+  "heldout__mcptox__flat__chunk_mil__wrapper=plain": {
+    "n_runs": 3,
+    "macro_f1_val_threshold": {
+      "mean": 0.49972649585646584,
+      "std": 0.06657060996913695,
+      "n": 3
+    },
+    "auroc": {
+      "mean": 0.6820565907522429,
+      "std": 0.023345311106828904,
+      "n": 3
+    },
+    "attack_recall": {
+      "mean": 0.1932367149758454,
+      "std": 0.07981986300414641,
+      "n": 3
+    },
+    "fpr": {
+      "mean": 0.047619047619047616,
+      "std": 0.059476171413318075,
+      "n": 3
+    },
+    "n_test": 139
+  },
+  "heldout__mcptox__lexical__tfidf__paradigm=Template-1": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8322492297158508,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.95,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9642857142857143,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.2,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 98
+  },
+  "heldout__mcptox__lexical__tfidf__paradigm=Template-2": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.5872093023255813,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8617063492063493,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.3888888888888889,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.17142857142857143,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 142
+  },
+  "heldout__mcptox__lexical__tfidf__paradigm=Template-3": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.5891690009337068,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8511278195488722,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.3263157894736842,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 165
+  },
+  "heldout__mcptox__lexical__tfidf__wrapper=ignore_previous": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8538375051778211,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8488095238095239,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9166666666666666,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.2,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 130
+  },
+  "heldout__mcptox__lexical__tfidf__wrapper=important_tag": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.5741388837723338,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.842857142857143,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.2878787878787879,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.05714285714285714,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 136
+  },
+  "heldout__mcptox__lexical__tfidf__wrapper=plain": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.6160897925603808,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.8664596273291927,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.3188405797101449,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 139
+  },
+  "main__a2a_sandbox__flat__chunk_mil__all": {
+    "n_runs": 5,
+    "macro_f1_val_threshold": {
+      "mean": 0.9618095503832462,
+      "std": 0.004851558778849702,
+      "n": 5
+    },
+    "auroc": {
+      "mean": 0.9968062442607897,
+      "std": 0.0004469172834400615,
+      "n": 5
+    },
+    "attack_recall": {
+      "mean": 0.9684848484848485,
+      "std": 0.009725337294473446,
+      "n": 5
+    },
+    "fpr": {
+      "mean": 0.044848484848484846,
+      "std": 0.01835773482528601,
+      "n": 5
+    },
+    "n_test": 660
+  },
+  "main__a2a_sandbox__lexical__tfidf__all": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.9545450371445101,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9952800734618916,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9575757575757575,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.048484848484848485,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 660
+  },
+  "main__agentdojo__flat__chunk_mil__all": {
+    "n_runs": 5,
+    "macro_f1_val_threshold": {
+      "mean": 0.8796771222798766,
+      "std": 0.055232739053563115,
+      "n": 5
+    },
+    "auroc": {
+      "mean": 0.9873015873015873,
+      "std": 0.009204296432335859,
+      "n": 5
+    },
+    "attack_recall": {
+      "mean": 0.9244444444444445,
+      "std": 0.05115939748098373,
+      "n": 5
+    },
+    "fpr": {
+      "mean": 0.02857142857142857,
+      "std": 0.06388765649999399,
+      "n": 5
+    },
+    "n_test": 104
+  },
+  "main__agentdojo__lexical__tfidf__all": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 104
+  },
+  "main__injecagent__flat__chunk_mil__all": {
+    "n_runs": 5,
+    "macro_f1_val_threshold": {
+      "mean": 0.9494652406417112,
+      "std": 0.11299915715172734,
+      "n": 5
+    },
+    "auroc": {
+      "mean": 0.9996415770609319,
+      "std": 0.0008014580564515202,
+      "n": 5
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 5
+    },
+    "fpr": {
+      "mean": 0.13333333333333333,
+      "std": 0.29814239699997197,
+      "n": 5
+    },
+    "n_test": 189
+  },
+  "main__injecagent__lexical__tfidf__all": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.0,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 189
+  },
+  "main__mcp_safetybench__flat__chunk_mil__all": {
+    "n_runs": 5,
+    "macro_f1_val_threshold": {
+      "mean": 0.6508009440641177,
+      "std": 0.13450215718433764,
+      "n": 5
+    },
+    "auroc": {
+      "mean": 0.7607142857142858,
+      "std": 0.15502038853543754,
+      "n": 5
+    },
+    "attack_recall": {
+      "mean": 0.6457142857142857,
+      "std": 0.15984686549370702,
+      "n": 5
+    },
+    "fpr": {
+      "mean": 0.29999999999999993,
+      "std": 0.30533451600935435,
+      "n": 5
+    },
+    "n_test": 59
+  },
+  "main__mcp_safetybench__lexical__tfidf__all": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8218599033816425,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9345238095238095,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.8857142857142857,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.25,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 59
+  },
+  "main__mcptox__flat__chunk_mil__all": {
+    "n_runs": 5,
+    "macro_f1_val_threshold": {
+      "mean": 0.49767951640430164,
+      "std": 0.07962690216801965,
+      "n": 5
+    },
+    "auroc": {
+      "mean": 0.7814065934065934,
+      "std": 0.05247902906105778,
+      "n": 5
+    },
+    "attack_recall": {
+      "mean": 0.33538461538461534,
+      "std": 0.1273096934797657,
+      "n": 5
+    },
+    "fpr": {
+      "mean": 0.03428571428571429,
+      "std": 0.053069073202876314,
+      "n": 5
+    },
+    "n_test": 265
+  },
+  "main__mcptox__lexical__tfidf__all": {
+    "n_runs": 1,
+    "macro_f1_val_threshold": {
+      "mean": 0.8991167961017208,
+      "std": 0.0,
+      "n": 1
+    },
+    "auroc": {
+      "mean": 0.9168498168498169,
+      "std": 0.0,
+      "n": 1
+    },
+    "attack_recall": {
+      "mean": 0.9692307692307692,
+      "std": 0.0,
+      "n": 1
+    },
+    "fpr": {
+      "mean": 0.2,
+      "std": 0.0,
+      "n": 1
+    },
+    "n_test": 265
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "study": "main",
+  "bench": "a2a_sandbox",
+  "benchmark": "a2a_sandbox",
+  "encoder": {
+    "per_message_ms_batch1": 10.85311949998868,
+    "per_message_ms_batched": 1.828792060005071,
+    "messages": 200
+  },
+  "d_p": 1280,
+  "device": "cuda",
+  "batch": {
+    "1": {
+      "windows": 1,
+      "messages": 8,
+      "median_batch_ms": 6.61740500072483,
+      "p99_batch_ms": 10.979864110504426,
+      "per_message_ms": 0.8271756250906037,
+      "messages_per_s": 1208.9331088430781
+    },
+    "8": {
+      "windows": 8,
+      "messages": 70,
+      "median_batch_ms": 7.774458999847411,
+      "p99_batch_ms": 12.226773569618679,
+      "per_message_ms": 0.11106369999782016,
+      "messages_per_s": 9003.841939532242
+    },
+    "32": {
+      "windows": 32,
+      "messages": 238,
+      "median_batch_ms": 12.415515000611776,
+      "p99_batch_ms": 15.428133440691461,
+      "per_message_ms": 0.052166029414335194,
+      "messages_per_s": 19169.56324310933
+    },
+    "128": {
+      "windows": 128,
+      "messages": 1106,
+      "median_batch_ms": 47.28628199973173,
+      "p99_batch_ms": 48.919790078980455,
+      "per_message_ms": 0.0427543236887267,
+      "messages_per_s": 23389.447282116085
+    }
+  }
+}
