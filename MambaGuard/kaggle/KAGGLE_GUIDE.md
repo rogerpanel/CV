@@ -1,4 +1,4 @@
-# Running the MambaGuard GPU study on Kaggle (version 2)
+# Running the GPU/TPU study on Kaggle
 
 This folder runs every experiment that needs a GPU and returns small zips of
 results that `scripts/summarise_kaggle_results.py` turns into the paper's
@@ -12,7 +12,29 @@ tables.
 | `requirements-kaggle.txt` | The two packages Kaggle lacks (`einops`, `sentence-transformers`) |
 | `build_kaggle_package.sh` | Builds `dist/mambaguard-kaggle.zip` for upload as a Kaggle Dataset (Option B) |
 
-## Version 3 (current): what runs and why
+## Version 4.1 (current): 2 h of T4 + TPU hours
+
+The notebook has a `PART` switch in cell 0, so the two halves run on different machines:
+
+| Session | Accelerator | Cell 0 | Time | Output to download |
+|---|---|---|---|---|
+| 1 | **TPU v5e-8** (the TPU VM's CPU host runs everything; no TPU code needed) | `PART="neural"`, `RUN_SMOKE=True`, `TIME_BUDGET_H=8.5` | ~5-7 h | `results_v4_neural_bundle.zip` |
+| 2 | **GPU T4 x2** | `PART="detectors"`, `RUN_SMOKE=False`, `TIME_BUDGET_H=1.6` | ~1.3 h | `results_v4_detectors_bundle.zip` |
+
+1. Re-import `kaggle/mambaguard_kaggle.ipynb` (File -> Import Notebook). Internet On.
+2. Session 1: choose TPU v5e-8, set cell 0, run cells 0-7 by hand (the smoke test also checks that the
+   detector models download), then **Save Version -> Save & Run All (Commit)**.
+3. Session 2 (can run at the same time, as a second notebook copy or after session 1): choose GPU T4 x2, set
+   cell 0, then **Save Version -> Save & Run All (Commit)** directly.
+4. If a run stops at its time budget: new version on the TPU VM with the same `PART`, **+ Add Input ->
+   Notebook Output** (the stopped version), `RESUME="/kaggle/input/<notebook>/results_baselines"` (or
+   `results_v4_all`), commit. Finished jobs are skipped.
+5. Download each bundle from the version's **Output** section and send both.
+
+Measured on 4 CPU cores: one full MCPTox training job takes 169 s, about the T4's speed, because the model is small.
+Colab alternative: Pay As You Go compute units; set `PART="both"` on a T4 or L4 runtime (about 4-4.5 h).
+
+## Version 3 (previous): what runs and why
 
 One background run, `STUDY = "all"`, estimated 4–5 h on a T4 → `results_v3_all.zip`.
 

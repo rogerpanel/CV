@@ -426,10 +426,14 @@ def main() -> None:
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--offline-test", action="store_true", help="tiny random models, no downloads")
     ap.add_argument("--resume-from", default=None)
+    ap.add_argument("--time-budget-h", type=float, default=11.0,
+                    help="stop starting new jobs after this many hours, then save and zip (resume later with --resume-from)")
     args = ap.parse_args()
     import torch
 
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
+    if args.device == "cpu":  # e.g. the CPU host of a TPU VM: use every core
+        torch.set_num_threads(max(1, os.cpu_count() or 1))
     args.calibration_split, args.heldout_a2a_pairs, args.a2a_pairs, args.agentdojo_model = True, 100, 200, None
     if args.smoke or args.offline_test:
         args.smoke, args.ft_seeds, args.ft_heldout_seeds, args.ft_epochs, args.max_chunks = True, [0], [0], 1, 16
@@ -459,7 +463,11 @@ def main() -> None:
                 print(f"SKIP {name}: {e}", flush=True)
                 (out / "runs" / f"_skipped__{name}.txt").write_text(str(e))
     records = []
+    deadline = t_start + args.time_budget_h * 3600
     for study, bench, fold, eps in cases(args, data):
+        if time.time() > deadline:
+            print(f"time budget of {args.time_budget_h} h reached: stopping; resume with --resume-from", flush=True)
+            break
         seeds = args.ft_seeds if study == "main" else args.ft_heldout_seeds
         for name in args.detectors:
             for seed in (seeds if name == "deberta_ft" else [0]):
