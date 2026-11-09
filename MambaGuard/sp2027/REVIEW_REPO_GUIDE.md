@@ -1,6 +1,6 @@
 # Publishing the anonymised artifact for reviewers
 
-The package is `sp2027/dist/mambaguard-artifact.zip` (built by
+The package is `sp2027/dist/review-artifact.zip` (built by
 `bash sp2027/build_artifact.sh`). It already passed the identity scan, the
 stale-claim scan and the test suite inside the copy. Every folder holds at
 most 100 files, so it can be uploaded through the GitHub website.
@@ -13,8 +13,8 @@ words removed.
 ## Step 1: create the repository
 
 1. github.com → **New repository**.
-2. Choose a neutral name with no personal or institutional words, e.g.
-   `agent-protocol-detector-study`.
+2. Choose a neutral name with no personal, institutional or project words (not "MambaGuard": that name
+   links to your public model repository), e.g. `agent-protocol-detectors`.
 3. Leave the README, .gitignore and licence boxes **unticked**; the package
    has its own. Private or Public both work.
 
@@ -25,19 +25,19 @@ It can attach the repository to the session and push the package as one
 commit with an anonymous author.
 
 **B. Browser upload.**
-1. Unzip `mambaguard-artifact.zip` on your computer.
+1. Unzip `review-artifact.zip` on your computer.
 2. On the empty repository's page, click **uploading an existing file**.
-3. Open the unzipped `mambaguard-artifact` folder and select **its
+3. Open the unzipped `review-artifact` folder and select **its
    contents**, not the folder itself.
 4. Drag them in. If GitHub refuses more than 100 files, upload one
    top-level folder at a time: first the root files (`README.md`,
-   `LICENSE`, `setup.py`, ...), then `mambaguard/`, then `reproducibility/`,
+   `LICENSE`, `setup.py`, ...), then `apdet/`, then `reproducibility/`,
    and so on.
 5. Commit each batch to `main`.
 
 **C. Command line.**
 ```bash
-unzip mambaguard-artifact.zip && cd mambaguard-artifact
+unzip review-artifact.zip && cd review-artifact
 git init -b main && git add -A
 git -c user.name=Anonymous -c user.email=anonymous@example.com commit -m "Artifact"
 git remote add origin https://github.com/<account>/<repo>.git && git push -u origin main
@@ -48,10 +48,11 @@ git remote add origin https://github.com/<account>/<repo>.git && git push -u ori
 1. Go to anonymous.4open.science and sign in with GitHub.
 2. Choose **Anonymize your repository** and pick the repository and branch
    `main`.
-3. Under terms to remove, add your name, your GitHub user name, your
-   institution and any project names.
-4. Set the expiry after the review period and save. You get a link of the
-   form `https://anonymous.4open.science/r/<id>`.
+3. Under terms to remove, add your names, your GitHub user name, your
+   institution, and `MambaGuard`.
+4. Set the repository ID to `agent-protocol-detectors` (the paper's Appendix J already uses
+   `https://anonymous.4open.science/r/agent-protocol-detectors`; if that ID is taken, pick another and
+   tell Claude to update the paper), set the expiry after the review period, and save.
 5. Open the link in a private browser window and check the README renders
    and no name appears.
 6. Put the link in the paper (Appendix J, `\url{...}`) and in the

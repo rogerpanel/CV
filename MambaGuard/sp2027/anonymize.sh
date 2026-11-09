@@ -59,6 +59,7 @@ EXCLUDES=(
     '--exclude=kaggle/dist'
     '--exclude=kaggle/mambaguard_kaggle.ipynb'
     '--exclude=kaggle/KAGGLE_GUIDE.md'
+    '--exclude=kaggle/make_notebook.py'
     '--exclude=kaggle/build_kaggle_package.sh'
 )
 if command -v rsync >/dev/null 2>&1; then
@@ -66,7 +67,7 @@ if command -v rsync >/dev/null 2>&1; then
 else
     cp -a "$SRC"/. "$DEST"/
     rm -rf "$DEST/.git" "$DEST/manuscript_v4" "$DEST/sp2027" "$DEST/kaggle/results" "$DEST/kaggle/dist"
-    rm -f "$DEST/kaggle/mambaguard_kaggle.ipynb" "$DEST/kaggle/KAGGLE_GUIDE.md" "$DEST/kaggle/build_kaggle_package.sh"
+    rm -f "$DEST/kaggle/mambaguard_kaggle.ipynb" "$DEST/kaggle/KAGGLE_GUIDE.md" "$DEST/kaggle/build_kaggle_package.sh" "$DEST/kaggle/make_notebook.py"
 fi
 
 # Record .git deletion for the summary if the source had one.

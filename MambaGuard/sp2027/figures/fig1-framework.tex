@@ -26,7 +26,7 @@
   {\bfseries Pooling}\\ $p=[\overline{e},\max e,\max v]$\\ learned scorer $g(c_{k})$, max + mean};
 \node[stage=st4] (s4) at (3*\dx,0) {%
   {\bfseries Controls}\\ length: one threshold on $T$\\ lexical: TF--IDF + logistic regression\\ novelty: Mahalanobis distance to benign training data\\[3pt]
-  {\bfseries Neural detector}\\ MambaGuard $f_{\theta}$: SSM + GATv2, graph or flat read-out; 5 ablations\\[3pt]
+  {\bfseries Neural detector}\\ SSM-GAT $f_{\theta}$: SSM + GATv2, graph or flat read-out; 5 ablations\\[3pt]
   every model outputs a score $s(E)\in[0,1]$};
 \node[stage=st5] (s5) at (4*\dx,0) {%
   {\bfseries Calibration}\\ Platt: $\tilde s=\sigma(a s+b)$, fitted on val$_{\text{sel}}$\\[3pt]
@@ -35,7 +35,7 @@
 \node[stage=st6] (s6) at (5*\dx,0) {%
   {\bfseries Metrics}\\ macro-F1, AUROC, recall, FPR, ECE\\[3pt]
   {\bfseries Statistics}\\ 5 seeds; paired bootstrap with Holm correction; sign test over folds\\[3pt]
-  {\bfseries Guarantees}\\ smoothing $\mathrm{CertAcc}(r)$; composed utility bound; Lipschitz audit\\[3pt]
+  {\bfseries Guarantees}\\ smoothing $\mathrm{CertAcc}(r)$; radius ceiling; Lipschitz audit\\[3pt]
   {\bfseries Cost}\\ latency and throughput};
 \foreach \n/\c/\h in {s1/st1/{\ding{172}\ Benchmarks \& episodes}, s2/st2/{\ding{173}\ Splits \& held-out folds},
                      s3/st3/{\ding{174}\ Payload encoding}, s4/st4/{\ding{175}\ Models under test},

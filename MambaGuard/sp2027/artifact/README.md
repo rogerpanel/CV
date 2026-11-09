@@ -1,4 +1,4 @@
-# MambaGuard: What LLM Agent-Protocol Intrusion Detectors Actually Learn
+# What LLM Agent-Protocol Intrusion Detectors Actually Learn
 
 Anonymised artifact for an IEEE S&P 2027 submission. It reproduces every
 table and figure of the paper.
@@ -16,7 +16,7 @@ paper asks what learned intrusion detectors for this traffic actually learn.
 It renders five benchmarks as protocol episodes and compares the following
 models on identical episodes:
 
-- MambaGuard, a neural detector: a selective state-space model, graph
+- SSM-GAT, a neural detector: a selective state-space model, graph
   attention, and chunk-level payload scoring;
 - an episode-length control;
 - a TF-IDF lexical classifier;
@@ -42,7 +42,7 @@ mambaguard/                     the library
   data/protocol_traces/           benchmark loaders: MCPTox, MCP-SafetyBench, MCPSecBench,
                                   AgentDojo, InjecAgent, and the A2A-sandbox generator
   data/chunked_encoder.py         chunk-level payload encoder (one chunk per tool / sentence run)
-  models/                         MambaGuard: selective SSM (S4D-Real), LipschitzNorm GATv2,
+  models/                         SSM-GAT: selective SSM (S4D-Real), LipschitzNorm GATv2,
                                   chunk scorer, graph and flat read-outs
   certification/                  randomised smoothing, sparse (graph-edit) smoothing,
                                   composed bound, Hedge controller, Lipschitz bounds and probe
@@ -51,6 +51,8 @@ mambaguard/                     the library
 kaggle/
   run_kaggle_study.py             the whole GPU study (main runs, held-out folds, controls,
                                   certificates, latency); resumable
+  run_detector_baselines.py       independent detectors (zero-shot, LLM judge, fine-tuned) on
+                                  the same splits, held-out folds and transfers; resumable
   run_on_kaggle.ipynb             the same on a free Kaggle T4 (Section 6)
   setup_benchmarks.sh             clones the four benchmark repositories at pinned commits
 scripts/
@@ -59,6 +61,7 @@ scripts/
                                   paired bootstrap + Holm, sign test (reads saved scores only)
   summarise_kaggle_results.py     tables from a results folder or zip
   template_audit.py               CPU: top features, feature removal, template similarity
+  summarise_detectors.py          one AUROC table for every detector, from saved scores
   calibration_v2.py               CPU: ECE of the detector and the lexical baseline
   expert_mixture.py, lexical_baseline.py, run_sp2027_experiments.py, ...
 reproducibility/                recorded outputs of the paper's runs (Section 5)
@@ -90,6 +93,7 @@ bash scripts/reproduce_all.sh --gpu   data/raw   # stages 1 and 3
 | 1 | 51 tests; certificates, Hedge, Lipschitz probe and embedding-PGD on synthetic inputs | CPU, ~10 min | `outputs/experiments_sp2027.json` (`reproducibility/experiments_sp2027.json`) |
 | 2 | Template audit (Table 3, Fig. 3, Appendix D); ECE of the recorded three-seed predictions (Fig. 5b) | CPU, ~30 min | `outputs/template_audit.json`, `outputs/calibration_v2.json` (same names in `reproducibility/`) |
 | 3 | Five-seed GPU study and its analysis (Tables 2, 5, 6; Figs. 4, 5a, 6; Appendix E) | 1 GPU, ~3 h on a T4 | `outputs/summary_v3.md`, `outputs/analysis_v3.md` (`reproducibility/kaggle_gpu_v3/RESULTS_TRANSCRIBED.md`) |
+| 3b | Independent detectors (ProtectAI, PIGuard, Prompt-Guard-2, an LLM judge, a fine-tuned DeBERTa-v3, lexical) on the same splits, held-out folds and four cross-benchmark transfers; merged comparison table | 1 GPU, ~1.3 h on a T4 | `outputs/results_baselines/summary.md`, `outputs/detectors.md` |
 
 Stage 2 is deterministic. Its lexical AUROCs equal those printed by the GPU
 study on all 36 splits. Stage 3 varies with GPU and library versions.

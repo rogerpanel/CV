@@ -3,7 +3,7 @@
 #
 #   bash scripts/reproduce_all.sh                       # stage 1: tests + synthetic checks (CPU, ~10 min)
 #   bash scripts/reproduce_all.sh --audit  data/raw     # + stage 2: template audit and calibration (CPU, ~30 min)
-#   bash scripts/reproduce_all.sh --gpu    data/raw     # + stage 3: five-seed GPU study and its analysis (one GPU, ~3 h)
+#   bash scripts/reproduce_all.sh --gpu    data/raw     # + stage 3: five-seed GPU study, independent detectors, analysis (one GPU, ~4.5 h)
 #
 # data/raw must hold the benchmark clones made by `bash kaggle/setup_benchmarks.sh data/raw`.
 set -euo pipefail
@@ -53,5 +53,8 @@ if [ "$GPU" -eq 1 ]; then
   "$PYTHON" scripts/summarise_kaggle_results.py outputs/results_v3_all.zip | tee outputs/summary_v3.md
   "$PYTHON" scripts/analyse_v3.py outputs/results_v3_all.zip --json outputs/analysis_v3.json | tee outputs/analysis_v3.md
   echo "   -> compare outputs/summary_v3.md and outputs/analysis_v3.md with reproducibility/kaggle_gpu_v3/RESULTS_TRANSCRIBED.md"
+  echo "== [3b] independent detectors (Prompt-Guard-2 needs HF_TOKEN; it is skipped otherwise)"
+  "$PYTHON" kaggle/run_detector_baselines.py --data-root "$DATA_ROOT" --out outputs/results_baselines
+  "$PYTHON" scripts/summarise_detectors.py outputs/results_v3_all.zip outputs/results_baselines.zip | tee outputs/detectors.md
 fi
 echo "Done."

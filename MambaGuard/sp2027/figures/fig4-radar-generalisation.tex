@@ -55,12 +55,12 @@
 \addplot[fill=cLex, draw=white, line width=0.6pt] coordinates {(A2A,-0.389) (MCPTox,-0.047) (MCP-SB,-0.265) (AgentDojo,-0.019) (InjecAgent,0.000)};
 \addplot[fill=cNov, draw=white, line width=0.6pt] coordinates {(A2A,-0.205) (MCPTox,0.018) (MCP-SB,-0.003) (AgentDojo,0.034) (InjecAgent,-0.095)};
 \addplot[fill=cHyb, draw=white, line width=0.6pt] coordinates {(A2A,-0.527) (MCPTox,-0.046) (MCP-SB,-0.296) (AgentDojo,-0.019) (InjecAgent,-0.001)};
-\legend{MambaGuard, Lexical, Novelty, Hybrid}
+\legend{SSM-GAT, Lexical, Novelty, Hybrid}
 \end{axis}
 \end{scope}
 % ---------- shared legend for radars ----------
 \begin{scope}[shift={(0.2,-2.25)}]
-\draw[cDet, line width=0.9pt] (-0.25,0) -- (0.25,0); \node[mkdet] at (0,0) {}; \node[font=\scriptsize, anchor=west] at (0.3,0) {MambaGuard};
+\draw[cDet, line width=0.9pt] (-0.25,0) -- (0.25,0); \node[mkdet] at (0,0) {}; \node[font=\scriptsize, anchor=west] at (0.3,0) {SSM-GAT};
 \node[mklex] at (2.45,0) {}; \draw[cLex, line width=0.9pt] (2.2,0) -- (2.7,0); \node[font=\scriptsize, anchor=west] at (2.75,0) {Lexical};
 \node[mknov] at (4.45,0) {}; \draw[cNov, line width=0.9pt] (4.2,0) -- (4.7,0); \node[font=\scriptsize, anchor=west] at (4.75,0) {Novelty};
 \node[mkhyb] at (6.45,0) {}; \draw[cHyb, line width=0.9pt, densely dashed] (6.2,0) -- (6.7,0); \node[font=\scriptsize, anchor=west] at (6.75,0) {Hybrid};

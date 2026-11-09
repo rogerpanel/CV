@@ -2,7 +2,7 @@
 
 ## Upload
 
-Overleaf → **New Project → Upload Project** → choose `mambaguard-overleaf.zip`.
+Overleaf → **New Project → Upload Project** → choose `paper-overleaf.zip`.
 
 Settings (Menu, top left):
 - **Compiler:** pdfLaTeX

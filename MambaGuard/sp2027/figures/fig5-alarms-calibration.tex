@@ -13,7 +13,7 @@
 \addplot[fill=cDet, draw=white, line width=0.6pt] coordinates {(A2A split,0.033) (A2A ACI,0.050) (MCPTox split,0.171) (MCPTox ACI,0.057) (MCP-SB ACI,0.058) (AgentDojo ACI,0.114)};
 \addplot[fill=cLex, draw=white, line width=0.6pt] coordinates {(A2A split,0.048) (A2A ACI,0.052) (MCPTox split,0.186) (MCPTox ACI,0.071) (MCP-SB ACI,0.125) (AgentDojo ACI,0.143)};
 \addplot[fill=cHyb, draw=white, line width=0.6pt] coordinates {(A2A split,0.043) (A2A ACI,0.048) (MCPTox split,0.186) (MCPTox ACI,0.071) (MCP-SB ACI,0.075) (AgentDojo ACI,0.114)};
-\legend{MambaGuard, Lexical, Hybrid}
+\legend{SSM-GAT, Lexical, Hybrid}
 \node[font=\tiny, text=red!60!black, anchor=south] at (rel axis cs:0.30,0.24) {target $0.05$};
 \end{axis}
 \begin{axis}[at={(fpr.east)}, anchor=west, xshift=1.3cm,
@@ -28,6 +28,6 @@
 \addplot[fill=cDetL, draw=white, line width=0.6pt, postaction={pattern=north east lines, pattern color=cDet}] coordinates {(A2A,0.006) (MCPTox,0.110) (MCP-SB,0.072) (AgentDojo,0.027) (InjecAgent,0.001)};
 \addplot[fill=cLex, draw=white, line width=0.6pt] coordinates {(A2A,0.202) (MCPTox,0.236) (MCP-SB,0.329) (AgentDojo,0.293) (InjecAgent,0.037)};
 \addplot[fill=cLexL, draw=white, line width=0.6pt, postaction={pattern=north east lines, pattern color=cLex}] coordinates {(A2A,0.019) (MCPTox,0.203) (MCP-SB,0.112) (AgentDojo,0.007) (InjecAgent,0.000)};
-\legend{MambaGuard raw, MambaGuard Platt, Lexical raw, Lexical Platt}
+\legend{SSM-GAT raw, SSM-GAT Platt, Lexical raw, Lexical Platt}
 \end{axis}
 \end{tikzpicture}

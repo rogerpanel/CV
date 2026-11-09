@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build sp2027/dist/mambaguard-overleaf.zip (paper source + figure sources + ready-made figure PDFs/PNGs).
+# Build sp2027/dist/paper-overleaf.zip (paper source + figure sources + ready-made figure PDFs/PNGs).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="$HERE/dist/overleaf"
@@ -21,6 +21,6 @@ cp "$HERE/OVERLEAF_README.md" "$OUT/README.md"
   grep -q "^!" MambaGuard_sp2027.log && { echo "FAIL: compile errors" >&2; exit 1; }
   echo "compiled: $(grep -o 'Output written.*' MambaGuard_sp2027.log)"
   rm -f MambaGuard_sp2027.aux MambaGuard_sp2027.log MambaGuard_sp2027.out MambaGuard_sp2027.pdf )
-( cd "$HERE/dist" && rm -f mambaguard-overleaf.zip && cd overleaf && zip -qr ../mambaguard-overleaf.zip . )
+( cd "$HERE/dist" && rm -f paper-overleaf.zip && cd overleaf && zip -qr ../paper-overleaf.zip . )
 rm -rf "$OUT"
-echo "built: $HERE/dist/mambaguard-overleaf.zip ($(du -h "$HERE/dist/mambaguard-overleaf.zip" | cut -f1))"
+echo "built: $HERE/dist/paper-overleaf.zip ($(du -h "$HERE/dist/paper-overleaf.zip" | cut -f1))"

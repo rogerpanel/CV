@@ -3,7 +3,7 @@
 #
 #   bash sp2027/build_artifact.sh            # from the MambaGuard/ directory
 #
-# Output: sp2027/dist/mambaguard-artifact.zip (+ an unpacked copy beside it).
+# Output: sp2027/dist/review-artifact.zip (+ an unpacked copy beside it).
 # Fails if any identifying string or stale claim survives in the copy, or if
 # the test suite fails inside the copy.
 set -euo pipefail
@@ -56,6 +56,17 @@ cp "$HERE/artifact/reproduce_all.sh" "$A/scripts/reproduce_all.sh"
 chmod +x "$A/scripts/reproduce_all.sh"
 "$PYTHON" "$HERE/review/make_review_notebook.py" "$A/kaggle/run_on_kaggle.ipynb" >/dev/null
 
+echo "== rename the package (the name of the detector links to the authors' public model repository)"
+mv "$A/mambaguard" "$A/apdet"
+[ -f "$A/apdet/models/mambaguard.py" ] && mv "$A/apdet/models/mambaguard.py" "$A/apdet/models/ssmgat.py"
+[ -f "$A/configs/model/mambaguard.yaml" ] && mv "$A/configs/model/mambaguard.yaml" "$A/configs/model/ssmgat.yaml"
+find "$A" -type f \( -name '*.py' -o -name '*.md' -o -name '*.sh' -o -name '*.yaml' -o -name '*.yml' -o -name '*.toml' \
+    -o -name '*.cfg' -o -name '*.txt' -o -name '*.ipynb' -o -name '*.json' -o -name '*.in' \) -print0 | xargs -0 sed -i \
+  -e 's/MambaGuardConfig/SSMGATConfig/g' -e 's/MambaGuard/SSMGAT/g' -e 's/MAMBAGUARD/APDET/g' \
+  -e 's/models\.mambaguard/models.ssmgat/g' -e 's/\.mambaguard import/.ssmgat import/g' -e 's#models/mambaguard\.py#models/ssmgat.py#g' \
+  -e 's#model/mambaguard\.yaml#model/ssmgat.yaml#g' -e 's/mambaguard/apdet/g' -e 's/Mambaguard/Apdet/g'
+if grep -rniI "mambaguard" "$A"; then echo "FAIL: package name remains" >&2; exit 1; fi
+
 echo "== verify: no identifying strings"
 IDENT='anaedevha|trofimov|borodachev|mephi|robustidps|rogerpanel|torchroger|ar006|zenodo|kaggle/dsv|37\.27\.31|tnnls|lipmamba|moscow|russia|roger nick|campus\.'
 if grep -rniE "$IDENT" "$A"; then echo "FAIL: identifying strings remain" >&2; exit 1; fi
@@ -77,7 +88,7 @@ find "$A" -type d -name .pytest_cache -prune -exec rm -rf {} +
 for d in "$A"/*/; do n=$(find "$d" -type f | wc -l); [ "$n" -le 100 ] || echo "note: $d has $n files"; done
 
 echo "== zip"
-rm -rf "$DIST" && mkdir -p "$DIST"
-mv "$A" "$DIST/mambaguard-artifact"
-( cd "$DIST" && zip -qr mambaguard-artifact.zip mambaguard-artifact )
-echo "built: $DIST/mambaguard-artifact.zip ($(du -h "$DIST/mambaguard-artifact.zip" | cut -f1))"
+mkdir -p "$DIST" && rm -rf "$DIST/review-artifact" "$DIST/review-artifact.zip"
+mv "$A" "$DIST/review-artifact"
+( cd "$DIST" && zip -qr review-artifact.zip review-artifact )
+echo "built: $DIST/review-artifact.zip ($(du -h "$DIST/review-artifact.zip" | cut -f1))"
