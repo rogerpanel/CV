@@ -1,0 +1,20 @@
+% fig6-certified-accuracy: drawing code for \label{fig:cert-curves} (input by the main file and by figures/standalone.tex)
+\begin{tikzpicture}
+\begin{axis}[width=\columnwidth, height=4.9cm, xlabel={$\ell_2$ radius $r$ in payload-feature space}, ylabel={certified accuracy $\mathrm{CertAcc}(r)$},
+    xlabel style={font=\scriptsize}, ylabel style={font=\scriptsize},
+    xmin=0, xmax=0.115, ymin=0, ymax=1.02, ymajorgrids, xmajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+    legend style={font=\tiny, draw=none, at={(0.5,-0.30)}, anchor=north, legend columns=3, /tikz/every even column/.append style={column sep=4pt}}, legend cell align=left, tick label style={font=\scriptsize},
+    xtick={0,0.02,0.05,0.1}, xticklabels={0,0.02,0.05,0.10}]
+\addplot[black, line width=1pt, mark=*, mark size=1.8pt] coordinates {(0,0.98)(0.02,0.98)(0.05,0.98)(0.1,0.96)};
+\addlegendentry{InjecAgent}
+\addplot[black!70, line width=1pt, densely dashed, mark=square*, mark size=1.6pt] coordinates {(0,0.93)(0.02,0.93)(0.05,0.93)(0.1,0.76)};
+\addlegendentry{AgentDojo}
+\addplot[black!85, line width=1pt, mark=triangle*, mark size=2pt] coordinates {(0,0.95)(0.02,0.94)(0.05,0.90)(0.1,0.49)};
+\addlegendentry{A2A sandbox}
+\addplot[black!55, line width=1pt, densely dotted, mark=diamond*, mark size=2pt] coordinates {(0,0.68)(0.02,0.65)(0.05,0.60)(0.1,0.42)};
+\addlegendentry{MCPTox}
+\addplot[black!40, line width=1pt, dashdotted, mark=o, mark size=1.8pt] coordinates {(0,0.627)(0.02,0.492)(0.05,0.356)(0.1,0.102)};
+\addlegendentry{MCP-SafetyBench}
+\draw[red!60!black, densely dashed, line width=0.6pt] (axis cs:0.11,0) -- (axis cs:0.11,1.02) node[pos=0.5, rotate=90, above, font=\tiny, text=red!60!black] {max.\ certifiable $\approx2.2\sigma$};
+\end{axis}
+\end{tikzpicture}

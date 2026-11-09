@@ -1,0 +1,20 @@
+% Compile one figure on its own (same fonts, colours and widths as in the paper):
+%   pdflatex -jobname=fig1-framework "\def\figname{fig1-framework}\input{standalone}"
+%   pdflatex -jobname=fig2-encoder-ablation "\def\figname{fig2-encoder-ablation}\def\figwidth{243.91pt}\input{standalone}"
+% or set \figname below and compile this file directly.
+\documentclass[border=4pt]{standalone}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\IfFileExists{newtxtext.sty}{\usepackage{newtxtext,newtxmath}}{\usepackage{mathptmx}}  % Times, as in IEEEtran
+\input{fig-preamble}
+\providecommand{\figname}{fig1-framework}
+\providecommand{\figwidth}{505.89pt}   % 243.91pt for the one-column figures 2 and 6
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\calF}{\mathcal{F}}
+\newcommand{\RQ}[1]{\textbf{RQ#1}}
+\begin{document}
+\begin{minipage}{\figwidth}\centering
+\setlength{\textwidth}{505.89pt}\setlength{\columnwidth}{243.91pt}% IEEEtran compsoc conference widths
+\input{\figname}
+\end{minipage}
+\end{document}

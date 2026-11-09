@@ -1,0 +1,21 @@
+% fig2-encoder-ablation: drawing code for \label{fig:enc} (input by the main file and by figures/standalone.tex)
+\begin{tikzpicture}
+\begin{axis}[
+  width=\columnwidth, height=5.0cm, ybar=0.6pt, bar width=6.2pt, area legend,
+  ymin=0.4, ymax=1.16, ylabel={test macro-F1}, ylabel style={font=\scriptsize},
+  extra y ticks={0.5}, extra y tick labels={}, extra y tick style={grid=major, major grid style={densely dashed, black!55, line width=0.6pt}},
+  symbolic x coords={MCPTox,MCP-SafetyBench,AgentDojo}, xtick=data,
+  enlarge x limits=0.22, tick label style={font=\scriptsize},
+  ytick={0.4,0.5,0.6,0.7,0.8,0.9,1.0},
+  ymajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+  legend style={font=\tiny, draw=none, fill=none, at={(0.5,1.02)}, anchor=south, legend columns=2, /tikz/every even column/.append style={column sep=6pt}},
+  legend cell align=left,
+  nodes near coords, nodes near coords style={font=\tiny, rotate=90, anchor=west, text=black!75},
+  every node near coord/.append style={/pgf/number format/.cd, fixed, precision=2, fixed zerofill}]
+\addplot[fill=cE1, draw=white, line width=0.8pt] coordinates {(MCPTox,0.502) (MCP-SafetyBench,0.499) (AgentDojo,0.732)};
+\addplot[fill=cE2, draw=white, line width=0.8pt] coordinates {(MCPTox,0.587) (MCP-SafetyBench,0.588) (AgentDojo,0.910)};
+\addplot[fill=cE3, draw=white, line width=0.8pt] coordinates {(MCPTox,0.603) (MCP-SafetyBench,0.689) (AgentDojo,0.854)};
+\addplot[fill=cE4, draw=white, line width=0.8pt] coordinates {(MCPTox,0.700) (MCP-SafetyBench,0.883) (AgentDojo,0.989)};
+\legend{one vector per message, chunks: mean+max, + per-chunk word vector, + learned chunk scoring}
+\end{axis}
+\end{tikzpicture}

@@ -1,0 +1,33 @@
+% fig5-alarms-calibration: drawing code for \label{fig:ops} (input by the main file and by figures/standalone.tex)
+\begin{tikzpicture}
+\begin{axis}[name=fpr,
+  width=9.2cm, height=4.5cm, ybar=0.5pt, bar width=5.2pt,
+  ymin=0, ymax=0.21, ytick={0,0.05,0.10,0.15,0.20}, scaled y ticks=false, yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2, /pgf/number format/fixed zerofill}, area legend, ylabel={test false-positive rate}, ylabel style={font=\scriptsize},
+  extra y ticks={0.05}, extra y tick labels={}, extra y tick style={grid=major, major grid style={densely dashed, red!60!black, line width=0.7pt}},
+  symbolic x coords={A2A split,A2A ACI,MCPTox split,MCPTox ACI,MCP-SB ACI,AgentDojo ACI}, xtick=data,
+  x tick label style={font=\scriptsize, align=center, text width=1.1cm}, xticklabels={A2A\\split, A2A\\ACI, MCPTox\\split, MCPTox\\ACI, MCP-SB\\ACI, AgentDojo\\ACI},
+  enlarge x limits=0.09, tick label style={font=\scriptsize},
+  ymajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+  title={\scriptsize\bfseries (a) False alarms at target $\alpha=0.05$}, title style={yshift=-3pt},
+  legend style={font=\tiny, draw=none, fill=none, at={(0.02,0.98)}, anchor=north west, legend columns=1}, legend cell align=left]
+\addplot[fill=cDet, draw=white, line width=0.6pt] coordinates {(A2A split,0.033) (A2A ACI,0.050) (MCPTox split,0.171) (MCPTox ACI,0.057) (MCP-SB ACI,0.058) (AgentDojo ACI,0.114)};
+\addplot[fill=cLex, draw=white, line width=0.6pt] coordinates {(A2A split,0.048) (A2A ACI,0.052) (MCPTox split,0.186) (MCPTox ACI,0.071) (MCP-SB ACI,0.125) (AgentDojo ACI,0.143)};
+\addplot[fill=cHyb, draw=white, line width=0.6pt] coordinates {(A2A split,0.043) (A2A ACI,0.048) (MCPTox split,0.186) (MCPTox ACI,0.071) (MCP-SB ACI,0.075) (AgentDojo ACI,0.114)};
+\legend{MambaGuard, Lexical, Hybrid}
+\node[font=\tiny, text=red!60!black, anchor=south] at (rel axis cs:0.30,0.24) {target $0.05$};
+\end{axis}
+\begin{axis}[at={(fpr.east)}, anchor=west, xshift=1.3cm,
+  width=8.4cm, height=4.5cm, ybar=0.4pt, bar width=4.4pt,
+  ymin=0, ymax=0.44, area legend, ylabel={ECE (lower is better)}, ylabel style={font=\scriptsize},
+  symbolic x coords={A2A,MCPTox,MCP-SB,AgentDojo,InjecAgent}, xtick=data,
+  enlarge x limits=0.12, tick label style={font=\scriptsize},
+  ymajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
+  title={\scriptsize\bfseries (b) Calibration error, raw and Platt-recalibrated}, title style={yshift=-3pt},
+  legend style={font=\tiny, draw=none, fill=none, at={(0.99,0.98)}, anchor=north east, legend columns=2}, legend cell align=left]
+\addplot[fill=cDet, draw=white, line width=0.6pt] coordinates {(A2A,0.023) (MCPTox,0.116) (MCP-SB,0.149) (AgentDojo,0.107) (InjecAgent,0.019)};
+\addplot[fill=cDetL, draw=white, line width=0.6pt, postaction={pattern=north east lines, pattern color=cDet}] coordinates {(A2A,0.006) (MCPTox,0.110) (MCP-SB,0.072) (AgentDojo,0.027) (InjecAgent,0.001)};
+\addplot[fill=cLex, draw=white, line width=0.6pt] coordinates {(A2A,0.202) (MCPTox,0.236) (MCP-SB,0.329) (AgentDojo,0.293) (InjecAgent,0.037)};
+\addplot[fill=cLexL, draw=white, line width=0.6pt, postaction={pattern=north east lines, pattern color=cLex}] coordinates {(A2A,0.019) (MCPTox,0.203) (MCP-SB,0.112) (AgentDojo,0.007) (InjecAgent,0.000)};
+\legend{MambaGuard raw, MambaGuard Platt, Lexical raw, Lexical Platt}
+\end{axis}
+\end{tikzpicture}
