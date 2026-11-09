@@ -242,7 +242,7 @@ def load_classifier(mid, args):
     # PIGuard/InjecGuard ship a small custom head (modeling_piguard.py), hence trust_remote_code
     tok = AutoTokenizer.from_pretrained(mid, token=os.environ.get("HF_TOKEN"), trust_remote_code=True)
     model = AutoModelForSequenceClassification.from_pretrained(mid, token=os.environ.get("HF_TOKEN"), trust_remote_code=True)
-    return tok, model.to(args.device).eval()
+    return tok, model.float().to(args.device).eval()   # recent transformers may load 16-bit weights
 
 
 def load_causal(mid, args):
@@ -337,7 +337,8 @@ class FineTuned:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
             self.tok = AutoTokenizer.from_pretrained(FT_MODEL)
-            self.model = AutoModelForSequenceClassification.from_pretrained(FT_MODEL, num_labels=2).to(self.args.device)
+            # float32 master weights: recent transformers load the 16-bit checkpoint as is, which breaks GradScaler
+            self.model = AutoModelForSequenceClassification.from_pretrained(FT_MODEL, num_labels=2).float().to(self.args.device)
         texts, y = chunk_training_set(train_eps, self.args.max_chunks, self.args.ft_max_items, self.seed)
         w = torch.tensor([1.0, float(max(1.0, (y == 0).sum() / max(1, (y == 1).sum())))], dtype=torch.float32, device=self.args.device)
         opt = torch.optim.AdamW(self.model.parameters(), lr=self.args.ft_lr, weight_decay=0.01)
@@ -528,8 +529,9 @@ def main() -> None:
                     au = f"{rec['auroc']:.3f} [{ci[0]:.3f}, {ci[1]:.3f}]" if rec["auroc"] is not None else "n/a"
                     print(f"{stem}: AUROC {au}  macro-F1 {rec['macro_f1']:.3f}  ({meta['seconds']}s)", flush=True)
                 except Exception:
-                    (out / "runs" / f"{stem}.error.txt").write_text(traceback.format_exc())
-                    print(f"ERROR {stem}: see runs/{stem}.error.txt", flush=True)
+                    tb = traceback.format_exc()
+                    (out / "runs" / f"{stem}.error.txt").write_text(tb)
+                    print(f"ERROR {stem}: {tb.strip().splitlines()[-1][:300]} (full traceback: runs/{stem}.error.txt)", flush=True)
         for z in zs.values():
             z.save()
     write_summary(out, records)

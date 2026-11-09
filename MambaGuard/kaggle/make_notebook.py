@@ -53,7 +53,9 @@ RESUME_FROM = ""       # Kaggle only: an attached earlier version (Colab resumes
 md("## 1. Machine")
 code("""
 import os, sys, subprocess, importlib.util
-ON_KAGGLE, ON_COLAB = os.path.isdir("/kaggle"), importlib.util.find_spec("google.colab") is not None
+# Colab images also contain a /kaggle folder, so test for Colab first and use Kaggle's own environment variable
+ON_COLAB = importlib.util.find_spec("google.colab") is not None
+ON_KAGGLE = (not ON_COLAB) and "KAGGLE_KERNEL_RUN_TYPE" in os.environ
 if ON_KAGGLE:
     WORK = "/kaggle/working"
 elif ON_COLAB:   # write to Google Drive: survives disconnects, and re-running resumes where it stopped
