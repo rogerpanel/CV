@@ -18,29 +18,27 @@ def code(s):
 
 
 md("""
-# Detector study on a Kaggle TPU VM (version 4.2)
+# Study notebook (version 4.3): Google Colab, Kaggle GPU or Kaggle TPU VM
 
-Everything runs on the **CPU host of a TPU v5e-8 VM** (no TPU code needed; the models are small, and the host has
-many cores and native bfloat16). It also runs unchanged on a Kaggle T4 or on Colab.
+Two parts, run in this order: **detectors** (ProtectAI, PIGuard, Prompt-Guard-2, a Qwen2.5-1.5B judge, a
+fine-tuned DeBERTa-v3-small and the lexical baseline on the same splits, 31 held-out folds and 4 cross-benchmark
+transfers) and **neural** (the five-seed SSM-GAT study with saved per-episode scores).
 
-| Part (in run order) | What it runs | TPU VM (CPU host) |
-|---|---|---|
-| detectors | ProtectAI, PIGuard, Prompt-Guard-2, a Qwen2.5-1.5B judge, a fine-tuned DeBERTa-v3-small and the lexical baseline on the same splits, the 31 held-out folds and 4 cross-benchmark transfers | budget `DET_H` (4.5 h) |
-| neural | five-seed SSM-GAT study with saved per-episode scores (main + held-out + certificates) | budget `NEURAL_H` (4 h) |
+### Google Colab (pay as you go)
+1. *Runtime -> Change runtime type ->* **T4 GPU** (about 4.5 h for everything) or **L4 GPU** (faster).
+2. Optional, for Prompt-Guard-2: key icon on the left -> add secret `HF_TOKEN` (a Hugging Face read token after
+   accepting the model's licence) and switch on *Notebook access*.
+3. *Runtime -> Run all.* Cell 1 asks you to allow Google Drive: results go to
+   **My Drive / agent_protocol_study**, saved job by job.
+4. Keep the browser tab open (and the computer awake) until cell 9 prints `wrote .../results_v4_bundle.zip`.
+   If the runtime disconnects, reconnect and **Run all** again with `RUN_SMOKE = False`: finished jobs are
+   skipped automatically.
+5. Download `results_v4_bundle.zip` from Google Drive and send it.
 
-**Session 1.** Settings -> Accelerator **TPU v5e-8**, Internet **On**. Wait until the session indicator says it is
-running (TPU machines can take 5-15 min to start; cells queue until then). Run cells 0-7 by hand, then
-**Save Version -> Save & Run All (Commit)**.
-
-**Session 2, only if the log says a budget was reached.** Open the notebook, **+ Add Input -> Notebook Output ->**
-the finished version of this notebook, set `RESUME_FROM` to the path shown in the right panel
-(e.g. `/kaggle/input/sp-mambaguard-v4-1`), `RUN_SMOKE = False`, and commit again. Finished jobs are skipped.
-
-Each committed version writes **one file to download: `results_v4_bundle.zip`** (version list -> the version ->
-**Output**). Only committed versions keep files.
-
-Optional, for Prompt-Guard-2: accept its licence on Hugging Face and store a read token as the Kaggle secret
-`HF_TOKEN` (*Add-ons -> Secrets*). Without it, that one detector is skipped.
+### Kaggle (GPU T4 x2 or TPU v5e-8)
+Run cells 0-7 by hand, then **Save Version -> Save & Run All (Commit)**; download `results_v4_bundle.zip` from the
+version's **Output**. To continue a stopped version: **+ Add Input -> Notebook Output**, set `RESUME_FROM` to its
+path, commit again.
 """)
 
 md("## 0. Settings")
@@ -49,14 +47,22 @@ PART        = "both"   # "both" (detectors, then neural), "detectors" or "neural
 RUN_SMOKE   = True     # 10-min check in session 1; False when resuming
 DET_H       = 4.5      # time budget of the detector part (hours)
 NEURAL_H    = 4.0      # time budget of the neural part (hours)
-RESUME_FROM = ""       # session 2: the attached earlier version, e.g. "/kaggle/input/sp-mambaguard-v4-1"
+RESUME_FROM = ""       # Kaggle only: an attached earlier version (Colab resumes from Google Drive by itself)
 """)
 
 md("## 1. Machine")
 code("""
 import os, sys, subprocess, importlib.util
 ON_KAGGLE, ON_COLAB = os.path.isdir("/kaggle"), importlib.util.find_spec("google.colab") is not None
-WORK = "/kaggle/working" if ON_KAGGLE else "/content"
+if ON_KAGGLE:
+    WORK = "/kaggle/working"
+elif ON_COLAB:   # write to Google Drive: survives disconnects, and re-running resumes where it stopped
+    from google.colab import drive
+    drive.mount("/content/drive")
+    WORK = "/content/drive/MyDrive/agent_protocol_study"
+else:
+    WORK = os.path.abspath("study_outputs")
+os.makedirs(WORK, exist_ok=True)
 if importlib.util.find_spec("torch") is None:   # some TPU images ship without PyTorch: CPU build is enough
     subprocess.run([sys.executable, "-m", "pip", "install", "-q", "torch", "--index-url", "https://download.pytorch.org/whl/cpu"], check=True)
 import torch
@@ -82,6 +88,8 @@ for init in glob.glob("/kaggle/input/**/mambaguard/__init__.py", recursive=True)
     shutil.rmtree(CODE, ignore_errors=True)
     shutil.copytree(os.path.dirname(os.path.dirname(init)), CODE, ignore=shutil.ignore_patterns("__pycache__"))
     print("using uploaded dataset"); break
+if CODE is None and os.path.isdir("/tmp/mg_repo/MambaGuard"):   # Colab "Run all" again: refresh the clone
+    shutil.rmtree("/tmp/mg_repo", ignore_errors=True)
 if CODE is None:
     shutil.rmtree("/tmp/mg_repo", ignore_errors=True)
     subprocess.run(["git", "clone", "-q", "--depth", "1", "--branch", BRANCH, "--filter=blob:none",

@@ -12,7 +12,25 @@ tables.
 | `requirements-kaggle.txt` | The two packages Kaggle lacks (`einops`, `sentence-transformers`) |
 | `build_kaggle_package.sh` | Builds `dist/mambaguard-kaggle.zip` for upload as a Kaggle Dataset (Option B) |
 
-## Version 4.2 (current): everything on a TPU VM
+## Google Colab (pay as you go): recommended while Kaggle TPUs are queued
+
+Same notebook, nothing else changes: code and benchmarks are cloned from public GitHub repositories, models come from
+Hugging Face.
+
+1. Buy compute units at colab.research.google.com (Pay As You Go). The whole run on a T4 costs only a fraction
+   of 100 units; check the current per-hour rates on Colab's pricing page.
+2. Colab -> *File -> Open notebook -> GitHub* -> paste
+   `https://github.com/rogerpanel/CV/blob/claude/implement-mambaguard-detection-zCgu6/MambaGuard/kaggle/mambaguard_kaggle.ipynb`
+   (or *Upload* the `.ipynb`).
+3. *Runtime -> Change runtime type ->* **T4 GPU** (about 4.5 h) or **L4 GPU** (faster, more units per hour).
+4. Optional: key icon -> secret `HF_TOKEN` with *Notebook access* on (only for Prompt-Guard-2).
+5. *Runtime -> Run all*; allow Google Drive when cell 1 asks. Results are written job by job to
+   **My Drive / agent_protocol_study**.
+6. Keep the tab open until cell 9 prints `wrote .../results_v4_bundle.zip`. After a disconnect: reconnect,
+   set `RUN_SMOKE = False` in cell 0, *Run all* again. Finished jobs are skipped.
+7. Download `results_v4_bundle.zip` from Google Drive.
+
+## Version 4.2 (alternative): everything on a TPU VM
 
 The whole study runs on the **CPU host of a Kaggle TPU v5e-8 VM**: no TPU code, no GPU needed. The models are
 small, the host has many cores, and the detector study uses bfloat16 on CPUs that support it natively, sorts
