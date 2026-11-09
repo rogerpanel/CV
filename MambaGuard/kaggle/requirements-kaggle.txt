@@ -3,3 +3,7 @@
 # pandas, pyyaml and networkx -- do NOT reinstall torch, it breaks the CUDA build.
 einops>=0.7
 sentence-transformers>=2.6
+sentencepiece>=0.1.99
+protobuf>=3.20
+transformers>=4.44
+huggingface_hub>=0.23
