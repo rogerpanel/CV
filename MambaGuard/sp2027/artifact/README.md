@@ -1,4 +1,4 @@
-# MambaGuard: What Do Agent-Protocol Intrusion Detectors Actually Learn?
+# MambaGuard: What LLM Agent-Protocol Intrusion Detectors Actually Learn
 
 Anonymised artifact for an IEEE S&P 2027 submission. It reproduces every
 table and figure of the paper.
