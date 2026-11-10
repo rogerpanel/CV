@@ -1,13 +1,13 @@
 % fig3-template-audit: drawing code for \label{fig:audit} (input by the main file and by figures/standalone.tex)
 \tikzset{every mark/.append style={line width=0.5pt}}
-\pgfplotsset{auditsc/.style={width=6.1cm, height=4.6cm, xmin=0.1, xmax=1.0, ymin=0.1, ymax=1.04,
+\pgfplotsset{auditsc/.style={sci, width=6.1cm, height=4.6cm, xmin=0.1, xmax=1.0, ymin=0.1, ymax=1.04,
     xlabel={similarity to nearest training attack (median)}, xlabel style={font=\scriptsize},
     tick label style={font=\scriptsize}, ymajorgrids, xmajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
     extra y ticks={0.5}, extra y tick labels={}, extra y tick style={grid=major, major grid style={densely dashed, red!60!black, line width=0.5pt}},
     only marks, mark size=2.1pt}}
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}
-\begin{axis}[auditsc, name=sa, ylabel={test AUROC}, ylabel style={font=\scriptsize}, title={\scriptsize\bfseries (a) SSM-GAT: $\rho=0.40$ ($p=0.015$)}, title style={yshift=-3pt}]
+\begin{axis}[auditsc, name=sa, ylabel={test AUROC}, ylabel style={font=\scriptsize}, title={\scriptsize\bfseries (a) MambaGuard: $\rho=0.40$ ($p=0.015$)}, title style={yshift=-3pt}]
 % held-out folds (hollow) per benchmark
 \addplot[cDet, mark=o] coordinates {(0.300,0.573)(0.287,0.436)(0.356,0.756)(0.263,0.209)(0.478,0.858)(0.718,0.760)(0.415,0.587)(0.789,0.453)(0.407,0.338)(0.457,0.556)(0.292,0.173)};
 \addplot[cDet, mark=square] coordinates {(0.214,0.704)(0.212,0.682)(0.192,0.662)(0.182,0.646)(0.226,0.678)(0.203,0.641)};
@@ -33,8 +33,8 @@
 \addplot[cLex, mark=diamond*, mark options={draw=black}] coordinates {(0.804,1.0)};
 \addplot[cLex, mark=pentagon*, mark options={draw=black}] coordinates {(0.842,1.0)};
 \end{axis}
-\begin{axis}[name=sc, at={(sb.east)}, anchor=west, xshift=1.35cm, width=6.1cm, height=4.6cm,
-    xmin=0.7, xmax=5.3, xtick={1,2,3,4,5}, xticklabels={0,10,50,200,1000}, ymin=0.62, ymax=1.02,
+\begin{axis}[sci, name=sc, at={(sb.east)}, anchor=west, xshift=1.35cm, width=6.1cm, height=4.6cm,
+    xmin=0.7, xmax=5.3, xtick={1,2,3,4,5}, xticklabels={0,10,50,200,1000}, ymin=0.40, ymax=1.02, ytick={0.4,0.6,0.8,1.0},
     xlabel={top attack n-grams removed, $k$}, ylabel={lexical test AUROC}, xlabel style={font=\scriptsize}, ylabel style={font=\scriptsize},
     tick label style={font=\scriptsize}, ymajorgrids, grid style={black!10}, axis line style={black!40}, tick style={black!40},
     title={\scriptsize\bfseries (c) Feature removal}, title style={yshift=-3pt},

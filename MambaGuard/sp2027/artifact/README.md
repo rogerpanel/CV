@@ -1,4 +1,4 @@
-# What LLM Agent-Protocol Intrusion Detectors Actually Learn
+# MambaGuard: What LLM Agent-Protocol Intrusion Detectors Actually Learn
 
 Anonymised artifact for an IEEE S&P 2027 submission. It reproduces every
 table and figure of the paper.
@@ -16,7 +16,7 @@ paper asks what learned intrusion detectors for this traffic actually learn.
 It renders five benchmarks as protocol episodes and compares the following
 models on identical episodes:
 
-- SSM-GAT, a neural detector: a selective state-space model, graph
+- MambaGuard, a neural detector: a selective state-space model, graph
   attention, and chunk-level payload scoring;
 - an episode-length control;
 - a TF-IDF lexical classifier;
@@ -30,9 +30,9 @@ conformal) and randomised-smoothing certificates.
 
 | Research question | Paper | Where in this artifact |
 |---|---|---|
-| RQ1 Does the detector beat simple controls and independent detectors? | §4.1, Tables 2–3, Fig. 4a | `kaggle/run_kaggle_study.py`, `kaggle/run_detector_baselines.py`, `scripts/analyse_v3.py` |
+| RQ1 Does the detector beat simple controls and independent detectors? | §4.1, Tables 2–3, Fig. 4 | `kaggle/run_kaggle_study.py`, `kaggle/run_detector_baselines.py`, `scripts/analyse_v3.py` |
 | RQ2 Which signal carries detection? | §4.2, Figs. 2–3, Tables 4–5 | encoder/architecture ablations; `scripts/template_audit.py` |
-| RQ3 Do models recognise unseen templates and other benchmarks? | §4.3, Tables 3, 6, 7, Fig. 4b–c | held-out folds and transfers in both runners |
+| RQ3 Do models recognise unseen templates and other benchmarks? | §4.3, Tables 3, 6, 7, Fig. 4 | held-out folds and transfers in both runners |
 | RQ4 Can false alarms be controlled? Are scores calibrated? | §4.4, Fig. 5 | `analyse_v3.py` (conformal, ACI), `scripts/calibration_v4.py` |
 | RQ5 What do certificates and latency deliver? | §4.5, Fig. 6, Table 8 | `mambaguard/certification/`, `run_kaggle_study.py` (`certify`, `latency`) |
 
@@ -43,7 +43,7 @@ mambaguard/                     the library
   data/protocol_traces/           benchmark loaders: MCPTox, MCP-SafetyBench, MCPSecBench,
                                   AgentDojo, InjecAgent, and the A2A-sandbox generator
   data/chunked_encoder.py         chunk-level payload encoder (one chunk per tool / sentence run)
-  models/                         SSM-GAT: selective SSM (S4D-Real), LipschitzNorm GATv2,
+  models/                         MambaGuard: selective SSM (S4D-Real), LipschitzNorm GATv2,
                                   chunk scorer, graph and flat read-outs
   certification/                  randomised smoothing, sparse (graph-edit) smoothing,
                                   composed bound, Hedge controller, Lipschitz bounds and probe
@@ -162,12 +162,13 @@ version also prints all tables.
 
 | Paper element | Command | Recorded output |
 |---|---|---|
-| Table 2, Fig. 4a (RQ1) | stage 3 | `kaggle_gpu_v4.zip: analysis_v4.md` → "In-distribution" |
+| Table 2 (RQ1) | stage 3 | `kaggle_gpu_v4.zip: analysis_v4.md` → "In-distribution" |
+| Fig. 4 (in-distribution vs held-out AUROC, six detectors) | stages 3 + 3b | `scripts/summarise_detectors.py` on `kaggle_gpu_v4.zip` and `detectors_v4.zip` |
 | Table 3, Table 11 (independent detectors), Table 6 (transfer) | stage 3b | `detectors_v4.zip` + `kaggle_gpu_v4.zip`, via `scripts/summarise_detectors.py` |
 | Fig. 2 (encoder ablation) | three-seed study | `kaggle_gpu_v2.zip: runs/enc__*.json` |
 | Table 4, Fig. 3 (template audit) | stage 2 | `template_audit.json` |
 | Table 5 (architecture ablation) | three-seed study (rows 1–6), stage 3 (last row) | `kaggle_gpu_v2.zip: runs/arch__*.json` |
-| Table 7, Fig. 4b–c, Table 10 (held-out) | stage 3 | `kaggle_gpu_v4.zip: summary_v4.md`, `analysis_v4.md` → "Held-out templates" |
+| Table 7, Table 10 (held-out) | stage 3 | `kaggle_gpu_v4.zip: summary_v4.md`, `analysis_v4.md` → "Held-out templates" |
 | Fig. 5a, Tables 12–13 (conformal, ACI, paired bootstrap) | stage 3 | `analysis_v4.md` → "Conformal", "Hybrid minus lexical" |
 | Fig. 5b (ECE) | stage 2 | `calibration_v4.json` |
 | Fig. 6, Table 14 (certified accuracy) | stage 3 | `summary_v4.md` → "Certified accuracy" |

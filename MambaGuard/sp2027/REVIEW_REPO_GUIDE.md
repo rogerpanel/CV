@@ -13,8 +13,9 @@ words removed.
 ## Step 1: create the repository
 
 1. github.com → **New repository**.
-2. Choose a neutral name with no personal, institutional or project words (not "MambaGuard": that name
-   links to your public model repository), e.g. `agent-protocol-detectors`.
+2. Choose a neutral name with no personal or institutional words, e.g. `agent-protocol-detectors`.
+   The paper names MambaGuard, and a public repository with that name (and your names) exists;
+   consider making that repository private until the reviews are out.
 3. Leave the README, .gitignore and licence boxes **unticked**; the package
    has its own. Private or Public both work.
 
@@ -31,7 +32,7 @@ commit with an anonymous author.
    contents**, not the folder itself.
 4. Drag them in. If GitHub refuses more than 100 files, upload one
    top-level folder at a time: first the root files (`README.md`,
-   `LICENSE`, `setup.py`, ...), then `apdet/`, then `reproducibility/`,
+   `LICENSE`, `setup.py`, ...), then `mambaguard/`, then `reproducibility/`,
    and so on.
 5. Commit each batch to `main`.
 
@@ -49,7 +50,7 @@ git remote add origin https://github.com/<account>/<repo>.git && git push -u ori
 2. Choose **Anonymize your repository** and pick the repository and branch
    `main`.
 3. Under terms to remove, add your names, your GitHub user name, your
-   institution, and `MambaGuard`.
+   and your institution.
 4. Set the repository ID to `agent-protocol-detectors` (the paper's Appendix I already uses
    `https://anonymous.4open.science/r/agent-protocol-detectors`; if that ID is taken, pick another and
    tell Claude to update the paper), set the expiry after the review period, and save.

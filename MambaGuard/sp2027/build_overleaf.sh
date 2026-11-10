@@ -6,7 +6,7 @@ OUT="$HERE/dist/overleaf"
 rm -rf "$OUT" && mkdir -p "$OUT/figures/pdf"
 # ready-made figures
 ( cd "$HERE/figures"
-  for f in fig1-framework fig2-encoder-ablation fig3-template-audit fig4-radar-generalisation fig5-alarms-calibration fig6-certified-accuracy; do
+  for f in fig1-framework fig2-encoder-ablation fig3-template-audit fig4-shift-dumbbell fig5-alarms-calibration fig6-certified-accuracy; do
     w=505.89pt; case $f in fig2*|fig6*) w=243.91pt;; esac
     for i in 1 2; do pdflatex -interaction=nonstopmode -jobname=$f "\def\figname{$f}\def\figwidth{$w}\input{standalone}" >/dev/null; done
     mv $f.pdf pdf/; rm -f $f.aux $f.log

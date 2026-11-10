@@ -27,7 +27,7 @@ with TikZ/pgfplots. Later compiles are faster.
 | 1 Measurement framework | `fig1-framework` | two columns |
 | 2 Payload-encoder ablation | `fig2-encoder-ablation` | one column |
 | 3 Template audit | `fig3-template-audit` | two columns |
-| 4 AUROC radar and generalisation gap | `fig4-radar-generalisation` | two columns |
+| 4 In-distribution vs held-out AUROC (six detectors) | `fig4-shift-dumbbell` | two columns |
 | 5 False alarms and calibration error | `fig5-alarms-calibration` | two columns |
 | 6 Certified accuracy | `fig6-certified-accuracy` | one column |
 

@@ -1,56 +1,63 @@
 % fig1-framework: drawing code for \label{fig:framework} (input by the main file and by figures/standalone.tex)
+% Near-monochrome: grey boxes and headers, one accent colour for the data flow.
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
   font=\scriptsize,
-  stage/.style={draw=#1, fill=#1!6, rounded corners=3pt, line width=0.7pt,
-                text width=2.72cm, minimum height=5.05cm, align=flush left, inner sep=3.5pt, anchor=north},
-  head/.style={fill=#1, text=white, font=\scriptsize\bfseries, rounded corners=2pt,
-               minimum width=3.0cm, minimum height=0.48cm, align=center, inner sep=1pt, anchor=south},
-  arr/.style={-{Stealth[length=5pt]}, line width=1pt, black!55},
-  rq/.style={draw=black!40, fill=white, rounded corners=2pt, font=\scriptsize, inner sep=2.5pt, align=center, minimum width=2.7cm},
-  sec/.style={font=\scriptsize\bfseries, text=black!80}]
-\definecolor{st1}{HTML}{2A78D6}\definecolor{st2}{HTML}{12866A}\definecolor{st3}{HTML}{6E52B8}
-\definecolor{st4}{HTML}{D2581F}\definecolor{st5}{HTML}{B8323A}\definecolor{st6}{HTML}{45443F}
-\def\dx{3.25}
-\node[stage=st1] (s1) at (0*\dx,0) {%
-  {\bfseries Inputs}\\ MCPTox, MCP-SafetyBench, AgentDojo, InjecAgent, A2A sandbox\\[3pt]
-  {\bfseries Rendering}\\ each case $\rightarrow$ episode $E=(m_{1},\dots,m_{T})$ of JSON-RPC messages; label $y\in\{0,1\}$, $1$ = attack\\[3pt]
-  {\bfseries Message tuple}\\ $m=(\tau,s,d,x,\mu,t)$: type, source, destination, payload, metadata, time};
-\node[stage=st2] (s2) at (1*\dx,0) {%
-  {\bfseries Grouped splits}\\ no server, case, template or twin crosses splits:\\ train $\mid$ val$_{\text{sel}}$ $\mid$ val$_{\text{cal}}$ $\mid$ test\\[3pt]
-  {\bfseries Held-out folds $\calF$}\\ hide one wording, family or vulnerability class from train and val; test on it alone\\[3pt]
-  {\bfseries Transfer}\\ train on one benchmark, test on another\\[3pt]
-  {\bfseries Audit}\\ leakage check per fold; length control};
-\node[stage=st3] (s3) at (2*\dx,0) {%
-  {\bfseries Chunking}\\ payload $x\rightarrow c_{1},\dots,c_{K}$: one per tool, per ${\sim}48$-word sentence run, plus a header ($K\le64$)\\[3pt]
-  {\bfseries Per chunk}\\ $e(c_{k})\in\R^{384}$: MiniLM\\ $v(c_{k})\in\R^{512}$: hashed word counts\\[3pt]
-  {\bfseries Pooling}\\ $p=[\overline{e},\max e,\max v]$\\ learned scorer $g(c_{k})$, max + mean};
-\node[stage=st4] (s4) at (3*\dx,0) {%
-  {\bfseries Controls}\\ length; lexical TF--IDF + logistic regression; novelty (Mahalanobis)\\[3pt]
-  {\bfseries Independent}\\ ProtectAI, PIGuard (zero-shot); LLM judge; fine-tuned DeBERTa-v3\\[3pt]
-  {\bfseries Neural detector}\\ SSM-GAT $f_{\theta}$: SSM + GATv2, graph or flat read-out; 5 ablations\\[3pt]
+  >={Latex[length=2.6mm,width=2.0mm]},
+  body/.style={draw=figInk!70, line width=0.55pt, fill=white, text width=2.62cm, minimum height=5.55cm,
+               align=flush left, inner xsep=3.2pt, inner ysep=3pt, anchor=north},
+  head/.style={draw=figInk, fill=figInk, text=white, font=\scriptsize\bfseries, minimum width=2.85cm,
+               minimum height=0.50cm, align=center, inner sep=1pt, anchor=south},
+  flow/.style={->, line width=1.3pt, draw=figAccent},
+  link/.style={->, line width=0.6pt, draw=figInk!55},
+  rq/.style={draw=figInk!60, fill=figInk!6, line width=0.5pt, font=\scriptsize, inner sep=2.5pt, align=center,
+             minimum width=2.75cm, minimum height=0.46cm},
+  sub/.style={font=\scriptsize\bfseries, text=figInk}]
+\def\dx{3.72}
+\node[body] (s1) at (0*\dx,0) {%
+  \textbf{Inputs}\\ MCPTox, MCP-SafetyBench, AgentDojo, InjecAgent, A2A sandbox\\[3pt]
+  \textbf{Rendering}\\ each case $\rightarrow$ episode $E=(m_{1},\dots,m_{T})$ of JSON-RPC messages; label $y\in\{0,1\}$, $1$ = attack\\[3pt]
+  \textbf{Message tuple}\\ $m=(\tau,s,d,x,\mu,t)$: type, source, destination, payload, metadata, time};
+\node[body] (s2) at (1*\dx,0) {%
+  \textbf{Grouped splits}\\ no server, case, template or twin crosses splits:\\ train $\mid$ val$_{\text{sel}}$ $\mid$ val$_{\text{cal}}$ $\mid$ test\\[3pt]
+  \textbf{Held-out folds $\calF$}\\ hide one wording, family or vulnerability class from train and val; test on it alone\\[3pt]
+  \textbf{Transfer}\\ train on one benchmark, test on another\\[3pt]
+  \textbf{Audit}\\ leakage check per fold; length control};
+\node[body] (s3) at (2*\dx,0) {%
+  \textbf{Chunking}\\ payload $x\rightarrow c_{1},\dots,c_{K}$: one per tool, per ${\sim}48$-word sentence run, plus a header ($K\le64$)\\[3pt]
+  \textbf{Per chunk}\\ $e(c_{k})\in\R^{384}$: MiniLM\\ $v(c_{k})\in\R^{512}$: hashed word counts\\[3pt]
+  \textbf{Pooling}\\ $p=[\overline{e},\max e,\max v]$\\ learned scorer $g(c_{k})$, max + mean};
+\node[body] (s4) at (3*\dx,0) {%
+  \textbf{Controls}\\ length; lexical TF--IDF + logistic regression; novelty (Mahalanobis)\\[3pt]
+  \textbf{Independent}\\ ProtectAI, PIGuard (zero-shot); LLM judge; fine-tuned DeBERTa-v3\\[3pt]
+  \textbf{MambaGuard}\\ $f_{\theta}$: SSM + GATv2, graph or flat read-out; 5 ablations\\[3pt]
   each outputs $s(E)\in[0,1]$};
-\node[stage=st5] (s5) at (4*\dx,0) {%
-  {\bfseries Calibration}\\ Platt: $\tilde s=\sigma(a s+b)$, fitted on val$_{\text{sel}}$\\[3pt]
-  {\bfseries Hybrid}\\ $s_{\text{hyb}}=\sum_{j}w_{j}\tilde s_{j}$; weights $w$ on the simplex, chosen on val$_{\text{sel}}$\\[3pt]
-  {\bfseries Alarm threshold}\\ $\hat\tau$: best val$_{\text{sel}}$ macro-F1\\ $\tau_{\alpha}$: split conformal on val$_{\text{cal}}$\\ $\alpha_{t}$: adaptive conformal (ACI)};
-\node[stage=st6] (s6) at (5*\dx,0) {%
-  {\bfseries Metrics}\\ macro-F1, AUROC, recall, FPR, ECE\\[3pt]
-  {\bfseries Statistics}\\ 5 seeds; paired bootstrap with Holm correction; sign test over folds\\[3pt]
-  {\bfseries Guarantees}\\ smoothing $\mathrm{CertAcc}(r)$; radius ceiling; Lipschitz audit\\[3pt]
-  {\bfseries Cost}\\ latency and throughput};
-\foreach \n/\c/\h in {s1/st1/{\ding{172}\ Benchmarks \& episodes}, s2/st2/{\ding{173}\ Splits \& held-out folds},
-                     s3/st3/{\ding{174}\ Payload encoding}, s4/st4/{\ding{175}\ Models under test},
-                     s5/st5/{\ding{176}\ Decision layer}, s6/st6/{\ding{177}\ Evidence}}
-  \node[head=\c] at ($(\n.north)+(0,0.06)$) {\h};
-\foreach \a/\b in {s1/s2, s2/s3, s3/s4, s4/s5, s5/s6}
-  \draw[arr] ($(\a.east)+(0.02,0.9)$) -- ($(\b.west)+(-0.02,0.9)$);
-\foreach \s/\t in {s2/{\RQ{3} generalisation}, s3/{\RQ{2} mechanism}, s4/{\RQ{1} detection}, s5/{\RQ{4} operating points}, s6/{\RQ{5} guarantees \& cost}} {
-  \node[rq] (rq-\s) at ($(\s.south)+(0,-0.55)$) {\t};
-  \draw[black!40, line width=0.5pt] (\s.south) -- (rq-\s.north);}
-\node[font=\scriptsize\itshape, text=black!60, anchor=center] at ($(s1.south)+(0,-0.55)$) {research questions};
-\draw[-{Stealth[length=4pt]}, densely dashed, black!50, line width=0.7pt]
-  ($(rq-s6.south)$) -- ++(0,-0.42) -| ($(rq-s2.south)$);
-\node[font=\scriptsize, text=black!65, fill=white, inner sep=1.5pt] at ($(rq-s4.south)!0.5!(rq-s5.south)+(0,-0.42)$)
+\node[body] (s5) at (4*\dx,0) {%
+  \textbf{Calibration}\\ Platt: $\tilde s=\sigma(a s+b)$, fitted on val$_{\text{sel}}$\\[3pt]
+  \textbf{Hybrid}\\ $s_{\text{hyb}}=\sum_{j}w_{j}\tilde s_{j}$; weights $w$ on the simplex, chosen on val$_{\text{sel}}$\\[3pt]
+  \textbf{Alarm threshold}\\ $\hat\tau$: best val$_{\text{sel}}$ macro-F1\\ $\tau_{\alpha}$: split conformal on val$_{\text{cal}}$\\ $\alpha_{t}$: adaptive conformal (ACI)};
+\node[body] (s6) at (5*\dx,0) {%
+  \textbf{Metrics}\\ macro-F1, AUROC, recall, FPR, ECE\\[3pt]
+  \textbf{Statistics}\\ 5 seeds; paired bootstrap with Holm correction; sign test over folds\\[3pt]
+  \textbf{Guarantees}\\ smoothing $\mathrm{CertAcc}(r)$; radius ceiling; Lipschitz audit\\[3pt]
+  \textbf{Cost}\\ latency and throughput};
+% header bands, flush with the box tops
+\foreach \n/\h in {s1/{\ding{182}\; Benchmarks \& episodes}, s2/{\ding{183}\; Splits, folds \& transfer},
+                   s3/{\ding{184}\; Payload encoding}, s4/{\ding{185}\; Models under test},
+                   s5/{\ding{186}\; Decision layer}, s6/{\ding{187}\; Evidence}}
+  \node[head] (h-\n) at (\n.north) {\h};
+% data flow between stages (accent colour), labelled with what is passed on
+\foreach \a/\b/\l in {s1/s2/episodes, s2/s3/splits, s3/s4/features, s4/s5/scores, s5/s6/alarms} {
+  \draw[flow] ($(\a.east)+(0.04,0.2)$) -- ($(\b.west)+(-0.04,0.2)$);}
+% research questions answered by each stage
+\foreach \s/\t in {s2/{\RQ{3} generalisation}, s3/{\RQ{2} mechanism}, s4/{\RQ{1} detection},
+                   s5/{\RQ{4} operating points}, s6/{\RQ{5} guarantees \& cost}} {
+  \node[rq] (rq-\s) at ($(\s.south)+(0,-0.62)$) {\t};
+  \draw[link] (\s.south) -- (rq-\s.north);}
+\node[font=\scriptsize\itshape, text=figInk!70] at ($(s1.south)+(0,-0.62)$) {research questions};
+% pre-registration rule: decisions never look at the test split
+\draw[->, densely dashed, line width=0.6pt, draw=figInk!60]
+  (rq-s6.south) -- ++(0,-0.40) -| (rq-s2.south);
+\node[font=\scriptsize, text=figInk!80, fill=white, inner sep=1.5pt] at ($(rq-s4.south)!0.5!(rq-s5.south)+(0,-0.40)$)
   {pre-registered: every choice uses val$_{\text{sel}}$ only; val$_{\text{cal}}$ only sets conformal thresholds; the test split is read once};
 \end{tikzpicture}}

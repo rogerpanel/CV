@@ -5,7 +5,7 @@
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.16}
 % --- chart colours (one colour per model, the same in every figure) -------
-\definecolor{cDet}{HTML}{2A78D6}   % SSM-GAT detector
+\definecolor{cDet}{HTML}{2A78D6}   % MambaGuard detector
 \definecolor{cLex}{HTML}{EB6834}   % lexical baseline
 \definecolor{cNov}{HTML}{1BAF7A}   % novelty expert
 \definecolor{cHyb}{HTML}{EDA100}   % calibrated hybrid
@@ -15,3 +15,19 @@
 \definecolor{cE3}{HTML}{2A78D6}\definecolor{cE4}{HTML}{104281}
 \definecolor{inkMuted}{HTML}{6B6A64}
 
+\definecolor{cDeb}{HTML}{6250D6}   % fine-tuned DeBERTa-v3
+\definecolor{cJud}{HTML}{008300}   % LLM judge
+\definecolor{cPro}{HTML}{E87BA4}   % ProtectAI (zero-shot)
+\definecolor{cPig}{HTML}{6B6A64}   % PIGuard (zero-shot): neutral grey, near chance
+\definecolor{figInk}{HTML}{2B2B2B} % near-black ink for frames and text
+\definecolor{figAccent}{HTML}{2A5C8A} % single accent (data flow in Fig. 1)
+\usepgfplotslibrary{groupplots}
+% One axis style for every chart: open frame, light grid, small consistent type.
+\pgfplotsset{sci/.style={
+  axis lines*=left, axis line style={figInk!75, line width=0.5pt},
+  tick style={figInk!75, line width=0.4pt}, tick align=outside, major tick length=2pt,
+  tick label style={font=\scriptsize, text=figInk}, label style={font=\scriptsize, text=figInk},
+  title style={font=\scriptsize\bfseries, text=figInk, yshift=-3pt},
+  ymajorgrids, grid style={figInk!10, line width=0.3pt},
+  legend style={font=\scriptsize, draw=none, fill=none, text=figInk}, legend cell align=left,
+  every axis plot/.append style={line join=round}}}
