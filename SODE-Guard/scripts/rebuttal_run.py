@@ -273,9 +273,18 @@ def save_results(out: Path, res: dict):
 
 
 def subset(X, y, n, seed):
+    """Class-stratified subset: up to ceil(n/K) flows per class (all of a rare
+    class if it has fewer), topped up at random to n."""
     g = torch.Generator().manual_seed(seed)
-    idx = torch.randperm(len(X), generator=g)[:n]
-    return X[idx], y[idx]
+    perm = torch.randperm(len(X), generator=g)
+    classes = y.unique()
+    quota = math.ceil(n / len(classes))
+    picked = torch.cat([perm[y[perm] == c][:quota] for c in classes])
+    if len(picked) < n:
+        rest = perm[~torch.isin(perm, picked)]
+        picked = torch.cat([picked, rest[: n - len(picked)]])
+    picked = picked[:n]
+    return X[picked], y[picked]
 
 
 def run_batched(attack, X, y, bs):
