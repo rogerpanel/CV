@@ -48,18 +48,19 @@ class _AttentionGate(nn.Module):
 class EGraphSAGE(nn.Module):
     def __init__(self, edge_features: int = 83, hidden_dim: int = 128,
                  num_layers: int = 3, dropout: float = 0.10,
-                 lipschitz: bool = False):
+                 lipschitz: bool = False, use_graph: bool = False):
         super().__init__()
         self.edge_features = edge_features
         self.hidden_dim = hidden_dim
         self.lipschitz = lipschitz
+        self.use_graph = use_graph and _HAS_PYG and not lipschitz
         sn = spectral_norm if lipschitz else (lambda m: m)
         self.input_proj = sn(nn.Linear(edge_features, hidden_dim))
 
         self.layers = nn.ModuleList()
         self.gates = nn.ModuleList()
         for _ in range(num_layers):
-            if _HAS_PYG and not lipschitz:
+            if self.use_graph:
                 self.layers.append(SAGEConv(hidden_dim, hidden_dim, aggr="mean"))
             else:
                 self.layers.append(sn(nn.Linear(hidden_dim, hidden_dim)))
@@ -72,7 +73,7 @@ class EGraphSAGE(nn.Module):
                 node_feat: torch.Tensor | None = None) -> torch.Tensor:
         h = F.gelu(self.input_proj(edge_attr))
         for layer, gate in zip(self.layers, self.gates):
-            if _HAS_PYG and not self.lipschitz and edge_index is not None and node_feat is not None:
+            if self.use_graph and edge_index is not None and node_feat is not None:
                 node_out = layer(node_feat, edge_index)
                 src, dst = edge_index
                 h_new = F.gelu(node_out[src] + node_out[dst])

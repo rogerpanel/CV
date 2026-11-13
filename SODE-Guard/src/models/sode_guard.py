@@ -44,6 +44,7 @@ class SODEGuardConfig:
     activation: str = "gelu"
     virtual_brownian: bool = True
     certifiable: bool = False   # Lipschitz encoder + spectral-normalised head
+    use_diffusion: bool = True  # False gives the neural-ODE ablation (g = 0, no floor)
 
 
 def fresh_seeds(n: int) -> list[int]:
@@ -84,11 +85,20 @@ class SODEGuard(nn.Module):
             use_virtual_brownian=c.virtual_brownian,
             save_trajectory=False,
         ))
+        self._em_ode = EulerMaruyama(EMConfig(
+            t0=0.0, t1=c.horizon, dt=c.dt, noise_dim=c.noise_dim,
+            ellipticity_floor=0.0, use_virtual_brownian=False, save_trajectory=False,
+        ))
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x)
 
+    def _no_diffusion(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        return x.new_zeros(x.shape[0], self.cfg.hidden_dim, self.cfg.noise_dim)
+
     def _integrate(self, h0: torch.Tensor, seed: Optional[int] = None) -> torch.Tensor:
+        if not self.cfg.use_diffusion:
+            return self._em_ode(h0, self.drift, self._no_diffusion, seed=seed)
         return self._em(h0, self.drift, self.diffusion, seed=seed)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -101,8 +111,17 @@ class SODEGuard(nn.Module):
         Each seed drives one Brownian path per example (the virtual Brownian
         tree draws independent increments for every row of the batch).
         """
+        seeds = list(seeds)
         h0 = self.encode(x)
-        return torch.stack([self.head(self._integrate(h0, seed=s)) for s in seeds], dim=1)
+        if len(seeds) == 1:
+            return self.head(self._integrate(h0, seed=seeds[0])).unsqueeze(1)
+        # All paths in one integration: row b*N + j is path j of example b. The
+        # virtual Brownian tree draws independent increments for every row, so
+        # this equals N independent paths; the combined seed keeps a fixed seed
+        # list deterministic, and shared seeds keep x and x+delta coupled.
+        combined = hash(tuple(seeds)) & 0x7FFFFFFF
+        out = self.head(self._integrate(h0.repeat_interleave(len(seeds), dim=0), seed=combined))
+        return out.view(x.shape[0], len(seeds), -1)
 
     def forward_mean(self, x: torch.Tensor, n_paths: Optional[int] = None,
                      seeds: Optional[Sequence[int]] = None) -> torch.Tensor:
@@ -121,11 +140,18 @@ class SODEGuard(nn.Module):
         n = n_paths or self.cfg.mc_paths_eval
         return F.softmax(self.forward_mean(x, seeds=range(n)), dim=-1)
 
-    def forward_with_paths(self, x: torch.Tensor, n_paths: int) -> tuple[torch.Tensor, torch.Tensor]:
-        """Per-path logits and terminal states for the anti-concentration regulariser."""
+    def forward_with_paths(self, x: torch.Tensor, n_paths: int,
+                           seeds: Optional[Sequence[int]] = None) -> tuple[torch.Tensor, torch.Tensor]:
+        """Per-path logits and terminal states for the anti-concentration regulariser.
+
+        In training mode the paths use fresh seeds, so every step sees new noise;
+        in eval mode they default to seeds 0..n_paths-1.
+        """
+        if seeds is None:
+            seeds = fresh_seeds(n_paths) if self.training else range(n_paths)
         h0 = self.encode(x)
         logits_list, states = [], []
-        for s in range(n_paths):
+        for s in seeds:
             hT = self._integrate(h0, seed=s)
             states.append(hT)
             logits_list.append(self.head(hT))

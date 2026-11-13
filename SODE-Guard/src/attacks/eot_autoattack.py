@@ -192,7 +192,7 @@ def square_attack(predict: Predict, x: torch.Tensor, y: torch.Tensor, *, eps: fl
             break
         frac = p_init * 0.5 ** sum(i > t * n_queries / 10000 for t in (10, 50, 200, 500, 1000, 2000, 4000, 6000, 8000))
         s = max(1, int(round(frac * d)))
-        idx = torch.stack([torch.randperm(d, device=x.device)[:s] for _ in range(int(active.sum()))])
+        idx = torch.rand(int(active.sum()), d, device=x.device).argsort(dim=1)[:, :s]
         cand = flat(x_adv[active].clone())
         base = flat(x[active])
         signs = eps * torch.sign(torch.randn(idx.shape, device=x.device))
@@ -227,3 +227,44 @@ def bel_pgd(model, x: torch.Tensor, y: torch.Tensor, *, eps: float, steps: int =
         g = torch.cat(rows)
         delta = _project(delta + alpha * g.sign(), eps, "linf")
     return (x + delta).detach()
+
+
+def expected_margin_pgd_chunked(model, x: torch.Tensor, y: torch.Tensor, *, eps: float,
+                                steps: int = 100, n_paths: int = 256, chunk: int = 32,
+                                alpha: Optional[float] = None, norm: str = "linf",
+                                box=None) -> torch.Tensor:
+    """Expected-margin PGD on the mean logits F(x) of a SODE-Guard-style model,
+    estimated from ``n_paths`` fresh paths per step.
+
+    The margin F_y - max_{k!=y} F_k is linear in F once the competing class is
+    fixed, so the competitor is chosen from a no-grad pass over all paths and the
+    gradient is accumulated over path chunks with the same seeds. This gives the
+    autograd gradient of the full-batch loss at a fraction of the memory.
+    """
+    from ..models.sode_guard import fresh_seeds
+    alpha = alpha if alpha is not None else 2.5 * eps / steps
+    delta = _random_start(x, eps, norm)
+    best = x.clone()
+    best_m = torch.full((x.shape[0],), float("inf"), device=x.device)
+    for _ in range(steps):
+        xa = (x + delta).detach()
+        seeds = fresh_seeds(n_paths)
+        with torch.no_grad():
+            mean = torch.zeros(x.shape[0], model.cfg.num_classes, device=x.device)
+            for i in range(0, n_paths, chunk):
+                mean += model.sample_logits(xa, seeds[i:i + chunk]).sum(dim=1)
+            mean /= n_paths
+            margin = cw_margin(mean, y)
+            rival = mean.scatter(1, y[:, None], float("-inf")).argmax(dim=1)
+        better = margin < best_m
+        best[better] = xa[better]
+        best_m = torch.where(better, margin, best_m)
+        grad = torch.zeros_like(x)
+        for i in range(0, n_paths, chunk):
+            xr = xa.clone().requires_grad_(True)
+            z = model.sample_logits(xr, seeds[i:i + chunk]).sum(dim=1) / n_paths
+            loss = (z.gather(1, rival[:, None]) - z.gather(1, y[:, None])).sum()
+            grad += torch.autograd.grad(loss, xr)[0]
+        delta = _project(delta + alpha * _step(grad, norm), eps, norm)
+        delta = _clip_box(x + delta, box) - x
+    return best.detach()

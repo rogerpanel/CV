@@ -44,7 +44,7 @@ def model_lipschitz(model) -> LipschitzReport:
     try:
         L_h = model.encoder.lipschitz_bound()
         K_f = model.drift.lipschitz_bound()
-        K_g = model.diffusion.lipschitz_bound()
+        K_g = model.diffusion.lipschitz_bound() if getattr(model.cfg, "use_diffusion", True) else 0.0
         head_norm = spectral_norm_exact(model.head.weight)
     finally:
         model.train(was_training)
