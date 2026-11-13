@@ -1,11 +1,14 @@
-"""One-shot reproduction of every experiment reported in the paper.
+"""End-to-end smoke run of the pipeline on SYNTHETIC data with random labels.
+
+This does NOT reproduce any result of the paper: it checks that the scripts
+run.  See docs/REPRODUCIBILITY.md.
 
 Pipeline:
     1.  Materialize AgentChain-26 (curated or synthetic).
     2.  Train DyGFormer-HGT + head.
     3.  Calibrate the conformal head.
-    4.  Evaluate against the 7 baselines (Table 2).
-    5.  Run the streaming Gibbs-Candès experiment (Sec. 5.4).
+    4.  Run the evaluation plumbing (stub baselines).
+    5.  Run the synthetic streaming check of adaptive conformal inference.
 
 Run:
     python scripts/reproduce_results.py

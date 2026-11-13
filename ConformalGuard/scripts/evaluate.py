@@ -1,4 +1,5 @@
-"""Evaluate ConformalGuard against the 7 baselines from Table 2."""
+"""Evaluation plumbing.  With the synthetic generator and stub baselines that
+ship in this repository, its output is NOT a result of the paper."""
 
 from __future__ import annotations
 
