@@ -51,6 +51,7 @@ class LipMambaConfig:
     reparam_eigen: bool = True
     spectral_norm: bool = True
     sn_in_proj: bool = False
+    clip_input: bool = True
     gloro_head: bool = True
 
     # heads
@@ -80,7 +81,7 @@ class LipMambaConfig:
             n_power_iters=self.n_power_iters, track_lipschitz=self.track_lipschitz,
             residual=self.residual, clamp_delta=self.clamp_delta,
             reparam_eigen=self.reparam_eigen, spectral_norm=self.spectral_norm,
-            sn_in_proj=self.sn_in_proj,
+            sn_in_proj=self.sn_in_proj, clip_input=self.clip_input,
         )
 
     def constraints(self) -> ConstraintSet:

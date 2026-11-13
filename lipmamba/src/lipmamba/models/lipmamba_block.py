@@ -44,6 +44,7 @@ class LipMambaBlockConfig:
     reparam_eigen: bool = True
     spectral_norm: bool = True
     sn_in_proj: bool = False   # True = "Naive SN" (every matrix); False = LipMamba-Arch
+    clip_input: bool = True
 
     def ssm_config(self) -> SSMConfig:
         return SSMConfig(
@@ -53,7 +54,7 @@ class LipMambaBlockConfig:
             lambda_min=self.lambda_min, lambda_max=self.lambda_max, x_max=self.x_max,
             n_power_iters=self.n_power_iters, track_lipschitz=self.track_lipschitz,
             clamp_delta=self.clamp_delta, reparam_eigen=self.reparam_eigen,
-            spectral_norm=self.spectral_norm,
+            spectral_norm=self.spectral_norm, clip_input=self.clip_input,
         )
 
 

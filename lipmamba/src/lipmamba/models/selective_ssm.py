@@ -58,6 +58,7 @@ class SSMConfig:
     clamp_delta: bool = True          # False → vanilla softplus Δ_t
     reparam_eigen: bool = True        # False → free (unconstrained) A
     spectral_norm: bool = True        # False → plain linear projections
+    clip_input: bool = True           # False → no X_max projection (unconstrained Mamba baseline)
 
     def constraints(self) -> ConstraintSet:
         return ConstraintSet(
@@ -132,9 +133,10 @@ class SelectiveSSM(nn.Module):
         # Ablation: vanilla softplus (unbounded above, → 0 below)
         return torch.nn.functional.softplus(self.delta_proj.proj(x))
 
-    def forward(self, x: torch.Tensor, record_trace: bool | None = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, record_trace: bool | None = None, return_state: bool = False):
         cfg = self.cfg
-        x = self.input_clip(x)                       # Assumption 1 by construction
+        if cfg.clip_input:
+            x = self.input_clip(x)                   # Assumption 1 by construction
         b, t, d = x.shape
         n = cfg.state_dim
         record = cfg.track_lipschitz if record_trace is None else record_trace
@@ -147,6 +149,8 @@ class SelectiveSSM(nn.Module):
 
         h = x.new_zeros(b, d, n)
         ys = []
+        hs = []
+        keep_seq = getattr(self, "keep_state", False)
         if record:
             a_max = x.new_zeros(b, t); a_min = x.new_zeros(b, t)
             inj = x.new_zeros(b, t); hn = x.new_zeros(b, t); dt = x.new_zeros(b, t)
@@ -161,6 +165,8 @@ class SelectiveSSM(nn.Module):
             h = a_bar[:, tt] * h_prev + inj_t
             y = (h * c_t[:, tt].unsqueeze(1)).sum(dim=-1)             # (B, D)
             ys.append(y)
+            if keep_seq:
+                hs.append(h.flatten(1).norm(dim=-1))
 
             if record:
                 with torch.no_grad():
@@ -175,6 +181,10 @@ class SelectiveSSM(nn.Module):
                     D_prev = D_t
 
         y = torch.stack(ys, dim=1) + self.D * x
+        keep = return_state or getattr(self, "keep_state", False)
+        self._last_state = h if keep else None          # final state (B, D, N), differentiable
+        self._last_delta = delta if keep else None      # step sizes (B, T, D)
+        self._state_seq = torch.stack(hs, dim=1) if (keep and hs) else None   # per-token state norms (B, T)
         if record:
             self._last_trace = ScanTrace(
                 delta=delta.detach(), a_bar_max=a_max, a_bar_min=a_min,
