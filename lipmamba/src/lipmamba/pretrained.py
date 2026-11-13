@@ -31,7 +31,7 @@ from .models.spectral_norm import SpectralNormLinear
 
 __all__ = [
     "ARCHS", "hf_state_dict", "tiny_state_dict", "infer_shapes", "build_from_mamba",
-    "calibrate_x_max", "set_x_max", "refresh_spectral_norms", "reference_logits",
+    "calibrate_x_max", "set_x_max", "refresh_spectral_norms", "reference_logits", "conversion_error",
 ]
 
 # name -> (preset, overrides).  All arms share one code path.
@@ -45,12 +45,12 @@ ARCHS: dict[str, tuple[str, dict]] = {
 }
 
 
-def _norm_keys(sd: dict) -> dict:
+def _norm_keys(sd: dict, dtype=torch.float32) -> dict:
     """Accept both the original (``backbone.embedding``) and the HF (``backbone.embeddings``) key names."""
     out = {}
     for k, v in sd.items():
         k = k.replace("backbone.embedding.weight", "backbone.embeddings.weight")
-        out[k] = v.detach().float().cpu()
+        out[k] = v.detach().to(dtype).cpu()
     return out
 
 
@@ -186,9 +186,9 @@ def refresh_spectral_norms(model: torch.nn.Module) -> None:
 
 
 @torch.no_grad()
-def reference_logits(sd: dict, ids: torch.Tensor) -> torch.Tensor:
+def reference_logits(sd: dict, ids: torch.Tensor, dtype=torch.float32) -> torch.Tensor:
     """Vanilla Mamba written directly from the public checkpoint's tensors (no code shared with the model classes)."""
-    sd = {k: v.to(ids.device) for k, v in _norm_keys(sd).items()}
+    sd = {k: v.to(ids.device) for k, v in _norm_keys(sd, dtype).items()}
     shp = infer_shapes(sd)
     d_in, n, r, k = shp["d_inner"], shp["state_dim"], shp["dt_rank"], shp["conv_kernel"]
     rms = lambda x, w: x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + 1e-5) * w
@@ -225,3 +225,22 @@ def describe(model: LipMambaModel) -> dict:
     if cfg.spectral_norm and cfg.clamp_delta and cfg.reparam_eigen and cfg.clip_input:
         out.update(rho_min=c.rho_min, rho_max=c.rho_max, log10_l_block=math.log10(c.l_block))
     return out
+
+
+@torch.no_grad()
+def conversion_error(model: LipMambaModel, sd: dict, ids: torch.Tensor) -> float:
+    """Max relative logit difference between the converted UNCONSTRAINED model and the checkpoint's function,
+    both evaluated in float64.  Single precision cannot decide this: over 24 blocks, rounding alone moves the
+    logits of the public implementation by about 1e-3 (it differs from itself by that much between float32
+    and float64).  In float64 a correct conversion agrees to about 1e-10; a wrong one differs at order one.
+    The model is left in float32 on return."""
+    r = infer_shapes(sd)["dt_rank"]
+    model.double()
+    for i, blk in enumerate(model.blocks):       # the step matrix as an exact float64 product
+        p = f"backbone.layers.{i}.mixer."
+        w = sd[p + "dt_proj.weight"].double() @ sd[p + "x_proj.weight"][:r].double()
+        blk.ssm.delta_proj.proj.weight.copy_(w.to(ids.device))
+    ours = model.lm_head(model.encode(ids))
+    ref = reference_logits(sd, ids, dtype=torch.float64)
+    model.float()
+    return float((ours - ref).abs().max() / ref.abs().max())

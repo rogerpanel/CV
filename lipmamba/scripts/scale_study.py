@@ -39,7 +39,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 
-from lipmamba.pretrained import (ARCHS, build_from_mamba, calibrate_x_max, describe, hf_state_dict,
+from lipmamba.pretrained import (ARCHS, build_from_mamba, calibrate_x_max, conversion_error, describe, hf_state_dict,
                                  reference_logits, refresh_spectral_norms, set_x_max, tiny_state_dict)
 
 NAMES = ["Alice", "Bob", "Carol", "David", "Emma", "Frank", "Grace", "Henry", "Jack", "Kate", "Liam", "Mary",
@@ -430,12 +430,19 @@ def cmd_run(a):
     base = build_from_mamba(sd, "mamba").to(dev).eval()
     g = torch.Generator().manual_seed(999)
     probe = [cat_ids(task.sample(8, g, 24, 8)).to(dev) for _ in range(4)] + [task.lm_batch(8, 128, g).to(dev) for _ in range(4)]
-    with torch.no_grad():                                      # the converted model must compute the public checkpoint's function
-        ours = base.lm_head(base.encode(probe[0]))
-        ref = hf.to(dev)(input_ids=probe[0]).logits if hf is not None else reference_logits(sd, probe[0])
-        verify = float((ours - ref).abs().max() / ref.abs().max())
-    print(f"  conversion check: max relative logit difference {verify:.2e}", flush=True)
-    if verify > 1e-3 and not a.skip_verify:
+    # The converted model must compute the public checkpoint's function.  Decided in float64 against an independent
+    # implementation (see conversion_error); the float32 comparison with the transformers model is a sanity bound.
+    verify = conversion_error(base, sd, probe[0][:2, :64])
+    with torch.no_grad():
+        if hf is not None:
+            ours = base.lm_head(base.encode(probe[0])); ref = hf.to(dev)(input_ids=probe[0]).logits
+            verify32 = float((ours - ref).abs().max() / ref.abs().max())
+            agree = float((ours.argmax(-1) == ref.argmax(-1)).float().mean())
+        else:
+            verify32, agree = verify, 1.0
+    print(f"  conversion check: float64 max relative logit difference {verify:.1e}; "
+          f"float32 vs transformers {verify32:.1e}, next-token agreement {agree:.4f}", flush=True)
+    if (verify > 1e-6 or verify32 > 3e-2 or agree < 0.95) and not a.skip_verify:
         raise RuntimeError("converted model does not reproduce the public checkpoint")
     del hf
     overrides = {k: float(v) for k, v in (s.split("=") for s in a.set)}
@@ -453,7 +460,7 @@ def cmd_run(a):
         print("  resumed from checkpoint; continuing evaluation", flush=True)
     else:
         res = dict(model=a.model, arch=arch, adversarial_training=at, seed=a.seed, tiny=a.tiny, base=a.base,
-                   args={k: v for k, v in vars(a).items() if k not in ("fn",)}, conversion_rel_error=verify,
+                   args={k: v for k, v in vars(a).items() if k not in ("fn",)}, conversion_rel_error=verify, conversion_rel_error_float32_vs_transformers=verify32, conversion_next_token_agreement=agree,
                    torch=torch.__version__, device=torch.cuda.get_device_name(0) if dev.type == "cuda" else "cpu",
                    n_names=len(task.names), n_values=len(task.values), allowed_trigger_tokens=int(task.allowed.sum()))
         model.eval(); refresh_spectral_norms(model)

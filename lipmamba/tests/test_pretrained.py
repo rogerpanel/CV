@@ -51,3 +51,15 @@ def test_constrained_variants_build_and_respect_bounds(arch):
         if cfg.spectral_norm:
             for lin, bound in ((s.x_to_b, cfg.s_b), (s.x_to_c, cfg.s_c), (s.delta_proj.proj, cfg.s_delta), (blk.out_proj, cfg.s_out)):
                 assert torch.linalg.matrix_norm(lin.normalised_weight(), ord=2) <= bound * (1 + 1e-4)
+
+
+def test_conversion_error_is_exact_in_double_and_detects_a_wrong_mapping():
+    from lipmamba.pretrained import conversion_error
+    sd = tiny_state_dict(V)
+    ids = _ids()
+    model = build_from_mamba(sd, "mamba").eval()
+    assert conversion_error(model, sd, ids) < 1e-9
+    assert model.embed_tokens.weight.dtype == torch.float32
+    s = model.blocks[0].ssm
+    s.x_to_b.weight.data, s.x_to_c.weight.data = s.x_to_c.weight.data.clone(), s.x_to_b.weight.data.clone()
+    assert conversion_error(model, sd, ids) > 1e-3
