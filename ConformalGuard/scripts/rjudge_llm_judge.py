@@ -60,11 +60,11 @@ def parse_verdict(text: str) -> int:
     return -1
 
 
-def judge_record(rec: dict, generate) -> dict:
+def judge_record(rec: dict, generate, reason_tokens: int = 400) -> dict:
     """`generate(messages, max_new_tokens) -> str` is any chat completion function."""
     messages = build_messages(rec)
     messages.append({"role": "user", "content": PROMPT_REASON})
-    reason = generate(messages, 400)
+    reason = generate(messages, reason_tokens)
     messages.append({"role": "assistant", "content": reason})
     messages.append({"role": "user", "content": PROMPT_PRED})
     verdict = generate(messages, 8)
@@ -85,6 +85,31 @@ def metrics(rows: list[dict]) -> dict:
     return out
 
 
+def encode_chat(tok, messages, max_input_tokens: int):
+    """Token ids of the chat prompt as a (1, L) tensor.
+
+    `apply_chat_template(..., return_tensors="pt")` returns a tensor in older
+    transformers releases and a BatchEncoding (dict-like) in newer ones; both
+    are handled.  Over-long prompts keep their most recent tokens.
+    """
+    enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+    ids = enc if hasattr(enc, "shape") else enc["input_ids"]
+    if ids.dim() == 1:
+        ids = ids.unsqueeze(0)
+    return ids[:, -max_input_tokens:]
+
+
+def generate_with(tok, model, messages, max_new_tokens: int, max_input_tokens: int) -> str:
+    import torch
+
+    ids = encode_chat(tok, messages, max_input_tokens).to(model.device)
+    with torch.no_grad():
+        out = model.generate(input_ids=ids, attention_mask=torch.ones_like(ids),
+                             max_new_tokens=max_new_tokens, do_sample=False,
+                             pad_token_id=tok.eos_token_id)
+    return tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
+
+
 def hf_generator(model_name: str, load_4bit: bool, max_input_tokens: int):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -95,19 +120,16 @@ def hf_generator(model_name: str, load_4bit: bool, max_input_tokens: int):
         from transformers import BitsAndBytesConfig
         kw["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True,
                                                        bnb_4bit_compute_dtype=torch.float16)
+        model = AutoModelForCausalLM.from_pretrained(model_name, **kw)
     else:
-        kw["torch_dtype"] = torch.float16 if torch.cuda.is_available() else torch.float32
-    model = AutoModelForCausalLM.from_pretrained(model_name, **kw).eval()
-
-    @torch.no_grad()
-    def generate(messages, max_new_tokens):
-        ids = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
-        ids = ids[:, -max_input_tokens:].to(model.device)
-        out = model.generate(ids, max_new_tokens=max_new_tokens, do_sample=False,
-                             pad_token_id=tok.eos_token_id)
-        return tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True)
-
-    return generate
+        half = torch.float16 if torch.cuda.is_available() else torch.float32
+        try:                                    # `dtype` replaced `torch_dtype` in recent releases
+            model = AutoModelForCausalLM.from_pretrained(model_name, dtype=half, **kw)
+        except TypeError:
+            model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=half, **kw)
+    model.eval()
+    return lambda messages, max_new_tokens: generate_with(tok, model, messages, max_new_tokens,
+                                                          max_input_tokens)
 
 
 def main() -> None:
@@ -117,6 +139,8 @@ def main() -> None:
     ap.add_argument("--load-4bit", action="store_true")
     ap.add_argument("--max-input-tokens", type=int, default=6000)
     ap.add_argument("--limit", type=int, default=0, help="judge only the first N records (testing)")
+    ap.add_argument("--reason-tokens", type=int, default=400,
+                    help="token budget for the analysis stage (lower is faster)")
     ap.add_argument("--out", default="runs/rjudge_judge")
     args = ap.parse_args()
 
@@ -140,13 +164,16 @@ def main() -> None:
         t0 = time.time()
         with pred_path.open("a") as fh:
             for i, rec in enumerate(todo, 1):
-                row = judge_record(rec, generate)
+                row = judge_record(rec, generate, args.reason_tokens)
                 done[row["id"]] = row
                 fh.write(json.dumps(row, ensure_ascii=False) + "\n"); fh.flush()
-                if i % 20 == 0 or i == len(todo):
-                    print(f"  {i}/{len(todo)}  ({time.time() - t0:.0f}s)", flush=True)
+                if i <= 3 or i % 20 == 0 or i == len(todo):
+                    el = time.time() - t0
+                    print(f"  {i}/{len(todo)}  {el:.0f}s elapsed, about "
+                          f"{el / i * (len(todo) - i) / 60:.0f} min left", flush=True)
     rows = [done[int(r["id"])] for r in recs]
-    m = {"model": args.model, "load_4bit": args.load_4bit, **metrics(rows)}
+    m = {"model": args.model, "load_4bit": args.load_4bit, "reason_tokens": args.reason_tokens,
+         **metrics(rows)}
     (out / "metrics.json").write_text(json.dumps(m, indent=1))
     print(json.dumps(m, indent=1))
 

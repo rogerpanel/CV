@@ -185,3 +185,23 @@ def test_one_record_per_group_restores_the_guarantee():
         pooled.append(float((s_te[one] > q).mean()))
     assert np.mean(per_group) <= 0.10 + 0.01
     assert np.mean(pooled) > 0.13
+
+
+def test_llm_judge_generation_handles_both_tokenizer_return_types():
+    """Older transformers return a tensor from apply_chat_template, newer ones a dict."""
+    class Tok:
+        eos_token_id = 0
+        def __init__(self, as_dict): self.as_dict = as_dict
+        def apply_chat_template(self, messages, add_generation_prompt, return_tensors):
+            ids = torch.arange(1, 11).unsqueeze(0)
+            return {"input_ids": ids, "attention_mask": torch.ones_like(ids)} if self.as_dict else ids
+        def decode(self, ids, skip_special_tokens): return "unsafe:" + ",".join(str(int(i)) for i in ids)
+    class Model:
+        device = "cpu"
+        def generate(self, input_ids, attention_mask, max_new_tokens, do_sample, pad_token_id):
+            assert input_ids.shape == attention_mask.shape and not do_sample
+            return torch.cat([input_ids, torch.full((1, max_new_tokens), 7)], dim=1)
+    for as_dict in (False, True):
+        assert J.encode_chat(Tok(as_dict), [], 6).tolist() == [[5, 6, 7, 8, 9, 10]]   # keeps recent tokens
+        text = J.generate_with(Tok(as_dict), Model(), [], max_new_tokens=3, max_input_tokens=6)
+        assert text == "unsafe:7,7,7"                                              # only new tokens decoded
