@@ -125,7 +125,14 @@ on all three Kaggle benchmarks.
 MIT — see [`LICENSE`](LICENSE). The Kaggle datasets retain their own licences (CC-BY
 4.0 for ICS3D / IIS3D / IDS-PQC; see each DOI landing page for the others).
 
-## 7. Reproducibility link
+## 7. v2 re-run (modules 1–3)
+
+`scripts/v2_run.py` and `notebooks/v2_rerun_ics3d_colab.ipynb` re-run SODE-Guard on
+ICS3D over five seeds with imbalance-aware training and post-hoc logit adjustment,
+EOT-matched adversarial training, and a randomised-smoothing certificate, against
+an MLP, a neural ODE and gradient-boosted trees. See [`docs/V2_RERUN.md`](docs/V2_RERUN.md).
+
+## 8. Reproducibility link
 
 This directory is the **reproducibility artefact** referenced in the manuscript:
 <https://github.com/rogerpanel/CV/tree/main/SODE-Guard>
