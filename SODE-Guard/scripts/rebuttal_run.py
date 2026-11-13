@@ -103,6 +103,12 @@ def cmd_prepare(a):
     y_str = df[label].astype(str)
     feat = df.drop(columns=[label])
     feat = feat[[c for c in feat.columns if not any(h in c.strip().lower() for h in ID_HINTS)]]
+    # label-like columns (e.g. Edge-IIoT's binary Attack_label) would leak the answer
+    leaky = [c for c in feat.columns
+             if "label" in c.lower() or c.lower().startswith("attack") or c in (a.drop_cols or [])]
+    feat = feat.drop(columns=leaky)
+    if leaky:
+        log("dropped label-like / requested columns:", leaky)
     feat = feat.apply(pd.to_numeric, errors="coerce")
     feat = feat.loc[:, feat.notna().mean() > 0.5]
     feat = feat.replace([np.inf, -np.inf], np.nan)
@@ -143,7 +149,8 @@ def cmd_prepare(a):
     np.savez_compressed(out / "data.npz", Xtr=X[tr], ytr=y[tr], Xva=X[va], yva=y[va], Xte=X[te], yte=y[te])
     meta = {"files": files, "label_column": label, "classes": classes,
             "class_counts": {c: int((y_str == c).sum()) for c in classes},
-            "dropped_small_classes": dropped, "features": list(keep), "n_features": len(keep),
+            "dropped_small_classes": dropped, "dropped_label_like_columns": leaky,
+            "features": list(keep), "n_features": len(keep),
             "cap_per_class": a.cap_per_class, "clip": a.clip, "seed": a.seed,
             "sizes": {"train": len(tr), "val": len(va), "test": len(te)},
             "split": split_note, "leakage": leakage,
@@ -496,6 +503,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--csv", help="glob of flow CSV files (prepare)")
     ap.add_argument("--label-col")
+    ap.add_argument("--drop-cols", nargs="*", help="extra feature columns to drop (prepare)")
     ap.add_argument("--cap-per-class", type=int, default=20000)
     ap.add_argument("--min-per-class", type=int, default=200)
     ap.add_argument("--chunksize", type=int, default=500_000)
