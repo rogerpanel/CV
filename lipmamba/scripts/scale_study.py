@@ -7,9 +7,16 @@ and is fine-tuned with the SAME data, optimiser, steps and seeds:
     mamba_released   public checkpoint, no fine-tuning (reference only)
     mamba            unconstrained, clean fine-tuning
     mamba_at         unconstrained, adversarial fine-tuning
-    lip              all constraints, clean fine-tuning
-    lip_at           all constraints, adversarial fine-tuning
-    lip_no_sn / lip_no_clamp / lip_free_A / lip_no_clip    single-constraint ablations
+    lipcal           all constraints, constants calibrated to the checkpoint, clean fine-tuning
+    lipcal_at        the same with adversarial fine-tuning
+    lipcal_no_sn / lipcal_no_clamp / lipcal_free_A / lipcal_no_clip    single-constraint ablations
+    lip, lip_at      all constraints with the PAPER's constants (s=1, Δ in [1e-3, 0.5), λ in [0.05, 1])
+
+"Calibrated" constants are each block's clean-data envelope of the public checkpoint (its own spectral
+norms and eigenvalue range, and quantiles of its step sizes and input norms), so the constrained model
+starts as almost the same function and every constraint is a bound that neither fine-tuning nor an
+attacker can exceed.  With the paper's constants the projection changes the pretrained function
+drastically (initial perplexity above 1e60), so those arms measure recovery as much as robustness.
 
 Task: natural-language fact recall.  The context states a code word for four
 names and one later update; then comes filler text from WikiText, then a
@@ -39,18 +46,20 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 
-from lipmamba.pretrained import (ARCHS, build_from_mamba, calibrate_x_max, conversion_error, describe, hf_state_dict,
-                                 reference_logits, refresh_spectral_norms, set_x_max, tiny_state_dict)
+from lipmamba.pretrained import (ARCHS, apply_calibration, build_from_mamba, calibrate_constraints, calibrate_x_max,
+                                 conversion_error, describe, hf_state_dict, reference_logits, refresh_spectral_norms,
+                                 tiny_state_dict)
 
 NAMES = ["Alice", "Bob", "Carol", "David", "Emma", "Frank", "Grace", "Henry", "Jack", "Kate", "Liam", "Mary",
          "Nora", "Oscar", "Paul", "Ruth", "Sam", "Tom"]
 VALUES = ["red", "blue", "green", "black", "white", "gold", "silver", "pink", "brown", "gray", "orange", "purple",
           "yellow", "iron", "stone", "glass", "north", "south", "east", "west"]
-CORE = ["mamba_released", "mamba", "lip", "mamba_at", "lip_at"]
-ABLATIONS = ["lip_no_sn", "lip_no_clamp", "lip_free_A", "lip_no_clip"]
+CORE = ["mamba_released", "mamba", "lipcal", "mamba_at", "lipcal_at"]
+PAPER = ["lip", "lip_at"]
+ABLATIONS = ["lipcal_no_sn", "lipcal_no_clamp", "lipcal_free_A", "lipcal_no_clip"]
 PRESETS = {  # explicit flags override these
-    "a100": dict(bs=16, accum=1, grad_chunk=16, eval_chunk=256, steps=1500, n_eval=64, iters=30),
-    "l4":   dict(bs=8, accum=2, grad_chunk=8, eval_chunk=96, steps=1000, n_eval=48, iters=20),
+    "a100": dict(bs=16, accum=1, grad_chunk=32, eval_chunk=384, steps=400, n_eval=64, iters=30),
+    "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=20),
     "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3),
 }
 
@@ -416,7 +425,8 @@ def cmd_run(a):
     out.parent.mkdir(parents=True, exist_ok=True)
     partial, ckpt = out.with_suffix(".partial.json"), out.with_suffix(".ckpt.pt")
     released = a.model == "mamba_released"
-    at = a.model.endswith("_at"); arch = "mamba" if released else a.model.removesuffix("_at")
+    at = a.model.endswith("_at"); calibrated = a.model.startswith("lipcal")
+    arch = "mamba" if released else a.model.removesuffix("_at").replace("lipcal", "lip")
     if released:
         a.steps = 0
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -446,20 +456,25 @@ def cmd_run(a):
         raise RuntimeError("converted model does not reproduce the public checkpoint")
     del hf
     overrides = {k: float(v) for k, v in (s.split("=") for s in a.set)}
-    x_max = None
-    if ARCHS[arch][1].get("clip_input", arch != "mamba"):
-        x_max = a.x_max if a.x_max is not None else calibrate_x_max(base, probe, q=a.x_max_quantile)
-    model = base if arch == "mamba" and not overrides else build_from_mamba(sd, arch, x_max=x_max, **overrides).to(dev)
+    cal = None
+    if arch != "mamba":
+        if calibrated:
+            cal = calibrate_constraints(base, probe, q_x=a.x_max_quantile, q_delta=a.delta_quantile, delta_headroom=a.delta_headroom)
+        else:                                                  # paper constants; only the input radius is calibrated
+            cal = dict(x_max=[a.x_max] * len(base.blocks) if a.x_max is not None else calibrate_x_max(base, probe, q=a.x_max_quantile))
+        if not ARCHS[arch][1].get("clip_input", True):
+            cal.pop("x_max")
+    model = base if arch == "mamba" and not overrides else build_from_mamba(sd, arch, calibration=cal, **overrides).to(dev)
     del base, sd
 
     if partial.exists() and ckpt.exists():                     # resume after training
         res = json.loads(partial.read_text()); state = torch.load(ckpt, map_location=dev)
         model.load_state_dict(state["model"])
-        if state["x_max"] is not None:
-            set_x_max(model, state["x_max"])
+        if state["cal"] is not None:
+            apply_calibration(model, state["cal"])
         print("  resumed from checkpoint; continuing evaluation", flush=True)
     else:
-        res = dict(model=a.model, arch=arch, adversarial_training=at, seed=a.seed, tiny=a.tiny, base=a.base,
+        res = dict(model=a.model, arch=arch, adversarial_training=at, calibrated_constants=calibrated, seed=a.seed, tiny=a.tiny, base=a.base,
                    args={k: v for k, v in vars(a).items() if k not in ("fn",)}, conversion_rel_error=verify, conversion_rel_error_float32_vs_transformers=verify32, conversion_next_token_agreement=agree,
                    torch=torch.__version__, device=torch.cuda.get_device_name(0) if dev.type == "cuda" else "cpu",
                    n_names=len(task.names), n_values=len(task.values), allowed_trigger_tokens=int(task.allowed.sum()))
@@ -470,7 +485,7 @@ def cmd_run(a):
             train(model, task, a, at, dev, res["train_log"])
         res["config"] = describe(model); res["train_seconds"] = time.time() - t_all
         if a.steps > 0 and not a.skip_attacks:
-            torch.save(dict(model=model.state_dict(), x_max=x_max if x_max is None or isinstance(x_max, list) else float(x_max)), ckpt)
+            torch.save(dict(model=model.state_dict(), cal=cal), ckpt)
         write_json(partial, res)
     evaluate(model, task, val, a, dev, res, lambda: write_json(partial, res), decode)
     res["seconds"] = res.get("seconds", 0.0) + time.time() - t_all
@@ -485,7 +500,7 @@ def cmd_run(a):
 
 
 def cmd_all(a):
-    models = (a.models or CORE) + (ABLATIONS if a.ablations else [])
+    models = (a.models or CORE) + (PAPER if a.paper_constants else []) + (ABLATIONS if a.ablations else [])
     jobs = [(m, s) for s in a.seeds for m in models if not (m in ABLATIONS and s != a.seeds[0])]
     passthrough = [x for x in a.rest if x != "--"]
     for i, (m, s) in enumerate(jobs):
@@ -528,7 +543,7 @@ def cmd_aggregate(a):
     pc = lambda v: f"{100 * v[0]:.1f} ± {100 * v[1]:.1f}"
     head = ["model", "seeds", "clean", "update", "ppl"] + [f"PACC@{L}" for L in Ls] + [f"ASR@{L}" for L in Ls] + [f"ret.soft@{L}" for L in Ls]
     lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
-    for m in [x for x in CORE + ABLATIONS if x in summary] + [x for x in summary if x not in CORE + ABLATIONS]:
+    for m in [x for x in CORE + PAPER + ABLATIONS if x in summary] + [x for x in summary if x not in CORE + PAPER + ABLATIONS]:
         o = summary[m]
         cells = [m, str(o["n_seeds"]), pc(o["clean_acc"]), pc(o["update_acc"]), f"{o['ppl'][0]:.1f}"]
         cells += [pc(o[f"pacc_worst@{L}"]) if f"pacc_worst@{L}" in o else "-" for L in Ls]
@@ -543,7 +558,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--model", required=True, choices=CORE + ABLATIONS + ["lip_no_sn_at", "lip_no_clamp_at", "lip_free_A_at", "lip_no_clip_at"])
+    r.add_argument("--model", required=True, choices=CORE + PAPER + ABLATIONS + [m.replace("lipcal", "lip") for m in ABLATIONS])
     r.add_argument("--seed", type=int, default=0); r.add_argument("--out", required=True)
     r.add_argument("--preset", choices=list(PRESETS), default=None); r.add_argument("--tiny", action="store_true")
     r.add_argument("--base", default="state-spaces/mamba-130m-hf"); r.add_argument("--revision", default=None)
@@ -554,9 +569,10 @@ def main():
     r.add_argument("--at-steps", type=int, default=2, help="HotFlip refinement steps per adversarial batch")
     r.add_argument("--lengths", type=int, nargs="+", default=[4, 8, 16]); r.add_argument("--eval-fill", type=int, default=24)
     r.add_argument("--n-clean", type=int, default=256); r.add_argument("--ppl-chunks", type=int, default=64)
-    r.add_argument("--n-cand", type=int, default=16); r.add_argument("--topk", type=int, default=64); r.add_argument("--soft-steps", type=int, default=30)
+    r.add_argument("--n-cand", type=int, default=16); r.add_argument("--topk", type=int, default=64); r.add_argument("--soft-steps", type=int, default=20)
     r.add_argument("--x-max", type=float, default=None, help="input-projection radius; default: calibrated per block on clean data")
-    r.add_argument("--x-max-quantile", type=float, default=0.99)
+    r.add_argument("--x-max-quantile", type=float, default=0.999); r.add_argument("--delta-quantile", type=float, default=0.999)
+    r.add_argument("--delta-headroom", type=float, default=2.0, help="calibrated arms: delta_max = headroom x clean quantile")
     r.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="override constraint constants, e.g. delta_max=1.0 lambda_max=4")
     r.add_argument("--n-fact", type=int, default=4, help="facts per context"); r.add_argument("--n-values", type=int, default=16, help="number of code words (answer classes)")
     r.add_argument("--log-every", type=int, default=25)
@@ -564,7 +580,7 @@ def main():
     r.add_argument("--keep-ckpt", action="store_true"); r.add_argument("--force", action="store_true")
     al = sub.add_parser("all", help="run every arm sequentially; extra flags after -- are passed to 'run'")
     al.add_argument("--dir", default="runs/scale"); al.add_argument("--seeds", type=int, nargs="+", default=[0])
-    al.add_argument("--models", nargs="+", default=None); al.add_argument("--ablations", action="store_true")
+    al.add_argument("--models", nargs="+", default=None); al.add_argument("--ablations", action="store_true"); al.add_argument("--paper-constants", action="store_true", help="also run lip and lip_at")
     al.add_argument("rest", nargs=argparse.REMAINDER)
     ag = sub.add_parser("aggregate"); ag.add_argument("--dir", default="runs/scale")
     a = ap.parse_args()

@@ -91,14 +91,18 @@ token triggers. Per-seed outputs and the summary of the reported run are in
 ```bash
 pip install transformers datasets
 python scripts/scale_study.py run --model lip_at --tiny --out /tmp/smoke.json      # CPU smoke test, no download
-python scripts/scale_study.py all --dir runs/scale --seeds 0 1 2 --ablations -- --preset a100
+python scripts/scale_study.py all --dir runs/scale --seeds 0 1 2 --paper-constants --ablations -- --preset a100
 python scripts/scale_study.py aggregate --dir runs/scale
 ```
 
 Every arm starts from the public `state-spaces/mamba-130m-hf` checkpoint and
 is fine-tuned with the same data, optimiser, steps and seeds: unconstrained
 and constrained, with clean and adversarial fine-tuning, plus
-single-constraint ablations. The converted unconstrained model is checked
+single-constraint ablations. Constrained arms use constants calibrated to
+the checkpoint (`lipcal*`: each block's own spectral norms and eigenvalue
+range, and quantiles of its clean step sizes and input norms) or the
+paper's constants (`lip*`), which change the pretrained function
+drastically at initialisation. The converted unconstrained model is checked
 at start-up to compute the same logits as the `transformers` implementation.
 The step projection is stored as one full matrix, so every arm has about
 185M parameters. Attacks (random, zero-shot, gradient-guided token search

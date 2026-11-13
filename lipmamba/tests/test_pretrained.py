@@ -63,3 +63,21 @@ def test_conversion_error_is_exact_in_double_and_detects_a_wrong_mapping():
     s = model.blocks[0].ssm
     s.x_to_b.weight.data, s.x_to_c.weight.data = s.x_to_c.weight.data.clone(), s.x_to_b.weight.data.clone()
     assert conversion_error(model, sd, ids) > 1e-3
+
+
+def test_calibrated_constraints_start_close_to_the_checkpoint():
+    from lipmamba.pretrained import calibrate_constraints, describe
+    sd = tiny_state_dict(V)
+    base = build_from_mamba(sd, "mamba").eval()
+    batches = [_ids(8, 32, seed=s) for s in range(4)]
+    cal = calibrate_constraints(base, batches)
+    ids = _ids(4, 32, seed=9)
+    ref = base(ids)["lm_logits"]
+    rel = lambda m: float((m(ids)["lm_logits"] - ref).abs().max() / ref.abs().max())
+    calibrated = build_from_mamba(sd, "lip", calibration=cal).eval()
+    paper = build_from_mamba(sd, "lip", calibration={"x_max": cal["x_max"]}).eval()
+    assert rel(calibrated) < 0.5 * rel(paper)
+    d = describe(calibrated)
+    assert len(d["delta_max"]) == 2 and all(0 < r < 1 for r in d["rho_min"])
+    for blk, smax in zip(calibrated.blocks, cal["s_out"]):
+        assert torch.linalg.matrix_norm(blk.out_proj.normalised_weight(), ord=2) <= smax * (1 + 1e-4)

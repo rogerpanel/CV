@@ -133,6 +133,25 @@ class SelectiveSSM(nn.Module):
         # Ablation: vanilla softplus (unbounded above, → 0 below)
         return torch.nn.functional.softplus(self.delta_proj.proj(x))
 
+    def _fast_scan(self, x, delta, b_t, c_t, return_state: bool):
+        """Same recurrence as the traced loop, with two autograd operations per token instead of about ten.
+        On a GPU the loop is bound by per-operation overhead, so this is several times faster."""
+        a_steps = self.A.discretise(delta).unbind(1)                            # T x (B, D, N)
+        u_steps = ((delta * x).unsqueeze(-1) * b_t.unsqueeze(-2)).unbind(1)     # T x (B, D, N) = Δ_t B_t x_t
+        h = x.new_zeros(x.size(0), x.size(2), self.cfg.state_dim)
+        hs = []
+        for a, u in zip(a_steps, u_steps):
+            h = a * h + u
+            hs.append(h)
+        del a_steps, u_steps
+        hseq = torch.stack(hs, dim=1)                                           # (B, T, D, N)
+        y = (hseq * c_t.unsqueeze(2)).sum(dim=-1) + self.D * x
+        keep = return_state or getattr(self, "keep_state", False)
+        self._last_state = h if keep else None
+        self._last_delta = delta if keep else None
+        self._state_seq = hseq.flatten(2).norm(dim=-1) if keep else None        # (B, T)
+        return y
+
     def forward(self, x: torch.Tensor, record_trace: bool | None = None, return_state: bool = False):
         cfg = self.cfg
         if cfg.clip_input:
@@ -144,6 +163,8 @@ class SelectiveSSM(nn.Module):
         delta = self.compute_delta(x)                # (B, T, D)
         b_t = self.x_to_b(x)                         # (B, T, N)
         c_t = self.x_to_c(x)                         # (B, T, N)
+        if not record:
+            return self._fast_scan(x, delta, b_t, c_t, return_state)
         a_bar = self.A.discretise(delta)             # (B, T, D, N)  = exp(Δ ⊙ A)
         b_bar = delta.unsqueeze(-1) * b_t.unsqueeze(-2)  # (B, T, D, N) = Δ_t B_t
 

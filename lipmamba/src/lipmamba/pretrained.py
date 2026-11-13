@@ -31,7 +31,7 @@ from .models.spectral_norm import SpectralNormLinear
 
 __all__ = [
     "ARCHS", "hf_state_dict", "tiny_state_dict", "infer_shapes", "build_from_mamba",
-    "calibrate_x_max", "set_x_max", "refresh_spectral_norms", "reference_logits", "conversion_error",
+    "calibrate_x_max", "calibrate_constraints", "apply_calibration", "set_x_max", "refresh_spectral_norms", "reference_logits", "conversion_error",
 ]
 
 # name -> (preset, overrides).  All arms share one code path.
@@ -95,11 +95,13 @@ def infer_shapes(sd: dict) -> dict:
 
 
 def build_from_mamba(sd: dict, arch: str = "mamba", x_max: list[float] | float | None = None,
-                     **overrides) -> LipMambaModel:
+                     calibration: dict | None = None, **overrides) -> LipMambaModel:
     """Build the ``arch`` variant and initialise it from a public Mamba state dict.
 
     ``overrides`` are :class:`LipMambaConfig` fields (e.g. ``delta_max=1.0``).
     ``x_max``: per-block radii, one radius, or ``None`` to keep the config value.
+    ``calibration``: per-block constants from :func:`calibrate_constraints`; applied before the weights are
+    projected, so the eigenvalues are projected into each block's own interval.
     """
     sd = _norm_keys(sd)
     shp = infer_shapes(sd)
@@ -108,6 +110,8 @@ def build_from_mamba(sd: dict, arch: str = "mamba", x_max: list[float] | float |
     cfg: LipMambaConfig = preset(name, **shp, norm_type="rms", track_lipschitz=False, n_classes=0,
                                  **{**flags, **overrides})
     model = LipMambaModel(cfg)
+    if calibration is not None:
+        apply_calibration(model, calibration)
     n = cfg.state_dim
     with torch.no_grad():
         model.embed_tokens.weight.copy_(sd["backbone.embeddings.weight"])
@@ -130,8 +134,9 @@ def build_from_mamba(sd: dict, arch: str = "mamba", x_max: list[float] | float |
             s.D.copy_(m("D"))
             a_log = m("A_log")
             if cfg.reparam_eigen:        # project the eigenvalues into the admissible interval, away from saturation
-                u = (a_log.exp() - cfg.lambda_min) / (cfg.lambda_max - cfg.lambda_min)
-                s.A.alpha.copy_(torch.logit(u.clamp(0.02, 0.98)))
+                u = (a_log.exp() - s.A.lambda_min) / (s.A.lambda_max - s.A.lambda_min)
+                eps = 1e-3 if calibration is not None and "lambda_max" in calibration else 0.02
+                s.A.alpha.copy_(torch.logit(u.clamp(eps, 1 - eps)))
             else:
                 s.A.alpha.copy_(a_log)
     if x_max is not None:
@@ -148,6 +153,74 @@ def set_x_max(model: LipMambaModel, x_max: list[float] | float) -> None:
     model.cfg.x_max = max(xs)
     for blk in model.blocks:
         blk.cfg.x_max = blk.ssm.cfg.x_max = max(xs)
+
+
+@torch.no_grad()
+def calibrate_constraints(model: LipMambaModel, batches: list[torch.Tensor], q_x: float = 0.999,
+                          q_delta: float = 0.999, delta_headroom: float = 2.0, margin: float = 1.25) -> dict:
+    """Per-block constraint constants at the clean-data envelope of the public checkpoint.
+
+    Run on the UNCONSTRAINED converted model.  With these constants the constrained model starts as (almost)
+    the same function as the checkpoint, and every constraint is a bound the attacker and the fine-tuning
+    cannot exceed:
+
+    * spectral bounds s_B, s_C, s_Δ, s_out = the checkpoint's own spectral norms;
+    * eigenvalue interval = [min/margin, max*margin] of the checkpoint's exp(A_log);
+    * step interval: Δ_max = ``delta_headroom`` times the ``q_delta`` quantile of the clean step sizes (the
+      smooth clamp compresses steps near Δ_max, so some headroom is needed to keep clean steps unchanged),
+      Δ_min = a tenth of their 0.001 quantile (at most 1e-3);
+    * input radius X_max = the ``q_x`` quantile of the clean scan-input norms.
+    """
+    import torch.nn.functional as F_
+    nb = len(model.blocks)
+    xs: list[list[torch.Tensor]] = [[] for _ in range(nb)]
+    ds: list[list[torch.Tensor]] = [[] for _ in range(nb)]
+    hooks = []
+    for i, blk in enumerate(model.blocks):
+        hooks.append(blk.ssm.register_forward_pre_hook(lambda _m, a, i=i: xs[i].append(a[0].norm(dim=-1).flatten().float().cpu())))
+        hooks.append(blk.ssm.delta_proj.proj.register_forward_hook(
+            lambda _m, _a, out, i=i: ds[i].append(F_.softplus(out).flatten()[::7].float().cpu())))
+    was = model.training
+    model.eval()
+    for ids in batches:
+        model.encode(ids)
+    for h in hooks:
+        h.remove()
+    model.train(was)
+    sig = lambda w: float(torch.linalg.matrix_norm(w.detach().double(), ord=2))
+    qt = lambda v, q: float(torch.quantile(torch.cat(v)[:4_000_000], q))
+    cal: dict = {k: [] for k in ("x_max", "delta_min", "delta_max", "lambda_min", "lambda_max", "s_b", "s_c", "s_delta", "s_out")}
+    for i, blk in enumerate(model.blocks):
+        s = blk.ssm
+        lam = s.A.lambdas
+        d_hi = delta_headroom * qt(ds[i], q_delta)
+        cal["x_max"].append(qt(xs[i], q_x))
+        cal["delta_max"].append(d_hi); cal["delta_min"].append(min(1e-3, 0.1 * qt(ds[i], 0.001), 0.01 * d_hi))
+        cal["lambda_min"].append(float(lam.min()) / margin); cal["lambda_max"].append(float(lam.max()) * margin)
+        cal["s_b"].append(sig(s.x_to_b.weight)); cal["s_c"].append(sig(s.x_to_c.weight))
+        cal["s_delta"].append(sig(s.delta_proj.proj.weight)); cal["s_out"].append(sig(blk.out_proj.weight))
+    return cal
+
+
+def apply_calibration(model: LipMambaModel, cal: dict) -> None:
+    """Set per-block constants (any subset of the keys of :func:`calibrate_constraints`) on the constraints the
+    model actually has.  The configs keep the worst case over blocks, which is what the closed-form constants use."""
+    cfg = model.cfg
+    for i, blk in enumerate(model.blocks):
+        s = blk.ssm
+        if "x_max" in cal:
+            s.input_clip.x_max = float(cal["x_max"][i])
+        if cfg.clamp_delta and "delta_max" in cal:
+            s.delta_proj.delta_min, s.delta_proj.delta_max = float(cal["delta_min"][i]), float(cal["delta_max"][i])
+        if cfg.reparam_eigen and "lambda_max" in cal:
+            s.A.lambda_min, s.A.lambda_max = float(cal["lambda_min"][i]), float(cal["lambda_max"][i])
+        if cfg.spectral_norm and "s_b" in cal:
+            s.x_to_b.s, s.x_to_c.s = float(cal["s_b"][i]), float(cal["s_c"][i])
+            s.delta_proj.proj.s = s.delta_proj.s_delta = float(cal["s_delta"][i]); blk.out_proj.s = float(cal["s_out"][i])
+    worst = {k: (min if k.endswith("_min") else max)(v) for k, v in cal.items()}
+    for c in [cfg] + [b.cfg for b in model.blocks] + [b.ssm.cfg for b in model.blocks]:
+        for k, v in worst.items():
+            setattr(c, k, float(v))
 
 
 @torch.no_grad()
@@ -215,15 +288,25 @@ def reference_logits(sd: dict, ids: torch.Tensor, dtype=torch.float32) -> torch.
 
 
 def describe(model: LipMambaModel) -> dict:
-    """Constants of the built model, for the result files."""
-    c, cfg = model.constraints, model.cfg
+    """Constants of the built model, per block, for the result files."""
+    cfg = model.cfg
     out = dict(params=sum(p.numel() for p in model.parameters()), n_layers=cfg.n_layers, d_model=cfg.d_model,
                spectral_norm=cfg.spectral_norm, clamp_delta=cfg.clamp_delta, reparam_eigen=cfg.reparam_eigen,
-               clip_input=cfg.clip_input, delta_min=cfg.delta_min, delta_max=cfg.delta_max,
-               lambda_min=cfg.lambda_min, lambda_max=cfg.lambda_max,
-               x_max=[blk.ssm.input_clip.x_max for blk in model.blocks])
-    if cfg.spectral_norm and cfg.clamp_delta and cfg.reparam_eigen and cfg.clip_input:
-        out.update(rho_min=c.rho_min, rho_max=c.rho_max, log10_l_block=math.log10(c.l_block))
+               clip_input=cfg.clip_input)
+    if cfg.clip_input:
+        out["x_max"] = [b.ssm.input_clip.x_max for b in model.blocks]
+    if cfg.clamp_delta:
+        out["delta_min"] = [b.ssm.delta_proj.delta_min for b in model.blocks]
+        out["delta_max"] = [b.ssm.delta_proj.delta_max for b in model.blocks]
+    if cfg.reparam_eigen:
+        out["lambda_min"] = [b.ssm.A.lambda_min for b in model.blocks]
+        out["lambda_max"] = [b.ssm.A.lambda_max for b in model.blocks]
+    if cfg.spectral_norm:
+        out.update(s_b=[b.ssm.x_to_b.s for b in model.blocks], s_c=[b.ssm.x_to_c.s for b in model.blocks],
+                   s_delta=[b.ssm.delta_proj.proj.s for b in model.blocks], s_out=[b.out_proj.s for b in model.blocks])
+    if cfg.clamp_delta and cfg.reparam_eigen:    # per-token retention factor guaranteed by the clamp, per block
+        out["rho_min"] = [math.exp(-dm * lm) for dm, lm in zip(out["delta_max"], out["lambda_max"])]
+        out["rho_max"] = [math.exp(-dm * lm) for dm, lm in zip(out["delta_min"], out["lambda_min"])]
     return out
 
 
