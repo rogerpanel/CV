@@ -20,12 +20,14 @@ property of the learned scorer.
 | Adaptive conformal inference exactly as in Algorithm 1 (no clipping), with delayed labels | `conformalguard/adaptive/gibbs_candes.py` | Unit-tested: the Proposition 2 inequality is asserted at every horizon on shifted, adversarial and delayed-feedback sequences (`tests/test_adaptive.py`). |
 | Controlled simulations behind Figure 2 and the calibration-unit comparison | `scripts/sim_checks.py` | Synthetic scores only; fixed seeds; prints the numbers reported in the paper and draws the figure. |
 | Figure 2 generator | `scripts/make_fig2.py` | Runs on logged scores; refuses to plot a curve that violates Proposition 2. `--demo` uses synthetic scores and watermarks the output. |
+| **R-Judge experiment** (real data, third-party labels): converter, four causal scorers, split protocols, conformal evaluation | `conformalguard/rjudge/`, `scripts/rjudge_run.py`, `docs/RJUDGE_EXPERIMENT.md` | Unit-tested, including that no scorer sees anything after the action it judges. Runs on CPU with TF-IDF features or on GPU with a sentence encoder (`notebooks/rjudge_colab.ipynb`). |
+| LLM-judge baseline on R-Judge | `scripts/rjudge_llm_judge.py` | Prompt construction and parsing unit-tested; model loading needs a GPU and has not been executed here. |
 | Execution graph, builder, framework hooks | `conformalguard/graph/` | Graph and builder unit-tested. The AutoGen / MetaGPT / LangGraph / CrewAI hooks are **untested** against the real frameworks. |
 | DyGFormer-HGT encoder | `conformalguard/encoder/` | Forward pass smoke-tested on CPU. |
 | Training / calibration / evaluation scripts | `scripts/` | Run end to end on the synthetic generator. See the limitations below. |
 | Runtime, analyst routing, FastAPI server | `conformalguard/deployment/` | Routing unit-tested; server not load-tested. |
 
-Run the tests with `pip install -e ".[dev]" && pytest` (34 tests).
+Run the tests with `pip install -e ".[dev]" && pytest`.
 
 ## Limitations of this release: read before citing it as the source of the paper's numbers
 
