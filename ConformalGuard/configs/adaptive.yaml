@@ -1,0 +1,16 @@
+# Online adaptive (Gibbs-Candès) controller config.
+# Used for the streaming evaluation in Sec. 5.4.
+
+adaptive:
+  target_alpha: 0.05
+  gamma: 0.05
+  # alpha_t is never clipped: clipping invalidates Proposition 2
+
+drift:
+  window: 512
+  alpha_drift: 0.01
+
+streaming:
+  steps_per_episode: 1000
+  n_episodes: 50
+  shift_schedule: [stationary, mild_drift, abrupt_shift, recovery]
