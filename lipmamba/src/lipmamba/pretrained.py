@@ -134,9 +134,15 @@ def build_from_mamba(sd: dict, arch: str = "mamba", x_max: list[float] | float |
             s.D.copy_(m("D"))
             a_log = m("A_log")
             if cfg.reparam_eigen:        # project the eigenvalues into the admissible interval, away from saturation
-                u = (a_log.exp() - s.A.lambda_min) / (s.A.lambda_max - s.A.lambda_min)
-                eps = 1e-3 if calibration is not None and "lambda_max" in calibration else 0.02
-                s.A.alpha.copy_(torch.logit(u.clamp(eps, 1 - eps)))
+                u = (a_log.double().exp() - s.A.lambda_min) / (s.A.lambda_max - s.A.lambda_min)
+                if calibration is not None and "lambda_max" in calibration:
+                    # every eigenvalue lies inside the calibrated interval: keep it exactly.  (Clamping u away
+                    # from 0 by even 1e-3 of the range would move the slow eigenvalues, the model's long memory,
+                    # up by orders of magnitude.)
+                    u = u.clamp(1e-12, 1 - 1e-9)
+                else:                    # paper constants: most eigenvalues are outside; stay off saturation
+                    u = u.clamp(0.02, 0.98)
+                s.A.alpha.copy_(torch.logit(u).float())
             else:
                 s.A.alpha.copy_(a_log)
     if x_max is not None:

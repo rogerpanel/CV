@@ -58,9 +58,9 @@ CORE = ["mamba_released", "mamba", "lipcal", "mamba_at", "lipcal_at"]
 PAPER = ["lip", "lip_at"]
 ABLATIONS = ["lipcal_no_sn", "lipcal_no_clamp", "lipcal_free_A", "lipcal_no_clip"]
 PRESETS = {  # explicit flags override these
-    "a100": dict(bs=16, accum=1, grad_chunk=32, eval_chunk=384, steps=400, n_eval=64, iters=30),
-    "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=20),
-    "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3),
+    "a100": dict(bs=16, accum=1, grad_chunk=32, eval_chunk=384, steps=400, n_eval=64, iters=60, n_cand=32),
+    "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=30, n_cand=16),
+    "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3, n_cand=8),
 }
 
 
@@ -499,6 +499,36 @@ def cmd_run(a):
     print(f"== done {a.model} s{a.seed} in {res['seconds'] / 60:.1f} min -> {out}", flush=True)
 
 
+def cmd_diagnose(a):
+    """Before any training: how far is each constrained variant from the public checkpoint?"""
+    dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    sd, _hf, task, val, _ = load_data(a); task.val_dev = task.val_ids.to(dev)
+    a.n_clean, a.ppl_chunks = 128, 16
+    base = build_from_mamba(sd, "mamba").to(dev).eval()
+    g = torch.Generator().manual_seed(999)
+    probe = [cat_ids(task.sample(8, g, 24, 8)).to(dev) for _ in range(4)] + [task.lm_batch(8, 128, g).to(dev) for _ in range(4)]
+    cal = calibrate_constraints(base, probe, q_x=a.x_max_quantile, q_delta=a.delta_quantile, delta_headroom=a.delta_headroom)
+    paper = dict(x_max=calibrate_x_max(base, probe, q=a.x_max_quantile))
+    rng = lambda v: f"{min(v):.3g}..{max(v):.3g}"
+    print("calibrated constants over blocks: " + ", ".join(f"{k} {rng(v)}" for k, v in cal.items()), flush=True)
+    rows = [("mamba (public checkpoint)", "mamba", None), ("lipcal (all constraints, calibrated)", "lip", cal),
+            ("lipcal without spectral norm", "lip_no_sn", cal), ("lipcal without step clamp", "lip_no_clamp", cal),
+            ("lipcal without eigenvalue bound", "lip_free_A", cal), ("lipcal without input projection", "lip_no_clip", cal),
+            ("lipcal, envelope = clean maximum", "lip", calibrate_constraints(base, probe, q_x=1.0, q_delta=1.0, delta_headroom=a.delta_headroom)),
+            ("lip (paper constants)", "lip", paper)]
+    out = {}
+    for label, arch, c in rows:
+        c = None if c is None else {k: v for k, v in c.items() if k != "x_max" or ARCHS[arch][1].get("clip_input", True)}
+        m = base if arch == "mamba" else build_from_mamba(sd, arch, calibration=c).to(dev)
+        m.eval(); refresh_spectral_norms(m)
+        out[label] = clean_metrics(m, task, val, a, dev)
+        print(f"  {label:<40} ppl {out[label]['ppl']:<12.4g} clean acc {out[label]['clean_acc']:.3f}  update acc {out[label]['update_acc']:.3f}", flush=True)
+        if m is not base:
+            del m
+    if a.out:
+        Path(a.out).parent.mkdir(parents=True, exist_ok=True); write_json(Path(a.out), dict(constants=cal, init=out))
+
+
 def cmd_all(a):
     models = (a.models or CORE) + (PAPER if a.paper_constants else []) + (ABLATIONS if a.ablations else [])
     jobs = [(m, s) for s in a.seeds for m in models if not (m in ABLATIONS and s != a.seeds[0])]
@@ -563,13 +593,13 @@ def main():
     r.add_argument("--preset", choices=list(PRESETS), default=None); r.add_argument("--tiny", action="store_true")
     r.add_argument("--base", default="state-spaces/mamba-130m-hf"); r.add_argument("--revision", default=None)
     r.add_argument("--cache", default="data_cache")
-    for k in ("bs", "accum", "grad_chunk", "eval_chunk", "steps", "n_eval", "iters"):
+    for k in ("bs", "accum", "grad_chunk", "eval_chunk", "steps", "n_eval", "iters", "n_cand"):
         r.add_argument("--" + k.replace("_", "-"), type=int, default=None)
     r.add_argument("--lr", type=float, default=1e-4); r.add_argument("--lm-weight", type=float, default=0.5); r.add_argument("--lm-bs", type=int, default=4)
     r.add_argument("--at-steps", type=int, default=2, help="HotFlip refinement steps per adversarial batch")
-    r.add_argument("--lengths", type=int, nargs="+", default=[4, 8, 16]); r.add_argument("--eval-fill", type=int, default=24)
+    r.add_argument("--lengths", type=int, nargs="+", default=[8, 16, 32]); r.add_argument("--eval-fill", type=int, default=24)
     r.add_argument("--n-clean", type=int, default=256); r.add_argument("--ppl-chunks", type=int, default=64)
-    r.add_argument("--n-cand", type=int, default=16); r.add_argument("--topk", type=int, default=64); r.add_argument("--soft-steps", type=int, default=20)
+    r.add_argument("--topk", type=int, default=64); r.add_argument("--soft-steps", type=int, default=20)
     r.add_argument("--x-max", type=float, default=None, help="input-projection radius; default: calibrated per block on clean data")
     r.add_argument("--x-max-quantile", type=float, default=0.999); r.add_argument("--delta-quantile", type=float, default=0.999)
     r.add_argument("--delta-headroom", type=float, default=2.0, help="calibrated arms: delta_max = headroom x clean quantile")
@@ -583,6 +613,12 @@ def main():
     al.add_argument("--models", nargs="+", default=None); al.add_argument("--ablations", action="store_true"); al.add_argument("--paper-constants", action="store_true", help="also run lip and lip_at")
     al.add_argument("rest", nargs=argparse.REMAINDER)
     ag = sub.add_parser("aggregate"); ag.add_argument("--dir", default="runs/scale")
+    dg = sub.add_parser("diagnose", help="no training: initial perplexity and accuracy of every constrained variant")
+    dg.add_argument("--out", default=None); dg.add_argument("--tiny", action="store_true"); dg.add_argument("--seed", type=int, default=0)
+    dg.add_argument("--base", default="state-spaces/mamba-130m-hf"); dg.add_argument("--revision", default=None); dg.add_argument("--cache", default="data_cache")
+    dg.add_argument("--x-max-quantile", type=float, default=0.999); dg.add_argument("--delta-quantile", type=float, default=0.999)
+    dg.add_argument("--delta-headroom", type=float, default=2.0); dg.add_argument("--eval-chunk", type=int, default=128)
+    dg.add_argument("--eval-fill", type=int, default=24); dg.add_argument("--n-fact", type=int, default=4); dg.add_argument("--n-values", type=int, default=16)
     a = ap.parse_args()
     if a.cmd == "run":
         smoke = a.tiny and a.steps is None                    # pure smoke test: shrink everything
@@ -593,7 +629,7 @@ def main():
                 setattr(a, k, v)
         if smoke:
             a.n_clean, a.ppl_chunks, a.soft_steps, a.lengths = 16, 4, 3, a.lengths[:2]
-    {"run": cmd_run, "all": cmd_all, "aggregate": cmd_aggregate}[a.cmd](a)
+    {"run": cmd_run, "all": cmd_all, "aggregate": cmd_aggregate, "diagnose": cmd_diagnose}[a.cmd](a)
 
 
 if __name__ == "__main__":
