@@ -29,6 +29,16 @@ property of the learned scorer.
 
 Run the tests with `pip install -e ".[dev]" && pytest`.
 
+## Measured results
+
+- `results/rjudge_kaggle_t4/SUMMARY.md`: R-Judge with sentence-encoder features, 100 random and 100
+  prompt-grouped splits, two encoders (GPU run).
+- `results/rjudge_lsa_cpu/RESULTS.md`: the same experiment with TF-IDF features on CPU, 40 splits,
+  with per-split JSON.
+- In short: the false-block guarantee holds on exchangeable splits for every scorer and fails under
+  prompt reuse and domain shift; the guard blocks 63-69% of unsafe records at alpha = 0.05; the
+  graph scorer is not better than a sequence model on this benchmark.
+
 ## Limitations of this release: read before citing it as the source of the paper's numbers
 
 1. **No benchmark data is included.** `conformalguard/data/synthetic.py` is a

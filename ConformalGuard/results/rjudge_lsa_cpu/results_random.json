@@ -6957,7 +6957,7 @@
   "fbr_unintended": 0.6428571428571429
  },
  "config": {
-  "rjudge_dir": "/home/user/ext/R-Judge",
+  "rjudge_dir": "R-Judge",
   "features": "lsa",
   "st_model": "sentence-transformers/all-MiniLM-L6-v2",
   "reps": 40,
@@ -6969,7 +6969,7 @@
   "layers": 3,
   "seed": 0,
   "device": "cpu",
-  "out": "/tmp/claude-0/-home-user-CV/6c78205f-8178-5d97-9a39-2b95841f749e/scratchpad/rj_lsa/random",
+  "out": "runs/rjudge_lsa/random",
   "quick": false,
   "data": {
    "records": 571,

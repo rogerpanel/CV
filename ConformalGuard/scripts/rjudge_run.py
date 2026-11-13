@@ -126,7 +126,7 @@ def main() -> None:
         rows = run("random", "random", lambda rng: E.split_random(traces, rng), args.reps)
         md.append(table(results["aggregate"]["random"], names,
                         "Random splits (exchangeable: the FBR guarantee applies)", len(rows)))
-        for a, b in (("graph", "seq"), ("graph", "step"), ("graph", "graph_untyped"), ("graph", "logreg_pooled")):
+        for a, b in (("graph", "seq"), ("graph", "step"), ("seq", "step"), ("graph", "graph_untyped"), ("graph", "logreg_pooled")):
             if a in names and b in names:
                 for metric in ("auroc", "block@0.10"):
                     results["paired"][f"random:{a}-{b}:{metric}"] = E.paired(rows, a, b, metric)
@@ -134,7 +134,7 @@ def main() -> None:
         rows = run("grouped", "grouped", lambda rng: E.split_grouped(traces, rng), args.reps)
         md.append(table(results["aggregate"]["grouped"], names,
                         "Prompt-grouped splits (no user prompt shared between train and test)", len(rows)))
-        for a, b in (("graph", "seq"), ("graph", "step"), ("graph", "graph_untyped"), ("graph", "logreg_pooled")):
+        for a, b in (("graph", "seq"), ("graph", "step"), ("seq", "step"), ("graph", "graph_untyped"), ("graph", "logreg_pooled")):
             if a in names and b in names:
                 for metric in ("auroc", "block@0.10"):
                     results["paired"][f"grouped:{a}-{b}:{metric}"] = E.paired(rows, a, b, metric)

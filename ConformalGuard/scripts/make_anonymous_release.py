@@ -20,9 +20,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 INCLUDE = ["conformalguard", "configs", "scripts", "tests", "examples", "notebooks",
-           "docs", "README.md", "LICENSE", "pyproject.toml", "requirements.txt", ".gitignore"]
+           "docs", "results", "README.md", "LICENSE", "pyproject.toml", "requirements.txt", ".gitignore"]
 DROP = ["docs/ROBUSTIDPS_INTEGRATION.md", "scripts/make_anonymous_release.py"]
-TEXT_SUFFIXES = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cfg", ".json", ""}
+TEXT_SUFFIXES = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cfg", ".json", ".ipynb", ""}
 
 # (pattern, replacement), applied in order, case-sensitive unless flagged.
 REPLACEMENTS = [
