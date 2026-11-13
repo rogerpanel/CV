@@ -138,6 +138,14 @@ def main() -> None:
             if a in names and b in names:
                 for metric in ("auroc", "block@0.10"):
                     results["paired"][f"grouped:{a}-{b}:{metric}"] = E.paired(rows, a, b, metric)
+        agg = results["aggregate"]["grouped"]
+        md += ["Calibration unit on the grouped splits: FBR (%) at alpha = 0.10 with the threshold set",
+               "from all safe calibration records (pooled) and from one random safe record per",
+               "calibration prompt group, evaluated on one random record per test group.", "",
+               "| scorer | FBR pooled | FBR one per group | Block one per group |", "|---|---|---|---|"]
+        md += [f"| {n} | {_fmt(agg, n, 'fbr@0.10')} | {_fmt(agg, n, 'fbr_g1@0.10')} | {_fmt(agg, n, 'block_g1@0.10')} |"
+               for n in names if n in agg]
+        md.append("")
     if "loco" in protocols:
         for cat in sorted({t.category for t in traces}):
             rows = run("loco", f"loco:{cat}",

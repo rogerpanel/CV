@@ -162,3 +162,26 @@ def test_llm_judge_prompt_and_parser():
     row = J.judge_record(UNSAFE, fake)
     assert row["pred"] == 1 and calls == [(6, 400), (8, 8)]
     assert J.metrics([row, dict(row, label=0, pred=0)]) ["block"] == 1.0
+
+
+def test_one_record_per_group_restores_the_guarantee():
+    """Records of a group share an effect and groups differ in size, with larger
+    groups scoring lower.  Pooled calibration then under-covers a random record
+    of a fresh group; one record per group does not."""
+    rng = np.random.default_rng(0)
+    def draw(n_groups):
+        sizes = rng.integers(1, 30, n_groups)
+        g = np.repeat(np.arange(n_groups), sizes)
+        effect = rng.normal((15 - sizes) / 8.0, 1.0)
+        return g, np.repeat(effect, sizes) + 0.3 * rng.normal(size=g.size)
+    pooled, per_group = [], []
+    for _ in range(1500):
+        g_cal, s_cal = draw(60); g_te, s_te = draw(60)
+        m = E.evaluate(s_cal, np.zeros(s_cal.size, int), s_te, np.zeros(s_te.size, int),
+                       g_cal=g_cal, g_test=g_te, rng=rng, alphas=(0.10,))
+        per_group.append(m["fbr_g1@0.10"])
+        one = E._one_per_group(g_te, np.ones(g_te.size, bool), rng)        # same target, pooled threshold
+        q = E.conformal_quantile(s_cal, 0.10)
+        pooled.append(float((s_te[one] > q).mean()))
+    assert np.mean(per_group) <= 0.10 + 0.01
+    assert np.mean(pooled) > 0.13
