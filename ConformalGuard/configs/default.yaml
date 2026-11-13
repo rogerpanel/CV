@@ -44,8 +44,6 @@ adaptive:
   enabled: true
   target_alpha: 0.05
   gamma: 0.05
-  alpha_min: 1.0e-3
-  alpha_max: 0.5
 
 drift:
   enabled: true

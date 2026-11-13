@@ -15,25 +15,30 @@ def _pset(verdict: Verdict, width: int = 3) -> PredictionSet:
     )
 
 
-def test_critical_block_escalates():
+def test_critical_block_with_drift_is_auto_blocked():
     r = AnalystRouter()
-    item = r.route("trace1", 0.0,
-                   _pset(Verdict.BLOCK, width=8),
-                   top_violation_id=1,    # pii_exfiltration → critical
-                   drift=0.5)
+    item = r.route("trace1", 0.0, _pset(Verdict.BLOCK, width=11),
+                   top_violation_id=1,    # pii_exfiltration -> critical
+                   drift=1.0)             # priority = 0.6 + 0.2 + 0.2 = 1.0
     assert item.decision == RoutingDecision.AUTO_BLOCK
 
 
-def test_low_severity_review_goes_to_queue():
+def test_critical_block_without_drift_goes_on_call():
     r = AnalystRouter()
-    item = r.route("t2", 1.0, _pset(Verdict.REVIEW, width=2),
-                   top_violation_id=8, drift=0.1)  # high severity but width small
-    assert item.decision in (RoutingDecision.REVIEW_QUEUE,
-                              RoutingDecision.ESCALATE_ONCALL)
+    item = r.route("trace1", 0.0, _pset(Verdict.BLOCK, width=8),
+                   top_violation_id=1, drift=0.5)   # priority = 0.84
+    assert item.decision == RoutingDecision.ESCALATE_ONCALL
 
 
-def test_allow_passes_through():
+def test_blocked_action_is_never_routed_as_allow():
+    r = AnalystRouter()
+    item = r.route("t2", 1.0, _pset(Verdict.BLOCK, width=1),
+                   top_violation_id=0, drift=0.0)   # lowest possible priority
+    assert item.decision == RoutingDecision.REVIEW_QUEUE
+
+
+def test_allowed_action_is_never_queued():
     r = AnalystRouter()
     item = r.route("t3", 0.0, _pset(Verdict.ALLOW, width=1),
-                   top_violation_id=0, drift=0.0)
+                   top_violation_id=1, drift=1.0)   # high priority, but allowed
     assert item.decision == RoutingDecision.ALLOW

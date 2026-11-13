@@ -1,4 +1,10 @@
-"""Streaming evaluation: Gibbs-Candès controller under shift regimes."""
+"""Streaming check of adaptive conformal inference under four shift regimes.
+
+This is a *synthetic* sanity experiment on Gaussian score streams: it exercises
+the exact update of Algorithm 1 and verifies Proposition 2 at every horizon.
+It is not the deployment-stream experiment of the paper; use
+``scripts/make_fig2.py`` with logged scores for that.
+"""
 
 from __future__ import annotations
 
@@ -8,33 +14,24 @@ from pathlib import Path
 
 import numpy as np
 
-from conformalguard.adaptive.gibbs_candes import GibbsCandesController
+from conformalguard.adaptive.gibbs_candes import aci_bound, run_stream
 from conformalguard.utils.config import load_config
 from conformalguard.utils.logging import get_logger
-from conformalguard.utils.seed import set_seed
 
 
-def _simulate_episode(regime: str, n_steps: int, rng: np.random.Generator):
-    """Synthetic stream of per-step nonconformity scores + ground truth set membership.
-
-    Each regime shapes the score distribution differently so we can test the
-    controller's ability to maintain target miscoverage.
-    """
+def _stream(regime: str, n: int, rng: np.random.Generator) -> np.ndarray:
     if regime == "stationary":
-        scores = rng.normal(loc=1.0, scale=0.4, size=n_steps)
+        loc = np.zeros(n)
     elif regime == "mild_drift":
-        drift = np.linspace(0, 0.4, n_steps)
-        scores = rng.normal(loc=1.0 + drift, scale=0.4)
+        loc = np.linspace(0.0, 0.4, n)
     elif regime == "abrupt_shift":
-        scores = rng.normal(loc=1.0, scale=0.4, size=n_steps)
-        scores[n_steps // 2:] += 1.2
+        loc = np.where(np.arange(n) >= n // 2, 1.2, 0.0)
     elif regime == "recovery":
-        drift = np.concatenate([np.linspace(0.0, 1.0, n_steps // 2),
-                                np.linspace(1.0, 0.0, n_steps - n_steps // 2)])
-        scores = rng.normal(loc=1.0 + drift, scale=0.4)
+        loc = np.concatenate([np.linspace(0.0, 1.0, n // 2),
+                              np.linspace(1.0, 0.0, n - n // 2)])
     else:
         raise ValueError(regime)
-    return scores
+    return rng.normal(loc, 1.0)
 
 
 def main():
@@ -43,31 +40,29 @@ def main():
     ap.add_argument("--config", default="configs/adaptive.yaml")
     args = ap.parse_args()
     cfg = load_config(args.config)
-    set_seed(1234)
 
-    target_alpha = cfg["adaptive"]["target_alpha"]
-    gamma        = cfg["adaptive"]["gamma"]
-    base_tau     = 1.20  # representative threshold from calibration
-
+    alpha = float(cfg["adaptive"]["target_alpha"])
+    gamma = float(cfg["adaptive"]["gamma"])
+    n = int(cfg["streaming"]["steps_per_episode"]) * int(cfg["streaming"]["n_episodes"])
     rng = np.random.default_rng(7)
+    cal = rng.normal(0.0, 1.0, 2000)
+
     out = []
     for regime in cfg["streaming"]["shift_schedule"]:
-        ctl = GibbsCandesController(target_alpha=target_alpha, gamma=gamma)
-        miscover = []
-        for ep in range(cfg["streaming"]["n_episodes"]):
-            scores = _simulate_episode(regime,
-                                       cfg["streaming"]["steps_per_episode"], rng)
-            for s in scores:
-                tau_eff = base_tau + ctl.adjustment(base_tau)
-                err = int(s > tau_eff)
-                ctl.update(err)
-                miscover.append(err)
-        emp = float(np.mean(miscover))
-        log.info(f"regime={regime:14s} emp_miscoverage={emp:.4f}  "
-                 f"final_alpha={ctl.alpha:.4f}")
+        scores = _stream(regime, n, rng)
+        aci = run_stream(cal, scores, alpha, gamma)
+        static = run_stream(cal, scores, alpha, gamma, adaptive=False)
+        T = np.arange(1, n + 1)
+        band = np.array([aci_bound(int(t), gamma, alpha) for t in T])
+        ok = bool(np.all(np.abs(aci["cum_err"] - alpha) <= band + 1e-12))
+        log.info(f"regime={regime:13s} ACI err={aci['cum_err'][-1]:.4f} "
+                 f"static err={static['cum_err'][-1]:.4f} "
+                 f"Prop.2 holds at every T: {ok}")
         out.append({"regime": regime,
-                    "empirical_miscoverage": emp,
-                    "final_alpha": ctl.alpha})
+                    "aci_miscoverage": float(aci["cum_err"][-1]),
+                    "static_miscoverage": float(static["cum_err"][-1]),
+                    "prop2_bound_at_T": float(band[-1]),
+                    "prop2_holds_at_every_T": ok})
 
     Path("runs/conformalguard").mkdir(parents=True, exist_ok=True)
     Path("runs/conformalguard/online.json").write_text(json.dumps(out, indent=2))

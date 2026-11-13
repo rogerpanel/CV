@@ -35,10 +35,10 @@ default YAML configs under `configs/`.
 
 | Symbol      | Value                              |
 |-------------|------------------------------------|
-| `n_cal`     | 2000 traces (held-out split)       |
+| `n_cal`     | 2000 traces, one safe step each    |
 | `α`         | 0.05  ⇒  95 % marginal coverage    |
 | Score `s`   | `− log p_θ(y | h_θ(G_<t))`         |
-| Quantile    | `⌈(n+1)(1−α)⌉ / n` (finite-sample) |
+| Threshold   | `⌈(n+1)(1−α)⌉`-th smallest score  |
 
 ## Online (Gibbs-Candès)
 
@@ -46,7 +46,7 @@ default YAML configs under `configs/`.
 |----------------|-----------------------------|
 | Target α       | 0.05                        |
 | Learning rate γ| 0.05                        |
-| α clip         | [0.001, 0.5]                |
+| α_t clipping   | none (clipping breaks Proposition 2) |
 
 ## Drift monitor
 

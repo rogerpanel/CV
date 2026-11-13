@@ -16,3 +16,7 @@ runs/
 .cache/
 .venv/
 .env
+
+# Local manuscript drafts
+paper/
+rebuttal/

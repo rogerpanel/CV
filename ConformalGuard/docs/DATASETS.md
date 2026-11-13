@@ -10,14 +10,14 @@
 | Labels         | `safe` + 11 critical violation classes                         |
 | Splits         | 80 / 10 / 10 train / val / test (stratified by platform+label) |
 | Distribution   | JSONL — one trace per line; see `AgentChainTrace.to_dict`      |
-| Curated DOI    | (TBA — pending Zenodo deposit)                                 |
-| Mirror         | `github.com/rogerpanel/CV/releases/tag/agentchain26-v1`        |
+| Release        | not included in this repository                                |
 
-When the curated archive is not present locally, the loader transparently
-falls back to a deterministic procedural generator
-(`conformalguard.data.synthetic`) that reproduces the marginal statistics of
-the benchmark. This makes every test in `tests/` runnable on a fresh machine
-without any download.
+The benchmark traces are **not** in this repository. When they are not present
+locally the loader falls back to a deterministic procedural generator
+(`conformalguard.data.synthetic`) that reproduces only the platform mix and the
+trace-length distribution and assigns labels at random. It makes the tests and
+scripts runnable without any download; results obtained on it are meaningless
+as evidence about the method.
 
 ### Eleven critical violation classes
 

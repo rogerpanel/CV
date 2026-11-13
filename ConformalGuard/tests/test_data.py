@@ -14,5 +14,5 @@ def test_synthetic_split_sizes():
 
 def test_external_registry_complete():
     assert any(d.name == "ToolEmu" for d in EXTERNAL_DATASETS)
-    d = find("RobustIDPS-PCAPs")
-    assert d.url.startswith("https://doi.org/")
+    assert find("toolemu").url.startswith("https://")
+    assert all(d.url.startswith("https://") for d in EXTERNAL_DATASETS)

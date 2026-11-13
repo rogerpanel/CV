@@ -4,7 +4,7 @@ Brings together:
   * `DyGFormerHGT`            — encoder
   * `SafetyHead`              — vocabulary classifier
   * `ConformalCalibrator`     — split-conformal threshold
-  * `GibbsCandesController`   — online adaptive coverage
+  * `AdaptiveConformal`       — online adaptive coverage (ACI, Algorithm 1)
   * `DriftMonitor`            — KS-based drift early warning
   * `AnalystRouter`           — routes flagged steps to the SOC review queue
 """
@@ -19,7 +19,7 @@ import numpy as np
 import torch
 
 from conformalguard.adaptive.drift_monitor import DriftMonitor
-from conformalguard.adaptive.gibbs_candes import GibbsCandesController
+from conformalguard.adaptive.gibbs_candes import AdaptiveConformal
 from conformalguard.conformal.calibration import ConformalCalibrator
 from conformalguard.conformal.nonconformity import NegLogProbScore, SafetyHead
 from conformalguard.conformal.prediction_set import PredictionSet, Verdict
@@ -46,7 +46,7 @@ class ConformalGuardRuntime:
         encoder: DyGFormerHGT,
         head: SafetyHead,
         calibrator: ConformalCalibrator,
-        adaptive: GibbsCandesController | None = None,
+        adaptive: AdaptiveConformal | None = None,
         drift_monitor: DriftMonitor | None = None,
         device: str | None = None,
     ):
@@ -54,7 +54,9 @@ class ConformalGuardRuntime:
         self.encoder = encoder.to(self.device).eval()
         self.head = head.to(self.device).eval()
         self.calibrator = calibrator
-        self.adaptive = adaptive or GibbsCandesController()
+        # ACI needs the calibration scores to re-read the quantile at the
+        # working level; without them the guard runs the static threshold.
+        self.adaptive = adaptive
         self.drift_monitor = drift_monitor
         self.score = NegLogProbScore()
 
@@ -72,9 +74,10 @@ class ConformalGuardRuntime:
         logits = self.head(h)
         all_scores = self.score.all_candidates(logits).squeeze(0)
 
-        # Adjust threshold by adaptive controller.
-        base_tau = self.calibrator.threshold()
-        tau_eff = base_tau + self.adaptive.adjustment(base_tau)
+        # Threshold: static split-conformal quantile, or the quantile re-read
+        # at the ACI working level alpha_t when online adaptation is enabled.
+        tau_eff = (self.adaptive.threshold() if self.adaptive is not None
+                   else self.calibrator.threshold())
         pset = PredictionSet.from_logits(
             logits.squeeze(0),
             threshold=tau_eff,
@@ -83,9 +86,9 @@ class ConformalGuardRuntime:
         )
         latency = (time.perf_counter() - t0) * 1000.0
 
-        # Update online state.
-        true_in_set = int(pset.contains(proposed_action))
-        self.adaptive.update(error_indicator=1 - true_in_set)
+        # NOTE: the ACI update is *not* applied here.  err_t is defined only on
+        # steps whose proposed action is later labelled safe, so the caller
+        # feeds the label back through `feedback()` when it arrives.
         drift = 0.0
         if self.drift_monitor is not None:
             drift = self.drift_monitor.observe(float(all_scores[proposed_action])).ks_statistic
@@ -96,8 +99,21 @@ class ConformalGuardRuntime:
             proposed_action=proposed_action,
             latency_ms=latency,
             drift=drift,
-            alpha_eff=self.adaptive.alpha,
+            alpha_eff=(self.adaptive.alpha_t if self.adaptive is not None
+                       else self.calibrator.alpha),
         )
+
+    # --------------------------------------------------------------------
+    def feedback(self, decision: GuardDecision, proposed_action_was_safe: bool) -> None:
+        """Delayed label for a past decision (Algorithm 1, line 5).
+
+        Only labelled-safe steps update the working level: err = 1 iff a safe
+        proposed action was blocked.  Steps whose proposed action is labelled
+        violating carry no coverage error and are skipped.
+        """
+        if self.adaptive is None or not proposed_action_was_safe:
+            return
+        self.adaptive.update(int(decision.verdict != Verdict.ALLOW))
 
     # --------------------------------------------------------------------
     @classmethod
@@ -111,4 +127,8 @@ class ConformalGuardRuntime:
         cal_state = ckpt.get("calibrator")
         if cal_state:
             calibrator.load_state_dict(cal_state)
-        return cls(encoder=encoder, head=head, calibrator=calibrator)
+        adaptive = None
+        if ckpt.get("cal_scores") is not None:
+            adaptive = AdaptiveConformal(np.asarray(ckpt["cal_scores"]),
+                                         alpha=calibrator.alpha)
+        return cls(encoder=encoder, head=head, calibrator=calibrator, adaptive=adaptive)

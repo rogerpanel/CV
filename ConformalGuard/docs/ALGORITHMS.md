@@ -11,12 +11,13 @@ Input:  trained encoder h_θ, head g_θ, calibration set D_cal,
         target miscoverage α ∈ (0, 1), nonconformity score s.
 Output: threshold τ.
 
+0.  from each calibration trace draw ONE safe step uniformly at random
 1.  for (G_<t^{(i)}, y^{(i)}) ∈ D_cal:
 2.      h^{(i)} ← h_θ(G_<t^{(i)})
 3.      logits  ← g_θ(h^{(i)})
 4.      s_i     ← s(logits, y^{(i)})
-5.  q ← ⌈(n + 1)(1 − α)⌉ / n
-6.  τ ← Quantile_q(s_1, …, s_n)
+5.  k ← ⌈(n + 1)(1 − α)⌉
+6.  τ ← k-th smallest of s_1, …, s_n   (+∞ if k > n)
 7.  return τ
 ```
 
@@ -36,22 +37,33 @@ Output: prediction set C_α(G_<t) ⊆ V.
 
 Implementation: `conformalguard.conformal.calibration.ConformalCalibrator.predict_set`.
 
-## Algorithm 3 — Online adaptive (Gibbs-Candès)
+## Algorithm 3 — Online adaptive (ACI, Gibbs-Candès), with delayed labels
 
 ```text
-Input:  base τ from Alg. 1, target α*, learning rate γ.
-State:  α_t.
+Input:  calibration scores {s_i} (one safe step per calibration trace),
+        target alpha, rate gamma.
+State:  working level alpha_t  (alpha_1 = alpha).  alpha_t is NEVER clipped.
 
-Initialise α_0 ← α*.
-On stream of (G_<t, y_t):
-    τ_eff   ← τ + (α* − α_t) · |τ|     # linear surrogate
-    C       ← {y : s(g_θ(h_θ(G_<t)), y) ≤ τ_eff}
-    err_t   ← 1{y_t ∉ C}
-    α_{t+1} ← clip(α_t + γ (err_t − α*), [α_min, α_max])
-    yield C
+At each step:
+    q_t  <- the ceil((n+1)(1 - alpha_t))-th smallest calibration score
+            (+inf if alpha_t < 1/(n+1);  -inf if alpha_t >= 1)
+    allow the proposed action a* iff NCS(G(t), a*) <= q_t
+When the label of a past step arrives (at most D labelled steps late):
+    if the proposed action was labelled safe:
+        err      <- 1 if it was blocked else 0
+        alpha_t  <- alpha_t + gamma * (alpha - err)
+    (steps labelled violating trigger no update)
+
+Guarantee (deterministic, any sequence):
+    | mean_{t<=T} err_t - alpha |
+        <= (max(alpha_1, 1 - alpha_1) + gamma (D + 1)) / (gamma T) + D / T
 ```
 
-Implementation: `conformalguard.adaptive.gibbs_candes.GibbsCandesController`.
+Implementation: `conformalguard.adaptive.gibbs_candes.AdaptiveConformal` and
+`run_stream`; the bound is `aci_bound`. An earlier version of this file
+described a linear threshold surrogate with alpha clipped to
+`[alpha_min, alpha_max]`; that variant does not satisfy the bound and has been
+removed.
 
 ## Algorithm 4 — Verdict / routing
 

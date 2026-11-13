@@ -76,18 +76,23 @@ For any new test point exchangeable with `D_cal`,
 C_α(G_<t) := { y ∈ V : s(h_θ(G_<t), y) ≤ τ }.
 ```
 
-## 4. Online adaptation (Theorem 2)
+## 4. Online adaptation (Proposition 2)
 
-In deployment we replace α by an online estimate
+On every step later labelled safe, the working level is updated as
 
 ```
-α_{t+1} = α_t + γ (1{y_t ∉ C_{α_t}} − α),
+α_{t+1} = α_t + γ (α − err_t),      err_t = 1{safe proposed action was blocked},
 ```
 
-where γ = 0.05. Theorem 2 (Gibbs & Candès, 2021) proves that
-`(1/T) Σ_{t≤T} 1{err_t} → α` regardless of distribution shift.
+and the threshold is re-read from the calibration scores at level `α_t`
+(`+∞` when `α_t < 1/(n+1)`, `−∞` when `α_t ≥ 1`). `α_t` is never clipped. With
+labels arriving at most `D` steps late, for every sequence and every `T`,
 
-In code this lives in `conformalguard.adaptive.gibbs_candes`.
+```
+| (1/T) Σ_{t≤T} err_t − α |  ≤  (max{α_1, 1−α_1} + γ(D+1)) / (γT) + D/T.
+```
+
+In code: `conformalguard.adaptive.gibbs_candes`.
 
 ## 5. Verdict mapping
 

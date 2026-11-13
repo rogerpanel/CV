@@ -63,14 +63,17 @@ class AnalystRouter:
             + self.w_drift * min(1.0, drift)
         )
 
-        if pset.verdict.value == "block" and priority >= self.priority_block:
+        # The guard's verdict is final: an allowed action is never queued and a
+        # non-allowed action is never released by the router.  Routing only
+        # decides how urgently a held action is shown to an analyst.
+        if pset.verdict.value == "allow":
+            decision = RoutingDecision.ALLOW
+        elif pset.verdict.value == "block" and priority >= self.priority_block:
             decision = RoutingDecision.AUTO_BLOCK
         elif priority >= self.priority_escalate:
             decision = RoutingDecision.ESCALATE_ONCALL
-        elif pset.verdict.value == "review":
-            decision = RoutingDecision.REVIEW_QUEUE
         else:
-            decision = RoutingDecision.ALLOW
+            decision = RoutingDecision.REVIEW_QUEUE
 
         item = QueueItem(
             trace_id=trace_id,

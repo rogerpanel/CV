@@ -61,6 +61,7 @@ def main():
 
     # Persist calibrator state into the checkpoint for the runtime to load.
     ckpt["calibrator"] = calibrator.state_dict()
+    ckpt["cal_scores"] = scores.tolist()   # ACI re-reads its quantile from these
     torch.save(ckpt, ckpt_path)
     log.info("Updated checkpoint with calibrator state.")
 

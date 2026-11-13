@@ -4,8 +4,7 @@
 adaptive:
   target_alpha: 0.05
   gamma: 0.05
-  alpha_min: 1.0e-3
-  alpha_max: 0.5
+  # alpha_t is never clipped: clipping invalidates Proposition 2
 
 drift:
   window: 512

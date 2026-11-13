@@ -82,19 +82,3 @@ def on_step(t, proposed_action_id, top_violation_id):
 | MITRE ATT&CK Mapper                     | 11 violation classes mapped onto agent-relevant ATT&CK |
 | OWASP LLM Top-10 Scorecard              | Aligns to LLM01-Prompt Injection, LLM05-Improper Tool, … |
 | AI Data & Models                        | Lists the AgentChain-26 dataset and DyGFormer-HGT model |
-
-## Production performance (paper Sec. 6.3)
-
-Over a 30-day window with 1.84 M agent steps:
-
-| Metric             | Value      |
-|--------------------|-----------:|
-| Precision          | 97.1 %     |
-| Recall             | 94.6 %     |
-| Avg. latency       | 24.7 ms    |
-| Auto-block share   | 71.3 %     |
-| Review-queue share | 17.5 %     |
-| Allow share        | 11.2 %     |
-
-These numbers are tracked in real time via the `/queue` endpoint and the
-`agent.safety.events` WebSocket topic.
