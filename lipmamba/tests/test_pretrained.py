@@ -1,0 +1,53 @@
+"""Conversion of a public-layout Mamba checkpoint: exactness without constraints, validity with them."""
+import pytest
+import torch
+
+from lipmamba.pretrained import (ARCHS, build_from_mamba, calibrate_x_max, infer_shapes, reference_logits,
+                                 tiny_state_dict)
+
+V = 97
+
+
+def _ids(n=3, t=20, seed=0):
+    return torch.randint(0, V, (n, t), generator=torch.Generator().manual_seed(seed))
+
+
+def test_unconstrained_conversion_matches_reference():
+    sd = tiny_state_dict(V)
+    model = build_from_mamba(sd, "mamba").eval()
+    ids = _ids()
+    assert torch.allclose(model(ids)["lm_logits"], reference_logits(sd, ids), atol=1e-4, rtol=1e-4)
+
+
+def test_matches_transformers_implementation():
+    tr = pytest.importorskip("transformers")
+    cfg = tr.MambaConfig(vocab_size=V, hidden_size=48, state_size=8, num_hidden_layers=2, expand=2, conv_kernel=4,
+                         time_step_rank=4, use_bias=False, use_conv_bias=True)
+    torch.manual_seed(0)
+    hf = tr.MambaForCausalLM(cfg).eval()
+    sd = hf.state_dict()
+    assert infer_shapes(sd)["dt_rank"] == 4
+    ids = _ids(seed=1)
+    with torch.no_grad():
+        ref = hf(input_ids=ids).logits
+        out = build_from_mamba(sd, "mamba").eval()(ids)["lm_logits"]
+    assert torch.allclose(out, ref, atol=1e-4, rtol=1e-4)
+    assert torch.allclose(reference_logits(sd, ids), ref, atol=1e-4, rtol=1e-4)
+
+
+@pytest.mark.parametrize("arch", [a for a in ARCHS if a != "mamba"])
+def test_constrained_variants_build_and_respect_bounds(arch):
+    sd = tiny_state_dict(V)
+    ids = _ids()
+    xm = calibrate_x_max(build_from_mamba(sd, "mamba"), [ids])
+    model = build_from_mamba(sd, arch, x_max=xm).eval()
+    out = model(ids)["lm_logits"]
+    assert torch.isfinite(out).all()
+    cfg = model.cfg
+    for blk in model.blocks:
+        s = blk.ssm
+        if cfg.reparam_eigen:
+            assert s.A.lambdas.min() >= cfg.lambda_min and s.A.lambdas.max() <= cfg.lambda_max
+        if cfg.spectral_norm:
+            for lin, bound in ((s.x_to_b, cfg.s_b), (s.x_to_c, cfg.s_c), (s.delta_proj.proj, cfg.s_delta), (blk.out_proj, cfg.s_out)):
+                assert torch.linalg.matrix_norm(lin.normalised_weight(), ord=2) <= bound * (1 + 1e-4)
