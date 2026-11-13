@@ -58,7 +58,7 @@ CORE = ["mamba_released", "mamba", "lipcal", "mamba_at", "lipcal_at"]
 PAPER = ["lip", "lip_at"]
 ABLATIONS = ["lipcal_no_sn", "lipcal_no_clamp", "lipcal_free_A", "lipcal_no_clip"]
 PRESETS = {  # explicit flags override these
-    "a100": dict(bs=16, accum=1, grad_chunk=32, eval_chunk=384, steps=400, n_eval=64, iters=60, n_cand=32),
+    "a100": dict(bs=16, accum=1, grad_chunk=16, eval_chunk=256, steps=400, n_eval=64, iters=60, n_cand=32),
     "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=30, n_cand=16),
     "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3, n_cand=8),
 }
@@ -205,12 +205,17 @@ def scores(model, val_ids, y, t0: int, t1: int, ids=None, emb=None, want_norm: b
 
 
 @torch.no_grad()
+def fit(chunk: int, ex, L: int) -> int:
+    """Chunk sizes are quoted for 96-token sequences; scale them so memory stays constant for longer ones."""
+    return max(1, chunk * 96 // (ex["ctx"].size(1) + ex["fill"].size(1) + L + ex["qry"].size(1)))
+
+
 def eval_trigger(model, task, ex, trig, chunk: int, want_norm: bool = False, idx=None):
     """No-grad margins (and log-ratios) for a trigger tensor; ``idx`` maps trigger rows to example rows."""
     n = trig.size(0); idx = torch.arange(n, device=trig.device) if idx is None else idx
     t0 = ex["ctx"].size(1) + ex["fill"].size(1) - 1; t1 = t0 + trig.size(1)
     ms, rs = [], []
-    for c in torch.arange(n, device=trig.device).split(chunk):
+    for c in torch.arange(n, device=trig.device).split(fit(chunk, ex, trig.size(1))):
         m, r = scores(model, task.val_dev, ex["y"][idx[c]], t0, t1, ids=cat_ids(ex, trig[c], idx[c]), want_norm=want_norm)
         ms.append(m); rs.append(r)
     return torch.cat(ms), (torch.cat(rs) if want_norm else None)
@@ -241,7 +246,7 @@ def gcg(model, task, ex, L: int, objective: str, a, seed: int):
         act = (cur > 0).nonzero().squeeze(1) if objective == "margin" else torch.arange(n, device=dev)
         if act.numel() == 0:
             break
-        grad = torch.cat([trig_grad(model, task, ex, trig[c], c, objective) for c in act.split(a.grad_chunk)])   # (a, L, d)
+        grad = torch.cat([trig_grad(model, task, ex, trig[c], c, objective) for c in act.split(fit(a.grad_chunk, ex, L))])   # (a, L, d)
         na = act.numel()
         pos = torch.randint(0, L, (na, K), generator=g).to(dev)
         tok = torch.empty(na, K, dtype=torch.long, device=dev)
@@ -267,7 +272,7 @@ def soft_norm_trigger(model, task, ex, L: int, a, seed: int):
     t0 = ex["ctx"].size(1) + ex["fill"].size(1) - 1; t1 = t0 + L
     init = task.random_trigger(n, L, torch.Generator().manual_seed(seed)).to(dev)
     out = []
-    for c in torch.arange(n, device=dev).split(a.grad_chunk):
+    for c in torch.arange(n, device=dev).split(fit(a.grad_chunk, ex, L)):
         trig = E[init[c]].clone().requires_grad_(True)
         opt = torch.optim.Adam([trig], lr=0.1 * float(E.std()))
         pre = E[torch.cat([ex["ctx"][c], ex["fill"][c]], 1)]; suf = E[ex["qry"][c]]
@@ -483,6 +488,8 @@ def cmd_run(a):
         res["train_log"] = []
         if a.steps > 0:
             train(model, task, a, at, dev, res["train_log"])
+            if dev.type == "cuda":
+                torch.cuda.empty_cache()
         res["config"] = describe(model); res["train_seconds"] = time.time() - t_all
         if a.steps > 0 and not a.skip_attacks:
             torch.save(dict(model=model.state_dict(), cal=cal), ckpt)
