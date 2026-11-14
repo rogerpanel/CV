@@ -18,7 +18,7 @@ dynamic = ["dependencies"]
 [project.optional-dependencies]
 dev = ["pytest>=7.4"]
 embeddings = ["sentence-transformers>=2.6"]          # --features st in scripts/rjudge_run.py
-llm = ["transformers>=4.40", "accelerate>=0.27"]     # scripts/rjudge_llm_judge.py
+llm = ["transformers>=4.40", "accelerate>=0.27", "anthropic>=1.0", "openai>=1.40"]   # scripts/rjudge_judge_*.py
 plots = ["matplotlib>=3.7"]
 serve = ["fastapi>=0.110", "uvicorn>=0.27", "pydantic>=2.5"]
 agents = ["pyautogen>=0.2", "metagpt>=0.8", "langgraph>=0.0.40", "crewai>=0.30"]

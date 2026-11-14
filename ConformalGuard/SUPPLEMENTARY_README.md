@@ -10,6 +10,10 @@ Everything in the paper can be regenerated from this package.
 | Section 6.2, Figure 2, Appendix E (simulations) | `python scripts/sim_checks.py --figure fig2_aci_simulation.pdf` | Synthetic scores, fixed seeds, CPU, about 3 minutes. |
 | The guarantees (Propositions 1 and 2, Corollary 1, the two-sided guard) | `pip install numpy torch scikit-learn pytest && python -m pytest -q` | Monte-Carlo checks of each bound; Proposition 2 asserted at every horizon on shifted, adversarial and delayed-feedback sequences; a test that no scorer sees anything after the action it scores. |
 
+Further experiments that are not in the paper (LLM guards calibrated conformally, the step-level
+guarantee on injection records, in-domain recalibration) are described at the end of
+`docs/RJUDGE_EXPERIMENT.md` and run by `notebooks/rjudge_kaggle_extra.ipynb`.
+
 A CPU-only variant of the R-Judge experiment with TF-IDF features
 (`--features lsa`, no model download) is in `results/rjudge_lsa_cpu/`.
 

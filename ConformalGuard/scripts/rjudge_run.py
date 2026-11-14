@@ -71,7 +71,8 @@ def main() -> None:
     ap.add_argument("--reps", type=int, default=50, help="random and grouped splits each")
     ap.add_argument("--loco-reps", type=int, default=5, help="splits per held-out category")
     ap.add_argument("--models", default="step,seq,graph,graph_untyped,logreg_pooled,rule_last_tool")
-    ap.add_argument("--protocols", default="random,grouped,loco")
+    ap.add_argument("--protocols", default="random,grouped,loco",
+                    help="any of random,grouped,loco,recal")
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--dim", type=int, default=128)
     ap.add_argument("--layers", type=int, default=3)
@@ -132,6 +133,18 @@ def main() -> None:
             if a in names and b in names:
                 for metric in ("auroc", "block@0.10"):
                     results["paired"][f"random:{a}-{b}:{metric}"] = E.paired(rows, a, b, metric)
+    if "random" in protocols:
+        agg = results["aggregate"]["random"]
+        cats = sorted({t.category for t in traces})
+        md += ["Category-conditional (Mondrian) calibration on the random splits, alpha = 0.10: FBR (%) per",
+               "category with one pooled threshold, and with one threshold per category.", "",
+               "| scorer | " + " | ".join(f"{c} pooled / per-cat" for c in cats) + " | all: FBR per-cat | all: Block per-cat |",
+               "|---|" + "---|" * (len(cats) + 2)]
+        for n in names:
+            if n in agg and "fbr_mond@0.10" in agg[n]:
+                cells = [f"{_fmt(agg, n, f'fbr_cat:{c}@0.10')} / {_fmt(agg, n, f'fbr_mond_cat:{c}@0.10')}" for c in cats]
+                md.append(f"| {n} | " + " | ".join(cells) + f" | {_fmt(agg, n, 'fbr_mond@0.10')} | {_fmt(agg, n, 'block_mond@0.10')} |")
+        md.append("")
     if "grouped" in protocols:
         rows = run("grouped", "grouped", lambda rng: E.split_grouped(traces, rng), args.reps)
         md.append(table(results["aggregate"]["grouped"], names,
@@ -155,6 +168,21 @@ def main() -> None:
             md.append(table(results["aggregate"][f"loco:{cat}"], names,
                             f"Leave-one-category-out, test on {cat} (distribution shift: no guarantee)",
                             len(rows)))
+
+    if "recal" in protocols:
+        md += ["### In-domain recalibration: train on four categories, calibrate and test on halves of the fifth", "",
+               f"Mean ± sd over {args.loco_reps} splits per category, alpha = 0.10. Calibration and test records are",
+               "exchangeable, so the guarantee applies. 'finite' is the share of splits in which the category had",
+               "enough safe calibration records for a finite threshold (otherwise nothing is blocked).", "",
+               "| held-out category | scorer | FBR@.10 | Block@.10 | finite | safe cal records |", "|---|---|---|---|---|---|"]
+        for cat in sorted({t.category for t in traces}):
+            run("recal", f"recal:{cat}", lambda rng, cat=cat: E.split_recal(traces, rng, cat), args.loco_reps)
+            agg = results["aggregate"][f"recal:{cat}"]
+            for n in names:
+                if n in agg:
+                    md.append(f"| {cat} | {n} | {_fmt(agg, n, 'fbr@0.10')} | {_fmt(agg, n, 'block@0.10')} | "
+                              f"{_fmt(agg, n, 'q_finite@0.10')} | {agg[n]['n_cal_safe']['mean']:.0f} |")
+        md.append("")
 
     if results["paired"]:
         md += ["### Paired comparisons (a minus b, per split; exact sign test)", "",

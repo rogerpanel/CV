@@ -98,3 +98,31 @@ configuration, code and data commits) and `summary.md` (the tables).
 `scripts/rjudge_llm_judge.py` has unit tests for its prompt construction and
 verdict parsing; its model-loading path needs a GPU and the Hugging Face hub
 and has not been executed in the environment where this code was written.
+
+## Additional experiments
+
+Run together by `notebooks/rjudge_kaggle_extra.ipynb`, or one at a time:
+
+| Experiment | Command | What it tests |
+|---|---|---|
+| Calibrated LLM guards | `scripts/rjudge_judge_local.py`, `rjudge_judge_claude.py`, `rjudge_judge_openai.py`, then `scripts/rjudge_guard_eval.py --scores name=path ...` | Whether the conformal layer gives an existing guard a false-block budget. Each judge writes a graded risk score per record (`--mode full`) or per decision step from the prefix only (`--mode causal`); the evaluator calibrates any score file without training. |
+| Step-level guarantee | `scripts/rjudge_steps.py --injecagent-dir InjecAgent` | Proposition 1 on real records: step labels for the 414 injection records are derived by code from InjecAgent's attacker-tool list; calibration uses one safe step per trace. |
+| In-domain recalibration | `scripts/rjudge_run.py --protocols random,recal` | Whether calibrating on a few records of the new application category restores the guarantee that a held-out category breaks, and what one threshold per category does on mixed data. |
+
+Limits to state with their results:
+
+- **The released Llama judge cannot be calibrated.** Its verdicts are binary and flag 85% of safe
+  records; as a score they have AUROC 0.50, so any threshold either blocks nearly everything or
+  nothing. A guard needs a graded score to benefit from calibration.
+- **The step-level task is nearly trivial for detection.** In the injection records a safe second
+  step is always a final answer and an unsafe one a tool call, so step scorers separate them almost
+  perfectly. The experiment tests the calibration rule on real step labels; it says little about
+  detection.
+- **API judges.** Ratings are integers from 0 to 100, so thresholds have ties; the conformal rule is
+  then conservative (false blocks at or below the target). A refused or unparseable reply counts as
+  the highest risk. The Claude script enables server-side refusal fallbacks and records which model
+  served each row. Neither API script has been run against the live service in the environment
+  where it was written; their request construction and response handling are unit-tested with
+  stand-in clients.
+- **Small categories.** IoT and Web have 11 and 15 safe records; half of them is too few for a
+  finite threshold at small alpha, and the output reports how often that happens.

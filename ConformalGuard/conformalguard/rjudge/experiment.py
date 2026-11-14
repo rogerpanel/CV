@@ -25,6 +25,14 @@ Split protocols
   loco     leave one application category out: train and calibrate on four
            categories, test on the fifth.  A real distribution shift; no
            guarantee applies and the FBR is reported to show what happens.
+  recal    the repair for that shift: train on four categories, then calibrate
+           on half of the fifth category's records and test on the other half.
+           Calibration and test records are exchangeable again, so the
+           guarantee applies, with as few calibration records as the category has.
+
+On random splits the evaluation also reports category-conditional ("Mondrian")
+calibration: one threshold per application category, from that category's safe
+calibration records, which bounds the false-block rate within each category.
 """
 
 from __future__ import annotations
@@ -84,6 +92,14 @@ def split_loco(traces, rng, held_out: str, cal_frac=1 / 3):
     sub = [traces[i] for i in inside]
     tr, cal, _ = split_random(sub, rng, fracs=(1 - cal_frac, cal_frac, 0.0))
     return inside[tr], inside[cal], test
+
+
+def split_recal(traces, rng, held_out: str):
+    """Train on the other categories; calibrate and test on halves of the held-out one."""
+    train = np.array([i for i, t in enumerate(traces) if t.category != held_out])
+    inside = np.array([i for i, t in enumerate(traces) if t.category == held_out])
+    _, cal, te = split_random([traces[i] for i in inside], rng, fracs=(0.0, 0.5, 0.5))
+    return train, inside[cal], inside[te]
 
 
 # --------------------------------------------------------------------------
@@ -180,7 +196,7 @@ def _one_per_group(groups, mask, rng) -> np.ndarray:
 
 
 def evaluate(scores_cal, y_cal, scores_test, y_test, attack_test=None, alphas=ALPHAS,
-             g_cal=None, g_test=None, rng=None) -> dict:
+             g_cal=None, g_test=None, rng=None, c_cal=None, c_test=None) -> dict:
     scores_cal, scores_test = np.asarray(scores_cal, float), np.asarray(scores_test, float)
     y_cal, y_test = np.asarray(y_cal), np.asarray(y_test)
     out = {"auroc": _auroc(y_test, scores_test),
@@ -212,6 +228,21 @@ def evaluate(scores_cal, y_cal, scores_test, y_test, attack_test=None, alphas=AL
             key = f"{a:.2f}"
             out[f"fbr_g1@{key}"] = float((scores_test[te_safe] > q).mean()) if te_safe.size else float("nan")
             out[f"block_g1@{key}"] = float((scores_test[te_unsafe] > q).mean()) if te_unsafe.size else float("nan")
+    # Category-conditional (Mondrian) calibration at alpha = 0.10: one threshold per category.
+    if c_cal is not None and c_test is not None:
+        c_cal, c_test = np.asarray(c_cal), np.asarray(c_test)
+        q_pool = conformal_quantile(safe_cal, 0.10)
+        blocked_m = np.zeros(scores_test.size, dtype=bool)
+        for c in np.unique(c_test):
+            m = c_test == c
+            q_c = conformal_quantile(scores_cal[(y_cal == 0) & (c_cal == c)], 0.10)
+            blocked_m[m] = scores_test[m] > q_c
+            safe_c = m & (y_test == 0)
+            if safe_c.any():
+                out[f"fbr_cat:{c}@0.10"] = float((scores_test[safe_c] > q_pool).mean())
+                out[f"fbr_mond_cat:{c}@0.10"] = float(blocked_m[safe_c].mean())
+        out["fbr_mond@0.10"] = float(blocked_m[y_test == 0].mean()) if (y_test == 0).any() else float("nan")
+        out["block_mond@0.10"] = float(blocked_m[y_test == 1].mean()) if (y_test == 1).any() else float("nan")
     # Two-sided guard (Appendix C) at alpha = beta = 0.10.
     q = conformal_quantile(safe_cal, 0.10)
     lam = lower_conformal_quantile(unsafe_cal, 0.10)
@@ -229,6 +260,7 @@ def run_split(traces, feats, parts, seed, device, model_names, train_kw=None) ->
     y_cal = np.array([traces[i].label for i in cal]); y_te = np.array([traces[i].label for i in te])
     attack = [traces[i].attack_type for i in te]
     g_cal = [traces[i].group for i in cal]; g_te = [traces[i].group for i in te]
+    c_cal = [traces[i].category for i in cal]; c_te = [traces[i].category for i in te]
     res = {}
     for name in model_names:
         t0 = time.time()
@@ -243,7 +275,7 @@ def run_split(traces, feats, parts, seed, device, model_names, train_kw=None) ->
         else:
             raise ValueError(name)
         res[name] = evaluate(s_cal, y_cal, s_te, y_te, attack, g_cal=g_cal, g_test=g_te,
-                             rng=np.random.default_rng(seed))
+                             rng=np.random.default_rng(seed), c_cal=c_cal, c_test=c_te)
         res[name]["seconds"] = round(time.time() - t0, 2)
         if name == "rule_last_tool":                 # its natural operating point, uncalibrated
             res[name]["block@rule"] = float(s_te[y_te == 1].mean())
