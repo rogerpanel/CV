@@ -31,35 +31,35 @@ Run the tests with `pip install -e ".[dev]" && pytest`.
 
 ## Measured results
 
-- `results/rjudge_kaggle_t4/SUMMARY.md`: R-Judge with sentence-encoder features, 100 random and 100
-  prompt-grouped splits, two encoders (GPU run).
+- `results/rjudge_kaggle_t4/{minilm,bge}/`: R-Judge with sentence-encoder features, 100 random and
+  100 prompt-grouped splits, two encoders (GPU run): `results.json` with every per-split number and
+  `summary.md` with the tables. These are the numbers in the paper.
 - `results/rjudge_lsa_cpu/RESULTS.md`: the same experiment with TF-IDF features on CPU, 40 splits,
   with per-split JSON.
 - In short: the false-block guarantee holds on exchangeable splits for every scorer and fails under
   prompt reuse and domain shift; the guard blocks 63-69% of unsafe records at alpha = 0.05; the
   graph scorer is not better than a sequence model on this benchmark.
 
-## Limitations of this release: read before citing it as the source of the paper's numbers
+## What the paper uses, and what it does not
 
-1. **No benchmark data is included.** `conformalguard/data/synthetic.py` is a
-   procedural generator that matches only the marginal statistics of
-   AgentChain-26 (platform mix, trace length) and assigns labels **at random**.
-   It exists to exercise the pipeline. Nothing trained or evaluated on it says
-   anything about the results in the paper.
-2. **The scorer here is not yet the one the paper describes.** The paper scores
-   candidate *actions* at each step and trains with a next-action likelihood
-   plus an unlikelihood term. `conformalguard/training/` currently trains a
-   12-way trace-level classifier over violation classes. The conformal layer is
-   independent of this and is correct as it stands; the scorer, the step-level
-   dataset and the training loss still have to be brought in line.
-3. **Baselines are stubs.** `conformalguard/evaluation/baselines.py` returns
-   random decisions unless the real model is wired in through the documented
-   environment variables. The learned agent guardrails (GuardAgent, AGrail,
-   ShieldAgent, Progent), the rule-based provenance monitor, the sequence
-   Transformer control, the predicate matcher, the R-Judge converter and the
-   closed-loop harness are **not implemented here**.
-4. Consequently **the benchmark tables of the paper cannot be regenerated from
-   this repository.** Only the simulation figure and the unit-tested guarantees can.
+The revised paper rests on three things, all in this repository and all reproducible: the conformal
+layer and its tests, the R-Judge experiment, and the simulations (`SUPPLEMENTARY_README.md` maps each
+table and figure to a command).
+
+The following are **not** used by the paper and carry no results. They are scaffolding written for
+the AgentChain-26 experiments of the submitted version, which have been withdrawn because their data
+and runs could not be recovered:
+
+- `conformalguard/data/` (a loader and a procedural generator that assigns labels at random),
+  `conformalguard/training/`, `conformalguard/evaluation/` (baseline stubs that return random
+  decisions), and the scripts `train.py`, `calibrate.py`, `evaluate.py`, `reproduce_results.py`,
+  `download_datasets.py`;
+- `conformalguard/deployment/` (runtime, routing, FastAPI server) and the framework hooks in
+  `conformalguard/graph/instrumentation.py`, which have not been tested against the real frameworks;
+- `docs/METHODOLOGY.md`, `ALGORITHMS.md`, `HYPERPARAMETERS.md`, `DATASETS.md`, which describe that
+  earlier design.
+
+`scripts/make_anonymous_release.py` leaves all of this out of the package prepared for reviewers.
 
 ## Layout
 

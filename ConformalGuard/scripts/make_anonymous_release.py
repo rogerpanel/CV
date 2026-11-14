@@ -19,9 +19,19 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-INCLUDE = ["conformalguard", "configs", "scripts", "tests", "examples", "notebooks",
-           "docs", "results", "README.md", "LICENSE", "pyproject.toml", "requirements.txt", ".gitignore"]
-DROP = ["docs/ROBUSTIDPS_INTEGRATION.md", "scripts/make_anonymous_release.py"]
+INCLUDE = ["conformalguard", "scripts", "tests", "notebooks", "docs", "results",
+           "LICENSE", "requirements.txt", ".gitignore"]
+# Not part of what the paper reports: scaffolding for the withdrawn AgentChain-26 experiments,
+# the deployment server, and documents that describe them.
+DROP = ["scripts/make_anonymous_release.py", "scripts/train.py", "scripts/calibrate.py",
+        "scripts/evaluate.py", "scripts/reproduce_results.py", "scripts/download_datasets.py",
+        "scripts/run_inference.py", "conformalguard/cli.py", "conformalguard/data",
+        "conformalguard/training", "conformalguard/evaluation", "conformalguard/deployment",
+        "conformalguard/utils", "conformalguard/violations", "docs/ROBUSTIDPS_INTEGRATION.md", "docs/METHODOLOGY.md",
+        "docs/ALGORITHMS.md", "docs/HYPERPARAMETERS.md", "docs/DATASETS.md",
+        "docs/REPRODUCIBILITY.md", "notebooks/01_explore_dataset.py",
+        "notebooks/02_calibrate_demo.py", "notebooks/03_online_demo.py",
+        "tests/test_data.py", "tests/test_routing.py", "tests/test_encoder.py"]
 TEXT_SUFFIXES = {".py", ".md", ".yaml", ".yml", ".toml", ".txt", ".cfg", ".json", ".ipynb", ""}
 
 # (pattern, replacement), applied in order, case-sensitive unless flagged.
@@ -64,7 +74,12 @@ def main() -> int:
         elif src.exists():
             shutil.copy2(src, out / name)
     for rel in DROP:
-        (out / rel).unlink(missing_ok=True)
+        target = out / rel
+        if target.is_dir():
+            shutil.rmtree(target)
+        else:
+            target.unlink(missing_ok=True)
+    shutil.copy2(ROOT / "SUPPLEMENTARY_README.md", out / "README.md")
 
     n_changed = 0
     for path in sorted(p for p in out.rglob("*") if p.is_file()):

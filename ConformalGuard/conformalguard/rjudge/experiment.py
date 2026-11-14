@@ -7,7 +7,7 @@ For each random split of the records into train / calibration / test:
 2. score every calibration and test record: the record score is the maximum
    step logit;
 3. set the blocking threshold to the ceil((n+1)(1-alpha))-th smallest score of
-   the n *safe* calibration records (the trace-level rule of Corollary 2);
+   the n *safe* calibration records (the trace-level rule of Corollary 1);
 4. on the test records report
      FBR    share of safe records with at least one blocked step
             (guaranteed <= alpha on average over splits, for any scorer),

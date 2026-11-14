@@ -40,7 +40,7 @@ For each split (50% train, 25% calibration, 25% test):
    calibration records;
 4. a test record is blocked if its score exceeds the threshold.
 
-Step 3 is the trace-level rule (Corollary 2 of the paper). R-Judge labels
+Step 3 is the trace-level rule (Corollary 1 of the paper). R-Judge labels
 records, not steps, so the step-level statement (Proposition 1) cannot be
 tested on it.
 
