@@ -111,6 +111,8 @@ def main() -> None:
                   f"({time.time() - t_start:.0f}s)", flush=True)
         results["per_split"][key] = rows
         results["aggregate"][key] = E.aggregate(rows)
+        # Keep what is finished: an interrupted session then loses at most one protocol.
+        (out / "results_partial.json").write_text(json.dumps(results, indent=1))
         return rows
 
     md = [f"# R-Judge experiment ({'QUICK SMOKE RUN, not a result' if args.quick else 'full run'})", "",
@@ -198,6 +200,7 @@ def main() -> None:
                          "numpy": np.__version__, "wall_seconds": round(time.time() - t_start, 1),
                          "quick_smoke_run": bool(args.quick)}
     (out / "results.json").write_text(json.dumps(results, indent=1))
+    (out / "results_partial.json").unlink(missing_ok=True)
     (out / "summary.md").write_text("\n".join(md))
     print("\n" + "\n".join(md))
     print(f"\nwrote {out / 'results.json'} and {out / 'summary.md'}")
