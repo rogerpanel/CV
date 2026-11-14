@@ -78,6 +78,15 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*eval_set.*")
 RADII = [0.0, 0.05, 0.1, 0.2, 0.273, 0.5]
 
+
+def atomic(path, write):
+    """Write through a temporary file and rename, so a run killed mid-write
+    (e.g. at a Kaggle or Colab time limit) never leaves a truncated file."""
+    path = Path(path)
+    tmp = path.with_name(path.stem + ".tmp" + path.suffix)
+    write(tmp)
+    tmp.replace(path)
+
 # ------------------------------------------------------------------ model zoo
 BASE_SPEC = dict(arch="sode", train="clean", loss="la", sampler=0.0, encoding="none", epochs=None,
                  posthoc="tau", at_method=None, at_steps=5, recipe="v2", source=None)
@@ -184,12 +193,12 @@ def cmd_prepare(a):
     y = y_str.map({c: i for i, c in enumerate(classes)}).to_numpy()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(out / "full.npz", X=feat.to_numpy(np.float32), y=y, t=t)
+    atomic(out / "full.npz", lambda f: np.savez_compressed(f, X=feat.to_numpy(np.float32), y=y, t=t))
     meta = {"files": files, "label_column": label, "time_column": tcol, "classes": classes,
             "class_counts_after_dedup": {c: int((y_str == c).sum()) for c in classes},
             "dropped_small_classes": small, "dropped_label_like_columns": leaky,
             "raw_features": list(feat.columns), "cap_per_class": a.cap_per_class, "dedup": dedup}
-    (out / "meta.json").write_text(json.dumps(meta, indent=2))
+    atomic(out / "meta.json", lambda f: f.write_text(json.dumps(meta, indent=2)))
     log(f"saved {len(y)} flows, {feat.shape[1]} raw features, {len(classes)} classes -> {out}")
     log("dedup:", dedup)
 
@@ -231,10 +240,10 @@ def make_split(a, seed):
     mu, sdv = Xr[tr].mean(0), Xr[tr].std(0)
     cols = np.where(sdv > 0)[0]
     X = np.clip((Xr[:, cols] - mu[cols]) / sdv[cols], -a.clip, a.clip).astype(np.float32)
-    np.savez_compressed(sd / "data.npz", Xtr=X[tr], ytr=y[tr], Xsel=X[sel], ysel=y[sel], Xcal=X[cal], ycal=y[cal],
-                        Xte=X[te], yte=y[te], cols=cols)
     (sd / "split.json").write_text(json.dumps({"seed": seed, "split": a.split, "n_features": int(len(cols)),
                                                "sizes": {"train": len(tr), "selection": len(sel), "calibration": len(cal), "test": len(te)}}))
+    atomic(sd / "data.npz", lambda f: np.savez_compressed(f, Xtr=X[tr], ytr=y[tr], Xsel=X[sel], ysel=y[sel],
+                                                          Xcal=X[cal], ycal=y[cal], Xte=X[te], yte=y[te], cols=cols))
     log(f"[seed {seed}] split {a.split}: train {len(tr)}, sel {len(sel)}, cal {len(cal)}, test {len(te)}, {len(cols)} features")
 
 
@@ -355,7 +364,7 @@ def train_neural(name, D, a, sd):
         model = build_model(name, D).to(DEV)
         model.load_state_dict(torch.load(sd / f"{spec['source']}.pt", map_location=DEV))
         info = posthoc(model, spec, kind, D, a)
-        torch.save(model.state_dict(), sd / f"{name}.pt")
+        atomic(sd / f"{name}.pt", lambda f: torch.save(model.state_dict(), f))
         return {"source": spec["source"], "val_score": info.get("val_macro_f1_after_posthoc"), **info}
     torch.manual_seed(a.seed_offset + D.seed)
     model = build_model(name, D).to(DEV)
@@ -422,7 +431,7 @@ def train_neural(name, D, a, sd):
     if best_state is not None:
         model.load_state_dict(best_state)
     info = posthoc(model, spec, kind, D, a)
-    torch.save(model.state_dict(), sd / f"{name}.pt")
+    atomic(sd / f"{name}.pt", lambda f: torch.save(model.state_dict(), f))
     out = {"train_seconds": time.time() - t0, "epochs_run": ep + 1, "best_epoch": best_ep + 1,
            "val_score": best, "val_history": hist, **info}
     if spec["encoding"] == "quantile":
@@ -465,8 +474,10 @@ def train_tree(name, D, a, sd):
     samples = pr(D.Xsel).unsqueeze(0)
     tau, grid = tune_tau(samples, ysel, D.prior)
     bias = (-tau * D.prior.log()).numpy()
-    with open(sd / f"{name}.pkl", "wb") as fh:
-        pickle.dump({"clf": clf, "bias": bias}, fh)
+    def _dump(f):
+        with open(f, "wb") as fh:
+            pickle.dump({"clf": clf, "bias": bias}, fh)
+    atomic(sd / f"{name}.pkl", _dump)
     val = fast_macro_f1(ysel, (samples[0] + torch.tensor(bias)).argmax(1).numpy(), D.K)
     return {"train_seconds": time.time() - t0, "val_score": val, "posthoc": "tau", "tau": tau, "val_macro_f1_by_tau": grid}
 
@@ -491,7 +502,7 @@ def load_results(sd):
 
 
 def save_results(sd, res):
-    (sd / "results.json").write_text(json.dumps(res, indent=2))
+    atomic(sd / "results.json", lambda f: f.write_text(json.dumps(res, indent=2)))
 
 
 def ordered(models):
@@ -533,6 +544,11 @@ def cmd_attack(a):
         w = test_weights(y, D.yte, D.K)
         yn = y.numpy()
         transfer = {}
+        pending = [n for n in a.attack_models if trained(n, sd) and spec_of(n)["train"] != "rs"
+                   and (a.force or n not in res.get("attack", {}))]
+        if not pending:
+            log(f"[seed {seed}] all requested models already attacked")
+            continue
         for src in ("mlp", "mlp_at"):
             if trained(src, sd):
                 s = load_any(src, D, sd)
@@ -607,8 +623,8 @@ def cmd_attack(a):
                 r["step_sweep"] = {str(s): macro(yn[:n_s], logits_of(fs, rr.run_batched(
                     lambda xb, yb: eot_pgd(fs, xb, yb, eps=a.eps, steps=s, eot=eot_s), X[:n_s], y[:n_s], a.attack_batch)).argmax(1).numpy(), D.K)
                     for s in a.step_sweep}
-            np.savez_compressed(sd / f"preds_attack_{name}.npz", clean_test=clean_pred, idx=idx.numpy(),
-                                **{f"worst_{k}": v.numpy() for k, v in worst.items()})
+            atomic(sd / f"preds_attack_{name}.npz", lambda f: np.savez_compressed(
+                f, clean_test=clean_pred, idx=idx.numpy(), **{f"worst_{k}": v.numpy() for k, v in worst.items()}))
             res.setdefault("attack", {})[name] = r
             res["attack_settings"] = {k: getattr(a, k) for k in ("eps", "profile", "n_attack", "restarts", "long_steps", "eot",
                                                                  "eot_apgd", "apgd_iters", "eot_steps", "square_queries", "em_paths")}
@@ -647,7 +663,7 @@ def cmd_certify(a):
                     "certified_accuracy_l2_test_reweighted": {str(r): float(np.average(correct & (rad >= r), weights=w)) for r in RADII},
                     "acr": float((rad * correct).mean()), "seconds": time.time() - t0,
                     "per_class_certified_recall@0.273": [float((correct & (rad >= 0.273))[y.numpy() == c].mean()) for c in range(D.K)]}
-            np.savez_compressed(sd / f"preds_cert_{name}.npz", pred=pred, radius=rad, idx=idx.numpy())
+            atomic(sd / f"preds_cert_{name}.npz", lambda f: np.savez_compressed(f, pred=pred, radius=rad, idx=idx.numpy()))
             res.setdefault("certify", {})[name] = cert
             save_results(sd, res)
             log(f"[seed {seed}][{name}] certified accuracy {cert['certified_accuracy_l2']} ({cert['seconds']:.0f}s)")

@@ -53,3 +53,16 @@ per-class clean F1, and the declared contrasts. The contrasts answer three quest
 
 The research report expects parity, not superiority, on questions 2 and 3, so
 null contrasts there are an expected and reportable result.
+
+## Running on Kaggle (unattended)
+
+`notebooks/v2_rerun_ics3d_kaggle.ipynb` runs the same plan as a background
+Kaggle job (**Save Version → Save & Run All**), so it does not depend on a
+browser tab staying open.
+
+* **Settings:** Accelerator *GPU T4 x2*, Internet *On*, and the ICS3D dataset added as an input (read from `/kaggle/input`, no API token).
+* `scripts/v2_driver.py` spreads the seeds over the two GPUs. For each seed it runs train → attack → certify, then aggregates.
+* The driver stops every process before a time budget (default 11 h) runs out, so the job finishes inside Kaggle's 12-hour limit and its output is saved.
+* All writes are atomic (temporary file, then rename), so a stopped process never leaves a truncated checkpoint or `results.json`.
+* **To continue in a further run:** attach the notebook's own previous output (*Add Input → Notebook Output Files*) and commit again. Finished models, attacks and certificates are skipped.
+* **Why not a TPU or the P100:** the code is CUDA PyTorch, and the SDE solver and the tree models do not run on a TPU without a rewrite. Recent PyTorch builds no longer support the P100's architecture.
