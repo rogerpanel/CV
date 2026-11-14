@@ -60,6 +60,7 @@ ABLATIONS = ["lipcal_no_sn", "lipcal_no_clamp", "lipcal_free_A", "lipcal_no_clip
 PRESETS = {  # explicit flags override these
     "a100": dict(bs=16, accum=1, grad_chunk=16, eval_chunk=256, steps=400, n_eval=64, iters=60, n_cand=32),
     "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=30, n_cand=16),
+    "t4":   dict(bs=8, accum=2, grad_chunk=8, eval_chunk=128, steps=400, n_eval=48, iters=40, n_cand=32),   # 15-16 GB (Kaggle T4 / P100)
     "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3, n_cand=8),
 }
 
@@ -537,23 +538,60 @@ def cmd_diagnose(a):
 
 
 def cmd_all(a):
+    """Run the arms one after another, or ``--jobs`` at a time with one GPU each (logs in <dir>/logs)."""
     models = (a.models or CORE) + (PAPER if a.paper_constants else []) + (ABLATIONS if a.ablations else [])
     jobs = [(m, s) for s in a.seeds for m in models if not (m in ABLATIONS and s != a.seeds[0])]
     passthrough = [x for x in a.rest if x != "--"]
-    failed = []
-    for i, (m, s) in enumerate(jobs):
-        out = Path(a.dir) / f"{m}_s{s}.json"
-        if out.exists():
-            print(f"[skip] {out}"); continue
-        print(f"\n#### job {i + 1}/{len(jobs)}", flush=True)
-        r = subprocess.run([sys.executable, __file__, "run", "--model", m, "--seed", str(s), "--out", str(out)] + passthrough)
-        if r.returncode != 0:
-            failed.append(f"{m}_s{s}")
-            print(f"!! {m} seed {s} failed (exit {r.returncode}); continuing with the next job", flush=True)
+    n_gpu = torch.cuda.device_count() if torch.cuda.is_available() else 0
+    width = max(1, min(a.jobs, n_gpu) if n_gpu else a.jobs)
+    logs = Path(a.dir) / "logs"; logs.mkdir(parents=True, exist_ok=True)
+    t0 = time.time(); failed, skipped, running = [], [], {}     # running: slot -> (name, process, log file)
+    todo = [(m, s) for m, s in jobs if not (Path(a.dir) / f"{m}_s{s}.json").exists()]
+    print(f"{len(jobs) - len(todo)} of {len(jobs)} runs already finished; {len(todo)} to do, {width} at a time", flush=True)
+    last_report = time.time()
+
+    def reap():
+        for slot, (name, proc, fh) in list(running.items()):
+            if proc.poll() is None:
+                continue
+            if fh is not None:
+                fh.close()
+            del running[slot]
+            if proc.returncode != 0:
+                failed.append(name)
+                print(f"!! {name} failed (exit {proc.returncode})", flush=True)
+                if fh is not None:
+                    print("   last lines of its log:\n   " + "\n   ".join((logs / f"{name}.log").read_text().splitlines()[-12:]), flush=True)
+            else:
+                print(f"== finished {name}  [{(time.time() - t0) / 3600:.2f} h elapsed]", flush=True)
+
+    while todo or running:
+        reap()
+        while todo and len(running) < width:
+            m, s = todo.pop(0); name = f"{m}_s{s}"
+            if a.time_budget_hours and time.time() - t0 > a.time_budget_hours * 3600:
+                skipped.append(name); continue
+            slot = next(i for i in range(width) if i not in running)
+            cmd = [sys.executable, __file__, "run", "--model", m, "--seed", str(s), "--out", str(Path(a.dir) / f"{name}.json")] + passthrough
+            env = dict(os.environ)
+            if n_gpu > 1:
+                env["CUDA_VISIBLE_DEVICES"] = str(slot % n_gpu)
+            fh = open(logs / f"{name}.log", "w") if width > 1 else None
+            print(f"#### starting {name}" + (f" on GPU {slot % n_gpu}" if n_gpu > 1 else ""), flush=True)
+            running[slot] = (name, subprocess.Popen(cmd, env=env, stdout=fh, stderr=subprocess.STDOUT if fh else None), fh)
+        if running:
+            time.sleep(5)
+            if width > 1 and time.time() - last_report > 300:
+                last_report = time.time()
+                for name, _, _ in running.values():
+                    lines = (logs / f"{name}.log").read_text().splitlines()
+                    print(f"   [{name}] {lines[-1].strip() if lines else '(starting)'}", flush=True)
     cmd_aggregate(a)
+    if skipped:
+        print(f"\n---- time budget reached; not started: {', '.join(skipped)}. Run the same command again to do them.", flush=True)
     if failed:
         print(f"\n!!!! {len(failed)} of {len(jobs)} runs FAILED: {', '.join(failed)}\n!!!! Their results are missing above. "
-              "Scroll up to the first 'Traceback' for the reason; re-running this cell retries them.", flush=True)
+              "Look for the first 'Traceback' (in <dir>/logs when running in parallel); running the same command again retries them.", flush=True)
 
 
 def cmd_aggregate(a):
@@ -623,6 +661,8 @@ def main():
     al = sub.add_parser("all", help="run every arm sequentially; extra flags after -- are passed to 'run'")
     al.add_argument("--dir", default="runs/scale"); al.add_argument("--seeds", type=int, nargs="+", default=[0])
     al.add_argument("--models", nargs="+", default=None); al.add_argument("--ablations", action="store_true"); al.add_argument("--paper-constants", action="store_true", help="also run lip and lip_at")
+    al.add_argument("--jobs", type=int, default=1, help="runs in parallel, one GPU each (e.g. 2 on Kaggle's T4 x2)")
+    al.add_argument("--time-budget-hours", type=float, default=0.0, help="do not start new runs after this many hours (0 = no limit)")
     al.add_argument("rest", nargs=argparse.REMAINDER)
     ag = sub.add_parser("aggregate"); ag.add_argument("--dir", default="runs/scale")
     dg = sub.add_parser("diagnose", help="no training: initial perplexity and accuracy of every constrained variant")
