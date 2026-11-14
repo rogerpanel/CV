@@ -204,12 +204,12 @@ def scores(model, val_ids, y, t0: int, t1: int, ids=None, emb=None, want_norm: b
     return m, logr
 
 
-@torch.no_grad()
 def fit(chunk: int, ex, L: int) -> int:
     """Chunk sizes are quoted for 96-token sequences; scale them so memory stays constant for longer ones."""
     return max(1, chunk * 96 // (ex["ctx"].size(1) + ex["fill"].size(1) + L + ex["qry"].size(1)))
 
 
+@torch.no_grad()
 def eval_trigger(model, task, ex, trig, chunk: int, want_norm: bool = False, idx=None):
     """No-grad margins (and log-ratios) for a trigger tensor; ``idx`` maps trigger rows to example rows."""
     n = trig.size(0); idx = torch.arange(n, device=trig.device) if idx is None else idx
@@ -242,7 +242,7 @@ def gcg(model, task, ex, L: int, objective: str, a, seed: int):
     trig = task.random_trigger(n, L, g).to(dev)
     cur_m, cur_r = eval_trigger(model, task, ex, trig, a.eval_chunk, want_norm=objective == "norm")
     cur = cur_m.clone() if objective == "margin" else cur_r.mean(1)
-    for _ in range(a.iters):
+    for _ in range(a.iters if objective == "margin" else max(1, a.iters // 3)):   # the norm search never stops early
         act = (cur > 0).nonzero().squeeze(1) if objective == "margin" else torch.arange(n, device=dev)
         if act.numel() == 0:
             break
@@ -540,6 +540,7 @@ def cmd_all(a):
     models = (a.models or CORE) + (PAPER if a.paper_constants else []) + (ABLATIONS if a.ablations else [])
     jobs = [(m, s) for s in a.seeds for m in models if not (m in ABLATIONS and s != a.seeds[0])]
     passthrough = [x for x in a.rest if x != "--"]
+    failed = []
     for i, (m, s) in enumerate(jobs):
         out = Path(a.dir) / f"{m}_s{s}.json"
         if out.exists():
@@ -547,8 +548,12 @@ def cmd_all(a):
         print(f"\n#### job {i + 1}/{len(jobs)}", flush=True)
         r = subprocess.run([sys.executable, __file__, "run", "--model", m, "--seed", str(s), "--out", str(out)] + passthrough)
         if r.returncode != 0:
+            failed.append(f"{m}_s{s}")
             print(f"!! {m} seed {s} failed (exit {r.returncode}); continuing with the next job", flush=True)
     cmd_aggregate(a)
+    if failed:
+        print(f"\n!!!! {len(failed)} of {len(jobs)} runs FAILED: {', '.join(failed)}\n!!!! Their results are missing above. "
+              "Scroll up to the first 'Traceback' for the reason; re-running this cell retries them.", flush=True)
 
 
 def cmd_aggregate(a):
