@@ -30,7 +30,7 @@ from torch import nn
 from conformalguard.encoder.relation_attention import RelationAwareAttention
 from conformalguard.rjudge.data import NODE_TYPES, RELATIONS, Trace
 
-MAX_LEN = 64      # longest R-Judge trace has 37 nodes
+MAX_LEN = 64      # default number of position embeddings; the longest R-Judge trace has 37 nodes
 
 
 def collate(traces: list[Trace], feats: list[np.ndarray], device: str = "cpu") -> dict:
@@ -53,7 +53,7 @@ def collate(traces: list[Trace], feats: list[np.ndarray], device: str = "cpu") -
     t = lambda a, dt=torch.long: torch.as_tensor(np.asarray(a), dtype=dt, device=device)
     return {
         "x": torch.as_tensor(np.concatenate(xs), dtype=torch.float32, device=device),
-        "ntype": t(ntype), "pos": t(pos).clamp_max(MAX_LEN - 1), "gid": t(gid),
+        "ntype": t(ntype), "pos": t(pos), "gid": t(gid),
         "edge_index": t([src, dst]) if src else torch.zeros(2, 0, dtype=torch.long, device=device),
         "etype": t(rel), "agent_idx": t(agent_idx), "action_idx": t(action_idx),
         "step_graph": t(step_graph), "y": t(labels, torch.float32), "n_graphs": len(traces),
@@ -66,16 +66,16 @@ def trace_max(step_logits: torch.Tensor, step_graph: torch.Tensor, n_graphs: int
 
 
 class _Embed(nn.Module):
-    def __init__(self, feat_dim: int, d: int, dropout: float, use_types: bool = True):
+    def __init__(self, feat_dim: int, d: int, dropout: float, use_types: bool = True, max_len: int = MAX_LEN):
         super().__init__()
         self.proj = nn.Linear(feat_dim, d)
         self.type_emb = nn.Embedding(len(NODE_TYPES), d)
-        self.pos_emb = nn.Embedding(MAX_LEN, d)
+        self.pos_emb = nn.Embedding(max_len, d)
         self.use_types = use_types
         self.drop = nn.Dropout(dropout)
 
     def forward(self, b: dict) -> torch.Tensor:
-        h = self.proj(b["x"]) + self.pos_emb(b["pos"])
+        h = self.proj(b["x"]) + self.pos_emb(b["pos"].clamp_max(self.pos_emb.num_embeddings - 1))
         if self.use_types:
             h = h + self.type_emb(b["ntype"])
         return self.drop(h)
@@ -101,9 +101,9 @@ class SeqScorer(nn.Module):
     """Causal Transformer over the time-ordered node sequence (no edges)."""
 
     def __init__(self, feat_dim: int, d: int = 128, layers: int = 3, heads: int = 4,
-                 dropout: float = 0.2, **_):
+                 dropout: float = 0.2, max_len: int = MAX_LEN, **_):
         super().__init__()
-        self.embed = _Embed(feat_dim, d, dropout)
+        self.embed = _Embed(feat_dim, d, dropout, max_len=max_len)
         # Feed-forward width 6d gives the same parameter count as the graph scorer.
         layer = nn.TransformerEncoderLayer(d, heads, 6 * d, dropout, batch_first=True,
                                            norm_first=True, activation="gelu")
@@ -127,10 +127,10 @@ class GraphScorer(nn.Module):
     """Relation-aware attention over the typed execution graph."""
 
     def __init__(self, feat_dim: int, d: int = 128, layers: int = 3, heads: int = 4,
-                 dropout: float = 0.2, typed: bool = True, **_):
+                 dropout: float = 0.2, typed: bool = True, max_len: int = MAX_LEN, **_):
         super().__init__()
         self.typed = typed
-        self.embed = _Embed(feat_dim, d, dropout, use_types=typed)
+        self.embed = _Embed(feat_dim, d, dropout, use_types=typed, max_len=max_len)
         n_nt = len(NODE_TYPES) if typed else 1
         n_et = len(RELATIONS) if typed else 1
         self.layers = nn.ModuleList(
@@ -147,8 +147,9 @@ class GraphScorer(nn.Module):
         return self.head(h[b["action_idx"]]).squeeze(-1)
 
 
-def build(name: str, feat_dim: int, d: int = 128, layers: int = 3, dropout: float = 0.2) -> nn.Module:
-    kw = dict(feat_dim=feat_dim, d=d, layers=layers, dropout=dropout)
+def build(name: str, feat_dim: int, d: int = 128, layers: int = 3, dropout: float = 0.2,
+          max_len: int = MAX_LEN) -> nn.Module:
+    kw = dict(feat_dim=feat_dim, d=d, layers=layers, dropout=dropout, max_len=max_len)
     if name == "step":
         return StepScorer(**kw)
     if name == "seq":

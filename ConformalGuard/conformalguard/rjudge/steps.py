@@ -82,14 +82,14 @@ def _step_logits(model, traces, feats, idx, device) -> list[np.ndarray]:
 
 
 def fit_steps(name, traces, feats, targets, train_idx, seed, device, epochs=40, lr=1e-3, wd=1e-2,
-              batch_size=32, d=128, layers=3, dropout=0.2):
+              batch_size=32, d=128, layers=3, dropout=0.2, max_len=M.MAX_LEN):
     """Per-step binary cross-entropy; the epoch is chosen on 15% of the training traces."""
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
     idx = rng.permutation(train_idx)
     n_val = max(8, int(0.15 * idx.size))
     val_idx, fit_idx = idx[:n_val], idx[n_val:]
-    model = M.build(name, feats[0].shape[1], d=d, layers=layers, dropout=dropout).to(device)
+    model = M.build(name, feats[0].shape[1], d=d, layers=layers, dropout=dropout, max_len=max_len).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=epochs)
     loss_fn = nn.BCEWithLogitsLoss()

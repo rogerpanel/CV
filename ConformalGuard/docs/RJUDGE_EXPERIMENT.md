@@ -101,7 +101,8 @@ and has not been executed in the environment where this code was written.
 
 ## Additional experiments
 
-Run together by `notebooks/rjudge_kaggle_extra.ipynb`, or one at a time:
+Run together by `notebooks/rjudge_kaggle_extra.ipynb` (which also runs the multi-agent experiment of
+`docs/MAS_EXPERIMENT.md`), or one at a time:
 
 | Experiment | Command | What it tests |
 |---|---|---|
