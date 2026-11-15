@@ -110,8 +110,8 @@ on the answer margin and on the state norm) are re-optimised against each
 fine-tuned checkpoint. `notebooks/scale_study_colab.ipynb` runs the same
 commands on Google Colab with results saved to Drive; `--preset l4` fits a
 24 GB GPU. Results are written per run as JSON and summarised in
-`summary.json` and `summary.md`. No result of this study is committed here
-until it has been run.
+`summary.json` and `summary.md`. `notebooks/scale_study_kaggle.ipynb` does the same on Kaggle's two T4s. The outputs of the reported run are in
+`paper/scale_study/` (see its README for what was and was not run).
 
 ## 9. What this repository does and does not regenerate
 
