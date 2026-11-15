@@ -31,7 +31,7 @@ from .models.spectral_norm import SpectralNormLinear
 
 __all__ = [
     "ARCHS", "hf_state_dict", "tiny_state_dict", "infer_shapes", "build_from_mamba",
-    "calibrate_x_max", "calibrate_constraints", "apply_calibration", "set_x_max", "refresh_spectral_norms", "reference_logits", "conversion_error",
+    "calibrate_x_max", "calibrate_constraints", "apply_calibration", "tighten", "set_x_max", "refresh_spectral_norms", "reference_logits", "conversion_error",
 ]
 
 # name -> (preset, overrides).  All arms share one code path.
@@ -227,6 +227,34 @@ def apply_calibration(model: LipMambaModel, cal: dict) -> None:
     for c in [cfg] + [b.cfg for b in model.blocks] + [b.ssm.cfg for b in model.blocks]:
         for k, v in worst.items():
             setattr(c, k, float(v))
+
+
+@torch.no_grad()
+def tighten(model: LipMambaModel, start: dict, frac: float, delta_cap: float | None = None,
+            lambda_cap: float | None = None) -> None:
+    """Move the upper step and eigenvalue bounds of every block from their calibrated values (``start``, the
+    dict from :func:`calibrate_constraints`) towards ``min(calibrated, cap)``, geometrically in ``frac`` in [0, 1].
+
+    Eigenvalues above the new bound are clipped to it and all others are kept exactly; the step clamp simply
+    tightens.  At ``frac = 1`` every block satisfies ``rho_min >= exp(-delta_cap * lambda_cap)``, the per-token
+    retention factor of the retention theorem."""
+    cfg = model.cfg
+    frac = min(1.0, max(0.0, frac))
+    for i, blk in enumerate(model.blocks):
+        s = blk.ssm
+        if cfg.reparam_eigen and lambda_cap is not None:
+            lam = s.A.lambdas.double()
+            hi0 = float(start["lambda_max"][i]); lo = s.A.lambda_min
+            hi = max(hi0 ** (1 - frac) * min(hi0, lambda_cap) ** frac, lo * 1.001)
+            u = (lam.clamp(max=hi) - lo) / (hi - lo)
+            s.A.lambda_max = hi
+            s.A.alpha.copy_(torch.logit(u.clamp(1e-12, 1 - 1e-9)).to(s.A.alpha.dtype))
+        if cfg.clamp_delta and delta_cap is not None:
+            d0 = float(start["delta_max"][i])
+            s.delta_proj.delta_max = max(d0 ** (1 - frac) * min(d0, delta_cap) ** frac, s.delta_proj.delta_min * 1.001)
+    hi_l = max(b.ssm.A.lambda_max for b in model.blocks); hi_d = max(b.ssm.delta_proj.delta_max for b in model.blocks)
+    for c in [cfg] + [b.cfg for b in model.blocks] + [b.ssm.cfg for b in model.blocks]:
+        c.lambda_max, c.delta_max = float(hi_l), float(hi_d)
 
 
 @torch.no_grad()

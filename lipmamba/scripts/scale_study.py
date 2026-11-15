@@ -48,7 +48,7 @@ import torch.nn.functional as F
 
 from lipmamba.pretrained import (ARCHS, apply_calibration, build_from_mamba, calibrate_constraints, calibrate_x_max,
                                  conversion_error, describe, hf_state_dict, reference_logits, refresh_spectral_norms,
-                                 tiny_state_dict)
+                                 tighten, tiny_state_dict)
 
 NAMES = ["Alice", "Bob", "Carol", "David", "Emma", "Frank", "Grace", "Henry", "Jack", "Kate", "Liam", "Mary",
          "Nora", "Oscar", "Paul", "Ruth", "Sam", "Tom"]
@@ -61,6 +61,7 @@ PRESETS = {  # explicit flags override these
     "a100": dict(bs=16, accum=1, grad_chunk=16, eval_chunk=256, steps=400, n_eval=64, iters=60, n_cand=32),
     "l4":   dict(bs=8, accum=1, grad_chunk=12, eval_chunk=192, steps=400, n_eval=48, iters=30, n_cand=16),
     "t4":   dict(bs=8, accum=2, grad_chunk=8, eval_chunk=128, steps=400, n_eval=48, iters=40, n_cand=32),   # 15-16 GB (Kaggle T4 / P100)
+    "a100-370m": dict(bs=8, accum=2, grad_chunk=6, eval_chunk=96, steps=400, n_eval=48, iters=40, n_cand=32),   # with --base state-spaces/mamba-370m-hf
     "tiny": dict(bs=8, accum=1, grad_chunk=8, eval_chunk=64, steps=40, n_eval=8, iters=3, n_cand=8),
 }
 
@@ -337,12 +338,17 @@ def perplexity(model, stream: torch.Tensor, dev, n_chunks: int, T: int = 256, bs
     return math.exp(nll / cnt)
 
 
-def train(model, task, a, at: bool, dev, log: list):
+def train(model, task, a, at: bool, dev, log: list, cal: dict | None = None):
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, weight_decay=0.0)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=a.lr, total_steps=a.steps, pct_start=0.1)
     g = torch.Generator().manual_seed(a.seed)                  # identical data stream for every arm
     t_start = time.time(); run = dict(loss=0.0, acc=0.0, lm=0.0, k=0)
+    caps = dict(delta_cap=a.delta_cap, lambda_cap=a.lambda_cap)
+    do_tighten = cal is not None and "delta_max" in cal and (a.delta_cap is not None or a.lambda_cap is not None)
+    n_tight = max(1, int(a.tighten_frac * a.steps))
     for step in range(a.steps):
+        if do_tighten and step <= n_tight and (step % 5 == 0 or step == n_tight):   # gradual: the model adapts as the bounds close
+            tighten(model, cal, step / n_tight, **caps)
         model.train(); opt.zero_grad(set_to_none=True)
         for _ in range(a.accum):
             L = (0, 4, 8, 16)[int(torch.randint(0, 4, (1,), generator=g))]
@@ -478,9 +484,11 @@ def cmd_run(a):
         model.load_state_dict(state["model"])
         if state["cal"] is not None:
             apply_calibration(model, state["cal"])
+        for b, (lam_hi, d_hi) in zip(model.blocks, state.get("bounds", [])):
+            b.ssm.A.lambda_max, b.ssm.delta_proj.delta_max = lam_hi, d_hi
         print("  resumed from checkpoint; continuing evaluation", flush=True)
     else:
-        res = dict(model=a.model, arch=arch, adversarial_training=at, calibrated_constants=calibrated, seed=a.seed, tiny=a.tiny, base=a.base,
+        res = dict(model=a.model + a.tag, base_model=a.model, arch=arch, adversarial_training=at, calibrated_constants=calibrated, seed=a.seed, tiny=a.tiny, base=a.base,
                    args={k: v for k, v in vars(a).items() if k not in ("fn",)}, conversion_rel_error=verify, conversion_rel_error_float32_vs_transformers=verify32, conversion_next_token_agreement=agree,
                    torch=torch.__version__, device=torch.cuda.get_device_name(0) if dev.type == "cuda" else "cpu",
                    n_names=len(task.names), n_values=len(task.values), allowed_trigger_tokens=int(task.allowed.sum()))
@@ -488,12 +496,13 @@ def cmd_run(a):
         res["init"] = clean_metrics(model, task, val, a, dev); print("  init", res["init"], flush=True)
         res["train_log"] = []
         if a.steps > 0:
-            train(model, task, a, at, dev, res["train_log"])
+            train(model, task, a, at, dev, res["train_log"], cal if calibrated else None)
             if dev.type == "cuda":
                 torch.cuda.empty_cache()
         res["config"] = describe(model); res["train_seconds"] = time.time() - t_all
         if a.steps > 0 and not a.skip_attacks:
-            torch.save(dict(model=model.state_dict(), cal=cal), ckpt)
+            torch.save(dict(model=model.state_dict(), cal=cal,
+                            bounds=[(b.ssm.A.lambda_max, b.ssm.delta_proj.delta_max) for b in model.blocks]), ckpt)
         write_json(partial, res)
     evaluate(model, task, val, a, dev, res, lambda: write_json(partial, res), decode)
     res["seconds"] = res.get("seconds", 0.0) + time.time() - t_all
@@ -540,13 +549,14 @@ def cmd_diagnose(a):
 def cmd_all(a):
     """Run the arms one after another, or ``--jobs`` at a time with one GPU each (logs in <dir>/logs)."""
     models = (a.models or CORE) + (PAPER if a.paper_constants else []) + (ABLATIONS if a.ablations else [])
-    jobs = [(m, s) for s in a.seeds for m in models if not (m in ABLATIONS and s != a.seeds[0])]
+    jobs = [(m, s) for s in a.seeds for m in models if a.models or not (m in ABLATIONS and s != a.seeds[0])]
     passthrough = [x for x in a.rest if x != "--"]
+    tag = passthrough[passthrough.index("--tag") + 1] if "--tag" in passthrough else ""
     n_gpu = torch.cuda.device_count() if torch.cuda.is_available() else 0
     width = max(1, min(a.jobs, n_gpu) if n_gpu else a.jobs)
     logs = Path(a.dir) / "logs"; logs.mkdir(parents=True, exist_ok=True)
     t0 = time.time(); failed, skipped, running = [], [], {}     # running: slot -> (name, process, log file)
-    todo = [(m, s) for m, s in jobs if not (Path(a.dir) / f"{m}_s{s}.json").exists()]
+    todo = [(m, s) for m, s in jobs if not (Path(a.dir) / f"{m}{tag}_s{s}.json").exists()]
     print(f"{len(jobs) - len(todo)} of {len(jobs)} runs already finished; {len(todo)} to do, {width} at a time", flush=True)
     last_report = time.time()
 
@@ -568,7 +578,7 @@ def cmd_all(a):
     while todo or running:
         reap()
         while todo and len(running) < width:
-            m, s = todo.pop(0); name = f"{m}_s{s}"
+            m, s = todo.pop(0); name = f"{m}{tag}_s{s}"
             if a.time_budget_hours and time.time() - t0 > a.time_budget_hours * 3600:
                 skipped.append(name); continue
             slot = next(i for i in range(width) if i not in running)
@@ -609,6 +619,8 @@ def cmd_aggregate(a):
         o = dict(n_seeds=len(rs), seeds=[r["seed"] for r in rs], steps=rs[0]["args"]["steps"],
                  **{k: ms([r["final"][k] for r in rs]) for k in ("clean_acc", "update_acc", "ppl")},
                  init_ppl=ms([r["init"]["ppl"] for r in rs]), init_clean_acc=ms([r["init"]["clean_acc"] for r in rs]))
+        if all("rho_min" in r.get("config", {}) for r in rs):          # guaranteed per-token retention factor, worst block
+            o["rho_min_worst_block"] = ms([min(r["config"]["rho_min"]) for r in rs])
         for L in sorted({L for r in rs for L in r.get("attacks", {})}, key=int):
             have = [r["attacks"][L] for r in rs if L in r.get("attacks", {})]
             for k in ("acc_benign", "acc_random8", "acc_zero_shot", "acc_gcg_margin", "acc_gcg_norm", "pacc_worst", "asr"):
@@ -655,6 +667,10 @@ def main():
     r.add_argument("--delta-headroom", type=float, default=2.0, help="calibrated arms: delta_max = headroom x clean quantile")
     r.add_argument("--set", nargs="*", default=[], metavar="KEY=VALUE", help="override constraint constants, e.g. delta_max=1.0 lambda_max=4")
     r.add_argument("--n-fact", type=int, default=4, help="facts per context"); r.add_argument("--n-values", type=int, default=16, help="number of code words (answer classes)")
+    r.add_argument("--tag", default="", help="suffix for the run name, to keep variants of one arm apart (e.g. _tight)")
+    r.add_argument("--delta-cap", type=float, default=None, help="calibrated arms: tighten every block's delta_max to at most this during fine-tuning")
+    r.add_argument("--lambda-cap", type=float, default=None, help="calibrated arms: tighten every block's lambda_max to at most this during fine-tuning")
+    r.add_argument("--tighten-frac", type=float, default=0.5, help="fraction of the steps over which the bounds are tightened")
     r.add_argument("--log-every", type=int, default=25)
     r.add_argument("--skip-attacks", action="store_true"); r.add_argument("--skip-verify", action="store_true")
     r.add_argument("--keep-ckpt", action="store_true"); r.add_argument("--force", action="store_true")

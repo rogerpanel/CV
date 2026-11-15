@@ -96,3 +96,23 @@ def test_calibrated_projection_keeps_slow_eigenvalues():
     model = build_from_mamba(sd, "lip", calibration=cal).eval()
     for b0, b1 in zip(base.blocks, model.blocks):
         assert torch.allclose(b1.ssm.A.lambdas, b0.ssm.A.lambdas, rtol=1e-3, atol=0)
+
+
+def test_tighten_moves_bounds_and_keeps_admissible_eigenvalues():
+    from lipmamba.pretrained import calibrate_constraints, describe, tighten
+    import math
+    sd = tiny_state_dict(V)
+    base = build_from_mamba(sd, "mamba").eval()
+    cal = calibrate_constraints(base, [_ids(8, 32, seed=s) for s in range(4)])
+    model = build_from_mamba(sd, "lip", calibration=cal).eval()
+    before = [b.ssm.A.lambdas.clone() for b in model.blocks]
+    tighten(model, cal, 0.0, delta_cap=0.1, lambda_cap=4.0)
+    for b, lam in zip(model.blocks, before):                      # frac 0 changes nothing
+        assert torch.allclose(b.ssm.A.lambdas, lam, rtol=1e-4)
+    tighten(model, cal, 1.0, delta_cap=0.1, lambda_cap=4.0)
+    for b, lam in zip(model.blocks, before):
+        assert b.ssm.A.lambda_max <= 4.0 + 1e-9 and b.ssm.delta_proj.delta_max <= 0.1 + 1e-9
+        assert torch.allclose(b.ssm.A.lambdas, lam.clamp(max=4.0), rtol=1e-3)
+    assert min(describe(model)["rho_min"]) >= math.exp(-0.4) - 1e-6
+    out = model(_ids())["lm_logits"]
+    assert torch.isfinite(out).all()
