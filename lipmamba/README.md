@@ -80,7 +80,12 @@ python scripts/certify.py  --config configs/certificate.yaml
 python scripts/attack.py   --config configs/attack_robench25.yaml
 ```
 
-Ablations (Table 3) and baselines (Table 1) are configuration presets:
+The results reported in the paper come from two training-matched studies,
+`scripts/scale_study.py` (130M parameters, one GPU) and
+`scripts/controlled_study.py` (from scratch, CPU); see
+`docs/REPRODUCIBILITY.md`. Their outputs are in `paper/`.
+
+Ablations and baselines are configuration presets:
 `configs/ablations.yaml`, `configs/baselines.yaml`, `lipmamba.baselines.preset(...)`.
 
 ## Datasets

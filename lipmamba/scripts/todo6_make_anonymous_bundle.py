@@ -30,12 +30,19 @@ ROOT = Path(__file__).resolve().parent.parent
 IDENTIFYING = [
     r"Anaedevha", r"Roger\s+Nick", r"rogerpanel", r"robustidps", r"RobustIDPS", r"MEPhI", r"mephi",
     r"Trofimov", r"Borodachev", r"torchroger", r"campus\.mephi", r"github\.com/rogerpanel", r"MambaShield",
-    r"anaedevha20\d\d", r"Moscow",
+    r"anaedevha20\d\d", r"Moscow", r"claude", r"anthropic", r"session_0",
 ]
 OMIT = {"docs/ROBUSTIDPS_INTEGRATION.md", "docs/MODEL_CARD.md", "docs/ICLR2027_AUDIT_RESPONSE.md", "docs/ICLR2027_PAT_RESPONSE.md",
-        "scripts/todo6_make_anonymous_bundle.py", "paper", ".git", "runs", "data_cache", "__pycache__",
+        "scripts/todo6_make_anonymous_bundle.py", "paper/README.md", "paper/demo_outputs", ".git", "runs", "data_cache", "__pycache__",
         ".pytest_cache", "lipmamba.egg-info"}
 REPLACEMENTS = [
+    # notebooks and docs: the anonymous mirror cannot be git-cloned, so fetch its zip instead
+    (r"!rm -rf CV && git clone [^\\\n\"]*", "# if this download fails, download the repository zip from the anonymous link and upload it here as repo.zip\\\\n"
+     "!rm -rf LipMamba-ICLR27 repo.zip && wget -q -O repo.zip https://anonymous.4open.science/api/repo/LipMamba-ICLR27/zip && unzip -q -o repo.zip -d LipMamba-ICLR27 && (cd LipMamba-ICLR27 && [ -d src ] || mv */* . 2>/dev/null; true)"),
+    (r"!git log --oneline -1", "!ls"),
+    (r"git clone https://github\.com/rogerpanel/CV\.git && cd CV/lipmamba", "# download the repository from the anonymous link, unzip it, and cd into it"),
+    (r"/kaggle/working/CV/lipmamba", "/kaggle/working/LipMamba-ICLR27"), (r"/content/CV/lipmamba", "/content/LipMamba-ICLR27"),
+    (r"rm -rf /kaggle/working/CV\b", "rm -rf /kaggle/working/LipMamba-ICLR27 /kaggle/working/repo.zip"),
     (r"`?(docs/)?ROBUSTIDPS_INTEGRATION\.md`?", "the deployment notes (omitted)"),
     (r"`?(docs/)?MODEL_CARD\.md`?", "the model card (omitted)"),
     (r"Copyright \(c\) \d{4} .*", "Copyright (c) 2026 Anonymous Authors"),
@@ -50,7 +57,7 @@ REPLACEMENTS = [
     (r"robustidps\.ai", "the deployment platform"), (r"RobustIDPS(\.ai)?", "the deployment platform"),
     (r"`robustidps_web_app/`|`integrated_ai_ids/`", "the deployment code"),
 ]
-TEXT_EXT = {".md", ".py", ".txt", ".yaml", ".yml", ".toml", ".cfg", ".tex", ".bib", ""}
+TEXT_EXT = {".md", ".py", ".txt", ".yaml", ".yml", ".toml", ".cfg", ".tex", ".bib", ".ipynb", ".json", ""}
 
 
 def scrub(text: str) -> str:
