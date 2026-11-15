@@ -49,8 +49,8 @@ def test_is_external():
 
 
 def test_normalise_accepts_what_models_return():
-    a = normalise({"kind": "tool", "tool": "read_doc", "args": '{"doc_id": "D1"}', "thought": None})
-    assert a["args"] == {"doc_id": "D1"} and a["thought"] == "" and a["kind"] == "tool"
+    a = normalise({"kind": "tool", "tool": "read_doc", "args": '{"doc_id": "D1"}', "note": None})
+    assert a["args"] == {"doc_id": "D1"} and a["note"] == "" and a["kind"] == "tool"
     assert normalise({"kind": "dance"})["kind"] == "finish" and normalise(None)["kind"] == "finish"
     assert normalise({"kind": "tool", "args": "not json"})["args"] == {"raw": "not json"}
 
@@ -191,7 +191,7 @@ def test_end_to_end_training_on_scripted_sessions():
 
 
 def test_parse_action():
-    a = G.parse_action('Sure. {"thought": "t", "kind": "tool", "tool": "read_doc", "args": {"doc_id": "D1", "to": ""}}')
+    a = G.parse_action('Sure. {"note": "t", "kind": "tool", "tool": "read_doc", "args": {"doc_id": "D1", "to": ""}}')
     assert a["tool"] == "read_doc" and a["args"] == {"doc_id": "D1"}             # unused arguments are dropped
     assert G.parse_action("no json here")["kind"] == "finish" and G.parse_action(None)["kind"] == "finish"
     assert G.parse_action("{broken")["kind"] == "finish"
@@ -232,7 +232,7 @@ class _Claude:
 def test_claude_policy_reads_actions_refusals_and_usage():
     usage = NS(input_tokens=100, output_tokens=20, cache_read_input_tokens=50, cache_creation_input_tokens=None)
     args = {n: "" for n in gen_claude.ARG_NAMES} | {"doc_id": "D2"}
-    text = json.dumps({"thought": "read", "kind": "tool", "tool": "read_doc", "args": args, "to": "", "content": ""})
+    text = json.dumps({"note": "read D2", "kind": "tool", "tool": "read_doc", "args": args, "to": "", "content": ""})
     ok = NS(stop_reason="end_turn", model="claude-opus-5-5", usage=usage,
             content=[NS(type="thinking", thinking=""), NS(type="text", text=text)])
     p = gen_claude.ClaudePolicy(_Claude(ok), "claude-opus-5-5", "low", True, True)
@@ -243,6 +243,33 @@ def test_claude_policy_reads_actions_refusals_and_usage():
     refused = NS(stop_reason="refusal", model="claude-opus-4-8", usage=usage, content=[], stop_details=NS(category="cyber"))
     p = gen_claude.ClaudePolicy(_Claude(refused), "claude-opus-5-5", "low", True, True)
     assert normalise(p.act("SYS", TURNS))["kind"] == "finish" and p.refusals == 1
+    assert p.refusal_categories == {"cyber": 1}
+
+
+def test_agents_are_not_asked_for_their_reasoning():
+    """A live trial had every step declined as `reasoning_extraction` when the format asked for a "thought"."""
+    from conformalguard.mas.sim import ACTION_KEYS, FORMAT, system_prompt
+    w = make_world(0)
+    text = (FORMAT + " ".join(system_prompt(r, w) for r in ("coordinator", "researcher", "communicator", "admin"))
+            + gen_claude.ARGS_NOTE + json.dumps(gen_claude.SCHEMA)).lower()
+    for word in ("thought", "reasoning", "think", "step by step", "chain of"):
+        assert word not in text, word
+    assert "note" in ACTION_KEYS and set(gen_claude.SCHEMA["properties"]) == set(ACTION_KEYS)
+
+
+def test_generation_stops_when_the_provider_refuses_most_steps(tmp_path):
+    class Refused:
+        usage = {"calls": 1}
+        def __init__(self): self.refusals, self.refusal_categories = 0, {}
+        def act(self, system, turns):
+            self.refusals += 1
+            self.refusal_categories["reasoning_extraction"] = self.refusals
+            return dict(G.DECLINED)
+    counts = G.run_many(Refused, range(200), tmp_path / "s.jsonl", 2, {"agent_model": "x"})
+    assert counts["stopped"] and counts["written"] < 40
+    assert "reasoning_extraction" in G.usage_report(tmp_path / "s.jsonl")
+    ok = G.run_many(ScriptedPolicy, range(30), tmp_path / "ok.jsonl", 2, {"agent_model": "x"})
+    assert not ok["stopped"] and ok["written"] == 30
 
 
 def test_openai_request_and_policy():
@@ -250,7 +277,7 @@ def test_openai_request_and_policy():
     assert req["messages"][0] == {"role": "system", "content": "SYS"} and len(req["messages"]) == 4
     assert req["response_format"] == {"type": "json_object"}
     assert "response_format" not in gen_openai.build_request("SYS", TURNS, "m", json_mode=False)
-    msg = NS(content='{"thought": "", "kind": "message", "to": "coordinator", "content": "found REF-123456"}', refusal=None)
+    msg = NS(content='{"note": "", "kind": "message", "to": "coordinator", "content": "found REF-123456"}', refusal=None)
     resp = NS(choices=[NS(message=msg)], model="some-model-2026", usage=NS(prompt_tokens=80, completion_tokens=12))
     client = NS(chat=NS(completions=NS(create=lambda **r: resp)))
     p = gen_openai.OpenAIPolicy(client, "some-model", True)
@@ -281,7 +308,7 @@ def test_run_many_resumes_and_skips_failed_sessions(tmp_path):
 def test_sessions_end_even_if_agents_only_call_tools():
     class ToolHappy:
         def act(self, system, turns):
-            return {"thought": "", "kind": "tool", "tool": "read_inbox", "args": {}}
+            return {"note": "", "kind": "tool", "tool": "read_inbox", "args": {}}
     s = run_session(make_world(5), ToolHappy())
     actions = [e for e in s["events"] if e["type"] == "action"]
     assert actions and all(e["kind"] == "tool" for e in actions)

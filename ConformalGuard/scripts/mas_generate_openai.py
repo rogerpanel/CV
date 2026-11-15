@@ -44,6 +44,7 @@ class OpenAIPolicy:
         self.client, self.model, self.json_mode = client, model, json_mode
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0}
         self.refusals = 0
+        self.refusal_categories: dict[str, int] = {}
         self.served_by: set[str] = set()
 
     def act(self, system: str, turns: list[dict]) -> dict:
@@ -64,7 +65,9 @@ class OpenAIPolicy:
         if getattr(resp, "model", None):
             self.served_by.add(resp.model)
         action, refused = read_action(resp)
-        self.refusals += refused
+        if refused:
+            self.refusals += 1
+            self.refusal_categories["refusal"] = self.refusal_categories.get("refusal", 0) + 1
         return action
 
 
@@ -85,6 +88,8 @@ def main() -> None:
                         {"agent_model": args.model, "provider": "openai"})
     print(f"done: {counts['written']} sessions written this run, {counts['failed']} failed (rerun to retry); file {path}")
     print("usage:", G.usage_report(path))
+    if counts["stopped"]:
+        sys.exit(2)
 
 
 if __name__ == "__main__":

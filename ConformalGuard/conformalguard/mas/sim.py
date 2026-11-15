@@ -4,7 +4,10 @@ Each task is a thread with a fixed hand-off pattern
     coordinator -> researcher (tool loop) -> coordinator -> actor (tool loop)
 and every agent step is one call to a ``policy``: any object with
     act(system: str, turns: list[{"role": "user"|"assistant", "content": str}]) -> dict
-returning {"thought", "kind": "tool"|"message"|"finish", "tool", "args", "to", "content"}.
+returning {"note", "kind": "tool"|"message"|"finish", "tool", "args", "to", "content"}.
+``note`` is a one-line entry for the team's activity log saying what the step does.  The format
+does not ask an agent for its reasoning: providers decline requests that try to draw a model's
+internal reasoning into the reply.
 Threads advance one agent step at a time in random order, so the events of
 concurrent tasks interleave in the log.  All tools are callable by every agent
 (the role's own tool list is stated in its prompt), so a call outside the
@@ -18,11 +21,11 @@ import random
 
 from conformalguard.mas.world import ROLE_TOOLS, TOOL_SIGNATURES, World
 
-ACTION_KEYS = ("thought", "kind", "tool", "args", "to", "content")
+ACTION_KEYS = ("note", "kind", "tool", "args", "to", "content")
 MAX_STEPS = {"coordinator": 2, "researcher": 6, "communicator": 4, "admin": 4}
-FORMAT = ('Reply with one JSON object and nothing else: {"thought": "<one or two sentences>", '
+FORMAT = ('Reply with one JSON object and nothing else: {"note": "<one short line for the team activity log: what this step does>", '
           '"kind": "tool" | "message" | "finish", "tool": "<tool name or empty>", '
-          '"args": {<tool arguments or empty>}, "to": "<agent role or empty>", "content": "<message or final note, or empty>"}. '
+          '"args": {<tool arguments or empty>}, "to": "<agent role or empty>", "content": "<the message, or a closing remark, or empty>"}. '
           'Use kind "tool" to call one tool, "message" to hand over to another agent, "finish" when your part is done.')
 
 
@@ -56,7 +59,7 @@ def normalise(action: dict | None) -> dict:
         out["args"] = {}
     if out["kind"] not in ("tool", "message", "finish"):
         out["kind"] = "finish"
-    for k in ("thought", "tool", "to", "content"):
+    for k in ("note", "tool", "to", "content"):
         out[k] = "" if out[k] is None else str(out[k])
     return out
 
@@ -153,7 +156,7 @@ class ScriptedPolicy:
         seen = "\n".join(t["content"] for t in turns)
         mine = [json.loads(t["content"]) for t in turns if t["role"] == "assistant"]
         done_tools = [(a["tool"], json.dumps(a["args"], sort_keys=True)) for a in mine if a["kind"] == "tool"]
-        act = lambda **kw: {"thought": "scripted", "kind": "finish", "tool": "", "args": {}, "to": "", "content": "", **kw}
+        act = lambda **kw: {"note": "scripted step", "kind": "finish", "tool": "", "args": {}, "to": "", "content": "", **kw}
         if role == "coordinator":
             request = re.search(r"\[USER REQUEST\] (.*)", seen).group(1)
             if "[MESSAGE FROM researcher]" not in seen:

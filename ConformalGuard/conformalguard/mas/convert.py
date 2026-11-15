@@ -2,7 +2,7 @@
 
 Nodes (the four types of the paper's schema)
   message   a user request; an agent's hand-over message or final note
-  agent     one agent invocation (text: role and thought)
+  agent     one agent invocation (text: role and its one-line activity note)
   tool      a proposed tool call (text: tool name and arguments)
   memory    what a tool returned
 
@@ -87,7 +87,7 @@ def session_to_trace(session: dict, sid: int, thread_feature: bool = True, cites
             inbox.setdefault(f"coordinator#{th}", []).append((u, "replies"))
         elif ev["type"] == "action":
             name, role = ev["agent"], ev["role"]
-            a = add(AGENT, f"{role}: {ev.get('thought', '')}", th, role)
+            a = add(AGENT, f"{role}: {ev.get('note', '')}", th, role)
             for src, rel in inbox.pop(name, []):
                 tr._edge(src, a, rel)
             if name in last_agent:

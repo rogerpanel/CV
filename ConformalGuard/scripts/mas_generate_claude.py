@@ -12,6 +12,9 @@ Labels are computed later, by code, from the event log (conformalguard/mas/label
 Notes
 - Every agent step is one Messages request with the agent's own history.  The reply is a
   JSON action, requested as structured output (pass --no-schema to parse plain JSON instead).
+- The action format asks for a one-line activity note, not for the agent's reasoning: a request
+  that tries to draw the model's internal reasoning into the reply is declined (category
+  `reasoning_extraction`), and that category is not retried on a fallback model.
 - Refusals: some workspaces contain an injected instruction, so a request can be declined by
   safety classifiers.  Server-side fallbacks are on by default (`fallbacks="default"`), so a
   declined request is re-run on a fallback model in the same call; the session records which
@@ -19,8 +22,11 @@ Notes
   Haiku models have no server-side fallback, so it is switched off for them.
 - Prompt caching: the last turn of each request is a cache breakpoint, so an agent's later
   steps read its earlier history from cache once the history is long enough to be cached.
-- Request construction and reply handling are unit-tested with a stand-in client.  This
-  script has not been run against the live API in the environment where it was written.
+- Sessions record how many steps were refused and in which category.  Generation stops early
+  if more than a quarter of the steps are refused, because such sessions are not usable.
+- Request construction and reply handling are unit-tested with a stand-in client.  The author
+  has not run this script against the live API; a first live trial (four sessions) had every
+  step declined as described above, which is why the action format was changed.
 """
 
 from __future__ import annotations
@@ -39,7 +45,7 @@ ARG_NAMES = ("doc_id", "name", "to", "subject", "body", "channel", "text", "url"
 SCHEMA = {
     "type": "object",
     "properties": {
-        "thought": {"type": "string"},
+        "note": {"type": "string"},
         "kind": {"type": "string", "enum": ["tool", "message", "finish"]},
         "tool": {"type": "string"},
         "args": {"type": "object", "properties": {n: {"type": "string"} for n in ARG_NAMES},
@@ -47,7 +53,7 @@ SCHEMA = {
         "to": {"type": "string"},
         "content": {"type": "string"},
     },
-    "required": ["thought", "kind", "tool", "args", "to", "content"],
+    "required": ["note", "kind", "tool", "args", "to", "content"],
     "additionalProperties": False,
 }
 ARGS_NOTE = ("\nIn \"args\", fill in only the arguments of the tool you call and leave every other "
@@ -70,12 +76,12 @@ def build_request(system: str, turns: list[dict], model: str, effort: str, fallb
     return req
 
 
-def read_action(resp) -> tuple[dict, bool]:
-    """(action, refused) from a Messages response."""
+def read_action(resp) -> tuple[dict, str | None]:
+    """(action, refusal category or None) from a Messages response."""
     if resp.stop_reason == "refusal":
-        return dict(G.DECLINED), True
+        return dict(G.DECLINED), str(getattr(getattr(resp, "stop_details", None), "category", None) or "unspecified")
     text = next((b.text for b in resp.content if b.type == "text"), None)
-    return G.parse_action(text), False
+    return G.parse_action(text), None
 
 
 class ClaudePolicy:
@@ -87,6 +93,7 @@ class ClaudePolicy:
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cache_read_input_tokens": 0,
                       "cache_creation_input_tokens": 0}
         self.refusals = 0
+        self.refusal_categories: dict[str, int] = {}
         self.served_by: set[str] = set()
 
     def act(self, system: str, turns: list[dict]) -> dict:
@@ -107,8 +114,10 @@ class ClaudePolicy:
             self.usage[k] += int(getattr(usage, k, 0) or 0)
         if getattr(resp, "model", None):
             self.served_by.add(resp.model)
-        action, refused = read_action(resp)
-        self.refusals += refused
+        action, category = read_action(resp)
+        if category is not None:
+            self.refusals += 1
+            self.refusal_categories[category] = self.refusal_categories.get(category, 0) + 1
         return action
 
 
@@ -134,6 +143,8 @@ def main() -> None:
                         {"agent_model": args.model, "provider": "anthropic", "effort": args.effort})
     print(f"done: {counts['written']} sessions written this run, {counts['failed']} failed (rerun to retry); file {path}")
     print("usage:", G.usage_report(path))
+    if counts["stopped"]:
+        sys.exit(2)
 
 
 if __name__ == "__main__":

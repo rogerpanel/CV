@@ -26,7 +26,9 @@ our contact at Northwind". Tools are mock functions. Nothing has a real side eff
 coordinator, researcher and acting agent (communicator or admin); the hand-over pattern
 coordinator → researcher → coordinator → actor is fixed, and what each agent says and does is
 decided by the model that plays it. One agent step is one model call that returns a JSON
-action (call a tool, hand over, or finish). Threads advance one step at a time in random
+action (call a tool, hand over, or finish). The action carries a one-line activity note for the
+team log; agents are not asked for their reasoning, because providers decline requests that try
+to draw a model's internal reasoning into the reply. Threads advance one step at a time in random
 order, so concurrent tasks interleave in the log.
 
 Three design choices carry the experiment:
@@ -119,6 +121,11 @@ a smoke run and is not a result.
 Outputs: `results.json` (every per-split number, aggregates, paired tests, configuration, data
 counts, code commit) and `summary.md` (the tables).
 
+Each session records how many agent steps the provider refused and in which category, and
+generation stops early if more than a quarter of the steps are refused.
+
 The two generation scripts have unit tests for request construction and reply handling with
-stand-in clients. Neither has been run against the live service in the environment where it
-was written.
+stand-in clients. A first live trial of the Claude script (four sessions) had every agent step
+declined in the `reasoning_extraction` category, because the action format then asked for a
+"thought"; the format now asks for an activity note instead. The corrected format has not yet
+been run live.
