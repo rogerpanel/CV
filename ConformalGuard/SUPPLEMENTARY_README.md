@@ -20,7 +20,8 @@ Everything in the paper can be regenerated from this package.
 | In-domain recalibration and one threshold per category | `scripts/rjudge_run.py --protocols random,recal` | end of `docs/RJUDGE_EXPERIMENT.md` |
 
 `notebooks/rjudge_kaggle_extra.ipynb` runs the three R-Judge experiments (results in `results/kaggle_extra/`);
-`notebooks/mas_rerun_kaggle.ipynb` runs the multi-agent experiment, which has no result yet. Their unit tests are in `tests/test_mas.py` and
+`notebooks/mas_rerun_kaggle.ipynb` runs the multi-agent experiment (results and their limits in
+`results/mas_kaggle_v2/README.md`). Their unit tests are in `tests/test_mas.py` and
 `tests/test_guards.py`; the tests use stand-ins for the language models and need no API key.
 
 A CPU-only variant of the R-Judge experiment with TF-IDF features

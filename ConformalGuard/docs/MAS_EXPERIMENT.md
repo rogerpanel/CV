@@ -135,6 +135,14 @@ first one the provider accepts (structured output, then JSON asked for in the pr
 `scripts/mas_cost.py` scales the measured token usage of a few sessions to a planned number of
 sessions, at prices you supply.
 
+## Results
+
+A full run with simulator version 2 (600 sessions with `claude-opus-5-5` as the agents, 69 with
+`gpt-6-astra`) is in `results/mas_kaggle_v2/`; its README gives the findings and the limits that
+belong with them. The most important limit: a hand-written rule on the provenance edges
+(`scripts/mas_rule_baseline.py`) reproduces the labels almost exactly, so the run speaks for the
+representation and the guarantees, not for the need to learn a scorer.
+
 ## What the first live runs showed (simulator version 1)
 
 Kept on record in `results/kaggle_extra/mas_pilot_v1/`; none of it is a result.
@@ -150,5 +158,4 @@ Kept on record in `results/kaggle_extra/mas_pilot_v1/`; none of it is a result.
   Version 2 states the budget in the prompt and gives the agent a final turn to hand over.
 
 Neither defect was caught by the unit tests, because the scripted stand-in for the agents never
-reaches a limit and no stand-in can reproduce a provider's classifier. Version 2 has not yet been
-run live.
+reaches a limit and no stand-in can reproduce a provider's classifier.

@@ -113,3 +113,20 @@ def run_split(traces, feats, targets, infos, parts, seed, device, names, train_k
                              [infos[i] for i in te], [1 + (traces[i].attack_type == "concurrent") for i in te],
                              np.random.default_rng(seed))
     return res
+
+
+def provenance_rule(trace, meta) -> np.ndarray:
+    """A hand-written reference rule, one 0/1 score per step: the proposed tool call names an external
+    destination and has a ``cites`` edge from a memory entry whose resource is restricted.
+
+    It uses exactly what the graph scorer is given.  Where it matches the labels, a learned scorer on the
+    graph cannot be credited with discovering anything a monitor could not have written down.
+    """
+    from conformalguard.mas import convert as C
+    restricted = C._C0 + C.CLASSES.index("restricted")
+    sources: dict[int, list[int]] = {}
+    for src, dst, rel in trace.edges:
+        if rel == REL["cites"]:
+            sources.setdefault(dst, []).append(src)
+    return np.array([float(meta[act, C._D0] == 1 and any(meta[s, restricted] == 1 for s in sources.get(act, [])))
+                     for _, act in trace.steps])

@@ -371,3 +371,15 @@ def test_sessions_end_even_if_agents_only_call_tools():
     assert handed and all(h["handover"].split("#")[0] in ("researcher", "coordinator", "communicator", "admin") for h in handed)
     tr, meta, y, _ = C.session_to_trace(s, 0)
     assert len(y) == len(actions) and all(src < dst for src, dst, _ in tr.edges)
+
+
+def test_provenance_rule_matches_exfiltration_labels_on_scripted_sessions():
+    hit = miss = false = 0
+    for i, s in enumerate(sessions(80, gullible=False)):
+        tr, meta, y, info = C.session_to_trace(s, i)
+        fire = X.provenance_rule(tr, meta) > 0
+        assert len(fire) == len(y)
+        hit += int((fire & (y == L.VIOL)).sum()); miss += int((~fire & (y == L.VIOL)).sum()); false += int((fire & (y == L.SAFE)).sum())
+        tr2, meta2, _, _ = C.session_to_trace(s, i, cites=False)
+        assert not X.provenance_rule(tr2, meta2).any()             # without provenance edges the rule sees nothing
+    assert hit > 5 and miss == 0 and false == 0
