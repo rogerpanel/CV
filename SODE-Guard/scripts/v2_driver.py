@@ -33,6 +33,119 @@ ABLATIONS = ("sode_noposthoc sode_perclass sode_ce sode_focal sode_cb sode_sampl
              "sode_at_pgd sode_at_trades mlp_at_pgd ode_rs sdetgnn").split()
 STATUS: dict[str, str] = {}
 LOCK = threading.Lock()
+SYNC_LOCK = threading.Lock()
+SYNC: dict = {"out": None, "dst": None}       # set in main() when --sync-to is given
+
+
+def sync_tree(src: Path, dst: Path) -> int:
+    """Copy new or changed files from src to dst (temporary file, then rename).
+    Half-written ``.tmp.`` files are never copied. Returns the number copied."""
+    n = 0
+    if not src.is_dir():
+        return 0
+    for f in src.rglob("*"):
+        if not f.is_file() or ".tmp." in f.name or "__pycache__" in f.parts:
+            continue
+        d = dst / f.relative_to(src)
+        try:
+            st = f.stat()
+            if d.exists():
+                ds = d.stat()
+                if ds.st_size == st.st_size and ds.st_mtime >= st.st_mtime - 1:
+                    continue
+            d.parent.mkdir(parents=True, exist_ok=True)
+            tmp = d.with_name(d.name + ".tmp.sync")
+            shutil.copy2(f, tmp)
+            tmp.replace(d)
+            n += 1
+        except (FileNotFoundError, OSError) as e:      # file replaced while copying: next sync gets it
+            print(f"[{now()}] sync skipped {f.name}: {e}", flush=True)
+    return n
+
+
+def _readable(f: Path) -> bool:
+    try:
+        if f.suffix == ".pt":
+            import torch
+            torch.load(f, map_location="cpu")
+        elif f.suffix == ".pkl":
+            import pickle
+            with open(f, "rb") as fh:
+                pickle.load(fh)
+        elif f.suffix == ".npz":
+            import numpy as np
+            with np.load(f) as z:
+                for k in z.files:
+                    z[k]
+        elif f.suffix == ".json":
+            json.loads(f.read_text())
+        return True
+    except Exception:
+        return False
+
+
+def check_tree(local: Path, remote: Path | None = None) -> list[str]:
+    """Set aside unreadable checkpoints, predictions and results (e.g. from a
+    session that died mid-write) and forget everything derived from them, so
+    the next run redoes that work. Returns the bad paths."""
+    bad = []
+    if not local.is_dir():
+        return bad
+    for f in sorted(local.rglob("*")):
+        if not f.is_file() or f.suffix not in (".pt", ".pkl", ".npz", ".json") or ".tmp." in f.name or "logs" in f.parts:
+            continue
+        if _readable(f):
+            continue
+        rel = f.relative_to(local)
+        bad.append(str(rel))
+        for root in (local, remote):
+            if root is not None and (root / rel).exists():
+                (root / rel).replace(root / rel.with_name(rel.name + ".corrupt"))
+        model = f.stem
+        if f.name.startswith(("preds_attack_", "preds_cert_")):   # forget the stage that wrote it
+            sec, model = ("attack", f.stem[len("preds_attack_"):]) if f.name.startswith("preds_attack_") \
+                else ("certify", f.stem[len("preds_cert_"):])
+            res = f.parent / "results.json"
+            if res.exists() and _readable(res):
+                r = json.loads(res.read_text())
+                r.get(sec, {}).pop(model, None)
+                res.write_text(json.dumps(r, indent=2))
+        if f.suffix in (".pt", ".pkl"):          # drop results and predictions of that model in this seed
+            res = f.parent / "results.json"
+            if res.exists() and _readable(res):
+                r = json.loads(res.read_text())
+                for sec in ("train", "attack", "certify"):
+                    r.get(sec, {}).pop(model, None)
+                res.write_text(json.dumps(r, indent=2))
+            for pf in f.parent.glob(f"preds_*_{model}.npz"):
+                pf.unlink()
+                if remote is not None and (remote / pf.relative_to(local)).exists():
+                    (remote / pf.relative_to(local)).unlink()
+    if remote is not None:                   # make the cleaned results the persistent copy too
+        sync_tree(local, remote)
+    return bad
+
+
+def companions(out: Path) -> list[Path]:
+    return [out, out.parent / (out.name + "_fullcheck"), out.parent / (out.name + "_classtime")]
+
+
+def sync_all(reason: str = ""):
+    """Mirror the local results folders to the persistent folder (e.g. Google Drive)."""
+    if not SYNC["dst"]:
+        return
+    with SYNC_LOCK:
+        n = sum(sync_tree(src, Path(SYNC["dst"]) / src.name) for src in companions(Path(SYNC["out"])))
+    if n:
+        print(f"[{now()}] synced {n} file(s) to {SYNC['dst']} {reason}", flush=True)
+
+
+def write_progress(final: bool = False):
+    if SYNC["out"]:
+        p = Path(SYNC["out"]) / "progress.json"
+        tmp = p.with_name("progress.tmp.json")
+        tmp.write_text(json.dumps({"updated": time.ctime(), "finished": final, "status": STATUS}, indent=2))
+        tmp.replace(p)
 
 
 def now():
@@ -51,6 +164,7 @@ def run(cmd: list[str], gpu: int | None, log: Path, deadline: float, margin: flo
     with LOCK:
         STATUS[tag] = "running"
         print(f"[{now()}] start {tag} (gpu {gpu}, {left / 3600:.1f} h left)", flush=True)
+        write_progress()
     with open(log, "a") as fh:
         fh.write(f"\n### {time.ctime()} {' '.join(cmd)}\n")
         fh.flush()
@@ -63,10 +177,14 @@ def run(cmd: list[str], gpu: int | None, log: Path, deadline: float, margin: flo
             with LOCK:
                 STATUS[tag] = "stopped at the time budget (resumes next run)"
                 print(f"[{now()}] {tag}: stopped at the time budget", flush=True)
+                write_progress()
+            sync_all("at the time budget")
             return False
     with LOCK:
         STATUS[tag] = "done" if rc == 0 else f"failed (exit {rc}, see {log.name})"
         print(f"[{now()}] {tag}: {STATUS[tag]}", flush=True)
+        write_progress()
+    sync_all(f"after {tag}")
     return rc == 0
 
 
@@ -97,6 +215,7 @@ def run_groups(groups: dict[int | None, list], a, logs: Path, label: str):
             t.join(timeout=a.heartbeat)
         if any(t.is_alive() for t in threads):
             tail(logs)
+            sync_all("(periodic)")
 
 
 def tail(logs: Path, n=3):
@@ -118,7 +237,10 @@ def split_seeds(seeds, gpus):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
-    ap.add_argument("--deadline", type=float, required=True, help="unix time by which every process must have stopped")
+    ap.add_argument("--deadline", type=float, default=None, help="unix time by which every process must have stopped")
+    ap.add_argument("--sync-to", default=None, help="persistent folder (e.g. on Google Drive) mirrored after every job")
+    ap.add_argument("--sync-only", action="store_true", help="mirror --out to --sync-to once and exit")
+    ap.add_argument("--restore", action="store_true", help="copy --sync-to back into --out (and companions) and exit")
     ap.add_argument("--margin", type=float, default=600, help="seconds kept free before the deadline")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     ap.add_argument("--profile", default="lite")
@@ -128,6 +250,20 @@ def main():
     ap.add_argument("--extra-args", default="", help="extra v2_run.py options for every train/attack/certify call")
     a = ap.parse_args()
     out = Path(a.out)
+    SYNC.update(out=str(out), dst=a.sync_to)
+    if a.restore or a.sync_only:
+        if not a.sync_to:
+            raise SystemExit("--restore/--sync-only need --sync-to")
+        if a.restore:
+            n = sum(sync_tree(Path(a.sync_to) / d.name, d) for d in companions(out))
+            print(f"restored {n} file(s) from {a.sync_to}")
+            bad = [b for d in companions(out) for b in check_tree(d, Path(a.sync_to) / d.name)]
+            print(f"unreadable files set aside (their work will be redone): {bad}" if bad else "all restored files readable")
+        else:
+            sync_all("(sync-only)")
+        return
+    if a.deadline is None:
+        raise SystemExit("--deadline is required")
     logs = out / "logs"
     logs.mkdir(parents=True, exist_ok=True)
     try:
@@ -175,19 +311,20 @@ def main():
         models = ["sode", "ode", "mlp", "lgbm", "sode_at", "mlp_at"]
         g = gpus[-1]
         for s in (0, 1, 2):
-            extra_groups[g] += [(t, c) for t, c in seed_jobs(a, s, models, out=str(ct),
+            extra_groups[g] += [(f"classtime {t}", c) for t, c in seed_jobs(a, s, models, out=str(ct),
                                                               extra=("--split", "class_time", "--sanity-seeds"))
                                 if not t.startswith("certify")]
         extra_groups[g].append(("classtime aggregate", RUN + ["aggregate", "--out", str(ct), "--n-boot", "500"]))
     if any(extra_groups.values()):
         run_groups(extra_groups, a, logs, "extras")
 
-    (out / "progress.json").write_text(json.dumps({"finished": time.ctime(), "status": STATUS}, indent=2))
+    write_progress(final=True)
     print("\n=== status ===")
     for k, v in STATUS.items():
         print(f"{v:48s} {k}")
     pending = [k for k, v in STATUS.items() if v != "done"]
-    print("\nALL DONE" if not pending else f"\n{len(pending)} job(s) not finished: run the notebook again with this output attached.")
+    sync_all("(final)")
+    print("\nALL DONE" if not pending else f"\n{len(pending)} job(s) not finished: run the notebook again: it resumes from the saved results.")
 
 
 if __name__ == "__main__":

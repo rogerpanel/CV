@@ -66,3 +66,13 @@ browser tab staying open.
 * All writes are atomic (temporary file, then rename), so a stopped process never leaves a truncated checkpoint or `results.json`.
 * **To continue in a further run:** attach the notebook's own previous output (*Add Input → Notebook Output Files*) and commit again. Finished models, attacks and certificates are skipped.
 * **Why not a TPU or the P100:** the code is CUDA PyTorch, and the SDE solver and the tree models do not run on a TPU without a rewrite. Recent PyTorch builds no longer support the P100's architecture.
+
+## Running on Colab (disconnect-proof)
+
+`notebooks/v2_rerun_ics3d_colab.ipynb` starts `scripts/v2_driver.py` as a
+**background process**, so a browser disconnect or a stopped cell does not stop it.
+
+* **Where results live:** work happens on the runtime's local disk (`/content/v2`). After every finished job, and every 5 minutes, it is mirrored to Google Drive (`MyDrive/sode_guard_v2/v2`, `.../v2_fullcheck`, `.../v2_classtime`).
+* **After a reset or disconnect:** *Runtime → Run all*. The notebook restores from Drive (`--restore`) and starts the background run again if none is active. Every stage skips finished work.
+* **Damaged files:** the restore sets aside any checkpoint, prediction or results file that cannot be read, which happens when a session dies mid-write, for example with the earlier notebook that wrote straight to Drive. It also drops the results derived from such a file, so that work is redone.
+* **Extras:** `EXTRAS = ['ablations', 'fullcheck', 'classtime']` runs all three after the core. The core is aggregated first, so its results are usable early.
