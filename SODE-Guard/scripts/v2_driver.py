@@ -241,6 +241,7 @@ def main():
     ap.add_argument("--sync-to", default=None, help="persistent folder (e.g. on Google Drive) mirrored after every job")
     ap.add_argument("--sync-only", action="store_true", help="mirror --out to --sync-to once and exit")
     ap.add_argument("--restore", action="store_true", help="copy --sync-to back into --out (and companions) and exit")
+    ap.add_argument("--check", action="store_true", help="set aside unreadable files in --out (and companions) and exit")
     ap.add_argument("--margin", type=float, default=600, help="seconds kept free before the deadline")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     ap.add_argument("--profile", default="lite")
@@ -252,6 +253,10 @@ def main():
     a = ap.parse_args()
     out = Path(a.out)
     SYNC.update(out=str(out), dst=a.sync_to)
+    if a.check:
+        bad = [b for d in companions(out) for b in check_tree(d)]
+        print(f"unreadable files set aside (their work will be redone): {bad}" if bad else "all files readable")
+        return
     if a.restore or a.sync_only:
         if not a.sync_to:
             raise SystemExit("--restore/--sync-only need --sync-to")
