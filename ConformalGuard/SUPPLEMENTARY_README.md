@@ -10,9 +10,17 @@ Everything in the paper can be regenerated from this package.
 | Section 6.2, Figure 2, Appendix E (simulations) | `python scripts/sim_checks.py --figure fig2_aci_simulation.pdf` | Synthetic scores, fixed seeds, CPU, about 3 minutes. |
 | The guarantees (Propositions 1 and 2, Corollary 1, the two-sided guard) | `pip install numpy torch scikit-learn pytest && python -m pytest -q` | Monte-Carlo checks of each bound; Proposition 2 asserted at every horizon on shifted, adversarial and delayed-feedback sequences; a test that no scorer sees anything after the action it scores. |
 
-Further experiments that are not in the paper (LLM guards calibrated conformally, the step-level
-guarantee on injection records, in-domain recalibration) are described at the end of
-`docs/RJUDGE_EXPERIMENT.md` and run by `notebooks/rjudge_kaggle_extra.ipynb`.
+## Experiments in progress (not in the paper; no results in this package yet)
+
+| Experiment | Code | Description |
+|---|---|---|
+| Multi-agent traces with concurrent tasks, step labels assigned by code | `conformalguard/mas/`, `scripts/mas_generate_claude.py`, `scripts/mas_generate_openai.py`, `scripts/mas_run.py`, `scripts/mas_show.py` | `docs/MAS_EXPERIMENT.md` |
+| Proposition 1 on real step labels (R-Judge injection records, labels from InjecAgent's attacker-tool list) | `conformalguard/rjudge/steps.py`, `scripts/rjudge_steps.py` | end of `docs/RJUDGE_EXPERIMENT.md` |
+| LLM judges as guards, calibrated by the same conformal rule | `scripts/rjudge_judge_local.py`, `rjudge_judge_claude.py`, `rjudge_judge_openai.py`, `rjudge_guard_eval.py` | end of `docs/RJUDGE_EXPERIMENT.md` |
+| In-domain recalibration and one threshold per category | `scripts/rjudge_run.py --protocols random,recal` | end of `docs/RJUDGE_EXPERIMENT.md` |
+
+`notebooks/rjudge_kaggle_extra.ipynb` runs all four. Their unit tests are in `tests/test_mas.py` and
+`tests/test_guards.py`; the tests use stand-ins for the language models and need no API key.
 
 A CPU-only variant of the R-Judge experiment with TF-IDF features
 (`--features lsa`, no model download) is in `results/rjudge_lsa_cpu/`.
