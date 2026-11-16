@@ -49,9 +49,14 @@ Run the tests with `pip install -e ".[dev]" && pytest`.
 
 ## What the paper uses, and what it does not
 
-The revised paper rests on three things, all in this repository and all reproducible: the conformal
-layer and its tests, the R-Judge experiment, and the simulations (`SUPPLEMENTARY_README.md` maps each
-table and figure to a command).
+The revised paper rests on the following, all in this repository and all reproducible
+(`SUPPLEMENTARY_README.md` maps each table and figure to a command):
+
+- the conformal layer and its tests;
+- the R-Judge experiments: trained scorers, three LLM judges calibrated as guards, the step-level
+  guarantee on the injection records, and in-domain recalibration;
+- the multi-agent trace experiment (simulator, generated sessions, evaluation, rule baseline);
+- the simulations of the online update.
 
 The following are **not** used by the paper and carry no results. They are scaffolding written for
 the AgentChain-26 experiments of the submitted version, which have been withdrawn because their data
