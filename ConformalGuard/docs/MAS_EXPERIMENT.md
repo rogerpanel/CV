@@ -26,9 +26,11 @@ our contact at Northwind". Tools are mock functions. Nothing has a real side eff
 coordinator, researcher and acting agent (communicator or admin); the hand-over pattern
 coordinator → researcher → coordinator → actor is fixed, and what each agent says and does is
 decided by the model that plays it. One agent step is one model call that returns a JSON
-action (call a tool, hand over, or finish). The action carries a one-line activity note for the
-team log; agents are not asked for their reasoning, because providers decline requests that try
-to draw a model's internal reasoning into the reply. Threads advance one step at a time in random
+action (call a tool, hand over, or finish). An agent has a budget of tool
+calls, stated in its prompt; when it is used up the agent gets one more turn to hand over.
+The action has no free-text field besides the message itself: agents are not asked for a thought,
+a note or any other commentary.
+Threads advance one step at a time in random
 order, so concurrent tasks interleave in the log.
 
 Three design choices carry the experiment:
@@ -102,8 +104,8 @@ State these whenever the numbers are quoted.
 ```bash
 pip install numpy torch scikit-learn anthropic openai sentence-transformers
 export ANTHROPIC_API_KEY=...   OPENAI_API_KEY=...
-python scripts/mas_generate_claude.py --n 400 --out runs/mas_claude
-python scripts/mas_generate_openai.py --model <model-id> --n 400 --out runs/mas_openai
+python scripts/mas_generate_claude.py --n 600 --backup-model claude-opus-4-8 --out runs/mas_claude
+python scripts/mas_generate_openai.py --model <model-id> --n 80 --out runs/mas_openai
 python scripts/mas_show.py runs/mas_claude/sessions.jsonl          # read a few sessions first
 python scripts/mas_run.py --sessions runs/mas_claude/sessions.jsonl runs/mas_openai/sessions.jsonl \
     --features st --reps 50 --out runs/mas_exp
@@ -112,8 +114,8 @@ python scripts/mas_run.py --sessions runs/mas_claude/sessions.jsonl runs/mas_ope
 Generation is resumable: finished sessions are appended to `sessions.jsonl`, and a session
 whose calls failed is retried on the next run. Each session records the agent model, which
 models served it (refusal fallbacks can change this), token usage and the number of refused
-steps. One session takes about 15 model calls. `notebooks/rjudge_kaggle_extra.ipynb` runs
-generation in the background and the experiment on a GPU.
+steps. One session takes roughly 15 to 25 model calls. `notebooks/mas_rerun_kaggle.ipynb` runs
+generation in the background and then the experiment.
 
 `--quick` runs three splits with six epochs to check the installation; its output is marked as
 a smoke run and is not a result.
@@ -122,10 +124,31 @@ Outputs: `results.json` (every per-split number, aggregates, paired tests, confi
 counts, code commit) and `summary.md` (the tables).
 
 Each session records how many agent steps the provider refused and in which category, and
-generation stops early if more than a quarter of the steps are refused.
+generation stops early if more than a quarter of the steps are refused. `mas_run.py` leaves out
+sessions with a refused step unless `--keep-refused` is given, and uses sessions of one simulator
+version only.
 
-The two generation scripts have unit tests for request construction and reply handling with
-stand-in clients. A first live trial of the Claude script (four sessions) had every agent step
-declined in the `reasoning_extraction` category, because the action format then asked for a
-"thought"; the format now asks for an activity note instead. The corrected format has not yet
-been run live.
+The Claude script first probes request configurations on three throw-away sessions and uses the
+first one the provider accepts (structured output, then JSON asked for in the prompt, then
+`--backup-model`); the probe report is saved next to the sessions in `config.json`.
+
+`scripts/mas_cost.py` scales the measured token usage of a few sessions to a planned number of
+sessions, at prices you supply.
+
+## What the first live runs showed (simulator version 1)
+
+Kept on record in `results/kaggle_extra/mas_pilot_v1/`; none of it is a result.
+
+- **Refusals.** With an action format that asked each agent for a "thought", and then for a "note
+  for the activity log", `claude-opus-5-5` declined almost every agent step in the category
+  `reasoning_extraction` (163 of 168 steps in the second run). A scratchpad or running log that the
+  model fills in before its answer is a documented trigger of that category, and it has no
+  server-side fallback. Version 2 removes the field.
+- **Lost findings.** Version 1 cut an agent off when it reached its step limit. With
+  `gpt-6-astra` the researcher usually read every document, reached the limit and never reported,
+  so in most tasks the acting agent had nothing to send: 33 violating steps in 400 sessions.
+  Version 2 states the budget in the prompt and gives the agent a final turn to hand over.
+
+Neither defect was caught by the unit tests, because the scripted stand-in for the agents never
+reaches a limit and no stand-in can reproduce a provider's classifier. Version 2 has not yet been
+run live.

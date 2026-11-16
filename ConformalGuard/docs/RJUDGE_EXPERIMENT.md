@@ -110,6 +110,8 @@ Run together by `notebooks/rjudge_kaggle_extra.ipynb` (which also runs the multi
 | Step-level guarantee | `scripts/rjudge_steps.py --injecagent-dir InjecAgent` | Proposition 1 on real records: step labels for the 414 injection records are derived by code from InjecAgent's attacker-tool list; calibration uses one safe step per trace. |
 | In-domain recalibration | `scripts/rjudge_run.py --protocols random,recal` | Whether calibrating on a few records of the new application category restores the guarantee that a held-out category breaks, and what one threshold per category does on mixed data. |
 
+Results of a full run of all three are in `results/kaggle_extra/` (see its README).
+
 Limits to state with their results:
 
 - **The released Llama judge cannot be calibrated.** Its verdicts are binary and flag 85% of safe
@@ -122,8 +124,9 @@ Limits to state with their results:
 - **API judges.** Ratings are integers from 0 to 100, so thresholds have ties; the conformal rule is
   then conservative (false blocks at or below the target). A refused or unparseable reply counts as
   the highest risk. The Claude script enables server-side refusal fallbacks and records which model
-  served each row. Neither API script has been run against the live service in the environment
-  where it was written; their request construction and response handling are unit-tested with
-  stand-in clients.
+  served each row: in the archived run about a quarter of the causal rows and a third of the
+  full-record rows were served by the fallback model, so that guard is "Opus 5.5 with fallback to
+  Opus 4.8". R-Judge is public, so these models may have seen its records in training; the
+  false-block guarantee does not depend on that, the block rates might.
 - **Small categories.** IoT and Web have 11 and 15 safe records; half of them is too few for a
   finite threshold at small alpha, and the output reports how often that happens.

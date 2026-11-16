@@ -22,7 +22,7 @@ property of the learned scorer.
 | Figure 2 generator | `scripts/make_fig2.py` | Runs on logged scores; refuses to plot a curve that violates Proposition 2. `--demo` uses synthetic scores and watermarks the output. |
 | **R-Judge experiment** (real data, third-party labels): converter, four causal scorers, split protocols, conformal evaluation | `conformalguard/rjudge/`, `scripts/rjudge_run.py`, `docs/RJUDGE_EXPERIMENT.md` | Unit-tested, including that no scorer sees anything after the action it judges. Runs on CPU with TF-IDF features or on GPU with a sentence encoder (`notebooks/rjudge_colab.ipynb`). |
 | LLM guards as scorers (local model, Claude, OpenAI), their conformal calibration, the step-level experiment, in-domain recalibration | `scripts/rjudge_judge_*.py`, `rjudge_guard_eval.py`, `rjudge_steps.py`, `conformalguard/rjudge/{guards,steps}.py`, `notebooks/rjudge_kaggle_extra.ipynb` | Unit-tested with stand-in clients and models; evaluator, step experiment and recalibration smoke-tested on real R-Judge data. The API and model-loading paths have not been run here. |
-| **Multi-agent trace experiment** (simulated workspace, LLM agents, code-derived step labels): simulator, labels, graph conversion, step- and session-level conformal evaluation | `conformalguard/mas/`, `scripts/mas_generate_{claude,openai}.py`, `mas_run.py`, `mas_show.py`, `docs/MAS_EXPERIMENT.md` | Unit-tested with a scripted stand-in for the agents and stand-in API clients; the experiment script is smoke-tested on scripted sessions. The API generation paths have not been run here, and no result exists yet. |
+| **Multi-agent trace experiment** (simulated workspace, LLM agents, code-derived step labels): simulator, labels, graph conversion, step- and session-level conformal evaluation | `conformalguard/mas/`, `scripts/mas_generate_{claude,openai}.py`, `mas_run.py`, `mas_show.py`, `docs/MAS_EXPERIMENT.md` | Unit-tested with a scripted stand-in for the agents and stand-in API clients; the experiment script is smoke-tested on scripted sessions. Two live runs with simulator version 1 exposed defects (provider refusals, lost findings; see `docs/MAS_EXPERIMENT.md`); version 2 has not been run live, and no result exists yet. |
 | LLM-judge baseline on R-Judge | `scripts/rjudge_llm_judge.py` | Prompt construction and parsing unit-tested; model loading needs a GPU and has not been executed here. |
 | Execution graph, builder, framework hooks | `conformalguard/graph/` | Graph and builder unit-tested. The AutoGen / MetaGPT / LangGraph / CrewAI hooks are **untested** against the real frameworks. |
 | DyGFormer-HGT encoder | `conformalguard/encoder/` | Forward pass smoke-tested on CPU. |
@@ -36,6 +36,9 @@ Run the tests with `pip install -e ".[dev]" && pytest`.
 - `results/rjudge_kaggle_t4/{minilm,bge}/`: R-Judge with sentence-encoder features, 100 random and
   100 prompt-grouped splits, two encoders (GPU run): `results.json` with every per-split number and
   `summary.md` with the tables. These are the numbers in the paper.
+- `results/kaggle_extra/`: LLM judges as conformally calibrated guards (local model, Claude, OpenAI), the
+  step-level guarantee on R-Judge's injection records, and in-domain recalibration (GPU run; tables in the
+  `*.md` file of each folder). Its `mas_pilot_v1/` folder is a pilot with known defects, not a result.
 - `results/rjudge_lsa_cpu/RESULTS.md`: the same experiment with TF-IDF features on CPU, 40 splits,
   with per-split JSON.
 - In short: the false-block guarantee holds on exchangeable splits for every scorer and fails under

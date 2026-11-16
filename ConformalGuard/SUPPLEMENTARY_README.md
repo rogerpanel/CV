@@ -10,7 +10,7 @@ Everything in the paper can be regenerated from this package.
 | Section 6.2, Figure 2, Appendix E (simulations) | `python scripts/sim_checks.py --figure fig2_aci_simulation.pdf` | Synthetic scores, fixed seeds, CPU, about 3 minutes. |
 | The guarantees (Propositions 1 and 2, Corollary 1, the two-sided guard) | `pip install numpy torch scikit-learn pytest && python -m pytest -q` | Monte-Carlo checks of each bound; Proposition 2 asserted at every horizon on shifted, adversarial and delayed-feedback sequences; a test that no scorer sees anything after the action it scores. |
 
-## Experiments in progress (not in the paper; no results in this package yet)
+## Further experiments (not in the paper)
 
 | Experiment | Code | Description |
 |---|---|---|
@@ -19,7 +19,8 @@ Everything in the paper can be regenerated from this package.
 | LLM judges as guards, calibrated by the same conformal rule | `scripts/rjudge_judge_local.py`, `rjudge_judge_claude.py`, `rjudge_judge_openai.py`, `rjudge_guard_eval.py` | end of `docs/RJUDGE_EXPERIMENT.md` |
 | In-domain recalibration and one threshold per category | `scripts/rjudge_run.py --protocols random,recal` | end of `docs/RJUDGE_EXPERIMENT.md` |
 
-`notebooks/rjudge_kaggle_extra.ipynb` runs all four. Their unit tests are in `tests/test_mas.py` and
+`notebooks/rjudge_kaggle_extra.ipynb` runs the three R-Judge experiments (results in `results/kaggle_extra/`);
+`notebooks/mas_rerun_kaggle.ipynb` runs the multi-agent experiment, which has no result yet. Their unit tests are in `tests/test_mas.py` and
 `tests/test_guards.py`; the tests use stand-ins for the language models and need no API key.
 
 A CPU-only variant of the R-Judge experiment with TF-IDF features

@@ -15,7 +15,7 @@ from conformalguard.mas.sim import run_session
 from conformalguard.mas.world import make_world
 
 MIN_STEPS_BEFORE_STOP, MAX_REFUSED_SHARE = 20, 0.25      # stop generating if the provider refuses this much
-DECLINED = {"note": "", "kind": "finish", "tool": "", "args": {}, "to": "", "content": "(declined)"}
+DECLINED = {"kind": "finish", "tool": "", "args": {}, "to": "", "content": "(declined)"}
 
 
 def parse_action(text: str | None) -> dict:
@@ -31,7 +31,7 @@ def parse_action(text: str | None) -> dict:
                 return obj
         except ValueError:
             pass
-    return {"note": "", "kind": "finish", "tool": "", "args": {}, "to": "", "content": text[:500]}
+    return {"kind": "finish", "tool": "", "args": {}, "to": "", "content": text[:500]}
 
 
 def done_seeds(path: Path) -> set[int]:

@@ -49,8 +49,8 @@ def test_is_external():
 
 
 def test_normalise_accepts_what_models_return():
-    a = normalise({"kind": "tool", "tool": "read_doc", "args": '{"doc_id": "D1"}', "note": None})
-    assert a["args"] == {"doc_id": "D1"} and a["note"] == "" and a["kind"] == "tool"
+    a = normalise({"kind": "tool", "tool": "read_doc", "args": '{"doc_id": "D1"}', "to": None, "note": "ignored"})
+    assert a["args"] == {"doc_id": "D1"} and a["to"] == "" and a["kind"] == "tool" and "note" not in a
     assert normalise({"kind": "dance"})["kind"] == "finish" and normalise(None)["kind"] == "finish"
     assert normalise({"kind": "tool", "args": "not json"})["args"] == {"raw": "not json"}
 
@@ -191,7 +191,7 @@ def test_end_to_end_training_on_scripted_sessions():
 
 
 def test_parse_action():
-    a = G.parse_action('Sure. {"note": "t", "kind": "tool", "tool": "read_doc", "args": {"doc_id": "D1", "to": ""}}')
+    a = G.parse_action('Sure. {"kind": "tool", "tool": "read_doc", "args": {"doc_id": "D1", "to": ""}}')
     assert a["tool"] == "read_doc" and a["args"] == {"doc_id": "D1"}             # unused arguments are dropped
     assert G.parse_action("no json here")["kind"] == "finish" and G.parse_action(None)["kind"] == "finish"
     assert G.parse_action("{broken")["kind"] == "finish"
@@ -232,7 +232,7 @@ class _Claude:
 def test_claude_policy_reads_actions_refusals_and_usage():
     usage = NS(input_tokens=100, output_tokens=20, cache_read_input_tokens=50, cache_creation_input_tokens=None)
     args = {n: "" for n in gen_claude.ARG_NAMES} | {"doc_id": "D2"}
-    text = json.dumps({"note": "read D2", "kind": "tool", "tool": "read_doc", "args": args, "to": "", "content": ""})
+    text = json.dumps({"kind": "tool", "tool": "read_doc", "args": args, "to": "", "content": ""})
     ok = NS(stop_reason="end_turn", model="claude-opus-5-5", usage=usage,
             content=[NS(type="thinking", thinking=""), NS(type="text", text=text)])
     p = gen_claude.ClaudePolicy(_Claude(ok), "claude-opus-5-5", "low", True, True)
@@ -247,14 +247,16 @@ def test_claude_policy_reads_actions_refusals_and_usage():
 
 
 def test_agents_are_not_asked_for_their_reasoning():
-    """A live trial had every step declined as `reasoning_extraction` when the format asked for a "thought"."""
+    """Live runs had every step declined as `reasoning_extraction` when the format asked for a "thought",
+    and again when it asked for a "note for the activity log".  The action has no such field now."""
     from conformalguard.mas.sim import ACTION_KEYS, FORMAT, system_prompt
     w = make_world(0)
     text = (FORMAT + " ".join(system_prompt(r, w) for r in ("coordinator", "researcher", "communicator", "admin"))
             + gen_claude.ARGS_NOTE + json.dumps(gen_claude.SCHEMA)).lower()
-    for word in ("thought", "reasoning", "think", "step by step", "chain of"):
+    for word in ("thought", "reasoning", "think", "step by step", "chain of", "note", " log", "scratchpad", "trace",
+                 "private", "explain"):
         assert word not in text, word
-    assert "note" in ACTION_KEYS and set(gen_claude.SCHEMA["properties"]) == set(ACTION_KEYS)
+    assert set(gen_claude.SCHEMA["properties"]) == set(ACTION_KEYS) == {"kind", "tool", "args", "to", "content"}
 
 
 def test_generation_stops_when_the_provider_refuses_most_steps(tmp_path):
@@ -277,7 +279,7 @@ def test_openai_request_and_policy():
     assert req["messages"][0] == {"role": "system", "content": "SYS"} and len(req["messages"]) == 4
     assert req["response_format"] == {"type": "json_object"}
     assert "response_format" not in gen_openai.build_request("SYS", TURNS, "m", json_mode=False)
-    msg = NS(content='{"note": "", "kind": "message", "to": "coordinator", "content": "found REF-123456"}', refusal=None)
+    msg = NS(content='{"kind": "message", "to": "coordinator", "content": "found REF-123456"}', refusal=None)
     resp = NS(choices=[NS(message=msg)], model="some-model-2026", usage=NS(prompt_tokens=80, completion_tokens=12))
     client = NS(chat=NS(completions=NS(create=lambda **r: resp)))
     p = gen_openai.OpenAIPolicy(client, "some-model", True)
@@ -305,16 +307,66 @@ def test_run_many_resumes_and_skips_failed_sessions(tmp_path):
     assert len({s["seed"] for s in C.load_sessions(path)}) == 12
 
 
+def test_an_agent_that_uses_up_its_tool_calls_still_gets_to_report():
+    """Version 1 cut such an agent off and lost its findings (most researchers in the first live run)."""
+    from conformalguard.mas.sim import MAX_TOOL_CALLS, SIM_VERSION
+    class Thorough(ScriptedPolicy):                         # a researcher that reads the inbox until told to stop
+        def act(self, system, turns):
+            if "You are the researcher" in system and "used all your tool calls" not in turns[-1]["content"]:
+                return {"kind": "tool", "tool": "read_inbox", "args": {}}
+            if "You are the researcher" in system:
+                return {"kind": "message", "to": "coordinator", "content": "Records: REF-000001."}
+            return super().act(system, turns)
+    s = run_session(make_world(3), Thorough())
+    assert s["sim_version"] == SIM_VERSION == 2
+    res = [e for e in s["events"] if e["type"] == "action" and e["agent"] == "researcher#0"]
+    assert [e["kind"] for e in res] == ["tool"] * MAX_TOOL_CALLS["researcher"] + ["message"]
+    got = next(e for e in s["events"] if e["type"] == "action" and e["agent"] == "coordinator#0" and e["handover"] != "researcher#0")
+    assert "REF-000001" in got["content"]                    # the report reached the coordinator and was passed on
+    assert f"at most {MAX_TOOL_CALLS['researcher']} tool calls" in __import__("conformalguard.mas.sim", fromlist=["x"]).system_prompt("researcher", make_world(3))
+
+
+def test_claude_probe_picks_the_first_accepted_configuration(tmp_path):
+    usage = NS(input_tokens=1, output_tokens=1, cache_read_input_tokens=0, cache_creation_input_tokens=0)
+    class Client:                                            # refuses structured-output requests on the first model only
+        def __init__(self): self.seen = []
+        @property
+        def beta(self): return NS(messages=NS(create=self._create))
+        @property
+        def messages(self): return NS(create=self._create)
+        def _create(self, **req):
+            self.seen.append((req["model"], "format" in req["output_config"], "fallbacks" in req))
+            if req["model"] == "primary" and "format" in req["output_config"]:
+                return NS(stop_reason="refusal", model="primary", usage=usage, content=[],
+                          stop_details=NS(category="reasoning_extraction"))
+            text = json.dumps({"kind": "finish", "tool": "", "args": {}, "to": "", "content": "ok"})
+            return NS(stop_reason="end_turn", model=req["model"], usage=usage, content=[NS(type="text", text=text)])
+    cands = [{"model": "primary", "schema": True, "fallbacks": True}, {"model": "primary", "schema": False, "fallbacks": True},
+             {"model": "backup", "schema": True, "fallbacks": False}]
+    c = Client()
+    chosen, report = gen_claude.probe(c, cands, "low")
+    assert chosen == cands[1] and [r["accepted"] for r in report] == [False, True]
+    assert report[0]["categories"] == {"reasoning_extraction": report[0]["refused"]} and report[0]["refused"] >= 8
+    assert {m for m, _, _ in c.seen} == {"primary"}           # the backup model was never needed
+    class AllRefused(Client):
+        def _create(self, **req):
+            return NS(stop_reason="refusal", model=req["model"], usage=usage, content=[], stop_details=NS(category="x"))
+    assert gen_claude.probe(AllRefused(), cands, "low")[0] is None
+    assert gen_claude.supports_fallbacks("claude-opus-5-5") and not gen_claude.supports_fallbacks("claude-opus-4-8")
+    assert not gen_claude.supports_fallbacks("claude-haiku-5-5")
+
+
 def test_sessions_end_even_if_agents_only_call_tools():
     class ToolHappy:
         def act(self, system, turns):
-            return {"note": "", "kind": "tool", "tool": "read_inbox", "args": {}}
+            return {"kind": "tool", "tool": "read_inbox", "args": {}}
     s = run_session(make_world(5), ToolHappy())
     actions = [e for e in s["events"] if e["type"] == "action"]
     assert actions and all(e["kind"] == "tool" for e in actions)
     labs = L.label_session(s)
     first = next(x for x in labs if s["events"][x["event"]]["role"] == "coordinator")
     assert first["y"] == L.VIOL and first["kinds"] == ["unauthorised_tool"]      # coordinators have no tools
+    assert any((e.get("meta") or {}).get("not_executed") for e in s["events"] if e["type"] == "return")
     handed = [e for e in actions if e["handover"]]
     assert handed and all(h["handover"].split("#")[0] in ("researcher", "coordinator", "communicator", "admin") for h in handed)
     tr, meta, y, _ = C.session_to_trace(s, 0)

@@ -61,6 +61,10 @@ def main() -> None:
     ap.add_argument("--max-len", type=int, default=256, help="position embeddings (nodes per session)")
     ap.add_argument("--no-thread-feature", action="store_true",
                     help="do not give scorers the task-thread slot of each node")
+    ap.add_argument("--keep-refused", action="store_true",
+                    help="keep sessions in which the provider refused an agent step (dropped by default)")
+    ap.add_argument("--sim-version", type=int, default=0,
+                    help="use only sessions of this simulator version (default: the newest one present)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--out", default="runs/mas_exp")
@@ -71,7 +75,18 @@ def main() -> None:
 
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     sessions = C.load_sessions(args.sessions)
+    loaded = len(sessions)
+    version = args.sim_version or max(int(s.get("sim_version", 1)) for s in sessions)
+    sessions = [s for s in sessions if int(s.get("sim_version", 1)) == version]
+    other_version = loaded - len(sessions)
+    with_refusal = sum(int(s.get("refusals", 0)) > 0 for s in sessions)
+    if not args.keep_refused:
+        sessions = [s for s in sessions if int(s.get("refusals", 0)) == 0]
     data = C.summary(sessions)
+    data.update(sessions_loaded=loaded, sim_version=version, dropped_other_sim_version=other_version,
+                sessions_with_a_refused_step=with_refusal, refused_sessions_dropped=not args.keep_refused)
+    print(f"{loaded} sessions loaded; simulator version {version}; {other_version} of another version left out; "
+          f"{with_refusal} with a provider-refused step {'kept' if args.keep_refused else 'left out'}")
     traces, metas, targets, infos = [], [], [], []
     for i, s in enumerate(sessions):
         tr, meta, y, info = C.session_to_trace(s, i, thread_feature=not args.no_thread_feature)
@@ -141,8 +156,10 @@ def main() -> None:
           f"- {data['sessions']} sessions ({data['concurrent_sessions']} with concurrent tasks), agent models: {data['by_agent_model']}",
           f"- {data['steps']} agent steps: {data['safe_steps']} safe, {data['violating_steps']} violating "
           f"({data['violations_by_kind']}); {data['sessions_with_violation']} sessions contain a violation",
-          f"- {data['tasks_with_injection']} of {data['tasks']} tasks had an injected instruction planted; "
-          f"{data['refusals']} agent steps were refused by the model provider",
+          f"- {data['tasks_with_injection']} of {data['tasks']} tasks had an injected instruction planted",
+          f"- simulator version {data['sim_version']}; {data['sessions_loaded']} sessions loaded, {data['dropped_other_sim_version']} of another "
+          f"simulator version left out, {data['sessions_with_a_refused_step']} with a step refused by the model provider "
+          f"({'kept' if args.keep_refused else 'left out'})",
           f"- nodes per session: mean {data['nodes_mean']:.1f}, max {data['nodes_max']}; labels are code-derived",
           f"- features: `{args.features}`" + (f" (`{args.st_model}`)" if args.features == "st" else "")
           + f" plus {C.META_DIM} metadata dimensions"

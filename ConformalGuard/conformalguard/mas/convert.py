@@ -2,7 +2,7 @@
 
 Nodes (the four types of the paper's schema)
   message   a user request; an agent's hand-over message or final note
-  agent     one agent invocation (text: role and its one-line activity note)
+  agent     one agent invocation (text: its role; agents are not asked for any commentary)
   tool      a proposed tool call (text: tool name and arguments)
   memory    what a tool returned
 
@@ -87,7 +87,7 @@ def session_to_trace(session: dict, sid: int, thread_feature: bool = True, cites
             inbox.setdefault(f"coordinator#{th}", []).append((u, "replies"))
         elif ev["type"] == "action":
             name, role = ev["agent"], ev["role"]
-            a = add(AGENT, f"{role}: {ev.get('note', '')}", th, role)
+            a = add(AGENT, f"{role} agent", th, role)
             for src, rel in inbox.pop(name, []):
                 tr._edge(src, a, rel)
             if name in last_agent:
@@ -130,10 +130,12 @@ def session_to_trace(session: dict, sid: int, thread_feature: bool = True, cites
 
 
 def load_sessions(paths) -> list[dict]:
-    """Read sessions from one or more .jsonl files (one session per line), in file order."""
+    """Read sessions from one or more .jsonl or .jsonl.gz files (one session per line), in file order."""
+    import gzip
     out = []
     for p in ([paths] if isinstance(paths, (str, bytes)) or hasattr(paths, "open") else paths):
-        with open(p, encoding="utf-8") as fh:
+        opener = gzip.open if str(p).endswith(".gz") else open
+        with opener(p, "rt", encoding="utf-8") as fh:
             out += [json.loads(line) for line in fh if line.strip()]
     return out
 
@@ -158,4 +160,5 @@ def summary(sessions: list[dict]) -> dict:
         for x in viol:
             kinds[x["kinds"][0]] += 1
     return {**dict(c), "violations_by_kind": dict(kinds),
+            "sim_versions": dict(Counter(str(s.get("sim_version", 1)) for s in sessions)),
             "by_agent_model": dict(Counter(str(s.get("agent_model", "unknown")) for s in sessions))}
