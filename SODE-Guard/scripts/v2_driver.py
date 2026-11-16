@@ -247,6 +247,7 @@ def main():
     ap.add_argument("--extras", nargs="*", default=[], choices=["ablations", "fullcheck", "classtime"])
     ap.add_argument("--gpus", type=int, default=None, help="number of GPUs to use (default: all visible)")
     ap.add_argument("--heartbeat", type=float, default=600)
+    ap.add_argument("--ablations", nargs="*", default=None, help="ablation models to run (default: all of ABLATIONS)")
     ap.add_argument("--extra-args", default="", help="extra v2_run.py options for every train/attack/certify call")
     a = ap.parse_args()
     out = Path(a.out)
@@ -280,43 +281,45 @@ def main():
     run_groups({g: [j for s in ss for j in seed_jobs(a, s)] for g, ss in by_gpu.items()}, a, logs, "core")
     run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "core: aggregate")
 
-    # 2. extras, only once the time allows
-    if "ablations" in a.extras:
-        run_groups({g: [j for s in ss for j in seed_jobs(a, s, ABLATIONS, ["ode_rs"])] for g, ss in by_gpu.items()},
-                   a, logs, "ablations")
-        run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "ablations: aggregate")
-    extra_groups = {g: [] for g in gpus}
-    if "fullcheck" in a.extras and (out / "seed_0" / "results.json").exists():
-        full = out.parent / (out.name + "_fullcheck")
-        (full / "seed_0").mkdir(parents=True, exist_ok=True)
-        for f in ("full.npz", "meta.json"):
-            if not (full / f).exists():
-                shutil.copy2(out / f, full / f)
-        for f in (out / "seed_0").iterdir():
-            if f.suffix in (".pt", ".pkl") or f.name in ("data.npz", "split.json"):
-                if not (full / "seed_0" / f.name).exists():
-                    shutil.copy2(f, full / "seed_0" / f.name)
-        extra_groups[gpus[0]] += [
-            ("fullcheck attack seed 0", RUN + ["attack", "--out", str(full), "--seeds", "0", "--profile", "full",
-                                               "--models", "sode", "sode_at", "ode_at", "mlp_at", "mlp", "lgbm"]),
-            ("fullcheck certify seed 0", RUN + ["certify", "--out", str(full), "--seeds", "0", "--profile", "full",
-                                                "--models", "sode_rs", "mlp_rs"]),
-            ("fullcheck aggregate", RUN + ["aggregate", "--out", str(full), "--n-boot", "200"])]
-    if "classtime" in a.extras:
-        ct = out.parent / (out.name + "_classtime")
-        ct.mkdir(parents=True, exist_ok=True)
-        for f in ("full.npz", "meta.json"):
-            if not (ct / f).exists():
-                shutil.copy2(out / f, ct / f)
-        models = ["sode", "ode", "mlp", "lgbm", "sode_at", "mlp_at"]
-        g = gpus[-1]
-        for s in (0, 1, 2):
-            extra_groups[g] += [(f"classtime {t}", c) for t, c in seed_jobs(a, s, models, out=str(ct),
-                                                              extra=("--split", "class_time", "--sanity-seeds"))
-                                if not t.startswith("certify")]
-        extra_groups[g].append(("classtime aggregate", RUN + ["aggregate", "--out", str(ct), "--n-boot", "500"]))
-    if any(extra_groups.values()):
-        run_groups(extra_groups, a, logs, "extras")
+    # 2. extras, in the order given by --extras
+    for extra in a.extras:
+        if extra == "ablations":
+            abl = a.ablations or ABLATIONS
+            rs = [m for m in abl if m.endswith("_rs")]
+            run_groups({g: [j for s in ss for j in seed_jobs(a, s, abl, rs or ["ode_rs"])] for g, ss in by_gpu.items()},
+                       a, logs, "ablations")
+            run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "ablations: aggregate")
+        elif extra == "fullcheck" and (out / "seed_0" / "results.json").exists():
+            full = out.parent / (out.name + "_fullcheck")
+            (full / "seed_0").mkdir(parents=True, exist_ok=True)
+            for f in ("full.npz", "meta.json"):
+                if not (full / f).exists():
+                    shutil.copy2(out / f, full / f)
+            for f in (out / "seed_0").iterdir():
+                if f.suffix in (".pt", ".pkl") or f.name in ("data.npz", "split.json"):
+                    if not (full / "seed_0" / f.name).exists():
+                        shutil.copy2(f, full / "seed_0" / f.name)
+            run_groups({gpus[0]: [
+                ("attack seed 0", RUN + ["attack", "--out", str(full), "--seeds", "0", "--profile", "full",
+                                         "--models", "sode", "sode_at", "ode_at", "mlp_at", "mlp", "lgbm"]),
+                ("certify seed 0", RUN + ["certify", "--out", str(full), "--seeds", "0", "--profile", "full",
+                                          "--models", "sode_rs", "mlp_rs"]),
+                ("aggregate", RUN + ["aggregate", "--out", str(full), "--n-boot", "200"])]}, a, logs, "fullcheck")
+        elif extra == "classtime":
+            ct = out.parent / (out.name + "_classtime")
+            ct.mkdir(parents=True, exist_ok=True)
+            for f in ("full.npz", "meta.json"):
+                if not (ct / f).exists():
+                    shutil.copy2(out / f, ct / f)
+            models = ["sode", "ode", "mlp", "lgbm", "sode_at", "mlp_at"]
+            groups = {g: [] for g in gpus}
+            for i, s_ in enumerate((0, 1, 2)):
+                groups[gpus[i % len(gpus)]] += [(t, c) for t, c in seed_jobs(
+                    a, s_, models, out=str(ct), extra=("--split", "class_time", "--sanity-seeds"))
+                    if not t.startswith("certify")]
+            run_groups(groups, a, logs, "classtime")
+            run(RUN + ["aggregate", "--out", str(ct), "--n-boot", "500"], None, logs / "aggregate.log",
+                a.deadline, 60, "classtime: aggregate")
 
     write_progress(final=True)
     print("\n=== status ===")
