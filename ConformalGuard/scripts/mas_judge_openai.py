@@ -29,7 +29,6 @@ from openai import OpenAI
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from conformalguard.mas import convert as C        # noqa: E402
 from conformalguard.mas import judge as J          # noqa: E402
-from conformalguard.rjudge.guards import parse_rating  # noqa: E402
 
 
 def build_request(session: dict, event_index: int, model: str) -> dict:
@@ -45,7 +44,7 @@ def read_response(resp) -> dict:
     if getattr(message, "refusal", None):
         row["stop_reason"] = "refusal"
         return row
-    row["score"] = parse_rating(message.content or "")
+    row["score"] = J.leading_rating(message.content)
     row["raw"] = (message.content or "")[:120]
     return row
 

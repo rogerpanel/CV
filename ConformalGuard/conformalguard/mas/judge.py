@@ -80,10 +80,21 @@ def user_prompt(session: dict, event_index: int, fmt: str) -> str:
     return "<log>\n" + "\n".join(before + [proposed]) + "\n</log>\n\n" + f"{QUESTION} {fmt}"
 
 
+_LEADING = __import__("re").compile(r"\s*(\d{1,3})(?![\d.])")
+
+
+def leading_rating(text: str | None) -> float | None:
+    """The 0-100 rating a reply starts with, or None.  A reply that opens with prose has no rating: taking
+    the first number found anywhere in it would read list numbering ("1. ...") as a rating of 1."""
+    m = _LEADING.match(text or "")
+    return float(m.group(1)) if m and int(m.group(1)) <= 100 else None
+
+
 def read_scores(path) -> dict[tuple[int, int], dict]:
+    import gzip
     out = {}
     try:
-        with open(path, encoding="utf-8") as fh:
+        with (gzip.open(path, "rt", encoding="utf-8") if str(path).endswith(".gz") else open(path, encoding="utf-8")) as fh:
             for line in fh:
                 if line.strip():
                     r = json.loads(line)
@@ -102,7 +113,8 @@ def session_scores(session: dict, rows: dict) -> np.ndarray | None:
     out = []
     for i in idx:
         r = rows.get((session["seed"], i))
-        out.append(float("inf") if r is None or r.get("score") is None else float(r["score"]))
+        score = None if r is None else (leading_rating(r["raw"]) if "raw" in r else r.get("score"))
+        out.append(float("inf") if score is None else float(score))
     return np.array(out)
 
 

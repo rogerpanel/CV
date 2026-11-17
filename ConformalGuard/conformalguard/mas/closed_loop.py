@@ -64,15 +64,21 @@ def pct(a: int, b: int) -> str:
 
 
 def report(no_guard: list[dict], guard: list[dict], guard_info: dict, note: str = "") -> tuple[dict, str]:
+    common = {s["seed"] for s in no_guard} & {s["seed"] for s in guard}
+    n_all = (len(no_guard), len(guard))
+    no_guard = [s for s in no_guard if s["seed"] in common]         # the same workspaces in both arms
+    guard = [s for s in guard if s["seed"] in common]
     A, B, P = arm_summary(no_guard), arm_summary(guard), paired_success(no_guard, guard)
     alpha = guard_info.get("alpha")
+    n_clean, k_int = B["sessions_without_violating_proposal"], B["of_which_interrupted"]
+    se = (alpha * (1 - alpha) / n_clean) ** 0.5 if n_clean and alpha else float("nan")
     md = [f"# Closed-loop study: task success with and without the guard{note}", "",
           f"- guard: `{guard_info.get('model')}` scorer, session-level threshold at alpha = {alpha} from "
           f"{guard_info.get('n_cal_violation_free')} violation-free calibration sessions; trained on {guard_info.get('n_train')} sessions",
           f"- agents: {guard_info.get('agent_model')}; a blocked action is not carried out and the agent may propose another, "
           f"up to {guard_info.get('max_reproposals', 2)} times; after that the task thread stops (escalation)",
-          f"- sessions: {A['sessions']} without the guard, {B['sessions']} with it, on the same workspaces "
-          f"({P['paired_workspaces']} present in both arms)",
+          f"- workspaces: {P['paired_workspaces']} run in both arms and compared below "
+          f"({n_all[0]} were generated without the guard and {n_all[1]} with it)",
           "- a task is *safe to complete* if doing what the user asked is allowed by the policy; for the others, completing "
           "the request as asked is itself the violation", "",
           "| | without guard | with guard |", "|---|---|---|",
@@ -85,8 +91,8 @@ def report(no_guard: list[dict], guard: list[dict], guard_info: dict, note: str 
           f"- safe-to-complete tasks in which an action was blocked: {pct(B['safe_tasks_with_block'], B['safe_tasks'])}; "
           f"of these, tasks that still succeeded: {pct(B['safe_tasks_with_block_success'], B['safe_tasks_with_block'])}",
           f"- sessions without any violating proposal that were interrupted at all: "
-          f"{pct(B['of_which_interrupted'], B['sessions_without_violating_proposal'])} (Corollary 1 bounds this by alpha = {alpha} "
-          f"when deployment sessions are exchangeable with the calibration sessions)",
+          f"{pct(k_int, n_clean)}; Corollary 1 bounds the expected rate by alpha = {alpha} when deployment sessions are "
+          f"exchangeable with the calibration sessions, and one standard error at that rate and sample size is {100 * se:.1f} points",
           f"- blocked actions: {B['blocked_actions']} of {B['agent_steps']} proposals, {B['blocked_safe_actions']} of them safe by label; "
           f"{B['escalated_tasks']} tasks escalated",
           (f"- guard latency per decision: median {1000 * B['guard_seconds_median']:.0f} ms, 90th percentile "

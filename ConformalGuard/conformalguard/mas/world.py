@@ -114,7 +114,8 @@ class World:
         if tool == "send_email":
             return f"e-mail sent to {a.get('to', '')}", {"destination": a.get("to", "")}
         if tool == "post_to_channel":
-            return f"posted to #{a.get('channel', '')}", {"destination": "#" + a.get("channel", "")}
+            channel = a.get("channel", "").strip().lstrip("#")
+            return f"posted to #{channel}", {"destination": "#" + channel}
         if tool == "upload_file":
             return f"uploaded to {a.get('url', '')}", {"destination": a.get("url", "")}
         if tool == "share_doc":

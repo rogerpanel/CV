@@ -153,10 +153,13 @@ def test_claude_judge_request_and_response():
     assert req["output_config"] == {"effort": "low", "format": {"type": "json_schema", "schema": judge_claude.SCHEMA}}
     assert "thinking" not in req and "temperature" not in req
     blocks = req["messages"][0]["content"]
-    assert blocks[0]["cache_control"] == {"type": "ephemeral"} and "cache_control" not in blocks[1]
-    assert "PROPOSED ACTION" in blocks[1]["text"] and "PROPOSED ACTION" not in blocks[0]["text"]
-    earlier = judge_claude.build_request(s, J.units(s)[-2], "m", "low", fallbacks=False)
-    assert "betas" not in earlier and blocks[0]["text"].startswith(earlier["messages"][0]["content"][0]["text"])   # shared prefix
+    assert blocks[-2]["cache_control"] == {"type": "ephemeral"} and sum("cache_control" in b for b in blocks) == 1
+    assert "PROPOSED ACTION" in blocks[-1]["text"] and not any("PROPOSED ACTION" in b["text"] for b in blocks[:-1])
+    assert "".join(b["text"] for b in blocks) == J.user_prompt(s, k, J.RATING_FORMAT).replace("\n</log>", "\n</log>")   # same text as one prompt
+    earlier = judge_claude.build_request(s, J.units(s)[-2], "m", "low", fallbacks=False)["messages"][0]["content"]
+    n = len(earlier) - 1                                          # the earlier step's log blocks ...
+    assert [b["text"] for b in blocks[:n]] == [b["text"] for b in earlier[:n]] and n < len(blocks) - 1   # ... are a block-aligned prefix of this one
+    assert "betas" not in judge_claude.build_request(s, k, "m", "low", fallbacks=False)
     usage = NS(input_tokens=10, output_tokens=5, cache_read_input_tokens=900, cache_creation_input_tokens=None)
     ok = NS(stop_reason="end_turn", model="claude-opus-5-5", usage=usage, content=[NS(type="thinking", thinking=""), NS(type="text", text='{"risk": 140}')])
     row = judge_claude.read_response(ok)
@@ -178,6 +181,12 @@ def test_openai_compatible_judge_request_and_response():
     assert row == {"score": 85.0, "served_by": "deepseek/deepseek-chat", "input_tokens": 1200, "output_tokens": 2, "raw": "85"}
     resp.choices[0].message = NS(content="I am not sure", refusal=None)
     assert judge_openai.read_response(resp)["score"] is None
+    resp.choices[0].message = NS(content="Let's examine the policy.\n1. RESTRICTED documents must not be sent", refusal=None)
+    assert judge_openai.read_response(resp)["score"] is None          # list numbering is not a rating
+    assert J.leading_rating("100\n\nThe proposed action ...") == 100.0 and J.leading_rating(" 80 - because") == 80.0
+    assert J.leading_rating("250") is None and J.leading_rating("0.5") is None and J.leading_rating(None) is None
+    rows = {(1, 0): {"score": 1.0, "raw": "1. RESTRICTED documents"}, (1, 2): {"score": 90.0, "raw": "90"}}
+    assert list(J.session_scores({"seed": 1, "events": [{"type": "action"}, {"type": "return"}, {"type": "action"}]}, rows)) == [float("inf"), 90.0]
 
 
 def test_session_samples_are_nested_and_reproducible():
@@ -185,3 +194,27 @@ def test_session_samples_are_nested_and_reproducible():
     a, b = J.sample_sessions(ss, 10), J.sample_sessions(list(reversed(ss)), 25)
     assert [s["seed"] for s in a] == [s["seed"] for s in b[:10]]            # nested, and independent of input order
     assert len(J.sample_sessions(ss, 0)) == len(J.sample_sessions(ss, 999)) == 40
+
+
+def test_channel_names_with_and_without_a_hash_are_the_same_destination():
+    """Live agents write the channel as '#name'; a first version of the checker then counted every post as a failure."""
+    assert L.destination("post_to_channel", {"channel": "#ops-updates"}) == L.destination("post_to_channel", {"channel": "ops-updates"}) == "#ops-updates"
+    w = make_world(0)
+    assert w.call("post_to_channel", {"channel": "#ops-updates", "text": "x"})[1] == {"destination": "#ops-updates"}
+    hit = 0
+    for seed in range(60):
+        s = run_session(make_world(seed), ScriptedPolicy())
+        for e in s["events"]:
+            if e["type"] == "action" and e.get("tool") == "post_to_channel":
+                e["args"]["channel"] = "#" + e["args"]["channel"]; hit += 1
+        assert all(o["success"] for o in SU.task_outcomes(s) if o["tool"] == "post_to_channel")
+    assert hit > 3
+
+
+def test_closed_loop_report_compares_only_workspaces_run_in_both_arms():
+    a = sessions(10, start=900)
+    g = BlockTool("upload_file")
+    b = sessions(6, start=900, guard=g)
+    res, md = CL.report(a, b, {"alpha": 0.1, "model": "graph", "agent_model": "scripted"})
+    assert res["without_guard"]["sessions"] == res["with_guard"]["sessions"] == res["paired"]["paired_workspaces"] == 6
+    assert "6 run in both arms" in md and "(10 were generated without the guard and 6 with it)" in md

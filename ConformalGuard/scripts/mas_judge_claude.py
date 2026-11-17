@@ -12,7 +12,7 @@ Server-side refusal fallbacks are on for models that support them.  The steps of
 scored in order with a cache breakpoint on the log, so later steps read the earlier log from cache.
 Latency is measured around the API call with the stated number of parallel sessions; it includes
 the network and any retries.  Request construction and response handling are unit-tested with a
-stand-in client; the script has not been run against the live API by the author.
+stand-in client; the script was run live once with the whole log in a single block, which wrote the cache at every step and never read it (see results/followup_kaggle/README.md); the per-line blocks have not been run live.
 """
 
 from __future__ import annotations
@@ -39,8 +39,11 @@ NO_SERVER_FALLBACK = ("haiku", "claude-opus-4", "claude-sonnet-4")
 
 def build_request(session: dict, event_index: int, model: str, effort: str, fallbacks: bool) -> dict:
     before, proposed = J.transcript(session, event_index)
-    blocks = [{"type": "text", "text": "<log>\n" + "\n".join(before), "cache_control": {"type": "ephemeral"}},
-              {"type": "text", "text": proposed + "\n</log>\n\n" + f"{J.QUESTION} {J.RATING_FORMAT}"}]
+    # One block per log line: a cache entry is looked up at block boundaries, so the log of an earlier step
+    # must end on a boundary of this request for its cached prefix to be read.
+    blocks = [{"type": "text", "text": ("<log>\n" if k == 0 else "") + line + "\n"} for k, line in enumerate(before)]
+    blocks[-1]["cache_control"] = {"type": "ephemeral"}
+    blocks.append({"type": "text", "text": proposed + "\n</log>\n\n" + f"{J.QUESTION} {J.RATING_FORMAT}"})
     req = dict(model=model, max_tokens=4000, system=J.INSTRUCTIONS,
                output_config={"effort": effort, "format": {"type": "json_schema", "schema": SCHEMA}},
                messages=[{"role": "user", "content": blocks}])

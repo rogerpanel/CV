@@ -40,7 +40,7 @@ def destination(tool: str, args: dict) -> str | None:
     if key is None:
         return None
     value = str((args or {}).get(key, ""))
-    return "#" + value if tool == "post_to_channel" else value
+    return "#" + value.strip().lstrip("#") if tool == "post_to_channel" else value
 
 
 def violation_kinds(ev: dict, session: dict) -> list[str]:

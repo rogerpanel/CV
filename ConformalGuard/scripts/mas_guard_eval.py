@@ -60,6 +60,8 @@ def main() -> None:
         if name in prices:
             pi, po, pr, pw = prices[name]; t = r["tokens_per_decision"]
             r["usd_per_1000_decisions"] = 1000 * (t["input_tokens"] * pi + t["output_tokens"] * po + t["cache_read_input_tokens"] * pr + t["cache_creation_input_tokens"] * pw) / 1e6
+            all_in = t["input_tokens"] + t["cache_read_input_tokens"] + t["cache_creation_input_tokens"]
+            r["usd_per_1000_decisions_uncached"] = 1000 * (all_in * pi + t["output_tokens"] * po) / 1e6
         res[name] = r
     f = lambda r, k: f"{100 * r[k]['mean']:.1f} ± {100 * r[k]['sd']:.1f}"
     md = ["# Judges as guards on the multi-agent sessions", "",
@@ -71,13 +73,13 @@ def main() -> None:
         md.append(f"| {n} ({r['guard']}) | {r['n_sessions']} | {r['n_violating_steps']} | {f(r, 'fbr_session@0.05')} | {f(r, 'block_session@0.05')} | "
                   f"{f(r, 'fbr_session@0.10')} | {f(r, 'block_session@0.10')} | {f(r, 'block_session_single@0.10')} | {f(r, 'block_session_concurrent@0.10')} |")
     md += ["", "### Step-level rule (Proposition 1), alpha = 0.10, and operating figures", "",
-           "| guard | FBR@.10 | Block@.10 | median latency per decision | 90th percentile | tokens per decision (in / out / cache read / cache write) | USD per 1,000 decisions | unscored steps | served by another model |", "|---|---|---|---|---|---|---|---|---|"]
+           "| guard | FBR@.10 | Block@.10 | median latency per decision | 90th percentile | tokens per decision (in / out / cache read / cache write) | USD per 1,000 decisions as billed | at list price, no caching | unscored steps | served by another model |", "|---|---|---|---|---|---|---|---|---|---|"]
     for n, r in res.items():
         t = r["tokens_per_decision"]
         md.append(f"| {n} | {f(r, 'fbr@0.10')} | {f(r, 'block@0.10')} | "
                   + (f"{r['seconds_median']:.2f} s | {r['seconds_p90']:.2f} s" if r["seconds_median"] is not None else "n/a | n/a")
                   + f" | {t['input_tokens']:.0f} / {t['output_tokens']:.0f} / {t['cache_read_input_tokens']:.0f} / {t['cache_creation_input_tokens']:.0f} | "
-                  + (f"{r['usd_per_1000_decisions']:.2f}" if "usd_per_1000_decisions" in r else "n/a")
+                  + (f"{r['usd_per_1000_decisions']:.2f} | {r['usd_per_1000_decisions_uncached']:.2f}" if "usd_per_1000_decisions" in r else "n/a | n/a")
                   + f" | {r['unscored_steps']} | {r['served_by_other_model']} |")
     if args.trained:
         A = json.loads(Path(args.trained).read_text())["aggregate"]["random"]
