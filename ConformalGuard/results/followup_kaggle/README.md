@@ -7,7 +7,7 @@ after the run with two corrections described below; `rjudge_openweight/guard_eva
 | Folder | Measurement | Status |
 |---|---|---|
 | `judges_sessions/` | LLM judges on 300 multi-agent sessions (4,847 decisions): `claude-opus-5-5` and `deepseek/deepseek-v3.2`, calibrated at the same budgets as the trained scorers, with latency and token use | Result for the two API judges. The two local judges are incomplete (see below). |
-| `rjudge_openweight/` | Open-weight judges on R-Judge under the protocol used for Qwen2.5-7B: `Qwen/Qwen3-8B` (run locally) and `deepseek/deepseek-v3.2` (through an API) | Result. |
+| `rjudge_openweight/` | Open-weight judges on R-Judge under the protocol used for Qwen2.5-7B: `Qwen/Qwen3-8B` (run locally) and `deepseek/deepseek-v3.2` (an open-weight model, run here through an API) | Result. |
 | `closed_loop/` | The same workspaces run without and with the guard in the loop | Result on 172 workspaces; the guard arm stopped at 172 of 200 when the API credit ran out. |
 
 ## Corrections made after the run
