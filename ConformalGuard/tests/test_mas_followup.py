@@ -165,3 +165,23 @@ def test_claude_judge_request_and_response():
     row = judge_claude.read_response(refused)
     assert row["score"] is None and row["refusal_category"] == "cyber"
     assert judge_claude.read_response(NS(stop_reason="end_turn", model="m", usage=usage, content=[NS(type="text", text="no json")]))["score"] is None
+
+
+def test_openai_compatible_judge_request_and_response():
+    judge_openai = pytest.importorskip("mas_judge_openai")
+    s = sessions(1)[0]
+    req = judge_openai.build_request(s, J.units(s)[-1], "deepseek/deepseek-chat")
+    assert req["model"] == "deepseek/deepseek-chat" and req["messages"][0] == {"role": "system", "content": J.INSTRUCTIONS}
+    assert "PROPOSED ACTION" in req["messages"][1]["content"] and J.RATING_FORMAT in req["messages"][1]["content"]
+    resp = NS(choices=[NS(message=NS(content="85", refusal=None))], model="deepseek/deepseek-chat", usage=NS(prompt_tokens=1200, completion_tokens=2))
+    row = judge_openai.read_response(resp)
+    assert row == {"score": 85.0, "served_by": "deepseek/deepseek-chat", "input_tokens": 1200, "output_tokens": 2}
+    resp.choices[0].message = NS(content="I am not sure", refusal=None)
+    assert judge_openai.read_response(resp)["score"] is None
+
+
+def test_session_samples_are_nested_and_reproducible():
+    ss = sessions(40)
+    a, b = J.sample_sessions(ss, 10), J.sample_sessions(list(reversed(ss)), 25)
+    assert [s["seed"] for s in a] == [s["seed"] for s in b[:10]]            # nested, and independent of input order
+    assert len(J.sample_sessions(ss, 0)) == len(J.sample_sessions(ss, 999)) == 40

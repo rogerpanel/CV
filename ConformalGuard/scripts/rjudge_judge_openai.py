@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import threading
 import time
@@ -67,6 +68,8 @@ def main() -> None:
     ap.add_argument("--score", choices=("rating", "logprob"), default="rating")
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--base-url", default="", help="an OpenAI-compatible endpoint, e.g. https://openrouter.ai/api/v1")
+    ap.add_argument("--api-key-env", default="OPENAI_API_KEY", help="environment variable that holds the key")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
@@ -78,7 +81,7 @@ def main() -> None:
     done = G.read_done(path)
     todo = [(r, s) for r, s in G.units(recs, args.mode) if (int(r["id"]), s) not in done]
     print(f"{args.model}, mode {args.mode}, score {args.score}: {len(done)} already scored, {len(todo)} to go")
-    client = OpenAI(max_retries=5)
+    client = OpenAI(max_retries=5, api_key=os.environ.get(args.api_key_env), **({"base_url": args.base_url} if args.base_url else {}))
     lock = threading.Lock()
     n = {"ok": 0, "failed": 0}
 

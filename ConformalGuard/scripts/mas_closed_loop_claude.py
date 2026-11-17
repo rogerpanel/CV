@@ -37,11 +37,19 @@ from conformalguard.mas import guard as GD             # noqa: E402
 from conformalguard.rjudge import models as M          # noqa: E402
 
 
+def load_checkpoint(path: Path, device: str) -> dict:
+    """The saved guard (weights, threshold, settings).  It is a file this script wrote itself."""
+    try:
+        return torch.load(path, map_location=device, weights_only=False)
+    except TypeError:                                         # older PyTorch without the argument
+        return torch.load(path, map_location=device)
+
+
 def load_or_train_guard(args, out: Path) -> GD.GraphGuard:
     encoder = GD.STEncoder(args.st_model, device=args.device)
     ckpt = out / "guard.pt"
     if ckpt.exists():
-        saved = torch.load(ckpt, map_location=args.device)
+        saved = load_checkpoint(ckpt, args.device)
         info = saved["info"]
         model = M.build(info["model"], saved["feat_dim"], d=info.get("d", 128), layers=info["layers"], max_len=info["max_len"]).to(args.device)
         model.load_state_dict(saved["state"])
@@ -72,10 +80,20 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    ap.add_argument("--report-only", action="store_true", help="write the report from the sessions already generated")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
 
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
+    keep = lambda arm: [s for s in C.load_sessions(out / arm / "sessions.jsonl") if not int(s.get("refusals", 0))] if (out / arm / "sessions.jsonl").exists() else []
+    if args.report_only:
+        saved = load_checkpoint(out / "guard.pt", "cpu")
+        model = json.loads((out / "config.json").read_text())["chosen"]["model"] if (out / "config.json").exists() else args.model
+        results, md = CL.report(keep("no_guard"), keep("guard"), {**saved["info"], "agent_model": model, "max_reproposals": 2},
+                                note=" (report from the sessions generated so far)")
+        (out / "results.json").write_text(json.dumps(results, indent=1)); (out / "summary.md").write_text(md)
+        print(md)
+        return
     guard = load_or_train_guard(args, out)
     client = anthropic.Anthropic(max_retries=6)
     cfg_path = out / "config.json"
@@ -99,7 +117,6 @@ def main() -> None:
         print(f"{arm}: {counts['written']} sessions written this run, {counts['failed']} failed (rerun to retry)")
         print("usage:", G.usage_report(out / arm / "sessions.jsonl"))
         stopped = stopped or counts["stopped"]
-    keep = lambda arm: [s for s in C.load_sessions(out / arm / "sessions.jsonl") if not int(s.get("refusals", 0))]
     info = {**guard.info, "agent_model": chosen["model"], "max_reproposals": 2}
     results, md = CL.report(keep("no_guard"), keep("guard"), info)
     (out / "results.json").write_text(json.dumps(results, indent=1))

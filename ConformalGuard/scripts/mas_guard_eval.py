@@ -8,7 +8,7 @@ For each score file: the sessions it covers are split at random into calibration
 (no training), the threshold is set by the session-level rule (Corollary 1) and by the step-level
 rule (Proposition 1), and the report gives the false-block rate, the share of violating steps
 blocked, the median latency per decision, tokens per decision and, with --prices
-(input,output,cache_read,cache_write in USD per million tokens, yours to supply), the cost per
+(input,output[,cache_read,cache_write] in USD per million tokens, yours to supply), the cost per
 thousand decisions.  --trained adds the trained scorers' numbers from scripts/mas_run.py for
 reference; those come from 50/25/25 splits of all sessions, so the split protocol differs.
 A step without a score (a refused or unparseable reply) counts as blocked.
@@ -38,7 +38,7 @@ def main() -> None:
     ap.add_argument("--out", default="runs/mas_guard_eval")
     args = ap.parse_args()
     by_seed = {s["seed"]: s for s in C.load_sessions(args.sessions)}
-    prices = {k: [float(x) for x in v.split(",")] for k, v in (p.split("=", 1) for p in args.prices)}
+    prices = {k: ([float(x) for x in v.split(",")] + [0.0, 0.0])[:4] for k, v in (p.split("=", 1) for p in args.prices)}
     res: dict = {}
     for spec in args.scores:
         name, path = spec.split("=", 1)

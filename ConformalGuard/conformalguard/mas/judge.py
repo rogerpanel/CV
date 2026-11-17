@@ -61,6 +61,15 @@ def transcript(session: dict, event_index: int) -> tuple[list[str], str]:
     return [_line(e) for e in ev[:event_index]], _line(ev[event_index], proposed=True)
 
 
+def sample_sessions(sessions: list[dict], n: int, seed: int = 0) -> list[dict]:
+    """The first ``n`` sessions of a fixed shuffle (all if n is 0 or too large).  Samples of different
+    sizes are nested, so a judge run on fewer sessions is scored on a subset of what the others saw."""
+    import random
+    order = sorted(sessions, key=lambda s: s["seed"])
+    random.Random(seed).shuffle(order)
+    return order[:n] if n and n < len(order) else order
+
+
 def units(session: dict) -> list[int]:
     """Event indices of the agent steps to score (every action event)."""
     return [i for i, e in enumerate(session["events"]) if e["type"] == "action"]

@@ -78,8 +78,7 @@ def main() -> None:
     args = ap.parse_args()
 
     sessions = [s for s in C.load_sessions(args.sessions) if int(s.get("sim_version", 1)) == 2 and not int(s.get("refusals", 0))]
-    if args.n_sessions and args.n_sessions < len(sessions):
-        sessions = random.Random(args.sample_seed).sample(sessions, args.n_sessions)
+    sessions = J.sample_sessions(sessions, args.n_sessions, args.sample_seed)
     out = Path(args.out); out.mkdir(parents=True, exist_ok=True)
     path = out / "scores.jsonl"
     done = J.read_scores(path)
