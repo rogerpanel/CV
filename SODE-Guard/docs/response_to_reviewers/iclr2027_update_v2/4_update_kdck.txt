@@ -1,0 +1,35 @@
+Update after the five-seed re-run (see also the general update)
+
+Thank you again for the constructive review. Here is how the update answers each point.
+
+Q1 (paths during PGD). Every attack is scored under both settings:
+- fixed Brownian paths (seeds 0-7, a deterministic target, attacked exactly by PGD with restarts);
+- fresh paths on every call (EOT-PGD, APGD with EOT, and a 64-path expected-margin attack).
+
+The two agree closely. Worst-case macro-F1 for SODE-Guard with EOT-matched adversarial training is 0.420 with fixed paths and 0.412 with fresh paths.
+
+W5 (adaptive attacks). Adversarial training through the deployed 8-path predictor, with fresh paths in every step (module 2), raises worst-case macro-F1 from 0.245 to 0.420 ± 0.010 over five seeds (Holm-adjusted p = 0.016). That is on par with an adversarially trained MLP (0.424) and neural ODE (0.432); the differences are not significant. The masking checks pass. A full-strength re-check of seed 0 (PGD-200 with 5 restarts, EOT-32, a 256-path expected-margin attack, Square with 5,000 queries) is running now.
+
+W4 (certification). SODE-Guard is now certified with randomised smoothing over the input and its own Brownian paths. Certified accuracy at l2 radius 0.273 is 0.556 ± 0.033, against 0.096 with Theorem A before. That is on par with a smoothed MLP (0.555). Reweighted to the test class mix, it is 0.843.
+
+W3 (recent and strong baselines). We added:
+- LightGBM, XGBoost and a random forest;
+- adversarially trained MLP and neural ODE, with the same recipe as SODE-Guard;
+- a smoothed MLP;
+- a neural ODE with the same imbalance-aware training.
+
+The trees reach the highest clean macro-F1 (0.61-0.62) but fall to 0.02-0.04 under a black-box Square attack, while adversarially trained neural models keep about 0.42. The revision discusses BARS (NDSS 2023) and MARS (2025) as certified traffic classifiers with anisotropic smoothing, a natural extension of module 3.
+
+W1, W2 (motivation, figures). The robustness gap of the strongest clean models gives the revision a concrete motivation:
+- trees are best on clean flows and weakest under attack;
+- a robust neural detector closes that gap.
+
+Figures 1-2 will be redrawn around the three modules and the clean / worst-case / certified trade-off.
+
+Running now, for the revision:
+- per-module ablations over five seeds;
+- a per-class chronological split;
+- the full-strength attack check;
+- also planned: feature-constrained attacks and a second container dataset.
+
+We hope the update addresses your concerns, and would be grateful if you could consider it in your final assessment.

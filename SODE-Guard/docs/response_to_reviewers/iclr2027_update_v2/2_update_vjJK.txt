@@ -1,0 +1,40 @@
+Update after the five-seed re-run (see also the general update)
+
+Thank you again for the detailed code check, which shaped this re-run.
+
+Q1 (adaptive attacks). The full adaptive suite was run on SODE-Guard with EOT-matched adversarial training (module 2). Each attack is run once against fixed Brownian paths (seeds 0-7, a deterministic target) and once against fresh paths on every call:
+- PGD-40 and PGD-100 with restarts
+- APGD-CE and APGD-DLR with EOT
+- EOT-PGD (EOT 8)
+- a 64-path expected-margin attack
+- Square (black box)
+- transfer from two surrogates
+
+Worst-case macro-F1 over all attacks (5 seeds):
+- fixed paths: 0.420 ± 0.010
+- fresh paths: 0.412 ± 0.012
+- without module 2: 0.245 (+0.174 with module 2, Holm-adjusted p = 0.016)
+
+Individual attacks land between 0.42 and 0.45, so no single attack dominates.
+
+The masking checks pass:
+- Varying eps: 0.462 at 0.01, 0.420 at 0.03, 0.290 at 0.1, 0.058 at 0.3, 0.004 at 1.0.
+- Varying steps: 0.425 at 10, 0.423 at 40, 0.427 at 100.
+- The black-box and transfer attacks are weaker than the white-box ones.
+
+A full-strength re-check of seed 0 (PGD-200 with 5 restarts, EOT-32, a 256-path expected-margin attack, Square with 5,000 queries) is running now and will be reported in the revision.
+
+Q2 (code version). There is now a single released pipeline covering data preparation, training, attacks, certification and aggregation:
+- What attacks differentiate through: the deployed predictor, i.e. the 8-path mean logits with the post-hoc logit adjustment. Every attack differentiates through exactly that predictor, by ordinary backpropagation through the Euler-Maruyama scheme.
+- Training randomness: Brownian seeds are fresh in every training step.
+- Data hygiene: duplicates and conflicting-label flows are removed before splitting.
+- Statistics: every number in the update is a mean over five seeds with a 95% CI. Comparisons use a paired bootstrap with Holm correction.
+
+Q3 (regulariser and Proposition 2). As we reported, the regulariser had no measurable effect, and it is not part of the revised method. It is replaced by three modules, each with a significant measured effect:
+- imbalance-aware training: clean macro-F1 0.438 to 0.495;
+- EOT-matched adversarial training: worst case 0.245 to 0.420;
+- a smoothing certificate over the SDE's own noise: certified accuracy at l2 radius 0.273 from 0.096 (Theorem A) to 0.556.
+
+Theorem A stays in the paper as a deterministic finite-step certificate. The headline certificate becomes the smoothing certificate, which samples input noise and Brownian paths jointly and is on par with a smoothed MLP (0.556 vs 0.555).
+
+We hope this addresses your concerns, and would be grateful if you could take the update into account in your final assessment.

@@ -1,0 +1,36 @@
+Update after the five-seed re-run (see also the general update)
+
+Thank you again. The update responds directly to your four points.
+
+Contribution not validated
+- What we now certify: a trained SODE-Guard, under a randomised-smoothing certificate taken jointly over input noise and the model's own Brownian paths. The input noise is a pure-diffusion prefix of the SDE.
+- Result: certified accuracy at l2 radius 0.273 (which contains the l-inf 0.03 ball) is 0.556 ± 0.033 over five seeds, against 0.096 for Theorem A in our first reply.
+- Against baselines: this is on par with a smoothed MLP (0.555, difference not significant).
+- Reweighted to the test class mix, the certified accuracy is 0.843.
+
+Why an SDE
+We agree that the learned diffusion does not, by itself, add accuracy or robustness:
+- SODE-Guard vs a neural ODE: +0.005 clean macro-F1 and -0.005 worst-case macro-F1, both not significant.
+
+What the stochastic model offers is a natural certificate. The deployed predictor already averages over random paths, so smoothing over input noise and those same paths needs no separate noisy copy of the model. The revision presents the contribution accordingly: a training-and-certification recipe for stochastic continuous-depth detectors that brings SODE-Guard level with the strongest robust baselines. We also cite and discuss Liu et al. (CVPR 2020), as you suggested.
+
+Gradient masking
+With EOT-matched adversarial training, worst-case macro-F1 over eight adaptive attacks is:
+- 0.420 with fixed paths;
+- 0.412 with fresh paths;
+- 0.245 without adversarial training.
+
+The checks show no masking:
+- F1 falls to 0.004 at eps = 1.
+- More steps do not help the model.
+- Square and transfer are weaker than the white-box attacks.
+
+Protocol (Arp et al.)
+- Duplicates and conflicting labels: removed before splitting (325 exact duplicates and 1,250 flows whose features appear with a different label).
+- Seeds and statistics: five seeds with new splits, paired bootstrap with Holm correction, and per-class F1.
+- Baselines: we added gradient-boosted trees and a random forest. They reach the highest clean macro-F1 (0.61-0.62) but fall to 0.02-0.04 under a black-box Square attack, while adversarially trained neural models, SODE-Guard included, keep 0.42.
+- Rare classes: two of them are poorly separated by every model, trees included. The revision analyses this as a property of the data.
+- Temporal evaluation: a per-class chronological split replaces the global temporal split, whose test window held one class. It is running now.
+- Realistic perturbations: feature-constrained attacks are planned for the revision.
+
+We hope this resolves your main concerns, and thank you for the references and suggestions that led to these results.

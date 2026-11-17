@@ -1,0 +1,38 @@
+Update: five-seed re-run with three added modules (to all reviewers and the AC)
+
+Following the discussion, we added three modules to SODE-Guard and re-ran the full evaluation over five seeds with one released pipeline. The update addresses the three main concerns raised in the reviews: adaptive attacks, a certificate on a trained model, and code that matches the paper.
+
+Protocol
+- Data: the container-flow part of ICS3D. Exact duplicates (325) and flows whose features appear with a different label (1,250) are removed before splitting, leaving 68,627 flows in 9 classes.
+- Splits: every seed draws a new stratified 60/20/20 split. Validation is halved into a selection half (early stopping, threshold tuning) and a held-out calibration half.
+- Attacks: l-inf eps = 0.03 (z-units) on 500 class-stratified test flows. They are PGD-40, PGD-100 with restarts, APGD-CE and APGD-DLR with EOT, EOT-PGD (EOT 8), a 64-path expected-margin attack, Square (black box) and transfer from two surrogates. We report the per-flow worst case over all attacks.
+- Statistics: mean ± 95% CI over 5 seeds. Every contrast is a paired bootstrap, Holm-corrected over a family declared before the runs.
+
+The three modules
+(1) Imbalance-aware training: a logit-adjusted loss, a full training budget with early stopping on validation macro-F1, and a post-hoc logit adjustment tuned on validation data.
+(2) EOT-matched adversarial training: the training adversary differentiates through the deployed 8-path mean predictor with fresh Brownian paths. It uses N-FGSM, an eps ramp, and early stopping on robust validation macro-F1.
+(3) A randomised-smoothing certificate for the stochastic model: Gaussian input noise acts as a pure-diffusion prefix of the SDE. The certificate of Cohen et al. is applied over input noise and Brownian paths jointly; it is valid for [0,1]-valued base classifiers (Salman et al., 2019, Lemma 2).
+
+Results (5 seeds)
+- Clean macro-F1: 0.438 ± 0.006 with the original recipe, 0.495 ± 0.009 with module 1 (+0.057, Holm-adjusted p = 0.016). The original recipe on the new split reproduces our rebuttal numbers (0.438 clean, 0.223 worst case), so the gains come from the modules.
+- Worst-case macro-F1: 0.245 before module 2, 0.420 ± 0.010 with it (+0.174, Holm-adjusted p = 0.016), at a clean cost of 0.027.
+- Certified accuracy at l2 radius 0.273 (this ball contains the l-inf 0.03 ball): 0.096 with Theorem A in our first reply, 0.556 ± 0.033 with module 3 on class-stratified flows, and 0.843 when reweighted to the test class mix.
+
+Positioning
+- Robust neural baselines: trained with the same recipe, SODE-Guard is on par with the strongest of them. Worst case is 0.420 vs 0.424 for an adversarially trained MLP and 0.432 for an adversarially trained neural ODE; the differences (-0.001 and -0.005) are not significant. Certified accuracy is 0.556 vs 0.555 for a smoothed MLP.
+- Tree baselines: gradient-boosted trees and a random forest reach the highest clean macro-F1 (0.61-0.62) but fall to 0.02-0.04 under the black-box Square attack. Every adversarially trained neural model keeps 0.42-0.43.
+- This motivates robust neural detectors, and places SODE-Guard with these modules among the best of them.
+
+Masking checks pass
+- F1 falls monotonically with eps, from 0.42 at eps = 0.03 to 0.004 at eps = 1.0.
+- More attack steps never help the model.
+- Square and transfer are weaker than the white-box attacks.
+- Fixed and fresh Brownian paths agree: 0.420 vs 0.412.
+
+Already running, for the revision
+(i) A full-strength re-attack of seed 0 (PGD-200 with 5 restarts, EOT-32, a 256-path expected-margin attack, Square with 5,000 queries).
+(ii) Per-module ablations over five seeds.
+(iii) A per-class chronological split.
+Also planned: feature-constrained attacks and a second container dataset.
+
+Code and configurations are in the updated anonymised repository. We thank the reviewers; this discussion has made the method markedly stronger.
