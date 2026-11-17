@@ -143,6 +143,37 @@ belong with them. The most important limit: a hand-written rule on the provenanc
 (`scripts/mas_rule_baseline.py`) reproduces the labels almost exactly, so the run speaks for the
 representation and the guarantees, not for the need to learn a scorer.
 
+## Follow-up measurements
+
+Three further measurements are implemented and run by `notebooks/followup_kaggle.ipynb`. None has a
+result in this repository yet.
+
+**Judges on the sessions** (`conformalguard/mas/judge.py`, `scripts/mas_judge_claude.py`,
+`scripts/mas_judge_local.py`, `scripts/mas_guard_eval.py`). An LLM judge scores every proposed action
+from the session log up to it. It is given the policy in words and the same monitor metadata as the
+trained scorers, written into the log. Its scores are calibrated on random halves by the same
+session-level and step-level rules, and the report adds the latency per decision, tokens per decision
+and, at prices you supply, the cost per thousand decisions. Two things to state with the numbers: the
+judge is told the policy while the trained scorers learn it from labels, and the trained scorers'
+reference numbers come from 50/25/25 splits of all sessions while the judges are calibrated on halves
+of the sessions they scored.
+
+**Closed loop** (`conformalguard/mas/guard.py`, `success.py`, `closed_loop.py`,
+`scripts/mas_closed_loop_claude.py`). The graph scorer is trained on half of the logged sessions and
+its per-session threshold is taken from the other half. New workspaces are then run twice with live
+agents: without the guard, and with the guard scoring each proposed action before it takes effect. A
+blocked action is not carried out; the agent is told and may propose another, up to twice, after which
+that task thread stops. Task success is decided by code: the delivery the user asked for was carried
+out to the named destination with the topic's record references. Tasks whose faithful completion is
+itself a violation are reported separately, because for them success as requested and the violation
+coincide. Limits to state: the two arms sample the agents anew, so they differ by the guard and by
+the model's run-to-run variation; the guard was trained on open-loop sessions, so blocked proposals
+in the log are new to it; and the false-interruption rate is compared with alpha on the assumption
+that the new workspaces are exchangeable with the calibration sessions.
+
+**A second open-weight judge on R-Judge** (`scripts/rjudge_judge_local.py --chat-kwargs`). The same
+prompt, scoring and calibration as for Qwen2.5-7B-Instruct, for a more recent model of similar size.
+
 ## What the first live runs showed (simulator version 1)
 
 Kept on record in `results/kaggle_extra/mas_pilot_v1/`; none of it is a result.

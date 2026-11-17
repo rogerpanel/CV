@@ -39,12 +39,52 @@ def letter_ids(tok) -> tuple[list[int], list[int]]:
     return a, b
 
 
-def score_unit(tok, model, rec: dict, step: int, a_ids, b_ids, max_input_tokens: int) -> float:
+def chat_ids(tok, messages: list[dict], chat_kwargs: dict | None = None):
+    """Token ids of a chat prompt.  ``chat_kwargs`` are extra template arguments, e.g. {"enable_thinking": false}
+    for models whose template would otherwise open a reasoning block; a template that does not know them ignores them."""
+    try:
+        enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt", **(chat_kwargs or {}))
+    except TypeError:
+        enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+    ids = enc if hasattr(enc, "shape") else enc["input_ids"]
+    return ids.unsqueeze(0) if ids.dim() == 1 else ids
+
+
+def letter_score(tok, model, messages: list[dict], a_ids, b_ids, max_input_tokens: int, chat_kwargs: dict | None = None) -> float:
+    """log p(B) - log p(A) for the next token after the chat prompt."""
+    import torch
+
+    ids = chat_ids(tok, messages, chat_kwargs)[:, -max_input_tokens:].to(model.device)
+    with torch.no_grad():
+        logits = model(input_ids=ids, attention_mask=torch.ones_like(ids)).logits[0, -1].float()
+    return float(torch.logsumexp(logits[b_ids], 0) - torch.logsumexp(logits[a_ids], 0))
+
+
+def load_model(name: str, load_4bit: bool = False):
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    tok = AutoTokenizer.from_pretrained(name)
+    kw = {"device_map": "auto"}
+    if load_4bit:
+        from transformers import BitsAndBytesConfig
+        kw["quantization_config"] = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
+        model = AutoModelForCausalLM.from_pretrained(name, **kw)
+    else:
+        half = torch.float16 if torch.cuda.is_available() else torch.float32
+        try:
+            model = AutoModelForCausalLM.from_pretrained(name, dtype=half, **kw)
+        except TypeError:
+            model = AutoModelForCausalLM.from_pretrained(name, torch_dtype=half, **kw)
+    return tok, model.eval()
+
+
+def score_unit(tok, model, rec: dict, step: int, a_ids, b_ids, max_input_tokens: int, chat_kwargs: dict | None = None) -> float:
     import torch
 
     messages = [{"role": "system", "content": G.INSTRUCTIONS},
                 {"role": "user", "content": G.user_prompt(rec, step, G.LETTER_FORMAT)}]
-    enc = tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt")
+    enc = chat_ids(tok, messages, chat_kwargs)
     ids = enc if hasattr(enc, "shape") else enc["input_ids"]
     if ids.dim() == 1:
         ids = ids.unsqueeze(0)
@@ -62,8 +102,10 @@ def main() -> None:
     ap.add_argument("--load-4bit", action="store_true")
     ap.add_argument("--max-input-tokens", type=int, default=6000)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--chat-kwargs", default="", help='JSON of extra chat-template arguments, e.g. \'{"enable_thinking": false}\'')
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
+    chat_kwargs = json.loads(args.chat_kwargs) if args.chat_kwargs else None
 
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -95,7 +137,7 @@ def main() -> None:
     t0 = time.time()
     with path.open("a", encoding="utf-8") as fh:
         for i, (rec, step) in enumerate(todo, 1):
-            s = score_unit(tok, model, rec, step, a_ids, b_ids, args.max_input_tokens)
+            s = score_unit(tok, model, rec, step, a_ids, b_ids, args.max_input_tokens, chat_kwargs)
             fh.write(json.dumps({"id": int(rec["id"]), "step": step, "guard": args.model,
                                  "mode": args.mode, "score": s}) + "\n")
             fh.flush()

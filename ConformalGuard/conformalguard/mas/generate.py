@@ -40,7 +40,7 @@ def done_seeds(path: Path) -> set[int]:
     return {json.loads(line)["seed"] for line in path.read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
-def run_many(make_policy, seeds, path: Path, workers: int, extra: dict) -> dict:
+def run_many(make_policy, seeds, path: Path, workers: int, extra: dict, guard=None) -> dict:
     """Generate one session per seed with ``make_policy()`` (a fresh policy per session, so its
     counters belong to that session) and append each finished session to ``path``.
     A session whose model calls fail is not written; rerun to retry it."""
@@ -55,7 +55,7 @@ def run_many(make_policy, seeds, path: Path, workers: int, extra: dict) -> dict:
             return
         policy = make_policy()
         try:
-            session = run_session(make_world(seed), policy)
+            session = run_session(make_world(seed), policy, guard=guard)
         except Exception as e:                          # the policy re-raises API errors after its retries
             with lock:
                 counts["failed"] += 1
