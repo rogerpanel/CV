@@ -29,6 +29,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 RUN = [sys.executable, str(HERE / "v2_run.py")]
+SMOOTHING_V21 = [f"{a}_rs_c{l}" for l in (2, 1, 0) for a in ("sode", "mlp", "ode")]
 ABLATIONS = ("sode_noposthoc sode_perclass sode_ce sode_focal sode_cb sode_sampler sode_quant "
              "sode_at_pgd sode_at_trades mlp_at_pgd ode_rs sdetgnn").split()
 STATUS: dict[str, str] = {}
@@ -245,10 +246,11 @@ def main():
     ap.add_argument("--margin", type=float, default=600, help="seconds kept free before the deadline")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     ap.add_argument("--profile", default="lite")
-    ap.add_argument("--extras", nargs="*", default=[], choices=["ablations", "fullcheck", "classtime"])
+    ap.add_argument("--extras", nargs="*", default=[], choices=["ablations", "fullcheck", "classtime", "smoothing"])
     ap.add_argument("--gpus", type=int, default=None, help="number of GPUs to use (default: all visible)")
     ap.add_argument("--heartbeat", type=float, default=600)
     ap.add_argument("--ablations", nargs="*", default=None, help="ablation models to run (default: all of ABLATIONS)")
+    ap.add_argument("--smoothing-models", nargs="*", default=None, help="v2.1 smoothing models (default: all nine)")
     ap.add_argument("--extra-args", default="", help="extra v2_run.py options for every train/attack/certify call")
     a = ap.parse_args()
     out = Path(a.out)
@@ -294,6 +296,12 @@ def main():
             run_groups({g: [j for s in ss for j in seed_jobs(a, s, abl, rs or ["ode_rs"])] for g, ss in by_gpu.items()},
                        a, logs, "ablations")
             run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "ablations: aggregate")
+        elif extra == "smoothing":            # v2.1 smoothing study: train and certify only
+            sm = a.smoothing_models or SMOOTHING_V21
+            def sm_jobs(seed):
+                return [(t, c) for t, c in seed_jobs(a, seed, sm) if not t.startswith("attack")]
+            run_groups({g: [j for s_ in ss for j in sm_jobs(s_)] for g, ss in by_gpu.items()}, a, logs, "smoothing")
+            run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "smoothing: aggregate")
         elif extra == "fullcheck" and (out / "seed_0" / "results.json").exists():
             full = out.parent / (out.name + "_fullcheck")
             (full / "seed_0").mkdir(parents=True, exist_ok=True)

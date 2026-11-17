@@ -76,3 +76,14 @@ browser tab staying open.
 * **After a reset or disconnect:** *Runtime → Run all*. The notebook restores from Drive (`--restore`) and starts the background run again if none is active. Every stage skips finished work.
 * **Damaged files:** the restore sets aside any checkpoint, prediction or results file that cannot be read, which happens when a session dies mid-write, for example with the earlier notebook that wrote straight to Drive. It also drops the results derived from such a file, so that work is redone.
 * **Extras:** `EXTRAS = ['ablations', 'fullcheck', 'classtime']` runs all three after the core. The core is aggregated first, so its results are usable early.
+
+## v2.1 smoothing study (`--extras smoothing`)
+
+In v2, the smoothed models often early-stopped at epochs 1–7, and their post-hoc τ sat at the edge of the grid (−1). The v2.1 variants `{sode,mlp,ode}_rs_c{2,1,0}` change four things:
+
+* the consistency weight is 2, 1 or 0 (0 is plain Gaussian augmentation, as in Cohen et al.);
+* the τ grid is widened to [−4, 4];
+* the model is selected on the τ-tuned noisy-vote macro-F1, i.e. the score after the adjustment that will actually be applied;
+* early stopping cannot trigger before epoch 20, and patience is 20.
+
+Certification is unchanged (σ = 0.25, n = 2,000, α = 0.001, on the same 500-flow subset). The contrasts are a separate Holm family (`CONTRASTS_V21`), declared before the run.

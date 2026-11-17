@@ -89,7 +89,8 @@ def atomic(path, write):
 
 # ------------------------------------------------------------------ model zoo
 BASE_SPEC = dict(arch="sode", train="clean", loss="la", sampler=0.0, encoding="none", epochs=None,
-                 posthoc="tau", at_method=None, at_steps=5, recipe="v2", source=None)
+                 posthoc="tau", at_method=None, at_steps=5, recipe="v2", source=None,
+                 cons_lambda=None, min_epochs=0, patience=None, tau_grid="narrow", select="raw")
 SPECS = {
     # module 1 applied to every neural model
     "sode": {}, "ode": {"arch": "ode"}, "mlp": {"arch": "mlp"}, "sdetgnn": {"arch": "sdetgnn"},
@@ -107,6 +108,11 @@ SPECS = {
     # ablations of module 2
     "sode_at_pgd": {"train": "at", "at_method": "pgd"}, "sode_at_trades": {"train": "at", "at_method": "trades"},
     "mlp_at_pgd": {"arch": "mlp", "train": "at", "at_method": "pgd"},
+    # v2.1 smoothing study: lower consistency weight, a wide tau grid, model selection on the
+    # tau-tuned noisy-vote macro-F1, and at least 20 epochs (patience 20) before early stopping
+    **{f"{arch}_rs_c{lam}": {"arch": arch, "train": "rs", "cons_lambda": float(lam),
+                             "min_epochs": 20, "patience": 20, "tau_grid": "wide", "select": "tuned"}
+       for arch in ("sode", "ode", "mlp") for lam in (0, 1, 2)},
     # gradient-boosted trees and a random forest
     "lgbm": {"arch": "lgbm"}, "xgb": {"arch": "xgb"}, "rf": {"arch": "rf"},
 }
@@ -114,8 +120,18 @@ CORE = ["sode_base", "sode", "ode", "mlp", "lgbm", "xgb", "rf", "sode_at", "ode_
 ABLATIONS = ["sode_noposthoc", "sode_perclass", "sode_ce", "sode_focal", "sode_cb", "sode_sampler", "sode_quant",
              "sode_at_pgd", "sode_at_trades", "mlp_at_pgd", "ode_rs", "sdetgnn"]
 TREES = {"lgbm", "xgb", "rf"}
+SMOOTHING_V21 = [f"{a}_rs_c{l}" for l in (2, 1, 0) for a in ("sode", "mlp", "ode")]
+TAU_GRIDS = {"narrow": np.round(np.arange(-1.0, 2.51, 0.25), 2), "wide": np.round(np.arange(-4.0, 4.01, 0.25), 2)}
 
 # contrasts declared before the run: (key, model A, model B, metric); Holm over the ones present
+CONTRASTS_V21 = [   # v2.1 smoothing study, its own Holm family
+    ("v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.273)", "sode_rs_c2", "mlp_rs_c2", "cert@0.273"),
+    ("v2.1: sode_rs_c1 vs mlp_rs_c1 (certified @0.273)", "sode_rs_c1", "mlp_rs_c1", "cert@0.273"),
+    ("v2.1: sode_rs_c0 vs mlp_rs_c0 (certified @0.273)", "sode_rs_c0", "mlp_rs_c0", "cert@0.273"),
+    ("v2.1: sode_rs_c2 vs ode_rs_c2 (certified @0.273)", "sode_rs_c2", "ode_rs_c2", "cert@0.273"),
+    ("v2.1: sode_rs_c2 vs sode_rs (certified @0.273)", "sode_rs_c2", "sode_rs", "cert@0.273"),
+    ("v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.5)", "sode_rs_c2", "mlp_rs_c2", "cert@0.5"),
+]
 CONTRASTS = [
     ("module 1: sode vs sode_base (clean)", "sode", "sode_base", "clean"),
     ("sode vs mlp (clean)", "sode", "mlp", "clean"),
@@ -323,6 +339,8 @@ def val_score(model, spec, kind, D, a, sub_idx):
     model.eval()
     if spec["train"] == "rs":
         s = noisy_logit_samples(predictor(model, kind, "fresh"), D.Xsel, a.sigma_rs, 8)
+        if spec["select"] == "tuned":       # score after the post-hoc adjustment that will be applied
+            return max(tune_tau(s, D.ysel.numpy(), D.prior, vote=True, grid=TAU_GRIDS[spec["tau_grid"]])[1].values())
         votes = F.one_hot(s.argmax(-1), D.K).sum(0).argmax(-1).numpy()
         return fast_macro_f1(D.ysel.numpy(), votes, D.K)
     f = predictor(model, kind, "fixed")
@@ -345,7 +363,7 @@ def posthoc(model, spec, kind, D, a):
     else:
         samples = logits_of(predictor(model, kind, "fixed"), D.Xsel).unsqueeze(0)
     ysel = D.ysel.numpy()
-    tau, grid = tune_tau(samples, ysel, D.prior, vote=vote)
+    tau, grid = tune_tau(samples, ysel, D.prior, vote=vote, grid=TAU_GRIDS[spec["tau_grid"]])
     bias = -tau * D.prior.log()
     info = {"posthoc": spec["posthoc"], "tau": tau, "val_macro_f1_by_tau": grid,
             "val_macro_f1_after_posthoc": grid[tau]}
@@ -400,7 +418,8 @@ def train_neural(name, D, a, sd):
                                         steps=spec["at_steps"], trades_beta=a.trades_beta)
             elif spec["train"] == "rs":
                 loss = gaussian_consistency_loss(f, x, y, loss_fn, sigma=a.sigma_rs, m=a.rs_m,
-                                                 lam=a.cons_lambda, eta=a.cons_eta)
+                                                 lam=a.cons_lambda if spec["cons_lambda"] is None else spec["cons_lambda"],
+                                                 eta=a.cons_eta)
             else:
                 loss = loss_fn(f(x), y)
             opt.zero_grad(set_to_none=True)
@@ -425,7 +444,7 @@ def train_neural(name, D, a, sd):
                 bad += a.eval_every
             log(f"[seed {D.seed}][{name}] epoch {ep + 1}/{epochs} loss {tot / len(perm):.4f} "
                 f"val {'robust ' if spec['train'] == 'at' else ''}macro-F1 {s:.4f} (best {best:.4f} @ {best_ep + 1})")
-            if bad >= a.patience:
+            if bad >= (spec["patience"] or a.patience) and ep + 1 >= spec["min_epochs"]:
                 log(f"[seed {D.seed}][{name}] early stop")
                 break
     if best_state is not None:
@@ -706,7 +725,8 @@ def cmd_aggregate(a):
         return lambda yy, pp, ww: float(np.average(pp, weights=ww))
 
     contrasts, pvals = {}, {}
-    for key, ma, mb, kind in CONTRASTS:
+    family = {k: "v2" for k, *_ in CONTRASTS} | {k: "v2.1" for k, *_ in CONTRASTS_V21}
+    for key, ma, mb, kind in CONTRASTS + CONTRASTS_V21:
         pairs = []
         for s in seeds:
             sd = out / f"seed_{s}"
@@ -735,8 +755,9 @@ def cmd_aggregate(a):
         if pairs:
             contrasts[key] = paired_bootstrap(pairs, metric_for(kind), n_boot=a.n_boot)
             pvals[key] = contrasts[key]["p"]
-    for k, p in holm(pvals).items():
-        contrasts[k]["p_holm"] = p
+    for fam in ("v2", "v2.1"):                 # Holm within each declared family
+        for k, p in holm({k: v for k, v in pvals.items() if family[k] == fam}).items():
+            contrasts[k]["p_holm"] = p
     (out / "summary.json").write_text(json.dumps({"seeds": seeds, "models": summ, "contrasts": contrasts}, indent=2))
 
     fmt = lambda c: "–" if not c or c.get("mean") is None else f"{c['mean']:.3f} ± {(c['hi'] - c['mean']):.3f}"
