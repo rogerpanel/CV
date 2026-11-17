@@ -1,0 +1,20 @@
+# ConformalGuard parameter schedule for the §6 benchmarks.
+
+alpha_sweep: [0.01, 0.025, 0.05, 0.10]
+k_hops_sweep: [1, 2, 3]
+lambda_cascade_sweep: [0.0, 0.25, 0.5, 1.0]
+cal_test_splits: 20
+
+monitor:
+  lr: 0.1
+  lam_init: 0.0
+
+benchmarks:
+  AgentDojo:
+    tasks: 97
+    security_cases: 629
+  InjecAgent:
+    cases: 1054
+  R-Judge:
+    records: 569
+    risk_scenarios: 27

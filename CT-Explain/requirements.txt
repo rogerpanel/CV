@@ -1,0 +1,41 @@
+# Core numerics
+numpy>=1.24
+scipy>=1.11
+pandas>=2.0
+pyyaml>=6.0
+tqdm>=4.65
+scikit-learn>=1.3
+
+# Deep learning
+torch>=2.1
+torchdiffeq>=0.2.4
+torchsde>=0.2.6        # optional, enables SDE-TGNN
+torch-geometric>=2.5   # optional, enables native graph ops
+
+# Conformal / uncertainty
+crepes>=0.6            # conformal reference implementations
+netcal>=1.3            # calibration metrics (ECE, Brier, reliability)
+
+# Explainability baselines
+quantus>=0.5           # faithfulness / stability metrics
+shap>=0.44             # SHAP baseline
+captum>=0.7            # attribution baselines
+
+# Game theory
+scipy>=1.11            # LP for Nash equilibrium
+cvxpy>=1.4             # optional convex solver fallback
+
+# Serving / integration
+flask>=3.0
+flask-cors>=4.0
+pydantic>=2.5
+requests>=2.31
+
+# Visualization
+matplotlib>=3.7
+seaborn>=0.13
+networkx>=3.2
+plotly>=5.18
+
+# Stats
+statsmodels>=0.14

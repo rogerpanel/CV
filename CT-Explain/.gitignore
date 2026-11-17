@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+
+# Test / run artefacts
+.pytest_cache/
+.coverage
+htmlcov/
+runs/
+data/
+
+# OS
+.DS_Store
+Thumbs.db
