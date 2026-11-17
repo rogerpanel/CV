@@ -175,7 +175,7 @@ def test_openai_compatible_judge_request_and_response():
     assert "PROPOSED ACTION" in req["messages"][1]["content"] and J.RATING_FORMAT in req["messages"][1]["content"]
     resp = NS(choices=[NS(message=NS(content="85", refusal=None))], model="deepseek/deepseek-chat", usage=NS(prompt_tokens=1200, completion_tokens=2))
     row = judge_openai.read_response(resp)
-    assert row == {"score": 85.0, "served_by": "deepseek/deepseek-chat", "input_tokens": 1200, "output_tokens": 2}
+    assert row == {"score": 85.0, "served_by": "deepseek/deepseek-chat", "input_tokens": 1200, "output_tokens": 2, "raw": "85"}
     resp.choices[0].message = NS(content="I am not sure", refusal=None)
     assert judge_openai.read_response(resp)["score"] is None
 

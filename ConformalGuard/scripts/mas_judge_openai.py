@@ -46,6 +46,7 @@ def read_response(resp) -> dict:
         row["stop_reason"] = "refusal"
         return row
     row["score"] = parse_rating(message.content or "")
+    row["raw"] = (message.content or "")[:120]
     return row
 
 
