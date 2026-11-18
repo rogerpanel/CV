@@ -81,8 +81,8 @@ whether traffic is benign or belongs to an attack. A \emph{flow} is the set of
 packets exchanged between two endpoints in one session, and modern detectors
 summarise it by statistics such as duration, packet and byte counts,
 inter-arrival times and protocol flags. Learned detectors on such summaries now
-run in production platforms \citep{robustidps2026}, across cloud, industrial and
-microservice settings \citep{anaedevha2026mstgnn,anaedevha2026cttgnn,anaedevha2026trippleE}.
+cover enterprise, cloud and industrial networks
+\citep{lo2022egraphsage,wu2022rtids,anaedevha2026mstgnn}.
 They are also exposed: an attacker who pads packets or adds delays controls
 some of the statistics, and small, deliberately chosen changes remove many F1
 points from standard detectors \citep{ennaji2024advsurvey,vitorino2024advbench,anaedevha2024robust}.
@@ -97,7 +97,7 @@ inherit stability from their flow map \citep{kang2021sodef}, and neural SDEs
 \citep{tzen2019nsde,li2020scalable} add learned noise that is well posed and
 carries calibrated uncertainty \citep{oh2024stablesde,liu2020sdenoise}.
 Stochastic and continuous-time intrusion detectors
-\citep{anaedevha2026ode,anaedevha2026fokker,anaedevha2026estc} already deliver
+\citep{anaedevha2026ode,anaedevha2026mstgnn} already deliver
 strong clean accuracy and uncertainty estimates; this paper turns such a model
 into a detector that is trained, attacked and certified under one protocol.
 
@@ -243,18 +243,11 @@ against adaptive attacks.
 \citep{wu2022rtids}, recurrent \citep{halbouni2022cnnlstm} and state-space
 \citep{mosaiyebzadeh2025graphmamba} detectors model flows and their context.
 Continuous-time and stochastic detectors
-\citep{anaedevha2026ode,anaedevha2026fokker,anaedevha2026mstgnn,anaedevha2026mstgnntia,anaedevha2026estc,anaedevha2026cttgnn}
-and uncertainty-aware models with Gaussian-process, PAC-Bayesian and
-multimodal formulations \citep{anaedevha2026hgp,anaedevha2026pacbayes,anaedevha2025stochtx}
-supply calibrated scores; robustness to evasion and poisoning has been studied
-with adversarially trained, state-space, reinforcement-learning and
-post-quantum detectors
-\citep{anaedevha2024robust,anaedevha2026mambashield,anaedevha2025drl,anaedevha2026pqidps}.
-Related threads cover encrypted and microservice traffic
-\citep{anaedevha2026hybridenc,anaedevha2026trippleE}, device identification
-\citep{anaedevha2024device}, federated, privacy-preserving and Byzantine-resilient
-detection \citep{anaedevha2026byzantine,anaedevha2026dpot,anaedevha2026fedllmapi,anaedevha2026fedloraguard},
-and language-model threat intelligence \citep{anaedevha2026cyberseclm}.
+\citep{anaedevha2026ode,anaedevha2026mstgnn} and uncertainty-aware models with
+stochastic and PAC-Bayesian formulations
+\citep{anaedevha2025stochtx,anaedevha2026pacbayes} supply calibrated scores, and
+adversarial training improves the robustness of flow classifiers to evasion
+\citep{anaedevha2024robust}.
 \citet{arp2022dos}, \citet{pendlebury2019tesseract} and
 \citet{engelen2021troubleshooting} show how leakage, sampling bias and label
 errors inflate security-ML results, and \citet{grinsztajn2022trees} show that
@@ -442,7 +435,8 @@ a neural ODE (SODE-Guard with $g_\theta=0$) and on an E-GraphSAGE-style MLP
 \citep{lo2022egraphsage}; LightGBM \citep{ke2017lightgbm}, XGBoost
 \citep{chen2016xgboost} and a random forest \citep{breiman2001rf} with balanced
 weights and the same post-hoc adjustment; and the original training recipe
-(cross-entropy, 10 epochs) as \texttt{SODE-base}.
+(cross-entropy with the anti-concentration regulariser, 10 epochs, no early
+stopping or post-hoc adjustment) as \texttt{SODE-base}.
 
 \textbf{Attacks and statistics.} $\ell_\infty$, $\varepsilon=0.03$, on 500
 class-stratified test flows per seed: PGD-40; PGD-100 with two restarts;
@@ -623,8 +617,8 @@ $r=0.5$.}
 & Configuration & \multicolumn{2}{c}{Clean / worst case}\\
 \midrule
 \multirow{8}{*}{M1}
-& original recipe (cross-entropy, 10 epochs) & 0.438 & 0.223\\
-& $+$ full budget, early stopping, logit-adjusted loss & 0.466 & 0.230\\
+& original recipe (cross-entropy $+$ regulariser, 10 epochs) & 0.438 & 0.223\\
+& $+$ full budget, early stopping, logit-adjusted loss, AdamW & 0.466 & 0.230\\
 & $+$ post-hoc adjustment (\textbf{M1}) & 0.495 & 0.245\\
 & \quad cross-entropy instead of logit-adjusted loss & 0.493 & 0.233\\
 & \quad focal / class-balanced loss & 0.500 / 0.500 & 0.199 / 0.248\\

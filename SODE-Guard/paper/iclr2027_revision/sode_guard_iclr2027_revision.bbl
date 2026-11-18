@@ -1,23 +1,9 @@
-\begin{thebibliography}{66}
+\begin{thebibliography}{49}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
-
-\bibitem[Anaedevha(2024)]{anaedevha2024device}
-Roger~Nick Anaedevha.
-\newblock Application of machine learning models for device identification in
-  wireless network traffic.
-\newblock In \emph{Conference of Young Researchers in Electrical and Electronic
-  Engineering (ElCon)}, pp.\  104--110, 2024.
-\newblock \doi{10.1109/ElCon61730.2024.10468413}.
-
-\bibitem[Anaedevha(2026)]{robustidps2026}
-Roger~Nick Anaedevha.
-\newblock {RobustIDPS.ai}: An open-source {AI}-native intrusion detection and
-  prevention platform.
-\newblock Zenodo, 2026.
 
 \bibitem[Anaedevha \& Trofimov(2024)Anaedevha and
   Trofimov]{anaedevha2024robust}
@@ -28,161 +14,41 @@ Roger~Nick Anaedevha and Alexander~G. Trofimov.
   3):\penalty0 S414--S423, 2024.
 \newblock \doi{10.3103/S1060992X24700681}.
 
-\bibitem[Anaedevha \& Trofimov(2025{\natexlab{a}})Anaedevha and
-  Trofimov]{anaedevha2025drl}
-Roger~Nick Anaedevha and Alexander~G. Trofimov.
-\newblock Integrated deep {Q}-networks and actor-critic models for enhanced
-  poisoning attack detection in network intrusion detection systems.
-\newblock In \emph{Conference of Young Researchers in Electrical and Electronic
-  Engineering (ElCon)}, 2025{\natexlab{a}}.
-
-\bibitem[Anaedevha \& Trofimov(2025{\natexlab{b}})Anaedevha and
+\bibitem[Anaedevha \& Trofimov(2025)Anaedevha and
   Trofimov]{anaedevha2025stochtx}
 Roger~Nick Anaedevha and Alexander~G. Trofimov.
 \newblock Stochastic multimodal transformer with uncertainty quantification for
   robust network intrusion detection.
 \newblock In \emph{Advances in Neural Computation, Machine Learning, and
   Cognitive Research IX}, volume 1241 of \emph{Studies in Computational
-  Intelligence}. Springer, 2025{\natexlab{b}}.
+  Intelligence}. Springer, 2025.
 \newblock \doi{10.1007/978-3-032-07690-8_35}.
 
-\bibitem[Anaedevha \& Trofimov(2026{\natexlab{a}})Anaedevha and
-  Trofimov]{anaedevha2026cyberseclm}
-Roger~Nick Anaedevha and Alexander~G. Trofimov.
-\newblock {CyberSecLLM}: A hybrid {M}amba--{T}ransformer foundation model with
-  {ODE}-augmented state dynamics for zero-shot threat intelligence.
-\newblock \emph{International Journal of Open Information Technologies},
-  14\penalty0 (10):\penalty0 27--41, 2026{\natexlab{a}}.
-
-\bibitem[Anaedevha \& Trofimov(2026{\natexlab{b}})Anaedevha and
-  Trofimov]{anaedevha2026fokker}
-Roger~Nick Anaedevha and Alexander~G. Trofimov.
-\newblock Uncertainty-aware network intrusion detection using
-  {F}okker--{P}lanck moment propagation and stochastic dynamics in temporal
-  graph neural networks.
-\newblock In \emph{IEEE 27th International Conference of Young Professionals in
-  Electron Devices and Materials (EDM)}, pp.\  1--11, 2026{\natexlab{b}}.
-\newblock \doi{10.1109/EDM69524.2026.11632112}.
-
-\bibitem[Anaedevha \& Trofimov(2026{\natexlab{c}})Anaedevha and
+\bibitem[Anaedevha \& Trofimov(2026)Anaedevha and
   Trofimov]{anaedevha2026mstgnn}
 Roger~Nick Anaedevha and Alexander~G. Trofimov.
 \newblock Multi-scale temporal graph neural network with stochastic dynamics
   for cloud and industrial network intrusion detection.
 \newblock In \emph{IEEE 27th International Conference of Young Professionals in
-  Electron Devices and Materials (EDM)}, pp.\  1--8, 2026{\natexlab{c}}.
+  Electron Devices and Materials (EDM)}, pp.\  1--8, 2026.
 \newblock \doi{10.1109/EDM69524.2026.11632205}.
 
-\bibitem[Anaedevha \& Trofimov(2026{\natexlab{d}})Anaedevha and
-  Trofimov]{anaedevha2026trippleE}
-Roger~Nick Anaedevha and Alexander~G. Trofimov.
-\newblock {TrippleE-TGNN}: Triple-embedding temporal graph neural networks for
-  multi-granularity microservices security.
-\newblock TechRxiv preprint, 2026{\natexlab{d}}.
-
 \bibitem[Anaedevha et~al.(2026{\natexlab{a}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026byzantine}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {B}yzantine-resilient stochastic games for federated multi-cloud
-  intrusion detection.
-\newblock \emph{Complex \& Intelligent Systems}, 2026{\natexlab{a}}.
-\newblock Accepted, to appear.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{b}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026cttgnn}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {CT-TGNN}: Continuous-time temporal graph neural networks for
-  real-time threat propagation analysis in encrypted zero-trust microservices.
-\newblock TechRxiv preprint, 2026{\natexlab{b}}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{c}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026dpot}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock Differentially private optimal transport for multi-cloud intrusion
-  detection: A privacy-preserving federated domain adaptation framework.
-\newblock TechRxiv preprint, 2026{\natexlab{c}}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{d}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026estc}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock Uncertainty-aware stochastic temporal graph networks for
-  reliability-critical intrusion detection across heterogeneous electronic
-  system domains.
-\newblock In \emph{IEEE 11th Electronics System-Integration Technology
-  Conference (ESTC)}, 2026{\natexlab{d}}.
-\newblock Accepted, to appear.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{e}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026fedllmapi}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {FedLLM-API}: Privacy-preserving large language model federation for
-  zero-day {API} threat detection across organizational boundaries.
-\newblock TechRxiv preprint, 2026{\natexlab{e}}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{f}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026fedloraguard}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {FedLoRAGuard}: Federated dynamic graph neural networks with
-  differential-privacy certificates for {LoRA} adapter integrity verification.
-\newblock In \emph{Findings of the Association for Computational Linguistics:
-  EMNLP 2026}, pp.\  31148--31161, 2026{\natexlab{f}}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{g}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026hgp}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock Uncertainty-calibrated hierarchical {G}aussian processes for
-  intrusion detection with multi-scale temporal modeling.
-\newblock \emph{Neurocomputing}, 677:\penalty0 133105, 2026{\natexlab{g}}.
-\newblock \doi{10.1016/j.neucom.2026.133105}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{h}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026hybridenc}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock Hybrid spatial-temporal deep learning for privacy-preserving
-  encrypted traffic intrusion detection.
-\newblock TechRxiv preprint, 2026{\natexlab{h}}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{i}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026mambashield}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {MambaShield}: Selective state-space models for poisoning-resilient
-  sequential modeling.
-\newblock \emph{Expert Systems with Applications}, pp.\  131175,
-  2026{\natexlab{i}}.
-\newblock \doi{10.1016/j.eswa.2026.131175}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{j}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026mstgnntia}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock Multi-scale temporal graph neural network with stochastic dynamics
-  for cloud and industrial network intrusion detection.
-\newblock \emph{IEEE Transactions on Industry Applications},
-  2026{\natexlab{j}}.
-\newblock Accepted, to appear.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{k}})Anaedevha, Trofimov, and
   Borodachev]{anaedevha2026ode}
 Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
 \newblock Temporal adaptive neural ordinary differential equations with deep
   spatio-temporal point processes for real-time network intrusion detection.
-\newblock \emph{Complex \& Intelligent Systems}, 2026{\natexlab{k}}.
+\newblock \emph{Complex \& Intelligent Systems}, 2026{\natexlab{a}}.
 \newblock \doi{10.1007/s40747-026-02291-7}.
 
-\bibitem[Anaedevha et~al.(2026{\natexlab{l}})Anaedevha, Trofimov, and
+\bibitem[Anaedevha et~al.(2026{\natexlab{b}})Anaedevha, Trofimov, and
   Borodachev]{anaedevha2026pacbayes}
 Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
 \newblock Stochastic {PAC}-{B}ayesian transformers for network intrusion
   detection and natural language processing applications.
 \newblock \emph{Knowledge and Information Systems}, 68:\penalty0 232,
-  2026{\natexlab{l}}.
+  2026{\natexlab{b}}.
 \newblock \doi{10.1007/s10115-026-02824-z}.
-
-\bibitem[Anaedevha et~al.(2026{\natexlab{m}})Anaedevha, Trofimov, and
-  Borodachev]{anaedevha2026pqidps}
-Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
-\newblock {PQ-IDPS}: Adversarially robust intrusion detection for post-quantum
-  encrypted traffic with hybrid classical-quantum machine learning.
-\newblock TechRxiv preprint, 2026{\natexlab{m}}.
 
 \bibitem[Andriushchenko et~al.(2020)Andriushchenko, Croce, Flammarion, and
   Hein]{andriushchenko2020square}
