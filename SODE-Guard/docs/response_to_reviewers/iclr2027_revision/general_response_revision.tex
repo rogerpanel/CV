@@ -1,0 +1,139 @@
+\documentclass[11pt]{article}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+\usepackage{xcolor}
+\setlist{nosep,leftmargin=1.4em}
+\setlength{\parskip}{4pt}\setlength{\parindent}{0pt}
+
+\begin{document}
+
+{\large\bfseries Revision summary: a three-module recipe makes SODE-Guard
+accurate on rare attacks, robust under adaptive attack and certified by its own
+randomness, validated over five seeds with a protocol built for security use.}
+
+\smallskip
+\textit{General comment to the reviewers and the Area Chair (Submission 13607)}
+
+We thank the reviewers and the Area Chair. Their comments shaped this revision,
+and the uploaded manuscript reflects all of the work carried out during the
+discussion.
+
+\section*{What is new in the method}
+\begin{enumerate}
+\item \textbf{Imbalance-aware training}: a logit-adjusted loss, a full training
+budget with early stopping on validation macro-F1, and a post-hoc logit
+adjustment tuned on a held-out selection split.
+\item \textbf{EOT-matched adversarial training}: the training adversary attacks
+exactly the deployed eight-path predictor, with fresh Brownian paths at every
+step (N-FGSM, $\varepsilon$ ramp, early stopping on robust validation macro-F1).
+\item \textbf{A smoothing certificate that uses the model's own noise}.
+Proposition~1 proves that randomised smoothing remains sound when the base
+classifier is itself random. Gaussian input noise is a pure-diffusion prefix of
+the SDE, so SODE-Guard is certified by sampling input noise and Brownian paths
+jointly. Theorem~A remains as a deterministic Lipschitz certificate for the
+discretised SDE.
+\end{enumerate}
+
+\section*{How it is evaluated}
+\begin{itemize}
+\item \textbf{Data:} container flows of ICS3D, with duplicates and conflicting
+labels removed before splitting.
+\item \textbf{Seeds and splits:} five seeds, each with a new 60/20/20 split.
+\item \textbf{Attacks:} eight adaptive attacks (PGD with restarts,
+APGD-CE/DLR with EOT, EOT-PGD, an expected-margin attack, Square, transfer),
+each scored with fixed and with fresh Brownian paths.
+\item \textbf{Checks:} gradient-masking checks, a full-strength re-attack, and a
+per-class chronological split.
+\item \textbf{Baselines:} LightGBM, XGBoost and a random forest.
+\item \textbf{Statistics:} paired-bootstrap contrasts with Holm correction,
+declared before the runs.
+\end{itemize}
+
+\section*{Main results (mean over five seeds)}
+\begin{center}\small
+\begin{tabular}{lccc}
+\toprule
+Metric & Before & With the recipe & Contrast \\
+\midrule
+Clean macro-F1 & 0.438 & 0.495 & $+0.057$, $p_{\mathrm{Holm}}=0.016$\\
+Worst-case macro-F1 (eight attacks) & 0.245 & 0.420 & $+0.174$, $p_{\mathrm{Holm}}=0.016$\\
+Certified accuracy, $\ell_2$ radius $0.273$ & 0.096 (Theorem~A) & 0.576 (0.877 test mix) & on par with smoothed MLP\\
+\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item Fixed and fresh Brownian paths agree (0.420 vs.\ 0.412), and certified
+accuracy at radius 0.5 is 0.491.
+\item SODE-Guard is on par with the strongest adversarially trained and smoothed
+baselines (MLP and neural ODE trained with the same recipe).
+\item Gradient-boosted trees reach the best clean macro-F1 (0.62) but fall to
+0.02--0.04 under a black-box attack, which shows where robust neural detectors
+are needed.
+\item The full-strength re-attack and the chronological split confirm every
+conclusion.
+\end{itemize}
+
+\section*{How the revision answers each review}
+\textbf{Reviewer vjJK.}
+\begin{itemize}
+\item Adaptive attacks are central to the evaluation, and the masking checks pass.
+\item The released pipeline attacks and certifies exactly the predictor that is
+deployed.
+\item The anti-concentration regulariser is replaced by three modules, each with
+a significant measured effect.
+\end{itemize}
+\textbf{Reviewer FiAv.}
+\begin{itemize}
+\item The certificate is applied to trained detectors and is competitive with
+randomised smoothing of an MLP.
+\item The stochastic model's distinctive strength is now explicit: its own paths
+are part of the smoothing distribution.
+\item The protocol follows Arp et al.\ and TESSERACT: deduplication, multiple
+seeds, chronological evaluation, strong tree baselines.
+\item The paper cites and discusses Liu et al.\ (CVPR 2020).
+\end{itemize}
+\textbf{Reviewer kdck.}
+\begin{itemize}
+\item Every attack is scored with fixed and with fresh paths.
+\item Recent robust and certified baselines are included, and BARS and MARS are
+discussed.
+\item Figures~1--2 are redrawn around the method and the accuracy / robustness /
+certification trade-off.
+\item The motivation is now grounded in the measured brittleness of the most
+accurate clean models.
+\end{itemize}
+
+\section*{Ablations}
+Every module was ablated over five seeds:
+\begin{itemize}
+\item the post-hoc adjustment and the training budget account for the clean gain;
+\item single-step N-FGSM matches five-step PGD at lower cost;
+\item the consistency weight trades certified accuracy at small radii against
+large radii.
+\end{itemize}
+
+\section*{Future work}
+We will extend SODE-Guard along the lines the reviewers opened:
+\begin{itemize}
+\item flow-sequence context for the rarest attack classes;
+\item feature-constrained and packet-level attacks;
+\item anisotropic noise in the certificate, in the spirit of BARS and MARS;
+\item a second container corpus with cross-dataset transfer;
+\item conformal alarm thresholds on the held-out calibration split.
+\end{itemize}
+
+The anonymised repository contains the code, the resumable multi-seed driver, a
+Colab notebook and every per-seed result file behind the tables and figures.
+
+\medskip
+\textbf{SODE-Guard and its open protocol give practitioners a ready path to
+intrusion detectors that are robust by measurement and certified by
+construction, and give researchers a reproducible benchmark for the next
+generation of robust detectors.}
+
+\end{document}

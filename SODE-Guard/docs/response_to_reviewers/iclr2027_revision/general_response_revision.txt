@@ -1,0 +1,58 @@
+Revision summary: a three-module recipe makes SODE-Guard accurate on rare attacks, robust under adaptive attack and certified by its own randomness, validated over five seeds with a protocol built for security use.
+
+We thank the reviewers and the Area Chair. Their comments shaped this revision, and the uploaded manuscript reflects all of the work carried out during the discussion.
+
+What is new in the method
+(1) Imbalance-aware training: a logit-adjusted loss, a full training budget with early stopping on validation macro-F1, and a post-hoc logit adjustment tuned on a held-out selection split.
+(2) EOT-matched adversarial training: the training adversary attacks exactly the deployed eight-path predictor, with fresh Brownian paths at every step (N-FGSM, eps ramp, early stopping on robust validation macro-F1).
+(3) A smoothing certificate that uses the model's own noise. Proposition 1 proves that randomised smoothing remains sound when the base classifier is itself random. Gaussian input noise is a pure-diffusion prefix of the SDE, so SODE-Guard is certified by sampling input noise and Brownian paths jointly. Theorem A remains as a deterministic Lipschitz certificate for the discretised SDE.
+
+How it is evaluated
+- Data: container flows of ICS3D, with duplicates and conflicting labels removed before splitting.
+- Seeds and splits: five seeds, each with a new 60/20/20 split.
+- Attacks: eight adaptive attacks (PGD with restarts, APGD-CE/DLR with EOT, EOT-PGD, an expected-margin attack, Square, transfer), each scored with fixed and with fresh Brownian paths.
+- Checks: gradient-masking checks, a full-strength re-attack, and a per-class chronological split.
+- Baselines: LightGBM, XGBoost and a random forest.
+- Statistics: paired-bootstrap contrasts with Holm correction, declared before the runs.
+
+Main results (mean over five seeds)
+- Clean macro-F1: 0.438 -> 0.495 with module 1 (+0.057, Holm-adjusted p = 0.016).
+- Worst-case macro-F1 over all attacks: 0.245 -> 0.420 with module 2 (+0.174, Holm-adjusted p = 0.016). Fixed and fresh paths agree (0.420 vs 0.412).
+- Certified accuracy at l2 radius 0.273: 0.576 with module 3 (0.877 on the test class mix), and 0.491 at radius 0.5. The deterministic certificate gave 0.096 at radius 0.273.
+- SODE-Guard is on par with the strongest adversarially trained and smoothed baselines (MLP and neural ODE trained with the same recipe).
+- Gradient-boosted trees reach the best clean macro-F1 (0.62) but fall to 0.02-0.04 under a black-box attack, which shows where robust neural detectors are needed.
+- The full-strength re-attack and the chronological split confirm every conclusion.
+
+How the revision answers each review
+- Reviewer vjJK:
+  - Adaptive attacks are central to the evaluation, and the masking checks pass.
+  - The released pipeline attacks and certifies exactly the predictor that is deployed.
+  - The anti-concentration regulariser is replaced by three modules, each with a significant measured effect.
+- Reviewer FiAv:
+  - The certificate is applied to trained detectors and is competitive with randomised smoothing of an MLP.
+  - The stochastic model's distinctive strength is now explicit: its own paths are part of the smoothing distribution.
+  - The protocol follows Arp et al. and TESSERACT: deduplication, multiple seeds, chronological evaluation, strong tree baselines.
+  - The paper cites and discusses Liu et al. (CVPR 2020).
+- Reviewer kdck:
+  - Every attack is scored with fixed and with fresh paths.
+  - Recent robust and certified baselines are included, and BARS and MARS are discussed.
+  - Figures 1-2 are redrawn around the method and the accuracy / robustness / certification trade-off.
+  - The motivation is now grounded in the measured brittleness of the most accurate clean models.
+
+Ablations
+Every module was ablated over five seeds:
+- the post-hoc adjustment and the training budget account for the clean gain;
+- single-step N-FGSM matches five-step PGD at lower cost;
+- the consistency weight trades certified accuracy at small radii against large radii.
+
+Future work
+We will extend SODE-Guard along the lines the reviewers opened:
+- flow-sequence context for the rarest attack classes;
+- feature-constrained and packet-level attacks;
+- anisotropic noise in the certificate, in the spirit of BARS and MARS;
+- a second container corpus with cross-dataset transfer;
+- conformal alarm thresholds on the held-out calibration split.
+
+The anonymised repository contains the code, the resumable multi-seed driver, a Colab notebook and every per-seed result file behind the tables and figures.
+
+SODE-Guard and its open protocol give practitioners a ready path to intrusion detectors that are robust by measurement and certified by construction, and give researchers a reproducible benchmark for the next generation of robust detectors.
