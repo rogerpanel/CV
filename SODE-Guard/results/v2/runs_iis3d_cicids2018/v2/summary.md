@@ -22,6 +22,7 @@ Data: 37996 flows after deduplication, 11 classes. Mean ± half-width of the 95%
 | model | r = 0.0 | r = 0.05 | r = 0.1 | r = 0.2 | r = 0.273 | r = 0.5 | ACR |
 |---|---|---|---|---|---|---|---|
 | mlp_rs_c2 | 0.870 ± 0.019 | 0.864 ± 0.020 | 0.856 ± 0.026 | 0.838 ± 0.031 | 0.828 ± 0.030 | 0.749 ± 0.068 | 0.538 ± 0.019 |
+| ode_rs_c2 | 0.869 ± 0.019 | 0.860 ± 0.022 | 0.844 ± 0.038 | 0.827 ± 0.035 | 0.818 ± 0.032 | 0.790 ± 0.017 | 0.544 ± 0.016 |
 | sode_rs_c2 | 0.871 ± 0.013 | 0.868 ± 0.013 | 0.864 ± 0.013 | 0.851 ± 0.015 | 0.842 ± 0.012 | 0.802 ± 0.015 | 0.554 ± 0.007 |
 
 ## Feature-constrained attacks (mutable features only, domain and integrality kept)
@@ -80,5 +81,6 @@ Data: 37996 flows after deduplication, 11 classes. Mean ± half-width of the 95%
 | module 2: sode_at vs sode (worst case) | +0.197 | [+0.182, +0.211] | 0.002 | 0.014 |
 | sode_at vs mlp_at (worst case) | +0.003 | [-0.006, +0.014] | 0.468 | 1.000 |
 | sode_at vs ode_at (worst case) | +0.002 | [-0.008, +0.013] | 0.715 | 1.000 |
-| v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.273) | +0.014 | [+0.005, +0.023] | 0.004 | 0.004 |
-| v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.5) | +0.052 | [+0.042, +0.063] | 0.002 | 0.004 |
+| v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.273) | +0.014 | [+0.005, +0.023] | 0.004 | 0.006 |
+| v2.1: sode_rs_c2 vs ode_rs_c2 (certified @0.273) | +0.024 | [+0.016, +0.032] | 0.002 | 0.006 |
+| v2.1: sode_rs_c2 vs mlp_rs_c2 (certified @0.5) | +0.052 | [+0.042, +0.063] | 0.002 | 0.006 |
