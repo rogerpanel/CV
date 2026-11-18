@@ -132,7 +132,7 @@ def build(out_dir: Path) -> Path:
         src = ROOT / rel
         dst = pkg / rel
         if src.is_dir():
-            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.tmp.*"))
+            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.tmp.*", "superseded"))
         else:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
