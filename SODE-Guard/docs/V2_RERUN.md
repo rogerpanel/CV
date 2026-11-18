@@ -87,3 +87,17 @@ In v2, the smoothed models often early-stopped at epochs 1–7, and their post-h
 * early stopping cannot trigger before epoch 20, and patience is 20.
 
 Certification is unchanged (σ = 0.25, n = 2,000, α = 0.001, on the same 500-flow subset). The contrasts are a separate Holm family (`CONTRASTS_V21`), declared before the run.
+
+## Operations extras and more datasets
+
+* `--extras calibrate` (stage `calibrate`) uses the saved models and the held-out calibration half:
+  * temperature scaling, with ECE reported before and after;
+  * split-conformal prediction sets with the LAC score, marginal and class-conditional (Mondrian), at α = 0.1 and 0.05;
+  * conformal false-alarm thresholds on the benign class at target FAR 1% and 5%, reporting test FAR and detection rate. The benign class is auto-detected by name or set with `--benign-class`.
+* `--extras constrained` (stage `constrained`) re-attacks the saved models under feature constraints (`src/attacks/constrained.py`):
+  * only attacker-controllable statistics change; `Bwd`/backward-direction features, ports, protocol, flags and window sizes are fixed;
+  * features never go below their training minimum;
+  * integer-valued features move by whole units, truncated towards the clean value so the ε budget holds.
+
+  The attacks are constrained PGD with restarts, EOT-PGD with fresh paths, a masked Square random search, and transfer from the MLP.
+* The Colab notebook takes `DATASET` = `ics3d`, `iis3d` or `idspqc`. Each has its own Drive folder, file pattern, per-class cap and default extras. New datasets use the improved smoothed models (`sode_rs_c2`, `mlp_rs_c2`) in the core.

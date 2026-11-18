@@ -246,10 +246,11 @@ def main():
     ap.add_argument("--margin", type=float, default=600, help="seconds kept free before the deadline")
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     ap.add_argument("--profile", default="lite")
-    ap.add_argument("--extras", nargs="*", default=[], choices=["ablations", "fullcheck", "classtime", "smoothing"])
+    ap.add_argument("--extras", nargs="*", default=[], choices=["ablations", "fullcheck", "classtime", "smoothing", "calibrate", "constrained"])
     ap.add_argument("--gpus", type=int, default=None, help="number of GPUs to use (default: all visible)")
     ap.add_argument("--heartbeat", type=float, default=600)
     ap.add_argument("--ablations", nargs="*", default=None, help="ablation models to run (default: all of ABLATIONS)")
+    ap.add_argument("--core-models", nargs="*", default=None, help="core models (default: v2_run.py CORE)")
     ap.add_argument("--smoothing-models", nargs="*", default=None, help="v2.1 smoothing models (default: all nine)")
     ap.add_argument("--extra-args", default="", help="extra v2_run.py options for every train/attack/certify call")
     a = ap.parse_args()
@@ -285,7 +286,7 @@ def main():
 
     # 1. core models, seeds spread over GPUs
     by_gpu = split_seeds(a.seeds, gpus)
-    run_groups({g: [j for s in ss for j in seed_jobs(a, s)] for g, ss in by_gpu.items()}, a, logs, "core")
+    run_groups({g: [j for s in ss for j in seed_jobs(a, s, a.core_models)] for g, ss in by_gpu.items()}, a, logs, "core")
     run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "core: aggregate")
 
     # 2. extras, in the order given by --extras
@@ -296,6 +297,13 @@ def main():
             run_groups({g: [j for s in ss for j in seed_jobs(a, s, abl, rs or ["ode_rs"])] for g, ss in by_gpu.items()},
                        a, logs, "ablations")
             run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, "ablations: aggregate")
+        elif extra in ("calibrate", "constrained"):   # operations: no retraining
+            mods = ["--models", *a.core_models] if a.core_models else []
+            prof = ["--profile", a.profile] if extra == "constrained" else []
+            run_groups({g: [(f"seed {s_}", RUN + [extra, "--out", a.out, "--seeds", str(s_), *mods, *prof,
+                                                 *shlex.split(a.extra_args)]) for s_ in ss]
+                        for g, ss in by_gpu.items()}, a, logs, extra)
+            run(RUN + ["aggregate", "--out", a.out], None, logs / "aggregate.log", a.deadline, 60, f"{extra}: aggregate")
         elif extra == "smoothing":            # v2.1 smoothing study: train and certify only
             sm = a.smoothing_models or SMOOTHING_V21
             def sm_jobs(seed):

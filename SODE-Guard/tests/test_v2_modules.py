@@ -78,3 +78,39 @@ def test_stats():
     assert res["diff"] > 0 and res["p"] < 0.05
     adj = holm({"x": 0.01, "y": 0.04, "z": 0.5})
     assert adj["x"] == 0.03 and adj["y"] == 0.08 and adj["z"] == 0.5
+
+
+def test_flow_constraints_respect_mask_domain_integers_and_budget():
+    from src.attacks.constrained import FlowConstraints, constrained_pgd
+    rng = np.random.default_rng(0)
+    raw = np.c_[rng.integers(0, 50, 500), rng.integers(0, 3, 500), rng.exponential(5.0, 500), rng.integers(1, 65535, 500)]
+    names = ["Total Fwd Packet", "Bwd Packets/s", "Flow Duration", "Dst Port"]
+    mu, sd = raw.mean(0), raw.std(0)
+    C = FlowConstraints(names, mu, sd, raw.astype(float), eps=0.5)
+    assert C.summary["n_mutable"] == 2 and C.summary["n_integer"] == 3
+    x = torch.tensor((raw[:20] - mu) / sd, dtype=torch.float32)
+    xa = C.finalize(x + 0.5 * torch.sign(torch.randn_like(x)), x)
+    d = xa - x
+    assert d.abs().max() <= 0.5 + 1e-5                      # budget
+    assert torch.all(d[:, 1] == 0) and torch.all(d[:, 3] == 0)  # Bwd and port fixed
+    raw_a = xa.numpy() * sd + mu
+    assert np.allclose(raw_a[:, 0], np.round(raw_a[:, 0]), atol=1e-3)   # integer counts stay integers
+    assert (raw_a[:, 2] >= raw[:, 2].min() - 1e-4).all()      # domain
+    f = torch.nn.Linear(4, 3)
+    xp = constrained_pgd(f, x, torch.zeros(20, dtype=torch.long), C, steps=3)
+    assert torch.all((xp - x)[:, 3] == 0)
+
+
+def test_conformal_coverage_and_alarm_far():
+    from src.evaluation.operations import alarm_threshold, conformal_sets, fit_temperature
+    rng = np.random.default_rng(1)
+    K, n = 4, 4000
+    y = rng.integers(0, K, n)
+    z = rng.normal(size=(n, K)); z[np.arange(n), y] += 1.5
+    p = torch.softmax(torch.tensor(z) / 2.0, 1).numpy()
+    T = fit_temperature(torch.tensor(z, dtype=torch.float32) / 2.0, torch.tensor(y))
+    assert 0.2 < T < 2.0
+    r = conformal_sets(p[:2000], y[:2000], p[2000:], y[2000:], alpha=0.1, classwise=True)
+    assert r["coverage"] >= 0.87 and r["min_class_coverage"] >= 0.84
+    al = alarm_threshold(p[:2000], y[:2000], p[2000:], y[2000:], benign=0, far=0.05)
+    assert al["test_far"] <= 0.08

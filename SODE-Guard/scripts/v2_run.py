@@ -64,6 +64,8 @@ from src.baselines.egraphsage_baseline import EGraphSAGEBaseline                
 from src.baselines.sde_tgnn import SDE_TGNN                                             # noqa: E402
 from src.certify.smoothing_sde import certify_randomized, radius_ceiling              # noqa: E402
 from src.evaluation.stats import holm, mean_ci, paired_bootstrap                       # noqa: E402
+from src.evaluation.operations import alarm_threshold, conformal_sets, ece, fit_temperature  # noqa: E402
+from src.attacks.constrained import FlowConstraints, constrained_pgd, constrained_square  # noqa: E402
 from src.models.pipeline import Pipeline, QuantileEncoder                              # noqa: E402
 from src.models.sode_guard import SODEGuard, SODEGuardConfig                           # noqa: E402
 from src.training.imbalance import (ImbalanceLoss, _predict as _vote_or_mean,  # noqa: E402
@@ -230,13 +232,8 @@ def seed_dir(out, seed):
     return d
 
 
-def make_split(a, seed):
+def split_indices(a, seed, y, t):
     from sklearn.model_selection import train_test_split
-    out, sd = Path(a.out), seed_dir(a.out, seed)
-    if (sd / "data.npz").exists():
-        return
-    d = np.load(out / "full.npz")
-    Xr, y, t = d["X"].astype(np.float64), d["y"], d["t"]
     idx = np.arange(len(y))
     if a.split == "class_time":
         if (t < 0).all():
@@ -251,6 +248,16 @@ def make_split(a, seed):
         tr, rest = train_test_split(idx, train_size=0.6, stratify=y, random_state=seed)
         va, te = train_test_split(rest, train_size=0.5, stratify=y[rest], random_state=seed)
     sel, cal = train_test_split(va, train_size=0.5, stratify=y[va], random_state=seed)
+    return tr, sel, cal, te
+
+
+def make_split(a, seed):
+    out, sd = Path(a.out), seed_dir(a.out, seed)
+    if (sd / "data.npz").exists():
+        return
+    d = np.load(out / "full.npz")
+    Xr, y, t = d["X"].astype(np.float64), d["y"], d["t"]
+    tr, sel, cal, te = split_indices(a, seed, y, t)
     med = np.nanmedian(Xr[tr], axis=0)
     Xr = np.where(np.isnan(Xr), med, Xr)
     mu, sdv = Xr[tr].mean(0), Xr[tr].std(0)
@@ -274,6 +281,33 @@ def load_split(a, seed) -> Data:
     D.counts = torch.bincount(D.ytr, minlength=D.K)
     D.prior = D.counts.float() / D.counts.sum()
     return D
+
+
+def raw_scaling(a, seed):
+    """Feature names, means, standard deviations and raw training values of the kept
+    columns, recomputed deterministically from full.npz (works for older splits too)."""
+    out = Path(a.out)
+    d = np.load(out / "full.npz")
+    Xr, y, t = d["X"].astype(np.float64), d["y"], d["t"]
+    tr, _, _, _ = split_indices(a, seed, y, t)
+    med = np.nanmedian(Xr[tr], axis=0)
+    Xr = np.where(np.isnan(Xr), med, Xr)
+    mu, sdv = Xr[tr].mean(0), Xr[tr].std(0)
+    cols = np.load(seed_dir(a.out, seed) / "data.npz")["cols"]
+    names = np.array(json.loads((out / "meta.json").read_text())["raw_features"])[cols]
+    return list(names), mu[cols], sdv[cols], Xr[tr][:, cols]
+
+
+def benign_index(a):
+    classes = json.loads((Path(a.out) / "meta.json").read_text())["classes"]
+    if a.benign_class:
+        if a.benign_class not in classes:
+            raise SystemExit(f"--benign-class {a.benign_class!r} not among classes {classes}")
+        return classes.index(a.benign_class)
+    for i, c in enumerate(classes):
+        if c.strip().lower() in ("benign", "normal", "benigntraffic", "benign_traffic"):
+            return i
+    return None
 
 
 def strat_idx(y: torch.Tensor, n: int, seed: int) -> torch.Tensor:
@@ -688,6 +722,104 @@ def cmd_certify(a):
             log(f"[seed {seed}][{name}] certified accuracy {cert['certified_accuracy_l2']} ({cert['seconds']:.0f}s)")
 
 
+# ------------------------------------------------------------------ calibrate (conformal alarms)
+def attackable(name, sd):
+    return trained(name, sd) and spec_of(name)["train"] != "rs"
+
+
+def cmd_calibrate(a):
+    b = benign_index(a)
+    log("benign class index for alarms:", b if b is not None else "none found (set --benign-class); alarms skipped")
+    for seed in a.seeds:
+        sd, D = seed_dir(a.out, seed), load_split(a, seed)
+        res = load_results(sd)
+        for name in a.models:
+            if not attackable(name, sd):
+                continue
+            if name in res.get("calibrate", {}) and not a.force:
+                log(f"[seed {seed}][{name}] already calibrated, skipping")
+                continue
+            kind = kind_of(spec_of(name))
+            f = predictor(load_any(name, D, sd), kind, "fixed")
+            zc, zt = logits_of(f, D.Xcal), logits_of(f, D.Xte)
+            yc, yt = D.ycal.numpy(), D.yte.numpy()
+            T = fit_temperature(zc, D.ycal)
+            pt0 = F.softmax(zt, 1).numpy()
+            pc, pt = F.softmax(zc / T, 1).numpy(), F.softmax(zt / T, 1).numpy()
+            r = {"temperature": T, "ece_test_before": ece(pt0, yt), "ece_test_after": ece(pt, yt),
+                 "conformal": {f"{kind_}_{al}": conformal_sets(pc, yc, pt, yt, al, classwise=(kind_ == "classwise"))
+                               for al in a.cal_alphas for kind_ in ("marginal", "classwise")}}
+            if b is not None:
+                r["alarms"] = {str(fa): alarm_threshold(pc, yc, pt, yt, b, fa) for fa in a.far_targets}
+            res.setdefault("calibrate", {})[name] = r
+            save_results(sd, res)
+            msg = f"ECE {r['ece_test_before']:.3f}->{r['ece_test_after']:.3f} (T={T:.2f})"
+            if b is not None:
+                al = r["alarms"][str(a.far_targets[0])]
+                msg += f" | target FAR {a.far_targets[0]}: test FAR {al['test_far']:.3f}, detection {al['detection_rate']:.3f}"
+            log(f"[seed {seed}][{name}] {msg}")
+
+
+# ------------------------------------------------------------------ constrained attacks
+def cmd_constrained(a):
+    for seed in a.seeds:
+        sd, D = seed_dir(a.out, seed), load_split(a, seed)
+        res = load_results(sd)
+        pending = [n for n in a.attack_models if attackable(n, sd) and (a.force or n not in res.get("attack_constrained", {}))]
+        if not pending:
+            log(f"[seed {seed}] all requested models already attacked under constraints")
+            continue
+        names, mu, sdv, raw_tr = raw_scaling(a, seed)
+        C = FlowConstraints(names, mu, sdv, raw_tr, a.eps, device=DEV)
+        log(f"[seed {seed}] constraints: {C.summary['n_mutable']}/{C.summary['n_features']} mutable, "
+            f"{C.summary['n_integer']} integer-valued")
+        idx = strat_idx(D.yte, a.n_attack, seed)
+        X, y = D.Xte[idx], D.yte[idx]
+        yn, w = y.numpy(), test_weights(y, D.yte, D.K)
+        transfer = {}
+        if trained("mlp", sd):
+            s_ = load_any("mlp", D, sd)
+            transfer["C-transfer from mlp"] = rr.run_batched(
+                lambda xb, yb: constrained_pgd(s_, xb, yb, C, steps=a.eot_steps), X, y, a.attack_batch)
+        for name in pending:
+            kind = kind_of(spec_of(name))
+            m = load_any(name, D, sd)
+            scorers = {"fixed": predictor(m, kind, "fixed")}
+            if kind == "sde":
+                scorers["fresh"] = predictor(m, kind, "fresh")
+            f_fixed, f_fresh = scorers["fixed"], scorers.get("fresh", scorers["fixed"])
+            atks = {f"C-Square ({a.square_queries} queries)": lambda xb, yb: constrained_square(f_fresh, xb, yb, C, n_queries=a.square_queries)}
+            if kind != "tree":
+                atks[f"C-PGD-{a.long_steps} x{a.restarts} (fixed)"] = lambda xb, yb: constrained_pgd(
+                    f_fixed, xb, yb, C, steps=a.long_steps, restarts=a.restarts)
+            if kind == "sde":
+                atks[f"C-EOT-PGD-{a.eot_steps} (EOT {a.eot})"] = lambda xb, yb: constrained_pgd(
+                    f_fresh, xb, yb, C, steps=a.eot_steps, eot=a.eot)
+            adv = dict(transfer)
+            for an, fn in atks.items():
+                t0 = time.time()
+                adv[an] = rr.run_batched(fn, X, y, a.attack_batch)
+                log(f"[seed {seed}][{name}] {an}: {time.time() - t0:.0f}s")
+            r, worst = {"attacks": {}}, {mode: None for mode in scorers}
+            for an, xa in adv.items():
+                r["attacks"][an] = {}
+                for mode, f in scorers.items():
+                    pr = logits_of(f, xa).argmax(1)
+                    r["attacks"][an][mode] = macro(yn, pr.numpy(), D.K)
+                    if worst[mode] is None:
+                        worst[mode] = pr.clone()
+                    else:
+                        flip = (pr != y) & (worst[mode] == y)
+                        worst[mode][flip] = pr[flip]
+            r["worst_case_macro_f1"] = {mode: macro(yn, wp.numpy(), D.K) for mode, wp in worst.items()}
+            r["worst_case_macro_f1_test_reweighted"] = {mode: macro(yn, wp.numpy(), D.K, w) for mode, wp in worst.items()}
+            r["clean_subset_macro_f1"] = macro(yn, logits_of(f_fixed, X).argmax(1).numpy(), D.K)
+            r["constraints"] = C.summary
+            res.setdefault("attack_constrained", {})[name] = r
+            save_results(sd, res)
+            log(f"[seed {seed}][{name}] constrained worst case {r['worst_case_macro_f1']} (clean subset {r['clean_subset_macro_f1']:.3f})")
+
+
 # ------------------------------------------------------------------ aggregate
 def cmd_aggregate(a):
     out = Path(a.out)
@@ -715,6 +847,22 @@ def cmd_aggregate(a):
                 for rad, v in c["certified_accuracy_l2"].items():
                     rows.setdefault(f"certified acc @{rad}", []).append(v)
                 rows.setdefault("ACR", []).append(c["acr"])
+            if m in r.get("calibrate", {}):
+                c = r["calibrate"][m]
+                rows.setdefault("ECE before", []).append(c["ece_test_before"])
+                rows.setdefault("ECE after", []).append(c["ece_test_after"])
+                for key, cs in c["conformal"].items():
+                    rows.setdefault(f"coverage {key}", []).append(cs["coverage"])
+                    rows.setdefault(f"min class coverage {key}", []).append(cs["min_class_coverage"])
+                    rows.setdefault(f"set size {key}", []).append(cs["mean_set_size"])
+                for fa, al in c.get("alarms", {}).items():
+                    rows.setdefault(f"test FAR @{fa}", []).append(al["test_far"])
+                    rows.setdefault(f"detection @{fa}", []).append(al["detection_rate"])
+            if m in r.get("attack_constrained", {}):
+                ac = r["attack_constrained"][m]
+                for mode, v in ac["worst_case_macro_f1"].items():
+                    rows.setdefault(f"constrained worst case ({mode})", []).append(v)
+                rows.setdefault("constrained clean subset", []).append(ac["clean_subset_macro_f1"])
             if m in r.get("train", {}) and "val_score" in r["train"][m]:
                 rows.setdefault("validation score", []).append(r["train"][m]["val_score"])
         summ[m] = {k: (np.mean(np.array(v), 0).round(4).tolist() if k == "per-class F1" else mean_ci(v)) for k, v in rows.items()}
@@ -778,6 +926,28 @@ def cmd_aggregate(a):
                   "| model | " + " | ".join(f"r = {r}" for r in RADII) + " | ACR |", "|---|" + "---|" * (len(RADII) + 1)]
         for m in cert_models:
             lines.append(f"| {m} | " + " | ".join(fmt(summ[m].get(f"certified acc @{r}")) for r in RADII) + f" | {fmt(summ[m]['ACR'])} |")
+    con_models = [m for m in models if "constrained worst case (fixed)" in summ[m]]
+    if con_models:
+        lines += ["", "## Feature-constrained attacks (mutable features only, domain and integrality kept)", "",
+                  "| model | clean (subset) | unconstrained worst case (fixed) | constrained worst case (fixed) | constrained (fresh) |",
+                  "|---|---|---|---|---|"]
+        for m in con_models:
+            lines.append(f"| {m} | {fmt(summ[m]['constrained clean subset'])} | {fmt(summ[m].get('worst-case macro-F1 (fixed)'))} | "
+                         f"{fmt(summ[m]['constrained worst case (fixed)'])} | {fmt(summ[m].get('constrained worst case (fresh)'))} |")
+    cal_models = [m for m in models if "ECE before" in summ[m]]
+    if cal_models:
+        al = sorted({k.split('@')[1] for m in cal_models for k in summ[m] if k.startswith("test FAR @")}, key=float)
+        cov = sorted({k[len("coverage "):] for m in cal_models for k in summ[m] if k.startswith("coverage ")})
+        lines += ["", "## Calibration, conformal sets and alarm thresholds (calibration half, then test)", "",
+                  "| model | ECE before | ECE after | " + " | ".join(f"coverage / min class / size ({c})" for c in cov)
+                  + "".join(f" | FAR / detection @{x}" for x in al) + " |", "|---|---|---|" + "---|" * (len(cov) + len(al))]
+        for m in cal_models:
+            s_ = summ[m]
+            g = lambda k: "–" if k not in s_ or s_[k]["mean"] is None else f"{s_[k]['mean']:.3f}"
+            row = f"| {m} | {fmt(s_['ECE before'])} | {fmt(s_['ECE after'])} | " + " | ".join(
+                f"{g('coverage ' + c)} / {g('min class coverage ' + c)} / {g('set size ' + c)}" for c in cov)
+            row += "".join(f" | {g('test FAR @' + x)} / {g('detection @' + x)}" for x in al)
+            lines.append(row + " |")
     lines += ["", "## Per-class clean F1 (mean over seeds)", "", "| model | " + " | ".join(meta["classes"]) + " |",
               "|---|" + "---|" * K]
     for m in models:
@@ -799,7 +969,7 @@ def cmd_report(a):
 # ------------------------------------------------------------------ main
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=["prepare", "train", "attack", "certify", "aggregate", "report"])
+    ap.add_argument("stage", choices=["prepare", "train", "attack", "certify", "calibrate", "constrained", "aggregate", "report"])
     ap.add_argument("--out", required=True)
     # prepare
     ap.add_argument("--csv"); ap.add_argument("--label-col"); ap.add_argument("--time-col")
@@ -853,6 +1023,9 @@ def main():
     ap.add_argument("--step-sweep", type=int, nargs="+", default=[10, 40, 100])
     ap.add_argument("--n-sweep", type=int, default=500)
     ap.add_argument("--n-boot", type=int, default=1000)
+    ap.add_argument("--benign-class", default=None, help="class name used as benign for alarm thresholds (auto: benign/normal)")
+    ap.add_argument("--cal-alphas", type=float, nargs="+", default=[0.1, 0.05])
+    ap.add_argument("--far-targets", type=float, nargs="+", default=[0.01, 0.05])
     a = ap.parse_args()
     for k, v in PROFILES[a.profile].items():
         if getattr(a, k) is None:
@@ -863,6 +1036,7 @@ def main():
         raise SystemExit(f"unknown models {unknown}; choose from {sorted(SPECS)}")
     log("device:", DEV, "| stage:", a.stage, "| profile:", a.profile)
     {"prepare": cmd_prepare, "train": cmd_train, "attack": cmd_attack, "certify": cmd_certify,
+     "calibrate": cmd_calibrate, "constrained": cmd_constrained,
      "aggregate": cmd_aggregate, "report": cmd_report}[a.stage](a)
 
 
