@@ -1,0 +1,33 @@
+{
+  "updated": "Wed Nov 18 01:35:21 2026",
+  "finished": true,
+  "status": {
+    "core: train seed 0": "done",
+    "core: attack seed 0": "done",
+    "core: certify seed 0": "done",
+    "core: train seed 1": "done",
+    "core: attack seed 1": "done",
+    "core: certify seed 1": "done",
+    "core: train seed 2": "done",
+    "core: attack seed 2": "done",
+    "core: certify seed 2": "done",
+    "core: train seed 3": "done",
+    "core: attack seed 3": "done",
+    "core: certify seed 3": "done",
+    "core: train seed 4": "done",
+    "core: attack seed 4": "done",
+    "core: certify seed 4": "done",
+    "core: aggregate": "done",
+    "smoothing: train seed 0": "done",
+    "smoothing: certify seed 0": "done",
+    "smoothing: train seed 1": "done",
+    "smoothing: certify seed 1": "done",
+    "smoothing: train seed 2": "done",
+    "smoothing: certify seed 2": "done",
+    "smoothing: train seed 3": "done",
+    "smoothing: certify seed 3": "done",
+    "smoothing: train seed 4": "done",
+    "smoothing: certify seed 4": "done",
+    "smoothing: aggregate": "done"
+  }
+}

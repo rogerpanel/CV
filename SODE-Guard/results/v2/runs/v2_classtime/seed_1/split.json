@@ -1,0 +1,1 @@
+{"seed": 1, "split": "class_time", "n_features": 75, "sizes": {"train": 41171, "selection": 6863, "calibration": 6864, "test": 13729}}
