@@ -1,0 +1,53 @@
+\documentclass[11pt]{article}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=1.4em}
+\setlength{\parskip}{4pt}\setlength{\parindent}{0pt}
+\begin{document}
+{\large\bfseries Update: under realisable attacks SODE-Guard keeps its robustness and
+meets a chosen false-alarm budget, while gradient-boosted trees remain brittle.}
+
+\medskip
+The updated PDF adds two analyses of the trained ICS3D models. Neither needed
+retraining.
+
+\begin{enumerate}
+\item \textbf{Feature-constrained attacks} (new Table~6, Section~6.5). The attacker
+may change only the 44 client-side flow statistics. Server-side, port, protocol,
+flag and window features stay fixed, every value stays within its training range,
+and the 51 integer-valued features change by whole units. The suite is constrained
+PGD with restarts, EOT-PGD with fresh paths, a masked Square search and constrained
+transfer, over five seeds. Worst-case macro-F1:
+\begin{itemize}
+\item SODE-Guard with adversarial training: 0.446, from 0.458 clean on the same flows.
+\item MLP and neural ODE with adversarial training: 0.439 and 0.443.
+\item Gradient-boosted trees and random forest: still 0.17--0.19, from about 0.60 clean.
+\end{itemize}
+This answers the realism question raised by Reviewers FiAv and kdck: the robustness
+ranking holds when attacks must stay realisable.
+\item \textbf{Conformal operating points} (Section~6.5, Table~8). Alarm thresholds are
+fitted on the held-out calibration half.
+\begin{itemize}
+\item The false-alarm budget holds on test flows for every model and seed:
+0.007--0.011 at 1\%, 0.047--0.050 at 5\%.
+\item At a 5\% budget, SODE-Guard raises an alarm on 95.6\% of attack flows,
+including 79--92\% of the five rare attack classes.
+\item Class-conditional conformal sets cover every class at least 80\% of the time at
+the 90\% level (SODE-Guard: 87\%).
+\end{itemize}
+\item \textbf{Data provenance.} The container flows are those of Amin et al.\ (AINA
+2024), now cited. The attack classes are named in Table~9. The Node-RED
+remote-code-execution and container-escape stages share the network footprint of
+the reconnaissance stage, which explains why they are detected as attacks but
+rarely named.
+\end{enumerate}
+
+The same protocol is running on two further flow corpora for the camera-ready version.
+
+\medskip
+\textbf{SODE-Guard now offers practitioners a detector that is robust under realistic
+attacks, certified by its own randomness and tunable to a false-alarm budget.}
+\end{document}
