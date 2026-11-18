@@ -79,6 +79,9 @@ warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", message=".*eval_set.*")
 RADII = [0.0, 0.05, 0.1, 0.2, 0.273, 0.5]
+# columns added by dataset integration (provenance, IDs, domain tags): never features, often label proxies
+METADATA_HINTS = ("record_id", "dataset_source", "security_domain", "data_category", "threat_type",
+                  "integration", "source_dataset", "source_file", "split")
 
 
 def atomic(path, write):
@@ -170,6 +173,13 @@ def cmd_prepare(a):
     header = pd.read_csv(files[0], nrows=5)
     label = rr.find_label(list(header.columns), a.label_col)
     log("files:", len(files), "| label column:", label)
+    # one schema only: mixing files with different columns makes the imputed gaps a
+    # dataset-of-origin feature, which leaks the label
+    schemas = {f: tuple(pd.read_csv(f, nrows=0).columns) for f in files}
+    if len(set(schemas.values())) > 1 and not a.allow_mixed_schema:
+        lines = "\n".join(f"  {len(c):3d} columns  {f}" for f, c in schemas.items())
+        raise SystemExit("the selected files have different columns:\n" + lines +
+                         "\nselect files with one schema (narrow --csv), or pass --allow-mixed-schema")
     kept, counts = {}, {}
     for f in files:
         for chunk in pd.read_csv(f, chunksize=a.chunksize, low_memory=False):
@@ -185,6 +195,7 @@ def cmd_prepare(a):
                 kept.setdefault(cls, []).append(take)
                 counts[cls] = have + len(take)
         log(f"read {f}; classes so far: {len(counts)}")
+    kept.pop(label, None)                          # repeated header lines inside a CSV
     df = pd.concat([pd.concat(v) for v in kept.values()], ignore_index=True)
     tcol = a.time_col or next((c for c in df.columns if c.strip().lower() in ("timestamp", "time", "ts")), None)
     t = (pd.to_datetime(df[tcol], errors="coerce").astype("int64").to_numpy() if tcol
@@ -192,7 +203,8 @@ def cmd_prepare(a):
     y_str = df[label].astype(str)
     feat = df.drop(columns=[label])
     feat = feat[[c for c in feat.columns if not any(h in c.strip().lower() for h in rr.ID_HINTS)]]
-    leaky = [c for c in feat.columns if "label" in c.lower() or c.lower().startswith("attack") or c in (a.drop_cols or [])]
+    leaky = [c for c in feat.columns if "label" in c.lower() or c.lower().startswith("attack") or c in (a.drop_cols or [])
+             or any(h in c.strip().lower() for h in METADATA_HINTS)]
     feat = feat.drop(columns=leaky).apply(pd.to_numeric, errors="coerce")
     feat = feat.loc[:, feat.notna().mean() > 0.5].replace([np.inf, -np.inf], np.nan)
     # exact duplicates and conflicting labels (Arp et al. 2022; Engelen et al. 2021)
@@ -978,6 +990,7 @@ def main():
     ap.add_argument("--min-per-class", type=int, default=100)
     ap.add_argument("--chunksize", type=int, default=500_000)
     ap.add_argument("--data-seed", type=int, default=42)
+    ap.add_argument("--allow-mixed-schema", action="store_true", help="allow CSV files with different columns")
     # split / seeds
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2, 3, 4])
     ap.add_argument("--seed-offset", type=int, default=0)

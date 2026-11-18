@@ -12,7 +12,7 @@ def code(s): cells.append({"cell_type": "code", "metadata": {}, "execution_count
 md(r"""
 # SODE-Guard v2 on ICS3D, IIS3D and IDS-PQC (Colab, disconnect-proof)
 
-One notebook for all three datasets: choose `DATASET` in step 0.
+One notebook for all datasets: choose `DATASET` in step 0. IIS3D is run per source corpus (CSE-CIC-IDS2018, UNSW-NB15, CIC-IoT-2023), because its files use different schemas; the prepare step refuses to mix schemas.
 
 **Experiments**
 * **Core** (12 models × 5 seeds): SODE-Guard with the three modules, the original recipe, neural ODE and MLP baselines (standard, adversarially trained, smoothed), and LightGBM, XGBoost and random forest. Each runs training, the lite attack suite and smoothing certificates.
@@ -38,7 +38,7 @@ Keep the tab open, and click into it now and then.
 """)
 md("## 0. Settings")
 code(r"""
-DATASET = 'ics3d'        # 'ics3d' | 'iis3d' | 'idspqc'
+DATASET = 'ics3d'        # 'ics3d' | 'iis3d_cicids2018' | 'iis3d_unsw' | 'iis3d_ciciot2023' | 'idspqc'
 
 DATASETS = {
     # container flows of ICS3D: core, ablations, checks and smoothing study already done -> run the new extras
@@ -46,9 +46,19 @@ DATASETS = {
                    files='Containers_Dataset.csv', label='Label', cap=20000, drive='sode_guard_v2',
                    benign='0',   # Kaggle data card: 0 = benign traffic
                    extras=['calibrate', 'constrained']),
-    # IIS3D: CSE-CIC-IDS2018 + CIC-IoT-2023 + UNSW-NB15 on one schema, 34 classes
-    'iis3d':  dict(slug='rogernickanaedevha/integrated-idps-security-3datasets',
-                   files='*.csv', label='', cap=5000, drive='sode_guard_v2_iis3d',
+    # IIS3D ships three source corpora with different schemas, in three variants
+    # (optimized / research_grade / ultrafast). Use one source and one variant per run:
+    'iis3d_cicids2018': dict(slug='rogernickanaedevha/integrated-idps-security-3datasets',
+                   files='integrated_dataset_research_grade/integrated_ids_intrusion_dataset.csv',
+                   label='label', cap=5000, drive='sode_guard_v2_iis3d_cicids2018',
+                   extras=['calibrate', 'constrained', 'fullcheck']),
+    'iis3d_unsw': dict(slug='rogernickanaedevha/integrated-idps-security-3datasets',
+                   files='integrated_dataset_research_grade/integrated_unsw_nb15_dataset.csv',
+                   label='attack_cat', cap=5000, drive='sode_guard_v2_iis3d_unsw',      # benign = 'Normal'
+                   extras=['calibrate', 'constrained', 'fullcheck']),
+    'iis3d_ciciot2023': dict(slug='rogernickanaedevha/integrated-idps-security-3datasets',
+                   files='integrated_dataset_ultrafast/integrated_ciciot2023_dataset.csv',
+                   label='label', cap=5000, drive='sode_guard_v2_iis3d_ciciot2023',  # benign = 'BenignTraffic'
                    extras=['calibrate', 'constrained', 'fullcheck']),
     # IDS-PQC: TLS 1.3 and post-quantum handshake flows
     'idspqc': dict(slug='rogernickanaedevha/ids-encrypted-and-post-quantum-cryptography-datasets',
