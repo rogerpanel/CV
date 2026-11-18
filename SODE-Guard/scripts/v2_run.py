@@ -205,7 +205,18 @@ def cmd_prepare(a):
     feat = feat[[c for c in feat.columns if not any(h in c.strip().lower() for h in rr.ID_HINTS)]]
     leaky = [c for c in feat.columns if "label" in c.lower() or c.lower().startswith("attack") or c in (a.drop_cols or [])
              or any(h in c.strip().lower() for h in METADATA_HINTS)]
+    # row counters ("id", "index", ...) are unique per row: they hide duplicates and, in files
+    # stored in class order, leak the label
+    exact_ids = {"id", "index", "idx", "row", "row_id", "rowid", "no", "sno", "unnamed: 0"}
+    leaky += [c for c in feat.columns if c.strip().lower() in exact_ids and c not in leaky]
     feat = feat.drop(columns=leaky).apply(pd.to_numeric, errors="coerce")
+    counters = [c for c in feat.columns
+                if feat[c].notna().all() and feat[c].is_unique and len(feat) > 100
+                and np.allclose(np.diff(np.sort(feat[c].to_numpy(float))), 1.0)]
+    if counters:
+        log("dropped row-counter columns (unique, consecutive integers):", counters)
+        feat = feat.drop(columns=counters)
+        leaky += counters
     feat = feat.loc[:, feat.notna().mean() > 0.5].replace([np.inf, -np.inf], np.nan)
     # exact duplicates and conflicting labels (Arp et al. 2022; Engelen et al. 2021)
     h = pd.util.hash_pandas_object(feat, index=False).to_numpy()
