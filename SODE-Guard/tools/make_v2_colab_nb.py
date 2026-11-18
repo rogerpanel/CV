@@ -73,7 +73,7 @@ DROP = ['Src Port', 'Source Port', 'src_port', 'sport']   # client-assigned sour
 BENIGN = CFG.get('benign', '')   # benign class for alarm thresholds; '' = auto-detect (benign/normal)
 EXTRAS = CFG['extras']   # any of 'calibrate', 'constrained', 'fullcheck', 'ablations', 'classtime', 'smoothing'
 CORE_MODELS = None if DATASET == 'ics3d' else \
-    'sode_base sode ode mlp lgbm xgb rf sode_at ode_at mlp_at sode_rs_c2 mlp_rs_c2'.split()
+    'sode_base sode ode mlp lgbm xgb rf sode_at ode_at mlp_at sode_rs_c2 mlp_rs_c2 ode_rs_c2'.split()
 SEEDS = '0 1 2 3 4'
 HOURS = 23               # stop cleanly after this many hours (free Colab: <= 11.5)
 RUN_SMOKE = True         # 5-10 minute check before the first long run on a dataset
