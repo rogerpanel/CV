@@ -1,5 +1,5 @@
 {
-  "updated": "Wed Nov 18 01:35:21 2026",
+  "updated": "Wed Nov 18 11:33:55 2026",
   "finished": true,
   "status": {
     "core: train seed 0": "done",
@@ -18,16 +18,17 @@
     "core: attack seed 4": "done",
     "core: certify seed 4": "done",
     "core: aggregate": "done",
-    "smoothing: train seed 0": "done",
-    "smoothing: certify seed 0": "done",
-    "smoothing: train seed 1": "done",
-    "smoothing: certify seed 1": "done",
-    "smoothing: train seed 2": "done",
-    "smoothing: certify seed 2": "done",
-    "smoothing: train seed 3": "done",
-    "smoothing: certify seed 3": "done",
-    "smoothing: train seed 4": "done",
-    "smoothing: certify seed 4": "done",
-    "smoothing: aggregate": "done"
+    "calibrate: seed 0": "done",
+    "calibrate: seed 1": "done",
+    "calibrate: seed 2": "done",
+    "calibrate: seed 3": "done",
+    "calibrate: seed 4": "done",
+    "calibrate: aggregate": "done",
+    "constrained: seed 0": "done",
+    "constrained: seed 1": "done",
+    "constrained: seed 2": "done",
+    "constrained: seed 3": "done",
+    "constrained: seed 4": "done",
+    "constrained: aggregate": "done"
   }
 }

@@ -7128,5 +7128,1437 @@
         0.14285714285714285
       ]
     }
+  },
+  "calibrate": {
+    "sode_base": {
+      "temperature": 1.098577618598938,
+      "ece_test_before": 0.01358052075091597,
+      "ece_test_after": 0.008364939431693915,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.8987323327990675,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.935159551216669,
+          "singleton_rate": 0.935159551216669,
+          "per_class_coverage": [
+            0.8958966565349544,
+            0.927682119205298,
+            0.9413793103448276,
+            0.920271629778672,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.8993151682937491,
+          "min_class_coverage": 0.7894736842105263,
+          "mean_set_size": 2.1803147311671283,
+          "singleton_rate": 0.6544514060906309,
+          "per_class_coverage": [
+            0.8961499493414387,
+            0.8921854304635761,
+            0.9189655172413793,
+            0.9006539235412475,
+            0.9393939393939394,
+            0.9354838709677419,
+            0.7894736842105263,
+            0.96,
+            0.9
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.951260381757249,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 1.0663703919568701,
+          "singleton_rate": 0.9428092670843654,
+          "per_class_coverage": [
+            0.9559270516717325,
+            0.9994701986754967,
+            0.9568965517241379,
+            0.9529678068410463,
+            0.0,
+            0.0,
+            0.02631578947368421,
+            0.0,
+            0.34375
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9494390208363689,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 4.47675943464957,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9490881458966566,
+            0.9417218543046357,
+            0.9551724137931035,
+            0.9554828973843058,
+            1.0,
+            1.0,
+            0.8421052631578947,
+            1.0,
+            0.925
+          ]
+        }
+      }
+    },
+    "sode": {
+      "temperature": 0.9222652316093445,
+      "ece_test_before": 0.018856008064463744,
+      "ece_test_after": 0.01111839972213879,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.8990237505464083,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9314439749380737,
+          "singleton_rate": 0.9314439749380737,
+          "per_class_coverage": [
+            0.9072948328267477,
+            0.8842384105960265,
+            0.9557471264367816,
+            0.9449195171026157,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.8987323327990675,
+          "min_class_coverage": 0.825,
+          "mean_set_size": 1.9173102141920444,
+          "singleton_rate": 0.6434503861285152,
+          "per_class_coverage": [
+            0.8951367781155015,
+            0.895364238410596,
+            0.9149425287356322,
+            0.8993963782696177,
+            1.0,
+            0.967741935483871,
+            0.9736842105263158,
+            0.88,
+            0.825
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9514060906309194,
+          "min_class_coverage": 0.2,
+          "mean_set_size": 1.082034095876439,
+          "singleton_rate": 0.9471805332944776,
+          "per_class_coverage": [
+            0.9374366767983789,
+            0.997615894039735,
+            0.9620689655172414,
+            0.9529678068410463,
+            0.30303030303030304,
+            0.22580645161290322,
+            0.6052631578947368,
+            0.2,
+            0.525
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9504589829520618,
+          "min_class_coverage": 0.944635761589404,
+          "mean_set_size": 4.641337607460295,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9478216818642351,
+            0.944635761589404,
+            0.9528735632183908,
+            0.9554828973843058,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.9625
+          ]
+        }
+      }
+    },
+    "ode": {
+      "temperature": 0.9048615097999573,
+      "ece_test_before": 0.02550044249128218,
+      "ece_test_after": 0.014727822280079508,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.8987323327990675,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.928675506338336,
+          "singleton_rate": 0.928675506338336,
+          "per_class_coverage": [
+            0.9136271529888551,
+            0.8813245033112582,
+            0.957471264367816,
+            0.9396378269617707,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.898222351741221,
+          "min_class_coverage": 0.8,
+          "mean_set_size": 1.9090776628296664,
+          "singleton_rate": 0.6337607460294332,
+          "per_class_coverage": [
+            0.89209726443769,
+            0.8977483443708609,
+            0.9103448275862069,
+            0.9021629778672032,
+            1.0,
+            0.967741935483871,
+            0.8947368421052632,
+            0.88,
+            0.8
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9506775462625674,
+          "min_class_coverage": 0.03225806451612903,
+          "mean_set_size": 1.0707416581669824,
+          "singleton_rate": 0.9449220457525863,
+          "per_class_coverage": [
+            0.9414893617021277,
+            0.9947019867549669,
+            0.9614942528735633,
+            0.9529678068410463,
+            0.18181818181818182,
+            0.03225806451612903,
+            0.5263157894736842,
+            0.12,
+            0.53125
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9513332361940843,
+          "min_class_coverage": 0.9375,
+          "mean_set_size": 4.450750400699403,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9511144883485309,
+            0.9451655629139073,
+            0.9522988505747126,
+            0.9559859154929577,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.9375
+          ]
+        }
+      }
+    },
+    "mlp": {
+      "temperature": 0.7146723866462708,
+      "ece_test_before": 0.10264598155367324,
+      "ece_test_after": 0.057835781085070856,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.8997522949147603,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9452863179367623,
+          "singleton_rate": 0.9431006848317063,
+          "per_class_coverage": [
+            0.9113475177304965,
+            0.879205298013245,
+            0.9557471264367816,
+            0.9479376257545271,
+            0.030303030303030304,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.904269269998543,
+          "min_class_coverage": 0.83125,
+          "mean_set_size": 2.3679149060177767,
+          "singleton_rate": 0.49045606877458836,
+          "per_class_coverage": [
+            0.8941236068895644,
+            0.909933774834437,
+            0.9137931034482759,
+            0.9054325955734407,
+            1.0,
+            1.0,
+            0.9736842105263158,
+            0.92,
+            0.83125
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9476905143523241,
+          "min_class_coverage": 0.45454545454545453,
+          "mean_set_size": 1.4771965612705813,
+          "singleton_rate": 0.7311671280780999,
+          "per_class_coverage": [
+            0.9313576494427558,
+            0.9663576158940398,
+            0.957471264367816,
+            0.9514587525150905,
+            0.45454545454545453,
+            0.7419354838709677,
+            0.7631578947368421,
+            0.48,
+            0.96875
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9510418184467434,
+          "min_class_coverage": 0.944635761589404,
+          "mean_set_size": 4.509616785662247,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.950354609929078,
+            0.944635761589404,
+            0.9528735632183908,
+            0.9557344064386318,
+            1.0,
+            1.0,
+            0.9736842105263158,
+            1.0,
+            0.95
+          ]
+        }
+      }
+    },
+    "lgbm": {
+      "temperature": 1.1383196115493774,
+      "ece_test_before": 0.008055125434414622,
+      "ece_test_after": 0.006848932982237984,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.9025936179513332,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9186215940550779,
+          "singleton_rate": 0.9186215940550779,
+          "per_class_coverage": [
+            0.9478216818642351,
+            0.822251655629139,
+            0.964367816091954,
+            0.9502012072434608,
+            0.0,
+            0.03225806451612903,
+            0.7105263157894737,
+            0.16,
+            0.34375
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.9002622759726068,
+          "min_class_coverage": 0.8125,
+          "mean_set_size": 1.6020690660061199,
+          "singleton_rate": 0.6951041818446744,
+          "per_class_coverage": [
+            0.894630192502533,
+            0.8964238410596026,
+            0.9063218390804598,
+            0.9089537223340041,
+            0.8484848484848485,
+            1.0,
+            0.9473684210526315,
+            1.0,
+            0.8125
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9528631793676234,
+          "min_class_coverage": 0.03225806451612903,
+          "mean_set_size": 0.998542911263296,
+          "singleton_rate": 0.9896546699694011,
+          "per_class_coverage": [
+            0.9602330293819655,
+            0.968476821192053,
+            0.9683908045977011,
+            0.9590040241448692,
+            0.09090909090909091,
+            0.03225806451612903,
+            0.7368421052631579,
+            0.24,
+            0.6
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9530817426781291,
+          "min_class_coverage": 0.93125,
+          "mean_set_size": 4.174486376220312,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9483282674772037,
+            0.9509933774834437,
+            0.9545977011494253,
+            0.9587525150905433,
+            1.0,
+            1.0,
+            0.9736842105263158,
+            1.0,
+            0.93125
+          ]
+        }
+      }
+    },
+    "xgb": {
+      "temperature": 1.219875454902649,
+      "ece_test_before": 0.010223595817122398,
+      "ece_test_after": 0.008380043891798741,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.8993880227305843,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9133760746029433,
+          "singleton_rate": 0.9133760746029433,
+          "per_class_coverage": [
+            0.9483282674772037,
+            0.8158940397350993,
+            0.9649425287356321,
+            0.9486921529175051,
+            0.0,
+            0.0,
+            0.7105263157894737,
+            0.16,
+            0.24375
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.9028850356986741,
+          "min_class_coverage": 0.81875,
+          "mean_set_size": 1.4825877895963864,
+          "singleton_rate": 0.7325513623779688,
+          "per_class_coverage": [
+            0.8996960486322189,
+            0.8993377483443709,
+            0.9132183908045977,
+            0.9064386317907445,
+            0.9393939393939394,
+            1.0,
+            0.9736842105263158,
+            0.92,
+            0.81875
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9525717616202827,
+          "min_class_coverage": 0.030303030303030304,
+          "mean_set_size": 0.9860848025644762,
+          "singleton_rate": 0.9860848025644762,
+          "per_class_coverage": [
+            0.9604863221884499,
+            0.9764238410596027,
+            0.9660919540229885,
+            0.9577464788732394,
+            0.030303030303030304,
+            0.03225806451612903,
+            0.7105263157894737,
+            0.24,
+            0.45625
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.951988926125601,
+          "min_class_coverage": 0.9447821681864235,
+          "mean_set_size": 4.272038467142649,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9447821681864235,
+            0.9520529801324503,
+            0.9505747126436782,
+            0.9579979879275654,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.95625
+          ]
+        }
+      }
+    },
+    "rf": {
+      "temperature": 1.2779920101165771,
+      "ece_test_before": 0.012059261384848238,
+      "ece_test_after": 0.031086372566843212,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.9012093836514644,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9158531254553403,
+          "singleton_rate": 0.9158531254553403,
+          "per_class_coverage": [
+            0.9455420466058764,
+            0.8299337748344371,
+            0.9614942528735633,
+            0.9517102615694165,
+            0.0,
+            0.0,
+            0.5526315789473685,
+            0.12,
+            0.14375
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.8987323327990675,
+          "min_class_coverage": 0.8787878787878788,
+          "mean_set_size": 4.94259070377386,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.8986828774062816,
+            0.889271523178808,
+            0.8977011494252873,
+            0.9066901408450704,
+            0.8787878787878788,
+            1.0,
+            1.0,
+            1.0,
+            0.88125
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9527903249307883,
+          "min_class_coverage": 0.030303030303030304,
+          "mean_set_size": 0.9948273349847006,
+          "singleton_rate": 0.9806935742386711,
+          "per_class_coverage": [
+            0.9594731509625126,
+            0.9780132450331126,
+            0.9660919540229885,
+            0.9585010060362174,
+            0.030303030303030304,
+            0.03225806451612903,
+            0.7631578947368421,
+            0.28,
+            0.425
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9510418184467434,
+          "min_class_coverage": 0.925,
+          "mean_set_size": 5.056316479673612,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9511144883485309,
+            0.9427814569536423,
+            0.9545977011494253,
+            0.9567404426559356,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.925
+          ]
+        }
+      }
+    },
+    "sode_at": {
+      "temperature": 0.7957366704940796,
+      "ece_test_before": 0.15870136950769181,
+      "ece_test_after": 0.13921745188352957,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.9007722570304532,
+          "min_class_coverage": 0.08,
+          "mean_set_size": 0.9991257467579776,
+          "singleton_rate": 0.946597697799796,
+          "per_class_coverage": [
+            0.9047619047619048,
+            0.8649006622516556,
+            0.9557471264367816,
+            0.9524647887323944,
+            0.18181818181818182,
+            0.1935483870967742,
+            0.2894736842105263,
+            0.08,
+            0.325
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.9068920297246102,
+          "min_class_coverage": 0.8157894736842105,
+          "mean_set_size": 2.088663849628442,
+          "singleton_rate": 0.6744863762203118,
+          "per_class_coverage": [
+            0.8958966565349544,
+            0.9035761589403973,
+            0.9189655172413793,
+            0.9127263581488934,
+            0.9090909090909091,
+            0.967741935483871,
+            0.8157894736842105,
+            0.96,
+            0.98125
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9474719510418185,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 2.3754189130118024,
+          "singleton_rate": 0.6814804021564913,
+          "per_class_coverage": [
+            0.9136271529888551,
+            0.9705960264900663,
+            0.957471264367816,
+            0.9527162977867203,
+            1.0,
+            0.967741935483871,
+            0.8421052631578947,
+            1.0,
+            1.0
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9513332361940843,
+          "min_class_coverage": 0.868421052631579,
+          "mean_set_size": 4.713609208800816,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9506079027355623,
+            0.9430463576158941,
+            0.9551724137931035,
+            0.9564889336016097,
+            1.0,
+            1.0,
+            0.868421052631579,
+            1.0,
+            0.9875
+          ]
+        }
+      }
+    },
+    "ode_at": {
+      "temperature": 0.8005645871162415,
+      "ece_test_before": 0.15660711209914369,
+      "ece_test_after": 0.13109022757150024,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.9003351304094419,
+          "min_class_coverage": 0.0,
+          "mean_set_size": 0.9801107387439895,
+          "singleton_rate": 0.9638641993297392,
+          "per_class_coverage": [
+            0.9045086119554204,
+            0.8701986754966887,
+            0.9557471264367816,
+            0.9517102615694165,
+            0.18181818181818182,
+            0.0,
+            0.02631578947368421,
+            0.0,
+            0.3
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.9028121812618388,
+          "min_class_coverage": 0.7575757575757576,
+          "mean_set_size": 2.048083928311234,
+          "singleton_rate": 0.6698236922628588,
+          "per_class_coverage": [
+            0.8928571428571429,
+            0.9027814569536424,
+            0.9137931034482759,
+            0.90920523138833,
+            0.7575757575757576,
+            0.967741935483871,
+            0.8157894736842105,
+            0.96,
+            0.9
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.946961969983972,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 2.3920297246102287,
+          "singleton_rate": 0.6828646364563602,
+          "per_class_coverage": [
+            0.9113475177304965,
+            0.9719205298013245,
+            0.9557471264367816,
+            0.9527162977867203,
+            1.0,
+            0.967741935483871,
+            0.8421052631578947,
+            1.0,
+            1.0
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9511875273204138,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 4.669459420078683,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9518743667679838,
+            0.944635761589404,
+            0.9517241379310345,
+            0.9554828973843058,
+            1.0,
+            1.0,
+            0.8421052631578947,
+            1.0,
+            0.975
+          ]
+        }
+      }
+    },
+    "mlp_at": {
+      "temperature": 0.8594870567321777,
+      "ece_test_before": 0.1654213746068135,
+      "ece_test_after": 0.1481292212413714,
+      "conformal": {
+        "marginal_0.1": {
+          "alpha": 0.1,
+          "classwise": false,
+          "coverage": 0.9019379280198164,
+          "min_class_coverage": 0.12,
+          "mean_set_size": 1.0277575404342125,
+          "singleton_rate": 0.9393122541162757,
+          "per_class_coverage": [
+            0.9042553191489362,
+            0.8675496688741722,
+            0.9568965517241379,
+            0.9529678068410463,
+            0.18181818181818182,
+            0.3548387096774194,
+            0.21052631578947367,
+            0.12,
+            0.33125
+          ]
+        },
+        "classwise_0.1": {
+          "alpha": 0.1,
+          "classwise": true,
+          "coverage": 0.904633542182719,
+          "min_class_coverage": 0.7878787878787878,
+          "mean_set_size": 2.0696488416144545,
+          "singleton_rate": 0.6721550342415853,
+          "per_class_coverage": [
+            0.89387031408308,
+            0.903841059602649,
+            0.9195402298850575,
+            0.9079476861167002,
+            0.7878787878787878,
+            0.967741935483871,
+            0.8421052631578947,
+            0.96,
+            0.9625
+          ]
+        },
+        "marginal_0.05": {
+          "alpha": 0.05,
+          "classwise": false,
+          "coverage": 0.9463791344892905,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 2.4865219291854874,
+          "singleton_rate": 0.6753606294623342,
+          "per_class_coverage": [
+            0.9156534954407295,
+            0.9642384105960264,
+            0.957471264367816,
+            0.9529678068410463,
+            1.0,
+            0.967741935483871,
+            0.8421052631578947,
+            1.0,
+            1.0
+          ]
+        },
+        "classwise_0.05": {
+          "alpha": 0.05,
+          "classwise": true,
+          "coverage": 0.9521346349992714,
+          "min_class_coverage": 0.8421052631578947,
+          "mean_set_size": 4.672737869736267,
+          "singleton_rate": 0.0,
+          "per_class_coverage": [
+            0.9516210739614995,
+            0.9464900662251655,
+            0.9540229885057471,
+            0.9557344064386318,
+            1.0,
+            1.0,
+            0.8421052631578947,
+            1.0,
+            0.9875
+          ]
+        }
+      }
+    }
+  },
+  "attack_constrained": {
+    "sode_base": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.3503534487885036,
+          "fresh": 0.34683005166876135
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.3638353095654528,
+          "fresh": 0.3710765192492536
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.34644148077715653,
+          "fresh": 0.34644148077715653
+        },
+        "C-EOT-PGD-50 (EOT 8)": {
+          "fixed": 0.3456206880199109,
+          "fresh": 0.3456206880199109
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.3447782447618256,
+        "fresh": 0.34457170038949214
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.40252523884046315,
+        "fresh": 0.4025255664795341
+      },
+      "clean_subset_macro_f1": 0.38038166833843623,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "sode": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.40323291078943174,
+          "fresh": 0.40380930855401087
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.4321940252712403,
+          "fresh": 0.4237066449635775
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.3930435824327642,
+          "fresh": 0.39277955603012393
+        },
+        "C-EOT-PGD-50 (EOT 8)": {
+          "fixed": 0.39395161244834576,
+          "fresh": 0.39371474609152834
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.38978193880792067,
+        "fresh": 0.3895125785385604
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.42541862229756544,
+        "fresh": 0.4253777941764936
+      },
+      "clean_subset_macro_f1": 0.4653813661521337,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "ode": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.4038382758562086
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.39467535077239074
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.39307311443139653
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.3917061918719559
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.42218679048841873
+      },
+      "clean_subset_macro_f1": 0.4656428897002136,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "mlp": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.39484052395228814
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.39777362447579456
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.39492771385739095
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.39484052395228814
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.42374590695643755
+      },
+      "clean_subset_macro_f1": 0.4608729550665035,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "lgbm": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.3819872397895899
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.13205288019108655
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.13125532705299336
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.1526976410851927
+      },
+      "clean_subset_macro_f1": 0.6222945130809244,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "xgb": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.3780961872833241
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.18518110718245198
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.18876262626262624
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.21216561823643035
+      },
+      "clean_subset_macro_f1": 0.5879170278237145,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "rf": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.49472922197793806
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.19938612054902263
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.19899313013176362
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.20990086339861821
+      },
+      "clean_subset_macro_f1": 0.6194868545162913,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "sode_at": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.46338425950999057,
+          "fresh": 0.45302342356940056
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.46884626946902164,
+          "fresh": 0.4693166163393532
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.45850080893273026,
+          "fresh": 0.45030267617951897
+        },
+        "C-EOT-PGD-50 (EOT 8)": {
+          "fixed": 0.45850080893273026,
+          "fresh": 0.45974037308287485
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.4587657142134791,
+        "fresh": 0.43192913696783475
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.46766967268249704,
+        "fresh": 0.4427152794485394
+      },
+      "clean_subset_macro_f1": 0.4701504858525722,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "ode_at": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.4381710079985942
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.4372600751805279
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.4372600751805279
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.43729765118654007
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.4483179042346298
+      },
+      "clean_subset_macro_f1": 0.46184584236496806,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    },
+    "mlp_at": {
+      "attacks": {
+        "C-transfer from mlp": {
+          "fixed": 0.45213963506685545
+        },
+        "C-Square (1000 queries)": {
+          "fixed": 0.44482098903283807
+        },
+        "C-PGD-100 x2 (fixed)": {
+          "fixed": 0.44675034333610025
+        }
+      },
+      "worst_case_macro_f1": {
+        "fixed": 0.44475859333010465
+      },
+      "worst_case_macro_f1_test_reweighted": {
+        "fixed": 0.4473064870180122
+      },
+      "clean_subset_macro_f1": 0.4824417139778217,
+      "constraints": {
+        "n_features": 75,
+        "n_mutable": 44,
+        "n_integer": 51,
+        "immutable": [
+          "Dst Port",
+          "Protocol",
+          "Total Bwd packets",
+          "Total Length of Bwd Packet",
+          "Bwd Packet Length Max",
+          "Bwd Packet Length Min",
+          "Bwd Packet Length Mean",
+          "Bwd Packet Length Std",
+          "Bwd IAT Total",
+          "Bwd IAT Mean",
+          "Bwd IAT Std",
+          "Bwd IAT Max",
+          "Bwd IAT Min",
+          "Fwd PSH Flags",
+          "Bwd PSH Flags",
+          "Fwd RST Flags",
+          "Bwd RST Flags",
+          "Bwd Header Length",
+          "Bwd Packets/s",
+          "FIN Flag Count",
+          "SYN Flag Count",
+          "RST Flag Count",
+          "PSH Flag Count",
+          "ACK Flag Count",
+          "Bwd Segment Size Avg",
+          "Bwd Bytes/Bulk Avg",
+          "Bwd Packet/Bulk Avg",
+          "Bwd Bulk Rate Avg",
+          "Subflow Bwd Bytes",
+          "FWD Init Win Bytes",
+          "Bwd Init Win Bytes"
+        ]
+      }
+    }
   }
 }

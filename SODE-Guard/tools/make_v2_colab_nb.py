@@ -44,6 +44,7 @@ DATASETS = {
     # container flows of ICS3D: core, ablations, checks and smoothing study already done -> run the new extras
     'ics3d':  dict(slug='rogernickanaedevha/integrated-cloud-security-3datasets-ics3d',
                    files='Containers_Dataset.csv', label='Label', cap=20000, drive='sode_guard_v2',
+                   benign='0',   # Kaggle data card: 0 = benign traffic
                    extras=['calibrate', 'constrained']),
     # IIS3D: CSE-CIC-IDS2018 + CIC-IoT-2023 + UNSW-NB15 on one schema, 34 classes
     'iis3d':  dict(slug='rogernickanaedevha/integrated-idps-security-3datasets',
@@ -59,7 +60,7 @@ FILES = CFG['files']     # glob inside the download folder; narrow it after step
 LABEL = CFG['label']     # '' = auto-detect (Label, label, Attack_type, Category, class, ...)
 CAP = CFG['cap']         # flows kept per class
 DROP = ['Src Port', 'Source Port', 'src_port', 'sport']   # client-assigned source port (a shortcut feature)
-BENIGN = ''              # benign class name for alarm thresholds; '' = auto (benign/normal). ICS3D codes: set the benign code if known
+BENIGN = CFG.get('benign', '')   # benign class for alarm thresholds; '' = auto-detect (benign/normal)
 EXTRAS = CFG['extras']   # any of 'calibrate', 'constrained', 'fullcheck', 'ablations', 'classtime', 'smoothing'
 CORE_MODELS = None if DATASET == 'ics3d' else \
     'sode_base sode ode mlp lgbm xgb rf sode_at ode_at mlp_at sode_rs_c2 mlp_rs_c2'.split()
