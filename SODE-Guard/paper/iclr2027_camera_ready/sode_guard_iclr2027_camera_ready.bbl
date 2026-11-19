@@ -1,0 +1,389 @@
+\begin{thebibliography}{54}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aly~Amin et~al.(2024)Aly~Amin, Harun~Dogan, Sena~Kuru, Sever, and
+  Angin]{amin2024misuse}
+Mohamed Aly~Amin, Adnan Harun~Dogan, Elif Sena~Kuru, Yigit Sever, and Pelin
+  Angin.
+\newblock Misuse detection and response for orchestrated microservices based
+  software.
+\newblock In \emph{Advanced Information Networking and Applications}, pp.\
+  217--226. Springer Nature Switzerland, 2024.
+
+\bibitem[Anaedevha \& Trofimov(2024)Anaedevha and
+  Trofimov]{anaedevha2024robust}
+Roger~Nick Anaedevha and Alexander~G. Trofimov.
+\newblock Improved robust adversarial model against evasion attacks on
+  intrusion detection systems.
+\newblock \emph{Optical Memory and Neural Networks}, 33\penalty0 (Suppl.
+  3):\penalty0 S414--S423, 2024.
+\newblock \doi{10.3103/S1060992X24700681}.
+
+\bibitem[Anaedevha \& Trofimov(2025)Anaedevha and
+  Trofimov]{anaedevha2025stochtx}
+Roger~Nick Anaedevha and Alexander~G. Trofimov.
+\newblock Stochastic multimodal transformer with uncertainty quantification for
+  robust network intrusion detection.
+\newblock In \emph{Advances in Neural Computation, Machine Learning, and
+  Cognitive Research IX}, volume 1241 of \emph{Studies in Computational
+  Intelligence}. Springer, 2025.
+\newblock \doi{10.1007/978-3-032-07690-8_35}.
+
+\bibitem[Anaedevha \& Trofimov(2026)Anaedevha and
+  Trofimov]{anaedevha2026mstgnn}
+Roger~Nick Anaedevha and Alexander~G. Trofimov.
+\newblock Multi-scale temporal graph neural network with stochastic dynamics
+  for cloud and industrial network intrusion detection.
+\newblock In \emph{IEEE 27th International Conference of Young Professionals in
+  Electron Devices and Materials (EDM)}, pp.\  1--8, 2026.
+\newblock \doi{10.1109/EDM69524.2026.11632205}.
+
+\bibitem[Anaedevha et~al.(2026{\natexlab{a}})Anaedevha, Trofimov, and
+  Borodachev]{anaedevha2026ode}
+Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
+\newblock Temporal adaptive neural ordinary differential equations with deep
+  spatio-temporal point processes for real-time network intrusion detection.
+\newblock \emph{Complex \& Intelligent Systems}, 2026{\natexlab{a}}.
+\newblock \doi{10.1007/s40747-026-02291-7}.
+
+\bibitem[Anaedevha et~al.(2026{\natexlab{b}})Anaedevha, Trofimov, and
+  Borodachev]{anaedevha2026pacbayes}
+Roger~Nick Anaedevha, Alexander~G. Trofimov, and Yuri~V. Borodachev.
+\newblock Stochastic {PAC}-{B}ayesian transformers for network intrusion
+  detection and natural language processing applications.
+\newblock \emph{Knowledge and Information Systems}, 68:\penalty0 232,
+  2026{\natexlab{b}}.
+\newblock \doi{10.1007/s10115-026-02824-z}.
+
+\bibitem[Andriushchenko et~al.(2020)Andriushchenko, Croce, Flammarion, and
+  Hein]{andriushchenko2020square}
+Maksym Andriushchenko, Francesco Croce, Nicolas Flammarion, and Matthias Hein.
+\newblock Square attack: A query-efficient black-box adversarial attack via
+  random search.
+\newblock In \emph{Proc.\ ECCV}, pp.\  484--501, 2020.
+
+\bibitem[Anil et~al.(2019)Anil, Lucas, and Grosse]{anil2019sorting}
+Cem Anil, James Lucas, and Roger Grosse.
+\newblock Sorting out {Lipschitz} function approximation.
+\newblock In \emph{Proc.\ ICML}, volume~97 of \emph{PMLR}, pp.\  291--301,
+  2019.
+
+\bibitem[Anonymous(2025{\natexlab{a}})]{anon_ics3d}
+Anonymous.
+\newblock {ICS3D}: Integrated cloud security flow benchmark,
+  2025{\natexlab{a}}.
+\newblock Link withheld for review; data available via the anonymised
+  repository.
+
+\bibitem[Anonymous(2025{\natexlab{b}})]{anon_iis3d}
+Anonymous.
+\newblock {IIS3D}: Integrated intrusion-detection flow benchmark,
+  2025{\natexlab{b}}.
+\newblock Link withheld for review; data available via the anonymised
+  repository.
+
+\bibitem[Araujo et~al.(2023)Araujo, Havens, Delattre, Allauzen, and
+  Hu]{araujo2023sll}
+Alexandre Araujo, Aaron Havens, Blaise Delattre, Alexandre Allauzen, and Bin
+  Hu.
+\newblock A unified algebraic perspective on {Lipschitz} neural networks.
+\newblock In \emph{Proc.\ ICLR}, 2023.
+
+\bibitem[Arp et~al.(2022)Arp, Quiring, Pendlebury, Warnecke, Pierazzi,
+  Wressnegger, Cavallaro, and Rieck]{arp2022dos}
+Daniel Arp, Erwin Quiring, Feargus Pendlebury, Alexander Warnecke, Fabio
+  Pierazzi, Christian Wressnegger, Lorenzo Cavallaro, and Konrad Rieck.
+\newblock Dos and don'ts of machine learning in computer security.
+\newblock In \emph{USENIX Security Symposium}, 2022.
+
+\bibitem[Athalye et~al.(2018)Athalye, Carlini, and
+  Wagner]{athalye2018obfuscated}
+Anish Athalye, Nicholas Carlini, and David Wagner.
+\newblock Obfuscated gradients give a false sense of security: Circumventing
+  defenses to adversarial examples.
+\newblock In \emph{Proc.\ ICML}, volume~80 of \emph{PMLR}, pp.\  274--283,
+  2018.
+
+\bibitem[Bergna et~al.(2024)]{bergna2024lgnsde}
+Richard Bergna et~al.
+\newblock Latent graph neural stochastic differential equations.
+\newblock \emph{arXiv preprint arXiv:2408.16115}, 2024.
+
+\bibitem[Breiman(2001)]{breiman2001rf}
+Leo Breiman.
+\newblock Random forests.
+\newblock \emph{Machine Learning}, 45:\penalty0 5--32, 2001.
+
+\bibitem[Carlini et~al.(2019)Carlini, Athalye, Papernot, Brendel, Rauber,
+  Tsipras, Goodfellow, Madry, and Kurakin]{carlini2019evaluating}
+Nicholas Carlini, Anish Athalye, Nicolas Papernot, Wieland Brendel, Jonas
+  Rauber, Dimitris Tsipras, Ian Goodfellow, Aleksander Madry, and Alexey
+  Kurakin.
+\newblock On evaluating adversarial robustness.
+\newblock \emph{arXiv preprint arXiv:1902.06705}, 2019.
+
+\bibitem[Chen \& Guestrin(2016)Chen and Guestrin]{chen2016xgboost}
+Tianqi Chen and Carlos Guestrin.
+\newblock {XGBoost}: A scalable tree boosting system.
+\newblock In \emph{ACM SIGKDD International Conference on Knowledge Discovery
+  and Data Mining}, 2016.
+
+\bibitem[Clopper \& Pearson(1934)Clopper and Pearson]{clopper1934}
+C.~J. Clopper and E.~S. Pearson.
+\newblock The use of confidence or fiducial limits illustrated in the case of
+  the binomial.
+\newblock \emph{Biometrika}, 26\penalty0 (4):\penalty0 404--413, 1934.
+
+\bibitem[Cohen et~al.(2019)Cohen, Rosenfeld, and Kolter]{cohen2019smoothing}
+Jeremy Cohen, Elan Rosenfeld, and J.~Zico Kolter.
+\newblock Certified adversarial robustness via randomized smoothing.
+\newblock In \emph{Proc.\ ICML}, volume~97 of \emph{PMLR}, pp.\  1310--1320,
+  2019.
+
+\bibitem[Croce \& Hein(2020)Croce and Hein]{croce2020autoattack}
+Francesco Croce and Matthias Hein.
+\newblock Reliable evaluation of adversarial robustness with an ensemble of
+  diverse parameter-free attacks.
+\newblock In \emph{Proc.\ ICML}, volume 119 of \emph{PMLR}, pp.\  2206--2216,
+  2020.
+
+\bibitem[Cui et~al.(2019)Cui, Jia, Lin, Song, and
+  Belongie]{cui2019classbalanced}
+Yin Cui, Menglin Jia, Tsung-Yi Lin, Yang Song, and Serge Belongie.
+\newblock Class-balanced loss based on effective number of samples.
+\newblock In \emph{IEEE/CVF Conference on Computer Vision and Pattern
+  Recognition}, 2019.
+
+\bibitem[de~Jorge et~al.(2022)de~Jorge, Bibi, Volpi, Sanyal, Torr, Rogez, and
+  Dokania]{dejorge2022nfgsm}
+Pau de~Jorge, Adel Bibi, Riccardo Volpi, Amartya Sanyal, Philip H.~S. Torr,
+  Gr{\'e}gory Rogez, and Puneet~K. Dokania.
+\newblock Make some noise: Reliable and efficient single-step adversarial
+  training.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[Engelen et~al.(2021)Engelen, Rimmer, and
+  Joosen]{engelen2021troubleshooting}
+Gints Engelen, Vera Rimmer, and Wouter Joosen.
+\newblock Troubleshooting an intrusion detection dataset: the {CICIDS2017} case
+  study.
+\newblock In \emph{IEEE Security and Privacy Workshops}, 2021.
+
+\bibitem[Ennaji et~al.(2024)]{ennaji2024advsurvey}
+Sabrine Ennaji et~al.
+\newblock Adversarial challenges in network intrusion detection systems:
+  Research insights and future prospects.
+\newblock \emph{arXiv preprint arXiv:2409.18736}, 2024.
+
+\bibitem[Grinsztajn et~al.(2022)Grinsztajn, Oyallon, and
+  Varoquaux]{grinsztajn2022trees}
+L{\'e}o Grinsztajn, Edouard Oyallon, and Ga{\"e}l Varoquaux.
+\newblock Why do tree-based models still outperform deep learning on typical
+  tabular data?
+\newblock In \emph{Advances in Neural Information Processing Systems, Datasets
+  and Benchmarks Track}, 2022.
+
+\bibitem[Guo et~al.(2017)Guo, Pleiss, Sun, and Weinberger]{guo2017calibration}
+Chuan Guo, Geoff Pleiss, Yu~Sun, and Kilian~Q. Weinberger.
+\newblock On calibration of modern neural networks.
+\newblock In \emph{International Conference on Machine Learning}, 2017.
+
+\bibitem[Halbouni et~al.(2022)Halbouni, Gunawan, Habaebi, Halbouni, Kartiwi,
+  and Ahmad]{halbouni2022cnnlstm}
+Asmaa Halbouni, Teddy~Surya Gunawan, Mohamed~Hadi Habaebi, Murad Halbouni, Mira
+  Kartiwi, and Robiah Ahmad.
+\newblock {CNN-LSTM}: Hybrid deep neural network for network intrusion
+  detection system.
+\newblock \emph{IEEE Access}, 10:\penalty0 99837--99849, 2022.
+\newblock \doi{10.1109/ACCESS.2022.3206425}.
+
+\bibitem[Holm(1979)]{holm1979}
+Sture Holm.
+\newblock A simple sequentially rejective multiple test procedure.
+\newblock \emph{Scandinavian Journal of Statistics}, 6\penalty0 (2):\penalty0
+  65--70, 1979.
+
+\bibitem[Huang et~al.(2025)Huang, Lin, Chen, and Bertino]{huang2025mars}
+Huang, Lin, Chen, and Elisa Bertino.
+\newblock {MARS}: Multi-order adaptive randomized smoothing for dimensional
+  robustness certification of deep neural networks in network intrusion
+  detection.
+\newblock \emph{ACM Transactions on Privacy and Security}, \penalty0 (3), 2025.
+\newblock \doi{10.1145/3715121}.
+
+\bibitem[Jeong \& Shin(2020)Jeong and Shin]{jeong2020consistency}
+Jongheon Jeong and Jinwoo Shin.
+\newblock Consistency regularization for certified robustness of smoothed
+  classifiers.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2020.
+
+\bibitem[Kang et~al.(2021)Kang, Song, Ding, and Tay]{kang2021sodef}
+Qiyu Kang, Yang Song, Qinxu Ding, and Wee~Peng Tay.
+\newblock Stable neural {ODE} with {Lyapunov}-stable equilibrium points for
+  defending against adversarial attacks.
+\newblock In \emph{Proc.\ NeurIPS}, 2021.
+
+\bibitem[Ke et~al.(2017)Ke, Meng, Finley, Wang, Chen, Ma, Ye, and
+  Liu]{ke2017lightgbm}
+Guolin Ke, Qi~Meng, Thomas Finley, Taifeng Wang, Wei Chen, Weidong Ma, Qiwei
+  Ye, and Tie-Yan Liu.
+\newblock {LightGBM}: A highly efficient gradient boosting decision tree.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2017.
+
+\bibitem[Li et~al.(2020)Li, Wong, Chen, and Duvenaud]{li2020scalable}
+Xuechen Li, Ting-Kam~Leonard Wong, Ricky T.~Q. Chen, and David Duvenaud.
+\newblock Scalable gradients for stochastic differential equations.
+\newblock In \emph{Proc.\ AISTATS}, volume 108 of \emph{PMLR}, pp.\
+  3870--3882, 2020.
+
+\bibitem[Lin et~al.(2017)Lin, Goyal, Girshick, He, and
+  Doll{\'a}r]{lin2017focal}
+Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Doll{\'a}r.
+\newblock Focal loss for dense object detection.
+\newblock In \emph{IEEE International Conference on Computer Vision}, 2017.
+
+\bibitem[Liu et~al.(2020)Liu, Xiao, Si, Cao, Kumar, and Hsieh]{liu2020sdenoise}
+Xuanqing Liu, Tesi Xiao, Si~Si, Qin Cao, Sanjiv Kumar, and Cho-Jui Hsieh.
+\newblock How does noise help robustness? {E}xplanation and exploration under
+  the neural {SDE} framework.
+\newblock In \emph{IEEE/CVF Conference on Computer Vision and Pattern
+  Recognition}, 2020.
+
+\bibitem[Lo et~al.(2022)Lo, Layeghy, Sarhan, Gallagher, and
+  Portmann]{lo2022egraphsage}
+Wai~Weng Lo, Siamak Layeghy, Mohanad Sarhan, Marcus Gallagher, and Marius
+  Portmann.
+\newblock {E-GraphSAGE}: A graph neural network based intrusion detection
+  system for {IoT}.
+\newblock In \emph{Proc.\ IEEE/IFIP Network Operations and Management Symposium
+  (NOMS)}, pp.\  1--9, 2022.
+\newblock \doi{10.1109/NOMS54207.2022.9789878}.
+
+\bibitem[Madry et~al.(2018)Madry, Makelov, Schmidt, Tsipras, and
+  Vladu]{madry2018pgd}
+Aleksander Madry, Aleksandar Makelov, Ludwig Schmidt, Dimitris Tsipras, and
+  Adrian Vladu.
+\newblock Towards deep learning models resistant to adversarial attacks.
+\newblock In \emph{Proc.\ ICLR}, 2018.
+
+\bibitem[Maurer \& Pontil(2009)Maurer and Pontil]{maurer2009bernstein}
+Andreas Maurer and Massimiliano Pontil.
+\newblock Empirical {Bernstein} bounds and sample variance penalization.
+\newblock In \emph{Proc.\ COLT}, 2009.
+
+\bibitem[Menon et~al.(2021)Menon, Jayasumana, Rawat, Jain, Veit, and
+  Kumar]{menon2021logit}
+Aditya~Krishna Menon, Sadeep Jayasumana, Ankit~Singh Rawat, Himanshu Jain,
+  Andreas Veit, and Sanjiv Kumar.
+\newblock Long-tail learning via logit adjustment.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Mosaiyebzadeh et~al.(2025)]{mosaiyebzadeh2025graphmamba}
+Fatemeh Mosaiyebzadeh et~al.
+\newblock {IDS-GraphMamba}: A {Markov}-enhanced graph {Mamba} framework for
+  real-time intrusion detection in {IoMT} edge networks.
+\newblock \emph{Computer Networks}, 268:\penalty0 108989, 2025.
+\newblock \doi{10.1016/j.comnet.2025.108989}.
+
+\bibitem[Moustafa \& Slay(2015)Moustafa and Slay]{moustafa2015unsw}
+Nour Moustafa and Jill Slay.
+\newblock {UNSW-NB15}: A comprehensive data set for network intrusion detection
+  systems.
+\newblock In \emph{Military Communications and Information Systems Conference
+  (MilCIS)}, 2015.
+
+\bibitem[Oh et~al.(2024)Oh, Lim, and Kim]{oh2024stablesde}
+YongKyung Oh, Dongyoung Lim, and Sungil Kim.
+\newblock Stable neural stochastic differential equations in analyzing
+  irregular time series data.
+\newblock In \emph{Proc.\ ICLR}, 2024.
+
+\bibitem[Pendlebury et~al.(2019)Pendlebury, Pierazzi, Jordaney, Kinder, and
+  Cavallaro]{pendlebury2019tesseract}
+Feargus Pendlebury, Fabio Pierazzi, Roberto Jordaney, Johannes Kinder, and
+  Lorenzo Cavallaro.
+\newblock {TESSERACT}: Eliminating experimental bias in malware classification
+  across space and time.
+\newblock In \emph{USENIX Security Symposium}, 2019.
+
+\bibitem[Rice et~al.(2020)Rice, Wong, and Kolter]{rice2020overfitting}
+Leslie Rice, Eric Wong, and J.~Zico Kolter.
+\newblock Overfitting in adversarially robust deep learning.
+\newblock In \emph{International Conference on Machine Learning}, 2020.
+
+\bibitem[Sadinle et~al.(2019)Sadinle, Lei, and Wasserman]{sadinle2019lac}
+Mauricio Sadinle, Jing Lei, and Larry Wasserman.
+\newblock Least ambiguous set-valued classifiers with bounded error levels.
+\newblock \emph{Journal of the American Statistical Association}, 114\penalty0
+  (525):\penalty0 223--234, 2019.
+
+\bibitem[Salman et~al.(2019)Salman, Li, Razenshteyn, Zhang, Zhang, Bubeck, and
+  Yang]{salman2019smoothadv}
+Hadi Salman, Jerry Li, Ilya Razenshteyn, Pengchuan Zhang, Huan Zhang,
+  S{\'e}bastien Bubeck, and Greg Yang.
+\newblock Provably robust deep learning via adversarially trained smoothed
+  classifiers.
+\newblock In \emph{Proc.\ NeurIPS}, 2019.
+
+\bibitem[Simonetto et~al.(2024)Simonetto, Ghamizi, and
+  Cordy]{simonetto2024tabularbench}
+Thibault Simonetto, Salah Ghamizi, and Maxime Cordy.
+\newblock {TabularBench}: Benchmarking adversarial robustness for tabular deep
+  learning in real-world use-cases.
+\newblock In \emph{Advances in Neural Information Processing Systems, Datasets
+  and Benchmarks Track}, 2024.
+
+\bibitem[Tsuzuku et~al.(2018)Tsuzuku, Sato, and Sugiyama]{tsuzuku2018lipschitz}
+Yusuke Tsuzuku, Issei Sato, and Masashi Sugiyama.
+\newblock Lipschitz-margin training: Scalable certification of perturbation
+  invariance for deep neural networks.
+\newblock In \emph{Proc.\ NeurIPS}, 2018.
+
+\bibitem[Tzen \& Raginsky(2019)Tzen and Raginsky]{tzen2019nsde}
+Belinda Tzen and Maxim Raginsky.
+\newblock Neural stochastic differential equations: Deep latent {Gaussian}
+  models in the diffusion limit.
+\newblock \emph{arXiv preprint arXiv:1905.09883}, 2019.
+
+\bibitem[Vitorino et~al.(2024)]{vitorino2024advbench}
+Jo{\~a}o Vitorino et~al.
+\newblock An adversarial robustness benchmark for enterprise network intrusion
+  detection.
+\newblock \emph{arXiv preprint arXiv:2402.16912}, 2024.
+
+\bibitem[Wang et~al.(2023)Wang, Wang, Han, Chen, Yang, Shi, and
+  Yin]{wang2023bars}
+Kai Wang, Zhiliang Wang, Dongqi Han, Wenqi Chen, Jiahai Yang, Xingang Shi, and
+  Xia Yin.
+\newblock {BARS}: Local robustness certification for deep learning based
+  traffic analysis systems.
+\newblock In \emph{Network and Distributed System Security Symposium}, 2023.
+
+\bibitem[Wu et~al.(2022)Wu, Zhang, Wang, and Sun]{wu2022rtids}
+Zihan Wu, Hong Zhang, Penghai Wang, and Zhibo Sun.
+\newblock {RTIDS}: A robust transformer-based approach for intrusion detection
+  system.
+\newblock \emph{IEEE Access}, 10:\penalty0 64375--64387, 2022.
+\newblock \doi{10.1109/ACCESS.2022.3182333}.
+
+\bibitem[Yang et~al.(2020)Yang, Duan, Hu, Salman, Razenshteyn, and
+  Li]{yang2020smoothing}
+Greg Yang, Tony Duan, J.~Edward Hu, Hadi Salman, Ilya Razenshteyn, and Jerry
+  Li.
+\newblock Randomized smoothing of all shapes and sizes.
+\newblock In \emph{Proc.\ ICML}, volume 119 of \emph{PMLR}, pp.\  10693--10705,
+  2020.
+
+\bibitem[Zhang et~al.(2019)Zhang, Yu, Jiao, Xing, El~Ghaoui, and
+  Jordan]{zhang2019trades}
+Hongyang Zhang, Yaodong Yu, Jiantao Jiao, Eric Xing, Laurent El~Ghaoui, and
+  Michael Jordan.
+\newblock Theoretically principled trade-off between robustness and accuracy.
+\newblock In \emph{Proc.\ ICML}, volume~97 of \emph{PMLR}, pp.\  7472--7482,
+  2019.
+
+\end{thebibliography}

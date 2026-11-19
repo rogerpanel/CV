@@ -1,0 +1,15 @@
+Update: the protocol now covers a second corpus, and every conclusion carries over.
+
+We repeated the full five-seed protocol on UNSW-NB15. It comes from a different network, with a different feature extractor (39 numeric features), and its exact duplicates and conflicting-label flows are removed before splitting.
+
+ICS3D container flows -> UNSW-NB15:
+- Imbalance-aware training, clean macro-F1: +0.057 -> +0.144.
+- EOT-matched adversarial training, worst-case macro-F1: +0.174 -> +0.149.
+- SODE-Guard vs adversarially trained MLP / neural ODE, worst case: level (-0.001 / -0.005) -> significantly ahead (+0.011 / +0.010, Holm-adjusted p = 0.048).
+- Certified accuracy at l2 radius 0.273: 0.576 -> 0.453.
+- SODE-Guard vs smoothed MLP, certified: +0.006 -> +0.020 (Holm-adjusted p = 0.006). SODE-Guard is level with the smoothed neural ODE on both corpora.
+- Gradient-boosted trees, best on clean flows, collapse again under attack, including feature-constrained attacks (0.05-0.11 on UNSW-NB15).
+- Adversarially trained SODE-Guard keeps 0.571 under constrained attacks.
+- Conformal alarm thresholds stay close to the chosen budget: 0.5% at a 1% budget and 5.5% at a 5% budget.
+
+The results, code and per-seed files are in the anonymised repository. The camera-ready version will add this cross-corpus table to the paper.
