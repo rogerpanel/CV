@@ -275,7 +275,7 @@ under feature constraints.
   box/.style={draw, rounded corners=2pt, align=center, minimum height=0.95cm, inner sep=3pt, line width=0.5pt},
   mod/.style={draw, rounded corners=2pt, align=left, inner sep=3pt, text width=4.1cm, line width=0.5pt},
   arr/.style={->, line width=0.6pt}]
-\node[box, fill=blue!5, draw=blue!50!black, text width=1.45cm] (x) {flow $x\in\Real^{75}$\\z-scored};
+\node[box, fill=blue!5, draw=blue!50!black, text width=1.45cm] (x) {flow $x\in\Real^{p}$\\z-scored};
 \node[box, fill=orange!8, draw=orange!70!black, dashed, text width=1.75cm, right=0.32cm of x] (pre)
   {noise prefix\\$x+\sigma\epsilon$\\{\tiny (smoothed model)}};
 \node[box, fill=blue!5, draw=blue!50!black, text width=1.25cm, right=0.32cm of pre] (h) {encoder\\$X_0=h(x)$};
@@ -283,7 +283,7 @@ under feature constraints.
   {neural SDE ($d{=}128$, $m{=}16$)\\$dX=f_\theta\,dt+g_\theta\,dW$\\EM, 20 steps, $M{=}8$ paths};
 \node[box, fill=violet!6, draw=violet!70!black, text width=2.2cm, right=0.32cm of sde] (head)
   {mean logits $F_M(x)$\\$+$ post-hoc bias $b$};
-\node[box, fill=red!5, draw=red!60!black, text width=1.15cm, right=0.32cm of head] (y) {$\hat y(x)$\\9 classes};
+\node[box, fill=red!5, draw=red!60!black, text width=1.15cm, right=0.32cm of head] (y) {$\hat y(x)$\\$K$ classes};
 \draw[arr] (x)--(pre); \draw[arr] (pre)--(h); \draw[arr] (h)--(sde); \draw[arr] (sde)--(head); \draw[arr] (head)--(y);
 \node[mod, fill=gray!4, below=0.85cm of x.south west, anchor=north west] (m3)
   {\textbf{M3 Smoothing certificate}\\noise prefix + consistency in training; Cohen bound over $(\epsilon,W)$ jointly (\cref{prop:smooth})};
@@ -560,7 +560,7 @@ choice.
 \draw[gray!60, dashed] (axis cs:0.273,0.40) -- (axis cs:0.273,0.66);
 \end{axis}
 \end{tikzpicture}
-\caption{(a)~Clean against worst-case macro-F1 (means over five seeds).
+\caption{ICS3D container flows. (a)~Clean against worst-case macro-F1 (means over five seeds).
 Circles: SODE-Guard; squares: neural ODE; triangles: MLP; diamonds: trees;
 arrows: the effect of M1 and M2 on SODE-Guard. (b)~Certified accuracy of the
 smoothed detectors on class-stratified test flows ($\sigma=0.25$, $n=2000$);
@@ -689,7 +689,7 @@ the white-box ones (\cref{tab:attacks}).
 \addplot[gray, thick, dotted, mark=o, mark size=1.1pt] coordinates {(10,0.273) (40,0.273) (100,0.270)};
 \end{axis}
 \end{tikzpicture}
-\caption{Gradient-masking checks on seed 0 (500 flows, EOT-PGD with fresh
+\caption{Gradient-masking checks on seed 0 of the ICS3D container flows (500 flows, EOT-PGD with fresh
 paths). (a)~Macro-F1 falls steadily to near zero as the budget grows. (b)~More
 attack steps never help the defender; the attack has converged.}
 \label{fig:masking}

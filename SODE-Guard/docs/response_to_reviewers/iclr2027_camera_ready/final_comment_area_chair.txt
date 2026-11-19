@@ -1,0 +1,45 @@
+Final note to the Area Chair: how the reviews shaped a more rigorous and more useful SODE-Guard
+
+Dear Area Chair,
+
+We thank you and the three reviewers for an unusually constructive discussion. The reviews asked hard questions about adaptive attacks, about certification on trained models, about how much the stochastic dynamics matter, and about evaluation practice. Each question became an experiment, and together they turned SODE-Guard from a single-dataset proposal into a recipe, a certificate and a protocol tested on three corpora. We summarise how each concern was addressed.
+
+Adaptive attacks and gradient masking (all reviewers)
+- Every result now comes from eight adaptive attacks: PGD with restarts, EOT-PGD, APGD-CE and APGD-DLR with EOT, a 256-path expected-margin attack, Square, and transfer.
+- Each attack is scored with fixed and with fresh Brownian paths.
+- The masking checks pass on every corpus, and a full-strength re-attack agrees with the five-seed results within 0.03.
+- EOT-matched adversarial training raises worst-case macro-F1 by 0.149 to 0.174 on every corpus.
+
+Certification on trained models (Reviewers FiAv and kdck)
+- We prove that randomised smoothing stays sound when the base classifier is itself random, so SODE-Guard is certified with its own Brownian paths.
+- On trained detectors, certified accuracy at l2 radius 0.273 rose from 0.096 under our original Lipschitz bound to 0.576.
+- Across corpora the certificate stays within 0.02 of the best smoothed baseline.
+
+Code that matches the paper (Reviewer vjJK)
+- One released pipeline attacks and certifies exactly the deployed predictor.
+- The anti-concentration regulariser has been replaced by three modules with measured, significant effects.
+
+Why an SDE, and comparison with strong baselines (Reviewers FiAv and kdck)
+- Matched MLP and neural ODE baselines receive the same recipe.
+- Gradient-boosted trees and a random forest are included.
+- SODE-Guard is level with or ahead of the matched baselines under attack, significantly so on UNSW-NB15.
+- The trees are the most accurate clean models but collapse under attack: 0.02 to 0.14 under the full suite, and 0.05 to 0.33 even under feature-constrained attacks. This is exactly where a robust neural detector is needed.
+- BARS, MARS and Liu et al. (CVPR 2020) are now discussed.
+
+Evaluation practice and realism (Reviewer FiAv, following Arp et al.)
+- Duplicates, conflicting labels and integration metadata are removed before splitting.
+- Every result is a five-seed mean with pre-declared, Holm-corrected contrasts.
+- The protocol includes a per-class chronological split and feature-constrained attacks.
+- It also includes conformal alarm thresholds, which hold the false-alarm rate close to the chosen budget.
+- The same protocol now runs on the ICS3D container flows, UNSW-NB15 and CSE-CIC-IDS2018.
+
+Motivation and figures (Reviewer kdck)
+- The motivation now rests on the measured accuracy-robustness gap of the strongest clean models.
+- The figures have been redrawn around the method, the cross-corpus results and the masking checks.
+
+One finding deserves mention because the reviewers' scrutiny made it possible. On CSE-CIC-IDS2018, a single integration column (file size per daily capture file) had produced a significant but spurious certification advantage for our own model. We traced it, removed it, re-ran the corpus and documented the reversal as a case study. We now see that kind of checking as part of the contribution.
+
+We are grateful to the reviewers. Their questions are visible in every table of the revised paper, and they made the work both more rigorous and more useful to the practitioners and researchers it is meant to serve.
+
+With our thanks,
+The authors

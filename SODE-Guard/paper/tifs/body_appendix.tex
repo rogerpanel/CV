@@ -1,0 +1,218 @@
+\appendices
+
+
+%% ==================================================================
+\section{Proofs}\label{app:proofs}
+%% ==================================================================
+\paragraph{Proof of \cref{prop:smooth}.} For each class $c$ let
+$u_c(z)=\Prob_\omega[\hat y(z;\omega)=c]$. Since $\omega$ is independent of $z$
+and of $\epsilon$, Fubini's theorem gives
+$p_c(x)=\Exp_\epsilon[u_c(x+\sigma\epsilon)]$, the convolution of the
+$[0,1]$-valued function $u_c$ with $\mathcal N(0,\sigma^2I)$. By Lemma~2 of
+\citet{salman2019smoothadv}, $x\mapsto\sigma\Phi^{-1}(p_c(x))$ is 1-Lipschitz in
+$\ell_2$. Hence for $\|\delta\|_2<\sigma\Phi^{-1}(\underline p_A)$,
+$\Phi^{-1}(p_{c_A}(x+\delta))\ge\Phi^{-1}(\underline p_A)-\|\delta\|_2/\sigma>0$,
+that is $p_{c_A}(x+\delta)>\tfrac12$. Because $\sum_cp_c=1$, every other class has
+$p_c(x+\delta)<\tfrac12$, so $G(x+\delta)=c_A$. For the estimate, the pairs
+$(\epsilon_i,\omega_i)$, $i=1,\dots,n$, are independent and identically
+distributed, so the indicators $\mathbb 1[\hat y(x+\sigma\epsilon_i;\omega_i)=c_A]$
+are independent Bernoulli$(p_{c_A}(x))$ variables, and the one-sided
+Clopper--Pearson bound \citep{clopper1934} satisfies
+$\Prob[p_{c_A}(x)\ge\underline p_A]\ge1-\alpha$. The class $c_A$ is chosen from
+$n_0$ separate draws, so it is fixed given the estimation sample. Finally, the
+pure-diffusion prefix $dZ_s=\sigma\,dB_s$, $Z_0=x$, has $Z_1=x+\sigma B_1$ with
+$B_1\sim\mathcal N(0,I_p)$, which is the input noise above. \hfill$\square$
+
+\paragraph{Proof of \cref{lem:ms}.} Let $D_k=Y_k-X_k$. The constant diffusion
+floor cancels, so $D_{k+1}=D_k+\Delta f_k\Delta t+\Delta g_k\Delta W_k$ with
+$\Delta f_k=f_\theta(Y_k,t_k)-f_\theta(X_k,t_k)$ and
+$\Delta g_k=g_\theta(Y_k,t_k)-g_\theta(X_k,t_k)$. As $\Delta W_k$ is independent
+of $(X_k,Y_k)$ with mean zero and covariance $\Delta t I_m$,
+$\Exp[\|D_{k+1}\|^2\mid X_k,Y_k]=\|D_k+\Delta f_k\Delta t\|^2+\Delta t\|\Delta g_k\|_F^2
+\le((1+K_f\Delta t)^2+K_g^2\Delta t)\|D_k\|^2$. Iterating $n=T/\Delta t$ times with
+$1+u\le e^u$ and $\|D_0\|\le L_h\|\delta\|$ gives the claim. \hfill$\square$
+
+\paragraph{Proof of \cref{thm:mean-cert}.} Couple both expectations through the
+same increments. $P_B$ is non-expansive and $\psi$ is affine with $\|W_\psi\|$,
+so by Jensen, Cauchy--Schwarz and \cref{lem:ms},
+$\|F^B(x+\delta)-F^B(x)\|\le\|W_\psi\|(\Exp\|Y_n-X_n\|^2)^{1/2}\le L\|\delta\|$.
+Each logit difference is $\sqrt2L$-Lipschitz, so a margin $M(x)$ cannot be closed
+within radius $M(x)/(\sqrt2L)$. \hfill$\square$
+
+\begin{corollary}[Monte-Carlo certification]\label{cor:mc}
+Choose $\hat y$ from $n_0$ paths. From $n_{\mathrm c}$ further paths compute the
+pairwise margins $Z^{(i)}_k=(e_{\hat y}-e_k)^\tr P_B(\psi(X^{(i)}_n))$, their
+means $\hat M_k$ and empirical-Bernstein widths $t_k$ \citep{maurer2009bernstein}
+at level $\alpha/(K-1)$. With probability at least $1-\alpha$, if
+$\underline M=\min_{k\ne\hat y}(\hat M_k-t_k)>0$, then $\hat y=\argmax F^B(x)$ and
+$\underline M/(\sqrt2L)$ is a certified radius.
+\end{corollary}
+\emph{Proof.} Each $Z^{(i)}_k$ lies in $[-\sqrt2B,\sqrt2B]$; Theorem~4 of
+\citet{maurer2009bernstein} and a union bound over the $K-1$ competitors give
+$M(x)\ge\underline M$ with probability $1-\alpha$, and \cref{thm:mean-cert}
+applies. \hfill$\square$
+
+\begin{proposition}[Path-wise decision-flip bound]\label{prop:flip}
+For a fixed class $k^\star$, a perturbation $\delta$ chosen independently of the
+noise and the path margin $G(x)=\psi^{(k^\star)}(X_n)-\max_{k\ne k^\star}\psi^{(k)}(X_n)$,
+for every $\beta>0$,
+$\Prob[\argmax_k\psi^{(k)}(Y_n)\ne k^\star]\le\Prob[G(x)\le\beta]+2L^2\|\delta\|_2^2/\beta^2$.
+\end{proposition}
+\emph{Proof.} $|G(x+\delta)-G(x)|\le\sqrt2\|W_\psi\|\|Y_n-X_n\|$, so a flip needs
+$G(x)\le\beta$ or $\sqrt2\|W_\psi\|\|Y_n-X_n\|\ge\beta$; Markov's inequality on the
+square and \cref{lem:ms} bound the second event. \hfill$\square$
+
+
+
+%% ==================================================================
+\section{Additional results}\label{app:tables}
+%% ==================================================================
+\begin{algorithm}[t]
+\caption{\textsc{CertifySmoothed}$(x)$ for the stochastic detector}
+\label{alg:certify}
+\begin{algorithmic}[1]
+\REQUIRE flow $x$; noise level $\sigma$; $n_0$, $n$, $\alpha$; deployed predictor \eqref{eq:predictor} with fresh paths on every call
+\STATE draw $n_0$ pairs $(\epsilon_i,\omega_i)$; $c_A\leftarrow$ most frequent $\hat y(x+\sigma\epsilon_i;\omega_i)$ \hfill\COMMENT{selection}
+\STATE draw $n$ new pairs; $k\leftarrow\#\{i:\hat y(x+\sigma\epsilon_i;\omega_i)=c_A\}$ \hfill\COMMENT{estimation}
+\STATE $\underline p_A\leftarrow$ one-sided Clopper--Pearson lower bound of $k/n$ at level $1-\alpha$
+\IF{$\underline p_A>\tfrac12$} \RETURN $(c_A,\ \sigma\Phi^{-1}(\underline p_A))$ \ELSE \RETURN \textsc{abstain} \ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\begin{table*}[t]
+\caption{Macro-F1 of SODE-AT under each attack (mean of five seeds), scored with
+fixed and fresh paths; the worst case is taken per flow over all attacks.}
+\label{tab:attacks}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+Attack & Fixed paths & Fresh paths\\
+\midrule
+PGD-40 & 0.427 & 0.424\\
+PGD-100, two restarts & 0.427 & 0.434\\
+APGD-CE, EOT & 0.427 & 0.428\\
+APGD-DLR, EOT & 0.423 & 0.423\\
+EOT-PGD-50, eight draws & 0.427 & 0.428\\
+Expected margin, 64 paths & 0.422 & 0.423\\
+Square, 1{,}000 queries & 0.447 & 0.451\\
+Transfer from MLP / MLP-AT & 0.441 / 0.436 & 0.436 / 0.437\\
+\midrule
+Worst case over all attacks & 0.420 & 0.412\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{Operating points on ICS3D, fitted on the calibration half and measured on
+the test split (five seeds). ECE before and after temperature scaling;
+class-conditional conformal sets at the 90\% level (coverage, lowest per-class
+coverage, mean set size; marginal sets reach the same overall coverage but a
+lowest per-class coverage near zero); conformal false-alarm thresholds with the
+benign class (label 0): test false-alarm rate (FAR) and detection rate.}
+\label{tab:alarms}
+\centering\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lcccc}
+\toprule
+Model & ECE & Class-conditional sets, 90\% & FAR / detection, 1\% & FAR / detection, 5\%\\
+\midrule
+SODE (M1) & 0.063 $\to$ 0.032 & 0.897 / 0.867 / 2.05 & 0.009 / 0.666 & 0.049 / 0.956\\
+SODE-AT & 0.137 $\to$ 0.101 & 0.898 / 0.848 / 2.10 & 0.009 / 0.493 & 0.049 / 0.859\\
+Neural ODE-AT & 0.122 $\to$ 0.093 & 0.898 / 0.858 / 2.10 & 0.009 / 0.485 & 0.050 / 0.872\\
+MLP-AT & 0.119 $\to$ 0.094 & 0.899 / 0.835 / 2.09 & 0.009 / 0.498 & 0.048 / 0.872\\
+LightGBM & 0.010 $\to$ 0.006 & 0.898 / 0.834 / 1.48 & 0.007 / 0.894 & 0.050 / 0.999\\
+XGBoost & 0.012 $\to$ 0.006 & 0.899 / 0.804 / 1.44 & 0.007 / 0.900 & 0.050 / 0.999\\
+Random forest & 0.008 $\to$ 0.024 & 0.903 / 0.869 / 4.39 & 0.008 / 0.881 & 0.049 / 0.999\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+%% ==================================================================
+
+
+
+
+\begin{table*}[t]
+\caption{Per-class clean F1 (mean of five seeds). Classes of the ICS3D container
+flows (label codes 0, 1, 2, 11, 8, 6, 3, 4, 7; NR: Node-RED); flows per class
+after deduplication in parentheses.}
+\label{tab:perclass}
+\centering\scriptsize
+\setlength{\tabcolsep}{2.6pt}
+\begin{tabular}{lccccccccc}
+\toprule
+Model & Benign & \shortstack{CVE-\\20-13379} & \shortstack{NR\\recon} & \shortstack{Nuclei\\scan} & \shortstack{CVE-\\21-25741} & \shortstack{CVE-\\19-20933} & \shortstack{NR\\RCE} & \shortstack{NR\\escape} & \shortstack{CVE-\\21-30465}\\
+ & {\scriptsize(19{,}738)} & {\scriptsize(18{,}872)} & {\scriptsize(19{,}878)} & {\scriptsize(8{,}696)} & {\scriptsize(803)} & {\scriptsize(189)} & {\scriptsize(165)} & {\scriptsize(158)} & {\scriptsize(128)}\\
+\midrule
+SODE-base & 0.95 & 0.92 & 0.95 & 0.98 & 0.15 & 0.00 & 0.00 & 0.00 & 0.00\\
+SODE (M1) & 0.96 & 0.93 & 0.96 & 0.98 & 0.29 & 0.32 & 0.02 & 0.01 & 0.00\\
+SODE, square-root sampling & 0.95 & 0.93 & 0.96 & 0.98 & 0.31 & 0.38 & 0.04 & 0.00 & 0.03\\
+SODE-AT & 0.94 & 0.91 & 0.95 & 0.98 & 0.20 & 0.15 & 0.04 & 0.02 & 0.01\\
+MLP (M1) & 0.95 & 0.91 & 0.95 & 0.97 & 0.22 & 0.26 & 0.03 & 0.00 & 0.02\\
+LightGBM & 0.98 & 0.94 & 0.97 & 0.98 & 0.44 & 0.78 & 0.13 & 0.04 & 0.30\\
+XGBoost & 0.98 & 0.94 & 0.97 & 0.98 & 0.45 & 0.80 & 0.11 & 0.03 & 0.32\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{Deterministic certificates on trained detectors, from the earlier
+certifiable configuration (Lipschitz encoder, spectral-normalised head;
+stratified 70/15/15 split without deduplication; 500 class-stratified flows;
+$\alpha=10^{-3}$). $L$ is computed from exact singular values. Randomised
+smoothing of an MLP is shown for reference.}
+\label{tab:det-cert}
+\centering\small
+\begin{tabular}{lccccc}
+\toprule
+Certificate & $L$ & $r=0$ & $r=0.05$ & $r=0.1$ & $r=0.273$\\
+\midrule
+SODE-Guard, \cref{thm:mean-cert} (Monte-Carlo, \cref{cor:mc}) & 11.5 & 0.610 & 0.538 & 0.294 & 0.096\\
+Neural ODE, \cref{thm:mean-cert} ($K_g=0$) & 5.1 & 0.618 & 0.608 & 0.590 & 0.280\\
+Lipschitz MLP, Lipschitz margin & 1.4 & 0.618 & 0.608 & 0.590 & 0.422\\
+MLP, randomised smoothing ($\sigma=0.25$) & --- & 0.636 & 0.628 & 0.628 & 0.606\\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+%% ==================================================================
+\section{Data and protocol}\label{app:data}
+%% ==================================================================
+ICS3D \citep{anaedevha2025ics3d} combines cloud-security logs, an Edge-IIoT split and
+Kubernetes/Docker container flows; we use the container flows, extracted by a
+CICFlowMeter-compatible tool. Flows are read in chunks and capped at 20{,}000 per
+class ($70{,}319$ flows). Identifier columns (flow ID, addresses, timestamp) and the
+source port are dropped, non-numeric and mostly empty columns are removed, and
+exact duplicates (325) and feature vectors with conflicting labels (1{,}250
+flows) are removed before splitting. Three classes with fewer than 100 flows
+after deduplication (33--48 flows) are excluded, leaving $68{,}627$ flows in 9
+classes and 81 numeric columns, of which 75 have non-zero training variance.
+Each seed draws a stratified 60/20/20 split ($41{,}176$ training,
+$6{,}862$ selection, $6{,}863$ calibration and $13{,}726$ test flows); missing
+values are filled with training medians, features are z-scored with training
+statistics and clipped to $\pm10$. Attacks use 500 class-stratified test flows per
+seed and certificates another 500; metrics on these subsets are also reported
+reweighted to the test class mix. The chronological split orders each class by
+timestamp and assigns its first 60\%, next 20\% and last 20\% to training,
+validation and test.
+
+%% ==================================================================
+\section{Hyper-parameters}\label{app:hyper}
+%% ==================================================================
+\begin{table*}[t]
+\centering\small
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}X@{}}
+\toprule
+Component & Setting\\
+\midrule
+SDE & $d=128$, $m=16$, drift and diffusion three-layer GELU perceptrons of width 256 with spectral normalisation, diffusion floor $\lambda_0=10^{-3}$, $T=1$, $\Delta t=0.05$; $M=8$ paths in training and inference\\
+Optimisation (M1) & AdamW, learning rate $5\times10^{-4}$, weight decay $10^{-4}$, batch 512, cosine decay, at most 60 epochs, patience 12, gradient clipping at norm 1; logit-adjusted loss with $\tau=1$; post-hoc $\tau'$ on a grid over $[-1,2.5]$ (smoothed models: $[-4,4]$)\\
+Adversarial training (M2) & N-FGSM, $\varepsilon=0.03$, noise $\mathcal U[-2\varepsilon,2\varepsilon]$, budget ramp over the first 15\% of epochs, model selection on PGD-10 macro-F1 over 1{,}000 validation flows\\
+Smoothing (M3) & $\sigma=0.25$, two noisy copies, consistency weight $\lambda\in\{0,1,2\}$ (short schedule: 10), entropy weight 0.5, at least 20 epochs, patience 20, selection on the post-hoc-adjusted vote over eight noisy draws; certification $n_0=100$, $n=2000$ (check: $10{,}000$), $\alpha=10^{-3}$\\
+Trees & LightGBM: 3{,}000 rounds, learning rate 0.05, 63 leaves, subsampling 0.8, early stopping after 100 rounds; XGBoost: depth 8, otherwise the same; random forest: 500 trees, balanced subsampling; balanced sample weights and post-hoc $\tau'$\\
+Compute & one GPU per run (T4 or A100); mean training time per model on mixed GPUs: SODE 6.3\,min, SODE-AT 10.4\,min, SODE-RS 12.6\,min, MLP under 1\,min\\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
