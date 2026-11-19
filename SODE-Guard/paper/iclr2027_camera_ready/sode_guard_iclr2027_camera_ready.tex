@@ -70,10 +70,11 @@ adversarially trained and smoothed baselines. Gradient-boosted trees, the most
 accurate clean models, fall to $0.02$ under a black-box attack and to $0.17$
 when the attacker may change only realisable traffic statistics, a setting in
 which SODE-Guard keeps $0.446$; conformal alarm thresholds hold its false-alarm
-rate at the chosen budget. On UNSW-NB15, a second corpus from a different
-network and feature extractor, every conclusion carries over, and SODE-Guard is
-significantly ahead of the matched MLP both under attack and in certified
-accuracy.
+rate at the chosen budget. On UNSW-NB15 and CSE-CIC-IDS2018, two further corpora
+from different networks, the gains of every module and the brittleness of the
+trees carry over; SODE-Guard is level with or ahead of the matched baselines
+under attack, and its certificate stays within $0.02$ of the best smoothed
+baseline.
 SODE-Guard gives security teams a detector whose robustness is measured under
 adaptive attack and certified by its own randomness, and gives researchers an
 open, reproducible protocol for building and testing robust intrusion detectors.
@@ -132,9 +133,9 @@ fixed and fresh paths, gradient-masking checks, a full-strength re-attack,
 feature-constrained attacks, a per-class chronological split, tree baselines,
 conformal operating points and paired-bootstrap contrasts declared before the
 runs.
-\textbf{(C4) Findings that guide deployment, on two corpora.} With the recipe,
-SODE-Guard is never worse than the strongest adversarially trained and smoothed
-baselines and pulls ahead of them on UNSW-NB15, and
+\textbf{(C4) Findings that guide deployment, on three corpora.} With the recipe,
+SODE-Guard is level with or ahead of the strongest adversarially trained
+baselines and within $0.02$ of the best smoothed baseline, and
 gradient-boosted trees, the best clean models, collapse under attack, also when
 the attacker is limited to realisable changes, so robust neural detectors are
 needed exactly where trees look best.
@@ -435,8 +436,12 @@ UNSW-NB15 \citep{moustafa2015unsw} from the IIS3D collection \citep{anon_iis3d}:
 families, capped at 5{,}000 flows per class. Deduplication removes 4{,}405 exact
 duplicates and 11{,}212 flows whose features occur with different attack labels,
 a known property of this corpus, which leaves 21{,}074 flows; scores are
-therefore not comparable to published results on the uncleaned set. Each of
-five seeds draws a new stratified
+therefore not comparable to published results on the uncleaned set. The third
+corpus is CSE-CIC-IDS2018 \citep{sharafaldin2018cicids}, also from IIS3D:
+CICFlowMeter features, 11 classes with at least 100 flows, and 8{,}844 exact
+duplicates and 7{,}082 conflicting-label flows removed, which leaves 37{,}880
+flows. Integration metadata (source, file size, provenance flags) is dropped
+for every corpus. Each of five seeds draws a new stratified
 60/20/20 split (\cref{app:data}).
 
 \textbf{Models and baselines.} SODE-Guard with M1 (\texttt{SODE}), with M1 and
@@ -776,41 +781,44 @@ sensitivity at a fixed budget. Class-conditional conformal sets
 level (SODE-Guard: 87\%), with about two classes per set, whereas marginal sets
 almost never cover the rarest classes (\cref{tab:alarms}).
 
-\subsection{Generalisation to a second corpus}
-\Cref{tab:generalisation} repeats the full protocol on UNSW-NB15. Every
-conclusion carries over:
+\subsection{Generalisation to further corpora}
+\Cref{tab:generalisation} repeats the full protocol on UNSW-NB15 and
+CSE-CIC-IDS2018. The conclusions about the recipe carry over:
 \begin{itemize}
-\item M1 and M2 help even more (clean macro-F1 $+0.144$, worst case $+0.149$).
-\item The trees again lead on clean flows (by $0.16$, driven by four small attack
-families) and again collapse under attack, also when constrained.
-\item The masking checks pass, and the full-strength re-attack of seed 0 agrees
+\item M1 and M2 help on every corpus: clean macro-F1 rises by $0.016$--$0.144$ and
+the worst case by $0.149$--$0.174$.
+\item The trees lead on clean flows (by $0.02$--$0.16$) and collapse under attack,
+also when constrained.
+\item The masking checks pass, and the full-strength re-attacks of seed 0 agree
 within $0.03$.
 \end{itemize}
-On this corpus SODE-Guard is significantly ahead of the matched baselines under
-attack, by about one point over MLP-AT and ODE-AT (Holm-adjusted $p=0.048$). It
-also certifies more than the smoothed MLP ($+0.020$, $p=0.006$), while it is
-level with the smoothed neural ODE.
+Under attack, SODE-AT is level with or ahead of MLP-AT and ODE-AT on all three
+corpora; the lead is significant on UNSW-NB15 ($+0.011$). The certificate
+varies within $\pm0.02$ of the best smoothed baseline: SODE-RS is ahead of the
+smoothed MLP on UNSW-NB15 ($+0.020$), level on ICS3D, and behind on
+CSE-CIC-IDS2018 ($-0.017$). \Cref{app:leak} documents how one leaked metadata
+column had reversed that last result.
 
 \begin{table}[t]
-\caption{The protocol on two corpora (five seeds each; differences are paired
+\caption{The protocol on three corpora (five seeds each; differences are paired
 bootstrap estimates, $^{*}$ Holm-adjusted $p<0.05$). Worst cases use fixed paths;
 certified accuracy is at $\ell_2$ radius $0.273$ on class-stratified flows.}
 \label{tab:generalisation}
-\centering\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcc}
+\centering\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{lccc}
 \toprule
-& ICS3D container flows & UNSW-NB15\\
+& ICS3D containers & UNSW-NB15 & CSE-CIC-IDS2018\\
 \midrule
-Clean macro-F1, original recipe $\to$ M1 & 0.438 $\to$ 0.495$^{*}$ & 0.508 $\to$ 0.652$^{*}$\\
-Worst case, SODE (M1) $\to$ SODE-AT (M2) & 0.245 $\to$ 0.420$^{*}$ & 0.402 $\to$ 0.545$^{*}$\\
-SODE-AT $-$ MLP-AT / $-$ ODE-AT, worst case & $-0.001$ / $-0.005$ & $+0.011^{*}$ / $+0.010^{*}$\\
-SODE-RS certified accuracy & 0.576 & 0.453\\
-SODE-RS $-$ MLP-RS / $-$ ODE-RS, certified & $+0.006$ / $-0.003$ & $+0.020^{*}$ / $+0.002$\\
-Trees: clean / worst case & 0.61--0.62 / 0.02--0.04 & 0.80--0.82 / 0.04--0.11\\
-Trees: constrained worst case & 0.17--0.19 & 0.05--0.11\\
-SODE-AT, constrained worst case & 0.446 & 0.571\\
-SODE alarms: test FAR at 1\% / 5\% budget & 0.009 / 0.049 & 0.005 / 0.055\\
+Clean macro-F1, orig.\ recipe $\to$ M1 & 0.438 $\to$ 0.495$^{*}$ & 0.508 $\to$ 0.652$^{*}$ & 0.879 $\to$ 0.895$^{*}$\\
+Worst case, SODE $\to$ SODE-AT & 0.245 $\to$ 0.420$^{*}$ & 0.402 $\to$ 0.545$^{*}$ & 0.745 $\to$ 0.887$^{*}$\\
+SODE-AT $-$ MLP-AT / ODE-AT, worst & $-0.001$ / $-0.005$ & $+0.011^{*}$ / $+0.010^{*}$ & $+0.009$ / $+0.009$\\
+SODE-RS certified accuracy & 0.576 & 0.453 & 0.810\\
+SODE-RS $-$ MLP-RS / ODE-RS, cert. & $+0.006$ / $-0.003$ & $+0.020^{*}$ / $+0.002$ & $-0.017^{*}$ / $-0.010^{*}$\\
+Trees: clean / worst case & 0.61--0.62 / 0.02--0.04 & 0.80--0.82 / 0.04--0.11 & 0.91--0.92 / 0.08--0.14\\
+Trees: constrained worst case & 0.17--0.19 & 0.05--0.11 & 0.23--0.33\\
+SODE-AT, constrained worst case & 0.446 & 0.571 & 0.893\\
+SODE alarm FAR, 1\% / 5\% budget & 0.009 / 0.049 & 0.005 / 0.055 & 0.005 / 0.054\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -846,8 +854,8 @@ realisable; replaying perturbed traffic will measure robustness end to end
 \citep{simonetto2024tabularbench}.
 (iii)~\emph{Anisotropic certificates.} Feature-adaptive noise as in BARS and MARS
 \citep{wang2023bars,huang2025mars} fits the noise prefix of M3 directly.
-(iv)~\emph{More data.} Further corpora (Edge-IIoT, CSE-CIC-IDS2018, CIC-IoT-2023)
-and cross-dataset transfer will extend the generalisation study.
+(iv)~\emph{More data.} Further corpora (Edge-IIoT, CIC-IoT-2023) and
+cross-dataset transfer will extend the generalisation study.
 
 %% ==================================================================
 \section{Conclusion}\label{sec:conc}
@@ -862,8 +870,9 @@ macro-F1 by $0.174$ and certified accuracy to $0.576$ at $\ell_2$ radius $0.273$
 ($0.877$ on the test class mix), on par with the strongest robust baselines and
 far above gradient-boosted trees under attack, including attacks restricted to
 realisable traffic changes, and its conformal alarms meet the chosen
-false-alarm budget. The conclusions carry over to UNSW-NB15, where SODE-Guard is
-also significantly ahead of the matched MLP. SODE-Guard and its open protocol
+false-alarm budget. The conclusions about the recipe carry over to UNSW-NB15 and
+CSE-CIC-IDS2018, where SODE-Guard stays level with or ahead of the matched
+baselines under attack. SODE-Guard and its open protocol
 give practitioners a ready path to intrusion detectors that are robust by
 measurement and certified by construction, and give researchers a reproducible
 benchmark on which the next generation of robust, uncertainty-aware detectors
@@ -1068,6 +1077,40 @@ SODE-Guard, \cref{thm:mean-cert} (Monte-Carlo, \cref{cor:mc}) & 11.5 & 0.610 & 0
 Neural ODE, \cref{thm:mean-cert} ($K_g=0$) & 5.1 & 0.618 & 0.608 & 0.590 & 0.280\\
 Lipschitz MLP, Lipschitz margin & 1.4 & 0.618 & 0.608 & 0.590 & 0.422\\
 MLP, randomised smoothing ($\sigma=0.25$) & --- & 0.636 & 0.628 & 0.628 & 0.606\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ==================================================================
+\section{Case study: one leaked metadata column}\label{app:leak}
+The first CSE-CIC-IDS2018 run kept \texttt{file\_size\_mb}, an integration column
+with one value per daily capture file. Each capture day holds specific attacks,
+so the column identifies much of the label. Removing it and re-running the
+identical protocol changes the data and the conclusions (\cref{tab:leak}):
+\begin{itemize}
+\item About 4{,}800 more flows become feature-identical to flows with a different
+label; only the capture day had separated them.
+\item Clean and certified scores were inflated.
+\item The certificate ranking reversed: a significant $+0.014$ lead of SODE-RS
+over the smoothed MLP becomes a significant $-0.017$.
+\end{itemize}
+A single provenance column was enough to manufacture a method advantage.
+Integration metadata should therefore be removed before splitting, and
+deduplication should be run on the features actually used.
+
+\begin{table}[h]
+\caption{CSE-CIC-IDS2018 with and without the leaked column (five seeds each).}
+\label{tab:leak}
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+& With \texttt{file\_size\_mb} & Clean\\
+\midrule
+Exact duplicates / conflicting-label flows removed & 13{,}484 / 2{,}305 & 8{,}844 / 7{,}082\\
+Clean macro-F1: SODE (M1) / LightGBM & 0.917 / 0.932 & 0.895 / 0.915\\
+Worst case: SODE-AT / LightGBM & 0.892 / 0.246 & 0.887 / 0.079\\
+Certified at $r=0.273$: SODE-RS / MLP-RS / ODE-RS & 0.842 / 0.828 / 0.818 & 0.810 / 0.827 / 0.820\\
+SODE-RS $-$ MLP-RS, certified at $r=0.273$ & $+0.014^{*}$ & $-0.017^{*}$\\
 \bottomrule
 \end{tabular}
 \end{table}

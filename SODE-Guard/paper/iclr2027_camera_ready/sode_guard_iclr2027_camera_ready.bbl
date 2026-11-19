@@ -1,4 +1,4 @@
-\begin{thebibliography}{54}
+\begin{thebibliography}{55}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -328,6 +328,14 @@ Hadi Salman, Jerry Li, Ilya Razenshteyn, Pengchuan Zhang, Huan Zhang,
 \newblock Provably robust deep learning via adversarially trained smoothed
   classifiers.
 \newblock In \emph{Proc.\ NeurIPS}, 2019.
+
+\bibitem[Sharafaldin et~al.(2018)Sharafaldin, Lashkari, and
+  Ghorbani]{sharafaldin2018cicids}
+Iman Sharafaldin, Arash~Habibi Lashkari, and Ali~A. Ghorbani.
+\newblock Toward generating a new intrusion detection dataset and intrusion
+  traffic characterization.
+\newblock In \emph{International Conference on Information Systems Security and
+  Privacy (ICISSP)}, 2018.
 
 \bibitem[Simonetto et~al.(2024)Simonetto, Ghamizi, and
   Cordy]{simonetto2024tabularbench}
