@@ -67,15 +67,15 @@ through the deployed multi-path predictor with fresh Brownian paths, and a
 randomized-smoothing certificate that treats Gaussian input noise as a
 pure-diffusion prefix of the SDE. We prove that this certificate is sound for a
 stochastic base classifier and retain a deterministic Lipschitz certificate for
-the discretized dynamics. We evaluate on three corpora from different networks
-and feature extractors (Kubernetes container flows, UNSW-NB15 and
-CSE-CIC-IDS2018) with deduplication, five seeds, eight adaptive attacks,
+the discretized dynamics. We evaluate on four corpora from different networks
+and feature extractors (Kubernetes container flows, UNSW-NB15,
+CSE-CIC-IDS2018 and CIC-IoT-2023) with deduplication, five seeds, eight adaptive attacks,
 feature-constrained attacks, conformal alarm thresholds and pre-declared
 statistical contrasts. On every corpus the recipe significantly raises clean
-macro-F1, by 0.016 to 0.144, and worst-case macro-F1, by 0.149 to 0.174.
+macro-F1, by 0.016 to 0.144, and worst-case macro-F1, by 0.129 to 0.174.
 SODE-Guard is level with or ahead of matched adversarially trained baselines and
 certifies within 0.02 of the best smoothed baseline, whereas gradient-boosted
-trees, the most accurate clean models, fall to 0.02 to 0.14 under attack. A case
+trees, the most accurate clean models, fall to 0.02 to 0.17 under attack. A case
 study shows how one leaked metadata column reversed a certification comparison.
 SODE-Guard and its open protocol give practitioners robust, certifiable
 detectors with controllable false-alarm rates, and give researchers a
@@ -94,7 +94,7 @@ conformal prediction, evaluation methodology.
 
 \section*{Data and code availability}
 The container flows are part of the ICS3D collection \citep{anaedevha2025ics3d}
-and the UNSW-NB15 and CSE-CIC-IDS2018 flows are taken from the IIS3D collection
+and the UNSW-NB15, CSE-CIC-IDS2018 and CIC-IoT-2023 flows are taken from the IIS3D collection
 \citep{anaedevha2025iis3d}; both are public on Kaggle, and the original corpora are
 cited in \cref{sec:exp}. The code, the resumable multi-seed driver, a Colab
 notebook, and the per-seed result and prediction files behind every table and

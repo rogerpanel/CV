@@ -50,7 +50,7 @@ fixed and fresh paths, gradient-masking checks, a full-strength re-attack,
 feature-constrained attacks, a per-class chronological split, tree baselines,
 conformal operating points and paired-bootstrap contrasts declared before the
 runs.
-\textbf{(C4) Findings that guide deployment, on three corpora.} With the recipe,
+\textbf{(C4) Findings that guide deployment, on four corpora.} With the recipe,
 SODE-Guard is level with or ahead of the strongest adversarially trained
 baselines and within $0.02$ of the best smoothed baseline, and
 gradient-boosted trees, the best clean models, collapse under attack, also when
@@ -362,7 +362,12 @@ therefore not comparable to published results on the uncleaned set. The third
 corpus is CSE-CIC-IDS2018 \citep{sharafaldin2018cicids}, also from IIS3D:
 CICFlowMeter features, 11 classes with at least 100 flows, and 8{,}844 exact
 duplicates and 7{,}082 conflicting-label flows removed, which leaves 37{,}880
-flows. Integration metadata (source, file size, provenance flags) is dropped
+flows. The fourth corpus is CIC-IoT-2023 \citep{neto2023ciciot}, also from IIS3D:
+traffic of 105 real IoT devices, 27 classes with at least 100 flows (benign
+traffic and DDoS, DoS, Mirai, reconnaissance, spoofing, brute-force and web
+attacks), capped at 2{,}000 flows per class; 24 exact duplicates and no
+conflicting-label flows are removed, which leaves 41{,}719 flows with 39
+non-constant features. Integration metadata (source, file size, provenance flags) is dropped
 for every corpus. Each of five seeds draws a new stratified
 60/20/20 split (\cref{app:data}).
 
@@ -705,42 +710,44 @@ almost never cover the rarest classes (\cref{tab:alarms}).
 
 \subsection{Generalisation to further corpora}
 \Cref{tab:generalisation} and \cref{fig:crosscorpus} repeat the full protocol on
-UNSW-NB15 and CSE-CIC-IDS2018. The conclusions about the recipe carry over:
+UNSW-NB15, CSE-CIC-IDS2018 and CIC-IoT-2023. The conclusions about the recipe carry over:
 \begin{itemize}
 \item M1 and M2 help on every corpus: clean macro-F1 rises by $0.016$--$0.144$ and
-the worst case by $0.149$--$0.174$.
-\item The trees lead on clean flows (by $0.02$--$0.16$) and collapse under attack,
-also when constrained.
+the worst case by $0.129$--$0.174$.
+\item The trees lead on clean flows (by $0.02$--$0.21$) and collapse under attack
+(to $0.02$--$0.17$), also when constrained.
 \item The masking checks pass, and the full-strength re-attacks of seed 0 agree
 within $0.03$.
 \end{itemize}
-Under attack, SODE-AT is level with or ahead of MLP-AT and ODE-AT on all three
+Under attack, SODE-AT is level with or ahead of MLP-AT and ODE-AT on all four
 corpora; the lead is significant on UNSW-NB15 ($+0.011$). The certificate
 varies within $\pm0.02$ of the best smoothed baseline: SODE-RS is ahead of the
-smoothed MLP on UNSW-NB15 ($+0.020$), level on ICS3D, and behind on
-CSE-CIC-IDS2018 ($-0.017$). \Cref{app:leak} documents how one leaked metadata
+smoothed MLP on UNSW-NB15 ($+0.020$), level on ICS3D and CIC-IoT-2023, and behind on
+CSE-CIC-IDS2018 ($-0.017$). On CIC-IoT-2023, the largest label space (27
+classes), clean SODE is also significantly ahead of the MLP ($+0.021$) and the
+neural ODE ($+0.012$). \Cref{app:leak} documents how one leaked metadata
 column had reversed that last result.
 
 \begin{table*}[t]
-\caption{The protocol on three corpora (five seeds each; differences are paired
+\caption{The protocol on four corpora (five seeds each; differences are paired
 bootstrap estimates, $^{*}$ Holm-adjusted $p<0.05$). Worst cases use fixed paths;
 certified accuracy is at $\ell_2$ radius $0.273$ on class-stratified flows.}
 \label{tab:generalisation}
 \centering\scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-& ICS3D containers & UNSW-NB15 & CSE-CIC-IDS2018\\
+& ICS3D containers & UNSW-NB15 & CSE-CIC-IDS2018 & CIC-IoT-2023\\
 \midrule
-Clean macro-F1, orig.\ recipe $\to$ M1 & 0.438 $\to$ 0.495$^{*}$ & 0.508 $\to$ 0.652$^{*}$ & 0.879 $\to$ 0.895$^{*}$\\
-Worst case, SODE $\to$ SODE-AT & 0.245 $\to$ 0.420$^{*}$ & 0.402 $\to$ 0.545$^{*}$ & 0.745 $\to$ 0.887$^{*}$\\
-SODE-AT $-$ MLP-AT / ODE-AT, worst & $-0.001$ / $-0.005$ & $+0.011^{*}$ / $+0.010^{*}$ & $+0.009$ / $+0.009$\\
-SODE-RS certified accuracy & 0.576 & 0.453 & 0.810\\
-SODE-RS $-$ MLP-RS / ODE-RS, cert. & $+0.006$ / $-0.003$ & $+0.020^{*}$ / $+0.002$ & $-0.017^{*}$ / $-0.010^{*}$\\
-Trees: clean / worst case & 0.61--0.62 / 0.02--0.04 & 0.80--0.82 / 0.04--0.11 & 0.91--0.92 / 0.08--0.14\\
-Trees: constrained worst case & 0.17--0.19 & 0.05--0.11 & 0.23--0.33\\
-SODE-AT, constrained worst case & 0.446 & 0.571 & 0.893\\
-SODE alarm FAR, 1\% / 5\% budget & 0.009 / 0.049 & 0.005 / 0.055 & 0.005 / 0.054\\
+Clean macro-F1, orig.\ recipe $\to$ M1 & 0.438 $\to$ 0.495$^{*}$ & 0.508 $\to$ 0.652$^{*}$ & 0.879 $\to$ 0.895$^{*}$ & 0.651 $\to$ 0.721$^{*}$\\
+Worst case, SODE $\to$ SODE-AT & 0.245 $\to$ 0.420$^{*}$ & 0.402 $\to$ 0.545$^{*}$ & 0.745 $\to$ 0.887$^{*}$ & 0.484 $\to$ 0.614$^{*}$\\
+SODE-AT $-$ MLP-AT / ODE-AT, worst & $-0.001$ / $-0.005$ & $+0.011^{*}$ / $+0.010^{*}$ & $+0.009$ / $+0.009$ & $+0.004$ / $+0.002$\\
+SODE-RS certified accuracy & 0.576 & 0.453 & 0.810 & 0.526\\
+SODE-RS $-$ MLP-RS / ODE-RS, cert. & $+0.006$ / $-0.003$ & $+0.020^{*}$ / $+0.002$ & $-0.017^{*}$ / $-0.010^{*}$ & $-0.002$ / $-0.005$\\
+Trees: clean / worst case & 0.61--0.62 / 0.02--0.04 & 0.80--0.82 / 0.04--0.11 & 0.91--0.92 / 0.08--0.14 & 0.91--0.94 / 0.04--0.17\\
+Trees: constrained worst case & 0.17--0.19 & 0.05--0.11 & 0.23--0.33 & 0.10--0.17\\
+SODE-AT, constrained worst case & 0.446 & 0.571 & 0.893 & 0.623\\
+SODE alarm FAR, 1\% / 5\% budget & 0.009 / 0.049 & 0.005 / 0.055 & 0.005 / 0.054 & 0.006 / 0.042\\
 \bottomrule
 \end{tabular}
 \end{table*}
@@ -749,27 +756,27 @@ SODE alarm FAR, 1\% / 5\% budget & 0.009 / 0.049 & 0.005 / 0.055 & 0.005 / 0.054
 \centering
 \begin{tikzpicture}
 \pgfplotsset{every axis/.style={ybar, bar width=5pt, width=0.48\textwidth, height=4.4cm, ymin=0, ymax=1,
-  symbolic x coords={ICS3D,UNSW-NB15,CSE-CIC-IDS2018}, xtick=data, enlarge x limits=0.25,
+  symbolic x coords={ICS3D,UNSW-NB15,CIC-2018,CIC-IoT-2023}, xtick=data, enlarge x limits=0.18,
   tick label style={font=\scriptsize}, label style={font=\scriptsize}, title style={font=\scriptsize, yshift=-4pt},
   ylabel={macro-F1 under attack}, grid=major, grid style={gray!20}}}
 \begin{axis}[name=l, title={(a) worst case over eight adaptive attacks},
   legend style={font=\tiny, at={(0.02,0.98)}, anchor=north west, draw=none, fill=white, fill opacity=0.8, text opacity=1}, legend columns=2]
-\addplot[fill=blue!60!black, draw=none] coordinates {(ICS3D,0.420) (UNSW-NB15,0.545) (CSE-CIC-IDS2018,0.887)};
-\addplot[fill=green!50!black, draw=none] coordinates {(ICS3D,0.432) (UNSW-NB15,0.518) (CSE-CIC-IDS2018,0.889)};
-\addplot[fill=violet!70, draw=none] coordinates {(ICS3D,0.424) (UNSW-NB15,0.537) (CSE-CIC-IDS2018,0.878)};
-\addplot[fill=red!60!black, draw=none] coordinates {(ICS3D,0.021) (UNSW-NB15,0.111) (CSE-CIC-IDS2018,0.079)};
+\addplot[fill=blue!60!black, draw=none] coordinates {(ICS3D,0.420) (UNSW-NB15,0.545) (CIC-2018,0.887) (CIC-IoT-2023,0.614)};
+\addplot[fill=green!50!black, draw=none] coordinates {(ICS3D,0.432) (UNSW-NB15,0.518) (CIC-2018,0.889) (CIC-IoT-2023,0.611)};
+\addplot[fill=violet!70, draw=none] coordinates {(ICS3D,0.424) (UNSW-NB15,0.537) (CIC-2018,0.878) (CIC-IoT-2023,0.612)};
+\addplot[fill=red!60!black, draw=none] coordinates {(ICS3D,0.021) (UNSW-NB15,0.111) (CIC-2018,0.079) (CIC-IoT-2023,0.085)};
 \legend{SODE-AT, ODE-AT, MLP-AT, LightGBM}
 \end{axis}
 \begin{axis}[at={(l.east)}, anchor=west, xshift=1.2cm, title={(b) worst case under feature-constrained attacks}]
-\addplot[fill=blue!60!black, draw=none] coordinates {(ICS3D,0.446) (UNSW-NB15,0.571) (CSE-CIC-IDS2018,0.893)};
-\addplot[fill=green!50!black, draw=none] coordinates {(ICS3D,0.443) (UNSW-NB15,0.545) (CSE-CIC-IDS2018,0.895)};
-\addplot[fill=violet!70, draw=none] coordinates {(ICS3D,0.439) (UNSW-NB15,0.569) (CSE-CIC-IDS2018,0.886)};
-\addplot[fill=red!60!black, draw=none] coordinates {(ICS3D,0.172) (UNSW-NB15,0.113) (CSE-CIC-IDS2018,0.294)};
+\addplot[fill=blue!60!black, draw=none] coordinates {(ICS3D,0.446) (UNSW-NB15,0.571) (CIC-2018,0.893) (CIC-IoT-2023,0.623)};
+\addplot[fill=green!50!black, draw=none] coordinates {(ICS3D,0.443) (UNSW-NB15,0.545) (CIC-2018,0.895) (CIC-IoT-2023,0.622)};
+\addplot[fill=violet!70, draw=none] coordinates {(ICS3D,0.439) (UNSW-NB15,0.569) (CIC-2018,0.886) (CIC-IoT-2023,0.619)};
+\addplot[fill=red!60!black, draw=none] coordinates {(ICS3D,0.172) (UNSW-NB15,0.113) (CIC-2018,0.294) (CIC-IoT-2023,0.101)};
 \end{axis}
 \end{tikzpicture}
-\caption{Robustness across the three corpora (five seeds each, fixed paths). The adversarially trained neural
+\caption{Robustness across the four corpora (five seeds each, fixed paths). The adversarially trained neural
 detectors keep their accuracy under attack on every corpus, while the most accurate clean model, LightGBM,
-collapses, also when the attacker may change only realisable traffic statistics.}
+collapses, also when the attacker may change only realisable traffic statistics. CIC-2018 denotes CSE-CIC-IDS2018.}
 \label{fig:crosscorpus}
 \end{figure*}
 
@@ -857,8 +864,8 @@ macro-F1 by $0.174$ and certified accuracy to $0.576$ at $\ell_2$ radius $0.273$
 ($0.877$ on the test class mix), on par with the strongest robust baselines and
 far above gradient-boosted trees under attack, including attacks restricted to
 realisable traffic changes, and its conformal alarms meet the chosen
-false-alarm budget. The conclusions about the recipe carry over to UNSW-NB15 and
-CSE-CIC-IDS2018, where SODE-Guard stays level with or ahead of the matched
+false-alarm budget. The conclusions about the recipe carry over to UNSW-NB15,
+CSE-CIC-IDS2018 and CIC-IoT-2023, where SODE-Guard stays level with or ahead of the matched
 baselines under attack. SODE-Guard and its open protocol
 give practitioners a ready path to intrusion detectors that are robust by
 measurement and certified by construction, and give researchers a reproducible

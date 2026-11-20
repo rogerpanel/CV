@@ -197,6 +197,13 @@ reweighted to the test class mix. The chronological split orders each class by
 timestamp and assigns its first 60\%, next 20\% and last 20\% to training,
 validation and test.
 
+The three IIS3D corpora (UNSW-NB15, CSE-CIC-IDS2018 and CIC-IoT-2023) pass through
+the same pipeline. Each is read from a single source file, after a check that
+all rows share one schema; integration metadata (source file and dataset, file
+size, provenance and processing flags) and any column that is a running row
+counter are dropped before deduplication, and the dropped columns are logged
+with every run.
+
 %% ==================================================================
 \section{Hyper-parameters}\label{app:hyper}
 %% ==================================================================
