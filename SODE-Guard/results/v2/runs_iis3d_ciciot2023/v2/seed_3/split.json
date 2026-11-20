@@ -1,0 +1,1 @@
+{"seed": 3, "split": "random", "n_features": 39, "sizes": {"train": 25031, "selection": 4172, "calibration": 4172, "test": 8344}}
