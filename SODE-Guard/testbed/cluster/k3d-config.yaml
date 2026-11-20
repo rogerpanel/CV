@@ -1,0 +1,30 @@
+# k3d cluster for the problem-space testbed.
+#   k3d cluster create --config testbed/cluster/k3d-config.yaml
+#
+# The cluster is attached to a dedicated Docker network with no published
+# application ports. Only the Kubernetes API is exposed, and only on loopback,
+# so nothing in the cluster is reachable from outside the VM.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: idps-testbed
+servers: 1
+agents: 2
+network: idps-internal          # created by cluster/up.sh as an internal bridge
+kubeAPI:
+  host: "127.0.0.1"
+  hostIP: "127.0.0.1"           # API server on loopback only
+  hostPort: "6550"
+options:
+  k3d:
+    wait: true
+    disableLoadbalancer: true   # no servicelb -> no accidental published ports
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik  # no ingress controller; nothing is exposed
+        nodeFilters: [server:*]
+      - arg: --flannel-backend=vxlan
+        nodeFilters: [server:*]
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true

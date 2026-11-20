@@ -1,0 +1,26 @@
+# Attacker pod. Holds the standard public tools used by the scenarios and the
+# evasion layer. It runs inside the cluster, on the internal network only, so it
+# can reach the victim ClusterIPs and nothing outside the VM. NET_ADMIN is
+# granted only so that tc/netem can shape its own egress for the timing and rate
+# transformations.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: attacker
+  namespace: victims
+  labels: { app: attacker }
+spec:
+  restartPolicy: Never
+  containers:
+    - name: attacker
+      image: idps-testbed/attacker:latest     # built by attacker/Dockerfile
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "NET_RAW"]        # tc/netem and raw sockets for hping3
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - { name: shared, mountPath: /out }
+  volumes:
+    - name: shared
+      emptyDir: {}

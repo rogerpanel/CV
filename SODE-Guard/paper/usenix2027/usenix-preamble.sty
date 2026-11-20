@@ -1,0 +1,13 @@
+%% Minimal local shim so the skeleton compiles before the official USENIX class is
+%% dropped in. Approximates the USENIX Security layout (letter, two-column, 10pt).
+%% REPLACE for submission with \documentclass[...]{usenixsecurity} and delete this.
+\ProvidesPackage{usenix-preamble}
+\usepackage[letterpaper,margin=1in]{geometry}
+\setlength{\columnsep}{0.33in}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{microtype}
+\renewcommand{\abstractname}{\normalsize\bfseries Abstract}
+\endinput

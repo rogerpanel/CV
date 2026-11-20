@@ -1,0 +1,247 @@
+%% SODE-Guard — USENIX Security '27 submission (problem-space evaluation).
+%% Anonymous for double-blind review. Conference ID: SEC27.
+%%
+%% This is the EXPERIMENTAL (problem-space) companion to the feature-space work.
+%% It is a DIFFERENT contribution: it measures whether the robustness rankings
+%% hold when evasions are carried out as real network traffic. It cites the
+%% detector in the third person and uses no results from the other paper.
+%%
+%% Drop in the official template before submission:
+%%   https://secartifacts.github.io / https://www.usenix.org/conferences/author-resources
+%% replace the preamble below with \documentclass[...]{usenixsecurity}.
+%% Results tables marked %% FROM TESTBED are filled by testbed/analysis/make_tables.py
+%% once the Hetzner runs complete; no number is written here by hand.
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-preamble}   % local shim; swap for the official class
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+\newcommand{\todo}[1]{\textcolor{red}{[\textbf{TODO:} #1]}}
+\newcommand{\fromtestbed}[1]{\textcolor{blue}{#1}}  %% replaced by real numbers
+
+\begin{document}
+
+\title{\Large \bf Does Robustness Survive the Wire? A Problem-Space Evaluation of
+Certified Neural Intrusion Detectors}
+\author{}         % anonymous
+\date{}
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+Adversarially trained and certified neural network intrusion detectors are
+reported to resist evasion in \emph{feature space}: an attacker who perturbs the
+extracted flow statistics within a budget cannot flip the prediction. It is far
+less clear that these guarantees mean anything on the wire, where an attacker
+controls packets, not features, and every realisable change moves many features
+at once while having to keep the attack working. We build an isolated testbed in
+which standard evasions---padding, timing, packet splitting, chaff and
+rate shaping---are carried out as real traffic against deliberately vulnerable
+containerised services, and we re-extract features and re-score the resulting
+flows. A functionality oracle discards any evasion that breaks the attack, so
+every reported evasion is a working one. On this problem-space benchmark we
+compare adversarially trained neural detectors, a randomized-smoothing
+certificate, gradient-boosted trees, a deployed detection platform, and the
+signature engines Suricata and Zeek, under a gradient-guided and a black-box
+problem-space attack. We find that \fromtestbed{the feature-space rankings
+\{persist/change\}}: \todo{headline result, from testbed}. We release the
+testbed, the attack orchestration, and every captured flow.
+\end{abstract}
+
+\section{Introduction}
+Learned intrusion detectors are evaluated almost entirely in feature space.
+Robustness papers, including the certified ones, perturb the vector of flow
+statistics and report that the prediction is stable. But a network attacker does
+not edit a feature vector; they send packets, and a tool like CICFlowMeter then
+summarises those packets into features. Two gaps follow. First, not every
+feature is under the attacker's control, and the ones that are move together when
+a real knob (padding, delay, splitting) is turned. Second, an evasion is only
+interesting if the attack still works; a perturbation that silences the exploit
+is a failed attack, not a successful evasion. Neither gap is visible in a
+feature-space experiment.
+
+This paper asks a single question: \emph{do the robustness rankings established
+in feature space survive when the evasion is realised as traffic?} We answer it
+with a measurement study rather than a new model. Our contributions:
+\begin{itemize}
+\item \textbf{A problem-space testbed} (\cref{sec:testbed}) that runs benign load
+and seven attack families against vulnerable containers on an isolated cluster,
+captures traffic, extracts the same features used to train the detectors, and
+labels flows by \mbox{(attacker, window)}.
+\item \textbf{Two problem-space attacks} (\cref{sec:attack}): a gradient-guided
+attack that maps the constrained feature-space adversarial direction onto
+physical traffic knobs, and a budgeted black-box search that needs only detector
+scores, so it runs identically against neural detectors, trees, the platform and
+the signature engines.
+\item \textbf{A functionality oracle} (\cref{sec:oracle}) that certifies each
+evasion still achieves its goal, making evasion-success rates meaningful.
+\item \textbf{A fair comparison} (\cref{sec:results}) of adversarially trained
+neural detectors, a smoothing certificate, trees, a deployed platform, and
+Suricata/Zeek on identical realised traffic, with a measured deployment cost.
+\item \textbf{An open release} (\cref{sec:openscience}) of the testbed, attack
+code and captured flows.
+\end{itemize}
+
+\section{Background and threat model}\label{sec:threat}
+\paragraph{Detectors under test.} We evaluate a neural stochastic differential
+equation detector with adversarial training and a randomized-smoothing
+certificate, described in prior work~\cite{anon-featurespace} and used here
+unmodified as one of several detectors; matched adversarially trained MLP and
+neural-ODE baselines; gradient-boosted trees (LightGBM, XGBoost, random forest);
+a deployed detection platform exposing a scoring API; and the signature engines
+Suricata (ET Open) and Zeek. We treat all of them as black boxes that map a flow
+to a score, except where an attack is explicitly white-box.
+
+\paragraph{Attacker.} The attacker controls a host inside the monitored network
+and wants its attack traffic classified as benign while the attack still works.
+It may change traffic only through realisable knobs (\cref{sec:attack}), each with
+a budget, and must keep the attack functional (\cref{sec:oracle}). It may be
+white-box (gradient-guided) or black-box (search over knobs using scores only).
+The defender observes flows and raises an alarm at a chosen false-alarm budget.
+
+\section{The problem-space testbed}\label{sec:testbed}
+\cref{fig:testbed} shows the testbed. An isolated k3d cluster hosts a
+microservice shop, Node-RED, Grafana and InfluxDB (versions with public CVEs),
+with Locust generating benign user sessions throughout. An attacker pod holds
+standard public tools. We capture one pcap per run on the cluster bridge, extract
+flows with a single pinned CICFlowMeter build (the same extractor family as the
+training corpus), and label each flow from the attacking host and the run window.
+\emph{Isolation.} The cluster runs on an internal-only network; a host firewall
+rule drops any forwarded traffic toward the public interface, a per-namespace
+network policy denies external egress, and a target guard aborts any scenario
+whose target is not a private address. Full detail in \cref{sec:ethics}.
+
+\begin{figure}[t]\centering
+\fbox{\parbox{0.9\columnwidth}{\centering\small victims + benign load + attacker
+$\rightarrow$ pcap $\rightarrow$ CICFlowMeter $\rightarrow$ flows $\rightarrow$
+\{neural, trees, platform, Suricata/Zeek\}}}
+\caption{Testbed data flow. \todo{replace with the real architecture figure.}}
+\label{fig:testbed}
+\end{figure}
+
+\paragraph{Scenarios.} Seven families mirror the training corpus and the common
+public datasets: reconnaissance (nmap), vulnerability scan (nuclei), SSH/HTTP
+brute force (hydra), slow and volumetric DoS (slowloris, rate-limited hping3),
+and three exploits (Grafana path traversal CVE-2021-43798, InfluxDB auth bypass
+CVE-2019-20933, Node-RED RCE). Benign traffic runs alongside every scenario.
+
+\paragraph{Two tracks.} \emph{Track A} (primary) trains every detector on a clean
+testbed corpus and attacks the trained detectors with fresh evasive runs, so
+train and test share one environment and domain shift cannot explain the result.
+\emph{Track B} scores the detectors trained on the external container corpus on
+the testbed traffic without retraining, measuring cross-environment transfer.
+
+\section{Problem-space attacks}\label{sec:attack}
+\paragraph{Transformations.} Each evasion is a vector of budgeted knobs
+(\cref{tab:knobs}): payload padding ($\le{+}50\%$ bytes), timing delay and jitter
+($\le 50$\,ms/packet, $\le 3\times$ duration), packet splitting via MSS clamping
+($\le 4\times$ packets), chaff ($\le 1$ benign request per attack request) and
+rate shaping. Timing and rate are enforced in the kernel with \texttt{tc};
+padding, splitting and chaff are honoured by the HTTP scenarios. Budgets are
+hard-capped so no search can exceed them.
+
+\begin{table}[t]\centering\small
+\begin{tabular}{lll}
+\toprule
+knob & mechanism & budget\\
+\midrule
+padding & junk header bytes & $\le{+}50\%$ bytes\\
+timing & \texttt{tc}/netem delay+jitter & $\le 50$\,ms/pkt, $\le 3\times$\\
+splitting & MSS clamp & $\le 4\times$ packets\\
+chaff & interleaved benign requests & $\le 1{:}1$\\
+rate & egress rate cap & attack stays functional\\
+\bottomrule
+\end{tabular}
+\caption{Problem-space transformation budgets.}\label{tab:knobs}
+\end{table}
+
+\paragraph{Gradient-guided.} We compute the constrained feature-space adversarial
+direction on the target (white box) over the mutable features, then map the sign
+of each feature's gradient to the knob that can physically move it (e.g.\ forward
+packet length $\to$ padding, inter-arrival time $\to$ delay). We realise the knob,
+re-extract and re-score.
+
+\paragraph{Black-box.} A budgeted $(1{+}\lambda)$ search over the knob vector
+minimises the target's margin on the realised flows, using scores only, subject
+to the budget and the oracle ($\approx 50$ queries per scenario and detector).
+Because it needs only scores, the identical search runs against the trees, the
+platform and the signature engines.
+
+\section{Functionality oracle}\label{sec:oracle}
+An evasive run counts only if the attack still works: brute force still finds a
+valid credential; an exploit still reads the file or writes the RCE marker; a scan
+still reports the same open ports; a DoS still raises benign p95 latency by at
+least $2\times$. The oracle reads the artefacts each scenario leaves and gates
+every reported evasion, so evasion-success rates never include broken attacks.
+
+\section{Evaluation}\label{sec:results}
+\paragraph{Protocol.} Five repetitions $\times$ five seeds. Detection is reported
+per flow and per attack instance (a run is detected if any of its flows alarms),
+with macro-F1 on realised attacks. Alarms use conformal thresholds calibrated on
+benign testbed traffic at 1\% and 5\% false-alarm budgets; we report the test
+false-alarm rate alongside detection. Contrasts are declared in advance and
+tested with a paired bootstrap under Holm correction:
+(i)~neural adversarially trained vs.\ MLP adversarially trained,
+(ii)~neural vs.\ trees, (iii)~neural vs.\ Suricata, each under both attacks.
+
+\paragraph{Q1: do the rankings persist?} \todo{Table from testbed: detection and
+macro-F1 under realised attacks, per detector.} %% FROM TESTBED detection.md
+\begin{table}[t]\centering\small
+\begin{tabular}{lcccc}
+\toprule
+detector & det.\ rate & macro-F1 & FAR@1\% & FAR@5\%\\
+\midrule
+neural (AT) & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--}\\
+MLP (AT) & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--}\\
+trees & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--}\\
+platform & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--}\\
+Suricata & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--} & \fromtestbed{--}\\
+\bottomrule
+\end{tabular}
+\caption{Detection on realised evasive traffic (Track A).}\label{tab:detection}
+\end{table}
+
+\paragraph{Q2: can the attacker evade while the attack works?} \todo{Evasion
+success and overhead, gradient vs.\ black-box.} %% FROM TESTBED evasion.md
+
+\paragraph{Q3: deployment cost.} \todo{Per-flow latency, throughput, memory on the
+server CPU for every detector, Suricata and the platform.} %% FROM TESTBED cost.md
+
+\paragraph{Q4: signatures and the platform.} \todo{Suricata/Zeek and platform
+alerts on the same pcaps vs.\ the neural detectors.}
+
+\paragraph{Track B (transfer).} \todo{Detectors trained on the container corpus,
+scored on testbed traffic without retraining.}
+
+\section{Related work}\label{sec:related}
+Problem-space adversarial examples and the feature/problem-space gap
+\cite{pierazzi2020problemspace}; realisable network evasions and feature
+mutability \cite{apruzzese2023realworld}; adversarial training and randomized
+smoothing \cite{madry2018,cohen2019}; evaluation pitfalls in ML security
+\cite{arp2022dodo,carlini2019evaluating}. \todo{position against the detector's
+own feature-space paper and recent problem-space IDS work.}
+
+\section{Ethics and compliance}\label{sec:ethics}
+This is defensive measurement. All attacks are standard and public and run only
+against our own containers on an isolated VM, separate from any production host.
+No attack traffic can leave the host: the cluster is on an internal-only network,
+a host firewall rule drops forwarded traffic to the public interface, a network
+policy denies external egress, and a target guard aborts any non-private target.
+Floods are rate-limited. The data are flow statistics only, with no payloads or
+personal identifiers. We disclosed nothing to third parties because no external
+system is involved. Following USENIX guidance, we used large-language-model
+assistance for copy-editing and for parts of the released code; the authors
+checked every derivation, ran every experiment, and verified every citation.
+
+\section{Open science}\label{sec:openscience}
+We release the testbed manifests, the attack and evasion orchestration, the
+functionality oracle, the scoring and signature harness, the analysis code, and
+every captured flow (features only) and run manifest, under an open licence at an
+anonymous repository for review (\url{https://anonymous.4open.science/r/SEC27-sode-guard}).
+All tables are regenerated from the released runs by a single script.
+
+{\footnotesize \bibliographystyle{plain} \bibliography{sode_guard_usenix}}
+
+\end{document}

@@ -1,0 +1,5 @@
+runs/
+*.pcap
+scoring/models/
+*.pyc
+__pycache__/

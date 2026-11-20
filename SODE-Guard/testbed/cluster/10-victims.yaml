@@ -1,0 +1,114 @@
+# Victim services for the testbed, mirroring the ICS3D container classes.
+# All services are ClusterIP only (no NodePort, no LoadBalancer): reachable from
+# inside the cluster, never from outside the VM. Versions with public CVEs are
+# pinned so the exploit scenarios have something to hit; they run only on the
+# internal network.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: victims
+---
+# A microservice shop as the benign-application backdrop (reconnaissance and
+# brute-force scenarios run against it; benign Locust load browses it).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boutique-frontend
+  namespace: victims
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: boutique } }
+  template:
+    metadata: { labels: { app: boutique } }
+    spec:
+      containers:
+        - name: frontend
+          image: gcr.io/google-samples/microservices-demo/frontend:v0.10.2
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: PRODUCT_CATALOG_SERVICE_ADDR, value: "catalog:3550" }
+            - { name: CURRENCY_SERVICE_ADDR, value: "catalog:7000" }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: boutique, namespace: victims }
+spec:
+  type: ClusterIP
+  selector: { app: boutique }
+  ports: [{ port: 80, targetPort: 8080 }]
+---
+# Node-RED: reconnaissance, RCE and container-escape stages (as in ICS3D).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: node-red, namespace: victims }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: node-red } }
+  template:
+    metadata: { labels: { app: node-red } }
+    spec:
+      containers:
+        - name: node-red
+          image: nodered/node-red:3.0.2     # pinned; internal network only
+          ports: [{ containerPort: 1880 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: node-red, namespace: victims }
+spec: { type: ClusterIP, selector: { app: node-red }, ports: [{ port: 1880, targetPort: 1880 }] }
+---
+# Grafana with a path-traversal CVE (CVE-2021-43798).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: grafana, namespace: victims }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: grafana } }
+  template:
+    metadata: { labels: { app: grafana } }
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:8.3.0       # CVE-2021-43798
+          ports: [{ containerPort: 3000 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: grafana, namespace: victims }
+spec: { type: ClusterIP, selector: { app: grafana }, ports: [{ port: 3000, targetPort: 3000 }] }
+---
+# InfluxDB with an auth-bypass CVE (CVE-2019-20933).
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: influxdb, namespace: victims }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: influxdb } }
+  template:
+    metadata: { labels: { app: influxdb } }
+    spec:
+      containers:
+        - name: influxdb
+          image: influxdb:1.7.6              # CVE-2019-20933
+          ports: [{ containerPort: 8086 }]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: influxdb, namespace: victims }
+spec: { type: ClusterIP, selector: { app: influxdb }, ports: [{ port: 8086, targetPort: 8086 }] }
+---
+# Deny egress from the victims namespace to anything outside the cluster:
+# defence in depth on top of the host iptables rule.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: deny-external-egress, namespace: victims }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock: { cidr: 10.0.0.0/8 }       # cluster-internal only
+        - ipBlock: { cidr: 10.43.0.0/16 }     # k3s service CIDR (DNS, etc.)
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
