@@ -5,14 +5,14 @@
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
-\bibitem[Aly~Amin et~al.(2024)Aly~Amin, Harun~Dogan, Sena~Kuru, Sever, and
-  Angin]{amin2024misuse}
-Mohamed Aly~Amin, Adnan Harun~Dogan, Elif Sena~Kuru, Yigit Sever, and Pelin
+\bibitem[Amin et~al.(2024)Amin, Dogan, Kuru, Sever, and Angin]{amin2024misuse}
+Mohamed~Aly Amin, Adnan~Harun Dogan, Elif~Sena Kuru, Yigit Sever, and Pelin
   Angin.
 \newblock Misuse detection and response for orchestrated microservices based
   software.
-\newblock In \emph{Advanced Information Networking and Applications}, pp.\
-  217--226. Springer Nature Switzerland, 2024.
+\newblock In \emph{Advanced Information Networking and Applications (AINA
+  2024)}, pp.\  217--226. Springer Nature Switzerland, 2024.
+\newblock \doi{10.1007/978-3-031-57942-4_22}.
 
 \bibitem[Anaedevha \& Trofimov(2024)Anaedevha and
   Trofimov]{anaedevha2024robust}
@@ -108,10 +108,22 @@ Anish Athalye, Nicholas Carlini, and David Wagner.
 \newblock In \emph{Proc.\ ICML}, volume~80 of \emph{PMLR}, pp.\  274--283,
   2018.
 
-\bibitem[Bergna et~al.(2024)]{bergna2024lgnsde}
-Richard Bergna et~al.
-\newblock Latent graph neural stochastic differential equations.
-\newblock \emph{arXiv preprint arXiv:2408.16115}, 2024.
+\bibitem[Ben~Atitallah et~al.(2026)Ben~Atitallah, Driss, and
+  Boulila]{benatitallah2026graphmamba}
+Safa Ben~Atitallah, Maha Driss, and Wadii Boulila.
+\newblock {IDS--GraphMamba}: A {Markov}-enhanced graph {Mamba} framework for
+  real-time intrusion detection in {IoMT} edge networks.
+\newblock \emph{Computer Networks}, 275:\penalty0 111933, 2026.
+\newblock \doi{10.1016/j.comnet.2025.111933}.
+
+\bibitem[Bergna et~al.(2025)Bergna, Calvo-Ordo{\~n}ez, Opolka, Li{\`o}, and
+  Hern{\'a}ndez-Lobato]{bergna2024lgnsde}
+Richard Bergna, Sergio Calvo-Ordo{\~n}ez, Felix~L. Opolka, Pietro Li{\`o}, and
+  Jos{\'e}~Miguel Hern{\'a}ndez-Lobato.
+\newblock Uncertainty modeling in graph neural networks via stochastic
+  differential equations.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2025.
 
 \bibitem[Breiman(2001)]{breiman2001rf}
 Leo Breiman.
@@ -173,8 +185,10 @@ Gints Engelen, Vera Rimmer, and Wouter Joosen.
   study.
 \newblock In \emph{IEEE Security and Privacy Workshops}, 2021.
 
-\bibitem[Ennaji et~al.(2024)]{ennaji2024advsurvey}
-Sabrine Ennaji et~al.
+\bibitem[Ennaji et~al.(2024)Ennaji, De~Gaspari, Hitaj, Kbidi, and
+  Mancini]{ennaji2024advsurvey}
+Sabrine Ennaji, Fabio De~Gaspari, Dorjan Hitaj, Alicia Kbidi, and Luigi~V.
+  Mancini.
 \newblock Adversarial challenges in network intrusion detection systems:
   Research insights and future prospects.
 \newblock \emph{arXiv preprint arXiv:2409.18736}, 2024.
@@ -208,11 +222,11 @@ Sture Holm.
   65--70, 1979.
 
 \bibitem[Huang et~al.(2025)Huang, Lin, Chen, and Bertino]{huang2025mars}
-Huang, Lin, Chen, and Elisa Bertino.
-\newblock {MARS}: Multi-order adaptive randomized smoothing for dimensional
-  robustness certification of deep neural networks in network intrusion
-  detection.
-\newblock \emph{ACM Transactions on Privacy and Security}, \penalty0 (3), 2025.
+Mengdie Huang, Yingjun Lin, Xiaofeng Chen, and Elisa Bertino.
+\newblock Dimensional robustness certification for deep neural networks in
+  network intrusion detection systems.
+\newblock \emph{ACM Transactions on Privacy and Security}, 28\penalty0
+  (3):\penalty0 39:1--39:39, 2025.
 \newblock \doi{10.1145/3715121}.
 
 \bibitem[Jeong \& Shin(2020)Jeong and Shin]{jeong2020consistency}
@@ -282,19 +296,13 @@ Aditya~Krishna Menon, Sadeep Jayasumana, Ankit~Singh Rawat, Himanshu Jain,
 \newblock Long-tail learning via logit adjustment.
 \newblock In \emph{International Conference on Learning Representations}, 2021.
 
-\bibitem[Mosaiyebzadeh et~al.(2025)]{mosaiyebzadeh2025graphmamba}
-Fatemeh Mosaiyebzadeh et~al.
-\newblock {IDS-GraphMamba}: A {Markov}-enhanced graph {Mamba} framework for
-  real-time intrusion detection in {IoMT} edge networks.
-\newblock \emph{Computer Networks}, 268:\penalty0 108989, 2025.
-\newblock \doi{10.1016/j.comnet.2025.108989}.
-
 \bibitem[Moustafa \& Slay(2015)Moustafa and Slay]{moustafa2015unsw}
 Nour Moustafa and Jill Slay.
 \newblock {UNSW-NB15}: A comprehensive data set for network intrusion detection
-  systems.
+  systems ({UNSW-NB15} network data set).
 \newblock In \emph{Military Communications and Information Systems Conference
-  (MilCIS)}, 2015.
+  (MilCIS)}, pp.\  1--6, 2015.
+\newblock \doi{10.1109/MilCIS.2015.7348942}.
 
 \bibitem[Oh et~al.(2024)Oh, Lim, and Kim]{oh2024stablesde}
 YongKyung Oh, Dongyoung Lim, and Sungil Kim.
@@ -357,11 +365,14 @@ Belinda Tzen and Maxim Raginsky.
   models in the diffusion limit.
 \newblock \emph{arXiv preprint arXiv:1905.09883}, 2019.
 
-\bibitem[Vitorino et~al.(2024)]{vitorino2024advbench}
-Jo{\~a}o Vitorino et~al.
+\bibitem[Vitorino et~al.(2024)Vitorino, Silva, Maia, and
+  Pra{\c{c}}a]{vitorino2024advbench}
+Jo{\~a}o Vitorino, Miguel Silva, Eva Maia, and Isabel Pra{\c{c}}a.
 \newblock An adversarial robustness benchmark for enterprise network intrusion
   detection.
-\newblock \emph{arXiv preprint arXiv:2402.16912}, 2024.
+\newblock In \emph{Foundations and Practice of Security (FPS 2023)}, pp.\
+  3--17. Springer, 2024.
+\newblock \doi{10.1007/978-3-031-57537-2_1}.
 
 \bibitem[Wang et~al.(2023)Wang, Wang, Han, Chen, Yang, Shi, and
   Yin]{wang2023bars}

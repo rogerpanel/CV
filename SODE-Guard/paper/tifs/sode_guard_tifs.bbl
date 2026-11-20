@@ -40,14 +40,18 @@ R.~N. Anaedevha and A.~G. Trofimov, ``Multi-scale temporal graph neural network
   detection,'' in \emph{IEEE 27th International Conference of Young
   Professionals in Electron Devices and Materials (EDM)}, 2026, pp. 1--8.
 
-\bibitem[Ennaji et~al.(2024)]{ennaji2024advsurvey}
-S.~Ennaji \emph{et~al.}, ``Adversarial challenges in network intrusion
-  detection systems: Research insights and future prospects,'' \emph{arXiv
-  preprint arXiv:2409.18736}, 2024.
+\bibitem[Ennaji et~al.(2024)Ennaji, De~Gaspari, Hitaj, Kbidi, and
+  Mancini]{ennaji2024advsurvey}
+S.~Ennaji, F.~De~Gaspari, D.~Hitaj, A.~Kbidi, and L.~V. Mancini, ``Adversarial
+  challenges in network intrusion detection systems: Research insights and
+  future prospects,'' \emph{arXiv preprint arXiv:2409.18736}, 2024.
 
-\bibitem[Vitorino et~al.(2024)]{vitorino2024advbench}
-J.~Vitorino \emph{et~al.}, ``An adversarial robustness benchmark for enterprise
-  network intrusion detection,'' \emph{arXiv preprint arXiv:2402.16912}, 2024.
+\bibitem[Vitorino et~al.(2024)Vitorino, Silva, Maia, and
+  Pra{\c{c}}a]{vitorino2024advbench}
+J.~Vitorino, M.~Silva, E.~Maia, and I.~Pra{\c{c}}a, ``An adversarial robustness
+  benchmark for enterprise network intrusion detection,'' in \emph{Foundations
+  and Practice of Security (FPS 2023)}.\hskip 1em plus 0.5em minus 0.4em\relax
+  Springer, 2024, pp. 3--17.
 
 \bibitem[Anaedevha and Trofimov(2024)]{anaedevha2024robust}
 R.~N. Anaedevha and A.~G. Trofimov, ``Improved robust adversarial model against
@@ -180,19 +184,22 @@ K.~Wang, Z.~Wang, D.~Han, W.~Chen, J.~Yang, X.~Shi, and X.~Yin, ``{BARS}: Local
   in \emph{Network and Distributed System Security Symposium}, 2023.
 
 \bibitem[Huang et~al.(2025)Huang, Lin, Chen, and Bertino]{huang2025mars}
-Huang, Lin, Chen, and E.~Bertino, ``{MARS}: Multi-order adaptive randomized
-  smoothing for dimensional robustness certification of deep neural networks in
-  network intrusion detection,'' \emph{ACM Transactions on Privacy and
-  Security}, no.~3, 2025.
+M.~Huang, Y.~Lin, X.~Chen, and E.~Bertino, ``Dimensional robustness
+  certification for deep neural networks in network intrusion detection
+  systems,'' \emph{ACM Transactions on Privacy and Security}, vol.~28, no.~3,
+  pp. 39:1--39:39, 2025.
 
 \bibitem[Croce and Hein(2020)]{croce2020autoattack}
 F.~Croce and M.~Hein, ``Reliable evaluation of adversarial robustness with an
   ensemble of diverse parameter-free attacks,'' in \emph{Proc.\ ICML}, ser.
   PMLR, vol. 119, 2020, pp. 2206--2216.
 
-\bibitem[Bergna et~al.(2024)]{bergna2024lgnsde}
-R.~Bergna \emph{et~al.}, ``Latent graph neural stochastic differential
-  equations,'' \emph{arXiv preprint arXiv:2408.16115}, 2024.
+\bibitem[Bergna et~al.(2025)Bergna, Calvo-Ordo{\~n}ez, Opolka, Li{\`o}, and
+  Hern{\'a}ndez-Lobato]{bergna2024lgnsde}
+R.~Bergna, S.~Calvo-Ordo{\~n}ez, F.~L. Opolka, P.~Li{\`o}, and J.~M.
+  Hern{\'a}ndez-Lobato, ``Uncertainty modeling in graph neural networks via
+  stochastic differential equations,'' in \emph{International Conference on
+  Learning Representations (ICLR)}, 2025.
 
 \bibitem[Halbouni et~al.(2022)Halbouni, Gunawan, Habaebi, Halbouni, Kartiwi,
   and Ahmad]{halbouni2022cnnlstm}
@@ -200,10 +207,12 @@ A.~Halbouni, T.~S. Gunawan, M.~H. Habaebi, M.~Halbouni, M.~Kartiwi, and
   R.~Ahmad, ``{CNN-LSTM}: Hybrid deep neural network for network intrusion
   detection system,'' \emph{IEEE Access}, vol.~10, pp. 99\,837--99\,849, 2022.
 
-\bibitem[Mosaiyebzadeh et~al.(2025)]{mosaiyebzadeh2025graphmamba}
-F.~Mosaiyebzadeh \emph{et~al.}, ``{IDS-GraphMamba}: A {Markov}-enhanced graph
-  {Mamba} framework for real-time intrusion detection in {IoMT} edge
-  networks,'' \emph{Computer Networks}, vol. 268, p. 108989, 2025.
+\bibitem[Ben~Atitallah et~al.(2026)Ben~Atitallah, Driss, and
+  Boulila]{benatitallah2026graphmamba}
+S.~Ben~Atitallah, M.~Driss, and W.~Boulila, ``{IDS--GraphMamba}: A
+  {Markov}-enhanced graph {Mamba} framework for real-time intrusion detection
+  in {IoMT} edge networks,'' \emph{Computer Networks}, vol. 275, p. 111933,
+  2026.
 
 \bibitem[Anaedevha et~al.(2026{\natexlab{b}})Anaedevha, Trofimov, and
   Borodachev]{anaedevha2026mstgnntia}
@@ -234,8 +243,8 @@ R.~N. Anaedevha, A.~G. Trofimov, and Y.~V. Borodachev, ``Multi-scale temporal
 \bibitem[Anaedevha et~al.(2026{\natexlab{f}})Anaedevha, Trofimov, and
   Borodachev]{anaedevha2026mambashield}
 ------, ``{MambaShield}: Selective state-space models for poisoning-resilient
-  sequential modeling,'' \emph{Expert Systems with Applications}, p. 131175,
-  2026.
+  sequential modelling,'' \emph{Expert Systems with Applications}, vol. 308, p.
+  131175, 2026.
 
 \bibitem[Anaedevha et~al.(2026{\natexlab{g}})Anaedevha, Trofimov, and
   Borodachev]{anaedevha2026pqidps}
@@ -287,17 +296,18 @@ R.~N. Anaedevha, S.~Freitas, J.~Kalajdjieski, A.~Gharib, R.~McCann,
   M.~Aly~Amin, A.~Harun~Dogan, E.~Sena~Kuru, Y.~Sever, P.~Angin, and M.~A.
   Ferrag, ``Integrated cloud security 3datasets ({ICS3D}),'' Kaggle, 2025.
 
-\bibitem[Aly~Amin et~al.(2024)Aly~Amin, Harun~Dogan, Sena~Kuru, Sever, and
-  Angin]{amin2024misuse}
-M.~Aly~Amin, A.~Harun~Dogan, E.~Sena~Kuru, Y.~Sever, and P.~Angin, ``Misuse
-  detection and response for orchestrated microservices based software,'' in
-  \emph{Advanced Information Networking and Applications}.\hskip 1em plus 0.5em
-  minus 0.4em\relax Springer Nature Switzerland, 2024, pp. 217--226.
+\bibitem[Amin et~al.(2024)Amin, Dogan, Kuru, Sever, and Angin]{amin2024misuse}
+M.~A. Amin, A.~H. Dogan, E.~S. Kuru, Y.~Sever, and P.~Angin, ``Misuse detection
+  and response for orchestrated microservices based software,'' in
+  \emph{Advanced Information Networking and Applications (AINA 2024)}.\hskip
+  1em plus 0.5em minus 0.4em\relax Springer Nature Switzerland, 2024, pp.
+  217--226.
 
 \bibitem[Moustafa and Slay(2015)]{moustafa2015unsw}
 N.~Moustafa and J.~Slay, ``{UNSW-NB15}: A comprehensive data set for network
-  intrusion detection systems,'' in \emph{Military Communications and
-  Information Systems Conference (MilCIS)}, 2015.
+  intrusion detection systems ({UNSW-NB15} network data set),'' in
+  \emph{Military Communications and Information Systems Conference (MilCIS)},
+  2015, pp. 1--6.
 
 \bibitem[Anaedevha(2025)]{anaedevha2025iis3d}
 R.~N. Anaedevha, ``Integrated {IDPS} security 3datasets ({IIS3D}),'' Kaggle,
