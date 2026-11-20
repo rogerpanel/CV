@@ -114,9 +114,22 @@ Two attack algorithms:
 | Gradient-guided and black-box evasions, scoring, Suricata/Zeek | Hetzner VM | about 1-2 days of runs |
 | Analysis and the paper section "Problem-space evaluation", plus a cost table | repository | about 1 day |
 
-## Questions for the platform owner
+## Resolved with the platform owner (Nov 2026)
 
-1. VM size, OS, and whether Docker/k3d may run vulnerable images on an internal-only network.
-2. Does the RobustIDPS.ai backend expose a scoring API for an external model, or should SODE-Guard be deployed as an additional detector?
-3. Which signature engines (Suricata/Zeek versions and rule sets) and which breach-and-attack-simulation tools are already installed?
-4. May the experiment VM be a separate Hetzner instance? Recommended.
+1. **Testbed host.** The full testbed (no trimming) needs the plan's target of
+   ~16 vCPU / 32 GB. Two options: the owner's large VM (to be used once its
+   credentials are recovered), or rescaling the Hetzner `robustidps` box (CPX32,
+   4 vCPU / 8 GB) up to CPX52 (16 vCPU / 32 GB) for the collection and evasion
+   runs. Docker/k3d run the vulnerable images on an internal-only network.
+2. **Platform scoring.** SODE-Guard is added to the RobustIDPS.ai backend as an
+   extra detector branch (not an external API client). See
+   `testbed/platform_integration/` and its `INTEGRATION.md`. The platform still
+   exposes `POST /api/predict`, so the testbed scores the platform ensemble and
+   SODE-Guard on the same realised flows.
+3. **Signature engines.** Suricata (ET Open / Pro / OISF) and Snort are already
+   part of the platform's comparison; the testbed installs Suricata + Zeek on the
+   run host via `testbed/setup.sh` (`suricata-update` for ET Open). Snort can be
+   added as an optional third baseline since the platform auto-generates Snort
+   rules.
+4. **Isolation.** The experiment VM is kept separate from the production
+   `robustidps.ai` host, as recommended.
