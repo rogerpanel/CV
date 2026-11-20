@@ -49,7 +49,8 @@ def score(url: str, flows_csv: Path, batch: int = 5000):
                           files={"file": ("flows.csv", buf, "text/csv")}, timeout=300)
         r.raise_for_status()
         rows = r.json().get("predictions", r.json().get("results", []))
-        preds += [row.get("label_pred", row.get("prediction", "")) for row in rows]
+        # platform rows use "label_predicted"; the SODE-Guard branch uses the same
+        preds += [row.get("label_predicted", row.get("label_pred", "")) for row in rows]
         confidences += [row.get("confidence", row.get("score", float("nan"))) for row in rows]
     return np.array(preds), np.array(confidences, dtype=float)
 
