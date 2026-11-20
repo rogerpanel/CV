@@ -82,7 +82,7 @@ RADII = [0.0, 0.05, 0.1, 0.2, 0.273, 0.5]
 # columns added by dataset integration (provenance, IDs, domain tags): never features, often label proxies
 METADATA_HINTS = ("record_id", "dataset_source", "security_domain", "data_category", "threat_type",
                   "integration", "source_dataset", "source_file", "split", "file_size", "research_grade",
-                  "ultrafast", "optimized", "dataset_version", "processing")
+                  "ultrafast", "ultra_fast", "optimized", "dataset_version", "processing", "_processed")
 
 
 def atomic(path, write):
